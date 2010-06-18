@@ -1,0 +1,57 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <LastOpenVersion>7.10.3077</LastOpenVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ReferencePath>C:\Documents and Settings\d3k381\My Documents\Visual Studio Projects\UIMFLibrary_VS2003\Project1\bin\Debug\;C:\UIMFtest\UIMFLibrary_VS2003\UIMFLibrary_VS2003\Project1\bin\Debug\;C:\UIMFtest\UIMFLibrary_VS2003\UIMFLibrary_VS2003\UIMFLibrary\bin\Debug\;C:\UIMFtest\UIMFLibrary_VS2003\UIMFLibrary\bin\Debug\;C:\UIMFtest\UIMFLibrary_VS2003_working\UIMFLibrary\bin\Debug\;D:\My Documents\Projects\UIMFLibrary\UIMFLibrary\bin\Debug\;C:\New Folder\UIMFLibrary\UIMFLibrary\bin\Debug\;C:\Documents and Settings\d3x720\My Documents\Projects\UIMFLibrary\UIMFLibrary\bin\Debug\;C:\UIMFSoftwarePackage\UIMFLibrary\UIMFLibrary\bin\Debug\;C:\Yan-Utilities\UIMFLibrary\UIMFLibrary\bin\Debug\;C:\Yan-Utilities\UIMFLibrary\Source_Code\UIMFLibrary\bin\Debug\;D:\My Documents\Projects\UIMFLibrary\Source_Code\UIMFLibrary\bin\Debug\;C:\ProteomicsSoftwareTools\UIMFLibrary\Source_Code\UIMFLibrary\bin\Debug\</ReferencePath>
+    <CopyProjectDestinationFolder>
+    </CopyProjectDestinationFolder>
+    <CopyProjectUncPath>
+    </CopyProjectUncPath>
+    <CopyProjectOption>0</CopyProjectOption>
+    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectTrust>0</ProjectTrust>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <EnableASPDebugging>false</EnableASPDebugging>
+    <EnableASPXDebugging>false</EnableASPXDebugging>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <EnableSQLServerDebugging>false</EnableSQLServerDebugging>
+    <RemoteDebugEnabled>false</RemoteDebugEnabled>
+    <RemoteDebugMachine>
+    </RemoteDebugMachine>
+    <StartAction>Project</StartAction>
+    <StartArguments>
+    </StartArguments>
+    <StartPage>
+    </StartPage>
+    <StartProgram>
+    </StartProgram>
+    <StartURL>
+    </StartURL>
+    <StartWorkingDirectory>
+    </StartWorkingDirectory>
+    <StartWithIE>true</StartWithIE>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <EnableASPDebugging>false</EnableASPDebugging>
+    <EnableASPXDebugging>false</EnableASPXDebugging>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <EnableSQLServerDebugging>false</EnableSQLServerDebugging>
+    <RemoteDebugEnabled>false</RemoteDebugEnabled>
+    <RemoteDebugMachine>
+    </RemoteDebugMachine>
+    <StartAction>Project</StartAction>
+    <StartArguments>
+    </StartArguments>
+    <StartPage>
+    </StartPage>
+    <StartProgram>
+    </StartProgram>
+    <StartURL>
+    </StartURL>
+    <StartWorkingDirectory>
+    </StartWorkingDirectory>
+    <StartWithIE>true</StartWithIE>
+  </PropertyGroup>
+</Project>
