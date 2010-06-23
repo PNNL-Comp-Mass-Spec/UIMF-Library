@@ -1,0 +1,5 @@
+UIMFLibrary Revision History
+
+Version 1.0; June 23, 2010
+	- Added Revision History
+	- Updated to NUnit tests
