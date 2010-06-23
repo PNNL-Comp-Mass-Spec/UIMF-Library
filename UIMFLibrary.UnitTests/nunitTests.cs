@@ -21,7 +21,7 @@ public class TestClass
     [Test]
     public void createDB()
     {
-        string FileName = @"F:\Gord\temp02\testing.uimf";
+        string FileName = @"c:\\IMS\\testing.uimf";
         UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
 
         if (File.Exists(FileName))
@@ -83,7 +83,7 @@ public class TestClass
                     endFrame = i + frameDim;
                     startScan = j;
                     endScan = j + scanDim;
-                    dr.SumScansCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
+                    //dr.SumScansCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
                 }
             }
 
@@ -148,7 +148,7 @@ public class TestClass
         if (dr.OpenUIMF(FileName))
         {
             //dr.GetSpectrum(6, 322, intensitiesNormal, mzsNormal);
-            Console.WriteLine(dr.SumScansCached(mzsCache, intensitiesCache, 0, 6, 6, 322, 322));
+            //Console.WriteLine(dr.SumScansCached(mzsCache, intensitiesCache, 0, 6, 6, 322, 322));
             Console.WriteLine(dr.SumScans(mzsNormal, intensitiesNormal, 0, 6, 6, 322, 322));
         }
 
@@ -157,5 +157,67 @@ public class TestClass
 
         dr.CloseUIMF();
     }
+
+    
+    private int countNonZeroValues(int[] array)
+    {
+        int count = 0;
+
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (array[i] > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    [Test]
+    public void getIntensityBlock()
+    {
+        string fileName = "c:\\QC_Shew_60min_c1_500_100_10ms_fr700_Cougar_0001.uimf";
+        UIMFLibrary.DataReader reader = new DataReader();
+        int frameNum  = 10;
+        int startScan = 250;
+        int endScan = 255;
+        int startBin = 0;
+        int endBin = 98000;
+
+
+        if (reader.OpenUIMF(fileName))
+        {
+            GlobalParameters gp = reader.GetGlobalParameters();
+
+            int[] abundance = new int[gp.Bins];
+            double[] mzs = new double[gp.Bins];
+
+            endBin = gp.Bins;
+
+            int[][] intensities = reader.GetIntensityBlock(frameNum, 0, startScan, endScan, startBin, endBin);
+            
+
+            Assert.AreEqual(intensities.Length, endScan - startScan+1);
+            Assert.AreEqual(intensities[0].Length, endBin - startBin+1);
+
+            //somehow we'll have to validate the returned intensities as well
+            for (int i = startScan; i < endScan; i++)
+            {
+                int nonZeroCount = reader.GetSpectrum(frameNum, i, abundance, mzs);
+
+                //the number of non-zero values returned from getspectrum should be 
+                //equal to the number of non zero values from startBin to endBin
+                int countsInBlock = countNonZeroValues(intensities[i-startScan]);
+                Assert.AreEqual(nonZeroCount, countsInBlock);
+ 
+            }
+
+            reader.CloseUIMF();
+        }
+
+
+    }
+
 }
 

@@ -70,7 +70,7 @@ namespace UIMFLibrary
         private void loadPreparedStatements ()
 		{
 				dbcmd_PreparedStmt = dbcon_UIMF.CreateCommand();
-				dbcmd_PreparedStmt.CommandText = "SELECT FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
+				dbcmd_PreparedStmt.CommandText = "SELECT ScanNum,FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
 				dbcmd_PreparedStmt.Prepare();
 
 		}
@@ -364,6 +364,104 @@ namespace UIMFLibrary
 		}
 
 
+
+        /**
+         * @description:
+         *         //this method returns all the intensities without summing for that block
+                   //The return value is a 2-D array that returns all the intensities within the given scan range and bin range
+                   //If frame is added to this equation then we'll have to return a 3-D array of data values.
+
+                   //The startScan is stored at the zeroth location and so is the startBin. Callers of this method should offset
+                   //the retrieved values.
+
+         * */
+        public int[][] GetIntensityBlock(int frameNum, int frameType, int startScan, int endScan, int startBin, int endBin)
+        {
+
+            bool proceed = false;
+            int[][] intensities = null; 
+            FrameParameters fp = null;
+
+            if ( frameNum > 0 ){
+                fp = GetFrameParameters(frameNum);
+            }
+
+            //check input parameters
+            if ( fp != null && (endScan - startScan) > 0 && (endBin - startBin) > 0 && fp.Scans > 0)
+            {
+
+                if (endBin > mGlobalParameters.Bins)
+                {
+                    endBin = mGlobalParameters.Bins;
+                }
+
+                if (startBin < 0)
+                {
+                    startBin = 0;
+                }
+
+                proceed = true;
+            }
+
+            if (proceed)
+            {
+
+                //initialize the intensities return two-D array
+                intensities = new int[endScan - startScan + 1][];
+
+                //now setup queries to retrieve data
+                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum1", fp.FrameNum));
+                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum2", fp.FrameNum));
+                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum1", startScan));
+                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum2", endScan));
+                mSqliteDataReader = dbcmd_PreparedStmt.ExecuteReader();
+
+                byte[] spectra;
+                byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
+
+                while (mSqliteDataReader.Read())
+                {
+                    int ibin = 0;
+                    int out_len;
+
+                    spectra = (byte[])(mSqliteDataReader["Intensities"]);
+                    int scanNum = Convert.ToInt32(mSqliteDataReader["ScanNum"]);
+
+
+                    //get frame number so that we can get the frame calibration parameters
+                    if (spectra.Length > 0)
+                    {
+                        intensities[scanNum - startScan] = new int[endBin - startBin+1];
+                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+                        int numBins = out_len / DATASIZE;
+                        int decoded_intensityValue;
+                        for (int i = 0; i < numBins; i++)
+                        {
+                            decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                            if (decoded_intensityValue < 0)
+                            {
+                                ibin += -decoded_intensityValue;
+                            }
+                            else
+                            {
+                                if (startBin <= ibin && ibin <= endBin)
+                                {
+                                    intensities[scanNum - startScan][i] = decoded_intensityValue;
+                                }
+                                ibin++;
+                            }
+                        }
+                    }
+                }
+                mSqliteDataReader.Close();
+
+            }
+
+            return intensities;
+        }
+
+
+
 		//This method has the implementation since all UIMF files are currently created with 4 byte intensity values.
 		public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
 		{
@@ -394,7 +492,7 @@ namespace UIMFLibrary
 				if (spectra.Length > 0) 
 				{
 
-                    frameNumber = Convert.ToInt32(reader["FrameNum"]);
+                    frameNumber = Convert.ToInt32(mSqliteDataReader["FrameNum"]);
 					FrameParameters fp = GetFrameParameters(frameNumber);
 
 					out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
