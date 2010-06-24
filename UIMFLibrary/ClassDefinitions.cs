@@ -9,7 +9,7 @@ using System;
 using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
-using Mono.Data.SqliteClient;
+using System.Data.SQLite;
 
 namespace UIMFLibrary
 {

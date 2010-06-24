@@ -3,3 +3,8 @@ UIMFLibrary Revision History
 Version 1.0; June 23, 2010
 	- Added Revision History
 	- Updated to NUnit tests
+
+Version 1.1; June 24, 2010
+	- Updated to System.Data.SQLite
+	- Created lib in project folders to store dlls (note: IMCOMPS.dll doesn't play nice with this method)
+	- Reformated connection strings for new dll.

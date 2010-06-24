@@ -8,19 +8,17 @@ using System.Data;
 using System.IO;
 using System.Collections;
 using System.Runtime.InteropServices;
-using Mono.Data.SqliteClient;
-
+using System.Data.SQLite;
 
 namespace UIMFLibrary
 {
 	public class DataReader
 	{
-
 		private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
-		public SqliteConnection dbcon_UIMF;
-		public SqliteDataReader mSqliteDataReader;
-		public SqliteCommand dbcmd_PreparedStmt;
-		public SqliteCommand dbcmd_GetCountPerSpec;
+		public SQLiteConnection dbcon_UIMF;
+		public SQLiteDataReader mSQLiteDataReader;
+		public SQLiteCommand dbcmd_PreparedStmt;
+		public SQLiteCommand dbcmd_GetCountPerSpec;
 		private GlobalParameters mGlobalParameters = null;
 		//This .NET version doesn't support generics, however this hash has key as frame number and value as frame parameter object
 		//<int, FrameParameters>
@@ -33,8 +31,8 @@ namespace UIMFLibrary
 			bool success = false;
 			if (File.Exists(FileName))
 			{
-				string connectionString = "URI = file:" + FileName + ", Version=3";
-				dbcon_UIMF = new SqliteConnection(connectionString);
+                string connectionString = "Data Source = " + FileName + "; Version=3; DateTimeFormat=Ticks;";
+				dbcon_UIMF = new SQLiteConnection(connectionString);
 				dbcmd_GetCountPerSpec = dbcon_UIMF.CreateCommand();
 				dbcmd_GetCountPerSpec.CommandText = "SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum and ScanNum = :ScanNum";
 				dbcmd_GetCountPerSpec.Prepare();
@@ -132,11 +130,11 @@ namespace UIMFLibrary
 
 						//ARS: Don't know why this is a member variable, should be a local variable
 						//also they need to be named appropriately and don't need any UIMF extension to it
-						SqliteCommand dbCmd = dbcon_UIMF.CreateCommand();
+						SQLiteCommand dbCmd = dbcon_UIMF.CreateCommand();
 						dbCmd.CommandText = "SELECT * FROM Global_Parameters";
 						
 						//ARS: Don't know why this is a member variable, should be a local variable 
-						SqliteDataReader reader = dbCmd.ExecuteReader();
+						SQLiteDataReader reader = dbCmd.ExecuteReader();
 						while (reader.Read())
 						{
 							try
@@ -199,9 +197,9 @@ namespace UIMFLibrary
 				//else we have to retrieve it and store it in the cache for future reference
 					if ( dbcon_UIMF != null )
 					{
-						SqliteCommand dbCmd = dbcon_UIMF.CreateCommand();
+						SQLiteCommand dbCmd = dbcon_UIMF.CreateCommand();
 						dbCmd.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = " + frameNumber;
-						SqliteDataReader reader  = dbCmd.ExecuteReader();
+						SQLiteDataReader reader  = dbCmd.ExecuteReader();
 						while (reader.Read())
 						{
 							try
@@ -283,13 +281,13 @@ namespace UIMFLibrary
 				throw new Exception("frameNum should be a positive integer");
 			}
 			//Testing a prepared statement
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter(":FrameNum1", frameNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter(":FrameNum2", frameNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter(":ScanNum1", scanNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter(":ScanNum2", scanNum));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":FrameNum1", frameNum));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":FrameNum2", frameNum));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":ScanNum1", scanNum));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":ScanNum2", scanNum));
 
-			//SqliteDataReader reader = dbcmd_UIMF.ExecuteReader();
-			SqliteDataReader reader = dbcmd_PreparedStmt.ExecuteReader();
+			//SQLiteDataReader reader = dbcmd_UIMF.ExecuteReader();
+			SQLiteDataReader reader = dbcmd_PreparedStmt.ExecuteReader();
 
 			int nNonZero = 0;
 			
@@ -340,13 +338,13 @@ namespace UIMFLibrary
 		public int GetCountPerSpectrum(int frame_num, int scan_num)
 		{
 			int countPerSpectrum = 0;
-			dbcmd_GetCountPerSpec.Parameters.Add(new SqliteParameter(":FrameNum", frame_num));
-			dbcmd_GetCountPerSpec.Parameters.Add(new SqliteParameter(":ScanNum", scan_num));
+			dbcmd_GetCountPerSpec.Parameters.Add(new SQLiteParameter(":FrameNum", frame_num));
+			dbcmd_GetCountPerSpec.Parameters.Add(new SQLiteParameter(":ScanNum", scan_num));
 
 			try
 			{
 				
-				SqliteDataReader reader = dbcmd_GetCountPerSpec.ExecuteReader();
+				SQLiteDataReader reader = dbcmd_GetCountPerSpec.ExecuteReader();
 				while (reader.Read())
 				{							 
 					countPerSpectrum = Convert.ToInt32(reader[0]);														 
@@ -410,22 +408,22 @@ namespace UIMFLibrary
                 intensities = new int[endScan - startScan + 1][];
 
                 //now setup queries to retrieve data
-                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum1", fp.FrameNum));
-                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum2", fp.FrameNum));
-                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum1", startScan));
-                dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum2", endScan));
-                mSqliteDataReader = dbcmd_PreparedStmt.ExecuteReader();
+                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum1", fp.FrameNum));
+                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum2", fp.FrameNum));
+                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+                mSQLiteDataReader = dbcmd_PreparedStmt.ExecuteReader();
 
                 byte[] spectra;
                 byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
 
-                while (mSqliteDataReader.Read())
+                while (mSQLiteDataReader.Read())
                 {
                     int ibin = 0;
                     int out_len;
 
-                    spectra = (byte[])(mSqliteDataReader["Intensities"]);
-                    int scanNum = Convert.ToInt32(mSqliteDataReader["ScanNum"]);
+                    spectra = (byte[])(mSQLiteDataReader["Intensities"]);
+                    int scanNum = Convert.ToInt32(mSQLiteDataReader["ScanNum"]);
 
 
                     //get frame number so that we can get the frame calibration parameters
@@ -453,7 +451,7 @@ namespace UIMFLibrary
                         }
                     }
                 }
-                mSqliteDataReader.Close();
+                mSQLiteDataReader.Close();
 
             }
 
@@ -471,28 +469,28 @@ namespace UIMFLibrary
 				
 			}
 			
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum1", startFrame));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("FrameNum2", endFrame));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum1", startScan));
-			dbcmd_PreparedStmt.Parameters.Add(new SqliteParameter("ScanNum2", endScan));
-			mSqliteDataReader = dbcmd_PreparedStmt.ExecuteReader();
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum1", startFrame));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum2", endFrame));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+			mSQLiteDataReader = dbcmd_PreparedStmt.ExecuteReader();
 			byte[] spectra;
 			byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
 
 			int nonZeroCount = 0;
 			int frameNumber = startFrame;
-			while (mSqliteDataReader.Read())
+			while (mSQLiteDataReader.Read())
 			{
 				int ibin = 0;
 				int max_bin_iscan = 0;
 				int out_len;
-				spectra = (byte[])(mSqliteDataReader["Intensities"]);
+				spectra = (byte[])(mSQLiteDataReader["Intensities"]);
 
 				//get frame number so that we can get the frame calibration parameters
 				if (spectra.Length > 0) 
 				{
 
-                    frameNumber = Convert.ToInt32(mSqliteDataReader["FrameNum"]);
+                    frameNumber = Convert.ToInt32(mSQLiteDataReader["FrameNum"]);
 					FrameParameters fp = GetFrameParameters(frameNumber);
 
 					out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
@@ -533,7 +531,7 @@ namespace UIMFLibrary
 			}
 
 			dbcmd_PreparedStmt.Parameters.Clear();
-			mSqliteDataReader.Close();
+			mSQLiteDataReader.Close();
 			if (nonZeroCount > 0) nonZeroCount++;
 			return nonZeroCount;
 		}
@@ -823,9 +821,9 @@ namespace UIMFLibrary
 				throw new Exception("frameNum should be a positive integer");
 			}
 
-			SqliteCommand dbCmd = dbcon_UIMF.CreateCommand();
+			SQLiteCommand dbCmd = dbcon_UIMF.CreateCommand();
 			dbCmd.CommandText = "SELECT TIC FROM Frame_Scans WHERE FrameNum = " + frameNum + " AND ScanNum = " + scanNum;
-			SqliteDataReader reader = dbCmd.ExecuteReader();
+			SQLiteDataReader reader = dbCmd.ExecuteReader();
 		
 			if (reader.Read())
 			{
@@ -874,19 +872,19 @@ namespace UIMFLibrary
 			}
 			
 			FrameParameters fp = GetFrameParameters(frameNum);
-			SqliteCommand dbCmd = dbcon_UIMF.CreateCommand();
+			SQLiteCommand dbCmd = dbcon_UIMF.CreateCommand();
 			dbCmd.CommandText = "SELECT Intensities FROM Frame_Scans WHERE FrameNum = " + frameNum + " AND ScanNum = " + scanNum;
-			mSqliteDataReader = dbCmd.ExecuteReader();
+			mSQLiteDataReader = dbCmd.ExecuteReader();
 			int nNonZero = 0;
 			int expectedCount = GetCountPerSpectrum(frameNum, scanNum);
 			byte[] SpectraRecord;
 			byte[] decomp_SpectraRecord = new byte[expectedCount * DATASIZE*5];//this is the maximum possible size, again we should
 						
 			int ibin = 0;
-			while (mSqliteDataReader.Read())
+			while (mSQLiteDataReader.Read())
 			{
 				int out_len;
-				SpectraRecord = (byte[])(mSqliteDataReader["Intensities"]);
+				SpectraRecord = (byte[])(mSQLiteDataReader["Intensities"]);
 				if (SpectraRecord.Length > 0) 
 				{
 					out_len = IMSCOMP_wrapper.decompress_lzf(ref SpectraRecord, SpectraRecord.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
@@ -914,7 +912,7 @@ namespace UIMFLibrary
 				}
 			}
 
-			Dispose(dbCmd, mSqliteDataReader);
+			Dispose(dbCmd, mSQLiteDataReader);
 			return nNonZero;
 		}
 
@@ -1007,22 +1005,22 @@ namespace UIMFLibrary
 			}
 
 			// Construct the SQL
-			string Sql;
-			Sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + FieldName + ") AS Value " +
+			string SQL;
+			SQL = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + FieldName + ") AS Value " +
 				" FROM Frame_Scans" +
 				" WHERE FrameNum >= " + startFrame + " AND FrameNum <= " + endFrame;
 
 			if (!(startScan == 0 && endScan == 0)) 
 			{
 				// Filter by scan number
-				Sql += " AND Frame_Scans.ScanNum >= " + startScan + " AND Frame_Scans.ScanNum <= " + endScan;
+				SQL += " AND Frame_Scans.ScanNum >= " + startScan + " AND Frame_Scans.ScanNum <= " + endScan;
 			}
 
-			Sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
+			SQL += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
-			SqliteCommand dbcmd_UIMF = dbcon_UIMF.CreateCommand();
-			dbcmd_UIMF.CommandText = Sql;
-			SqliteDataReader reader = dbcmd_UIMF.ExecuteReader();
+			SQLiteCommand dbcmd_UIMF = dbcon_UIMF.CreateCommand();
+			dbcmd_UIMF.CommandText = SQL;
+			SQLiteDataReader reader = dbcmd_UIMF.ExecuteReader();
 
 			int ncount = 0;
 			while (reader.Read()) 
@@ -1035,7 +1033,7 @@ namespace UIMFLibrary
 		}
 
 		
-		private void Dispose(SqliteCommand cmd, SqliteDataReader reader)
+		private void Dispose(SQLiteCommand cmd, SQLiteDataReader reader)
 		{
 			cmd.Dispose();
 			reader.Dispose();

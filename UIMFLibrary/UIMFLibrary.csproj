@@ -81,6 +81,10 @@
     <Reference Include="System.Data">
       <Name>System.Data</Name>
     </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.65.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>
@@ -98,51 +102,17 @@
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SqliteClient\Sqlite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteCommand.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteConnection.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteDataAdapter.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteDataReader.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteExceptions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteParameter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteParameterCollection.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteRowUpdatedEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteRowUpdatedEventHandler.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteRowUpdatingEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteRowUpdatingEventHandler.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SqliteClient\SqliteTransaction.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UIMFDataReader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UIMFDataWriter.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="IMSCOMP.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -10,22 +10,22 @@ using System;
 using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
-using Mono.Data.SqliteClient;
+using System.Data.SQLite;
 
 namespace UIMFLibrary
 {
 	public class DataWriter
 	{
-		private SqliteConnection m_dbConn;
-		private SqliteCommand m_dbCmdUIMF;
-		private SqliteCommand m_dbCmdPrepareInsertScan;
-		private SqliteCommand m_dbCmdPrepareInsertFrame;
+		private SQLiteConnection m_dbConn;
+		private SQLiteCommand m_dbCmdUIMF;
+		private SQLiteCommand m_dbCmdPrepareInsertScan;
+		private SQLiteCommand m_dbCmdPrepareInsertFrame;
 		private GlobalParameters m_GlobalParameters;
 
 		public void OpenUIMF(string FileName)
 		{
-			string connectionString = "URI = file:" + FileName + ", Version=3";
-			m_dbConn = new SqliteConnection(connectionString);
+            string connectionString = "Data Source = " + FileName + "; Version=3";
+			m_dbConn = new SQLiteConnection(connectionString);
 			try
 			{
 				m_dbConn.Open();
@@ -192,21 +192,21 @@ namespace UIMFLibrary
 				"VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
 				":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile);";
             
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":DateStarted", header.DateStarted));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":NumFrames", header.NumFrames));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":TimeOffset", header.TimeOffset));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":BinWidth", header.BinWidth));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Bins", header.Bins));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":TOFCorrectionTime", header.TOFCorrectionTime));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":FrameDataBlobVersion", header.FrameDataBlobVersion));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":ScanDataBlobVersion", header.ScanDataBlobVersion));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":TOFIntensityType", header.TOFIntensityType));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":DatasetType", header.DatasetType));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Prescan_TOFPulses", header.Prescan_TOFPulses));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Prescan_Accumulations", header.Prescan_Accumulations));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Prescan_Continuous", header.Prescan_Continuous));
-			m_dbCmdUIMF.Parameters.Add(new SqliteParameter(":Prescan_Profile", header.Prescan_Profile));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":TimeOffset", header.TimeOffset));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":BinWidth", header.BinWidth));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Bins", header.Bins));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", header.TOFCorrectionTime));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", header.FrameDataBlobVersion));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", header.ScanDataBlobVersion));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":TOFIntensityType", header.TOFIntensityType));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":DatasetType", header.DatasetType));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", header.Prescan_TOFPulses));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", header.Prescan_Accumulations));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", header.Prescan_Continuous));
+			m_dbCmdUIMF.Parameters.Add(new SQLiteParameter(":Prescan_Profile", header.Prescan_Profile));
             
 			m_dbCmdUIMF.ExecuteNonQuery();
 			m_dbCmdUIMF.Parameters.Clear();
@@ -222,47 +222,47 @@ namespace UIMFLibrary
 				PrepareInsertFrame();
 			}
 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":FrameNum", fp.FrameNum));  // 0, Primary Key, Contains the frame number
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":StartTime", fp.StartTime)); // 1, Start time of frame
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":Duration", fp.Duration)); // 2, Duration of frame  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":Accumulations", fp.Accumulations)); // 3, Number of collected and summed acquisitions in a frame 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":FrameType", fp.FrameType)); // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":Scans", fp.Scans)); // 5, Number of TOF scans  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":IMFProfile", fp.IMFProfile)); 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":TOFLosses", fp.TOFLosses)); 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":AverageTOFLength", fp.AverageTOFLength)); // 6, Average time between TOF trigger pulses
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":CalibrationSlope", fp.CalibrationSlope)); // 7, Value of k0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":CalibrationIntercept", fp.CalibrationIntercept)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":a2", fp.a2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":b2", fp.b2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":c2", fp.c2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":d2", fp.d2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":e2", fp.e2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":f2", fp.f2)); // 8, Value of t0  
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":Temperature", fp.Temperature)); // 9, Ambient temperature
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltHVRack1", fp.voltHVRack1)); // 10, HVRack Voltage 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltHVRack2", fp.voltHVRack2)); // 11, HVRack Voltage 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltHVRack3", fp.voltHVRack3)); // 12, HVRack Voltage 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltHVRack4", fp.voltHVRack4)); // 13, HVRack Voltage 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltCapInlet", fp.voltCapInlet)); // 14, Capilary Inlet Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltEntranceIFTIn", fp.voltEntranceIFTIn)); // 15, IFT In Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltEntranceIFTOut", fp.voltEntranceIFTOut)); // 16, IFT Out Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltEntranceCondLmt", fp.voltEntranceCondLmt)); // 17, Cond Limit Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltTrapOut", fp.voltTrapOut)); // 18, Trap Out Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltTrapIn", fp.voltTrapIn)); // 19, Trap In Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltJetDist", fp.voltJetDist));              // 20, Jet Disruptor Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltQuad1", fp.voltQuad1));                // 21, Fragmentation Quadrupole Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltCond1", fp.voltCond1));                // 22, Fragmentation Conductance Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltQuad2", fp.voltQuad2));                // 23, Fragmentation Quadrupole Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltCond2", fp.voltCond2));                // 24, Fragmentation Conductance Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltIMSOut", fp.voltIMSOut));               // 25, IMS Out Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltExitIFTIn", fp.voltExitIFTIn));            // 26, IFT In Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltExitIFTOut", fp.voltExitIFTOut));           // 27, IFT Out Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":voltExitCondLmt", fp.voltExitCondLmt));          // 28, Cond Limit Voltage
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":PressureFront", fp.PressureFront)); // 29, Pressure at front of Drift Tube 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":PressureBack", fp.PressureBack)); // 30, Pressure at back of Drift Tube 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":MPBitOrder", fp.MPBitOrder)); // 31, Determines original size of bit sequence 
-			m_dbCmdPrepareInsertFrame.Parameters.Add(new SqliteParameter(":FragmentationProfile", blob_FragmentationSequence(fp.FragmentationProfile)));
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", fp.FrameNum));  // 0, Primary Key, Contains the frame number
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", fp.StartTime)); // 1, Start time of frame
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", fp.Duration)); // 2, Duration of frame  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Accumulations", fp.Accumulations)); // 3, Number of collected and summed acquisitions in a frame 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", fp.FrameType)); // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", fp.Scans)); // 5, Number of TOF scans  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", fp.IMFProfile)); 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", fp.TOFLosses)); 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":AverageTOFLength", fp.AverageTOFLength)); // 6, Average time between TOF trigger pulses
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationSlope", fp.CalibrationSlope)); // 7, Value of k0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationIntercept", fp.CalibrationIntercept)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", fp.a2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", fp.b2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", fp.c2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", fp.d2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", fp.e2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", fp.f2)); // 8, Value of t0  
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", fp.Temperature)); // 9, Ambient temperature
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", fp.voltHVRack1)); // 10, HVRack Voltage 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", fp.voltHVRack2)); // 11, HVRack Voltage 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", fp.voltHVRack3)); // 12, HVRack Voltage 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", fp.voltHVRack4)); // 13, HVRack Voltage 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", fp.voltCapInlet)); // 14, Capilary Inlet Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", fp.voltEntranceIFTIn)); // 15, IFT In Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", fp.voltEntranceIFTOut)); // 16, IFT Out Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", fp.voltEntranceCondLmt)); // 17, Cond Limit Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", fp.voltTrapOut)); // 18, Trap Out Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", fp.voltTrapIn)); // 19, Trap In Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", fp.voltJetDist));              // 20, Jet Disruptor Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", fp.voltQuad1));                // 21, Fragmentation Quadrupole Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", fp.voltCond1));                // 22, Fragmentation Conductance Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", fp.voltQuad2));                // 23, Fragmentation Quadrupole Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", fp.voltCond2));                // 24, Fragmentation Conductance Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", fp.voltIMSOut));               // 25, IMS Out Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", fp.voltExitIFTIn));            // 26, IFT In Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", fp.voltExitIFTOut));           // 27, IFT Out Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", fp.voltExitCondLmt));          // 28, Cond Limit Voltage
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", fp.PressureFront)); // 29, Pressure at front of Drift Tube 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", fp.PressureBack)); // 30, Pressure at back of Drift Tube 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", fp.MPBitOrder)); // 31, Determines original size of bit sequence 
+			m_dbCmdPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", blob_FragmentationSequence(fp.FragmentationProfile)));
             
 			m_dbCmdPrepareInsertFrame.ExecuteNonQuery();
 			m_dbCmdPrepareInsertFrame.Parameters.Clear();
@@ -750,13 +750,13 @@ namespace UIMFLibrary
 
 		private void insertScanAddParameters(int frameNum, int scanNum, int nonZeroCount, int bpi, double bpi_mz, int tic_scan, byte[]SpectraRecord)
 		{
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("FrameNum", frameNum.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("ScanNum", scanNum.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("NonZeroCount", nonZeroCount.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("BPI", bpi.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("BPI_MZ", bpi_mz.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("TIC", tic_scan.ToString()));
-			m_dbCmdPrepareInsertScan.Parameters.Add(new SqliteParameter("Intensities", SpectraRecord));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNum.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpi_mz.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic_scan.ToString()));
+			m_dbCmdPrepareInsertScan.Parameters.Add(new SQLiteParameter("Intensities", SpectraRecord));
 		}
 
 
