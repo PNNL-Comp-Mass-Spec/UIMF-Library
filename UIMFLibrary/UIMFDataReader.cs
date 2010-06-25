@@ -406,6 +406,10 @@ namespace UIMFLibrary
 
                 //initialize the intensities return two-D array
                 intensities = new int[endScan - startScan + 1][];
+				for (int i = 0; i < endScan - startScan + 1; i++)
+				{
+					intensities[i] = new int[endBin - startBin + 1];
+				}
 
                 //now setup queries to retrieve data
                 dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum1", fp.FrameNum));
@@ -425,8 +429,6 @@ namespace UIMFLibrary
                     spectra = (byte[])(mSQLiteDataReader["Intensities"]);
                     int scanNum = Convert.ToInt32(mSQLiteDataReader["ScanNum"]);
 
-
-                    intensities[scanNum - startScan] = new int[endBin - startBin + 1];
                     //get frame number so that we can get the frame calibration parameters
                     if (spectra.Length > 0)
                     {
@@ -444,7 +446,7 @@ namespace UIMFLibrary
                             {
                                 if (startBin <= ibin && ibin <= endBin)
                                 {
-                                    intensities[scanNum - startScan][i] = decoded_intensityValue;
+                                    intensities[scanNum - startScan][ibin - startBin] = decoded_intensityValue;
                                 }
                                 ibin++;
                             }
