@@ -426,10 +426,10 @@ namespace UIMFLibrary
                     int scanNum = Convert.ToInt32(mSQLiteDataReader["ScanNum"]);
 
 
+                    intensities[scanNum - startScan] = new int[endBin - startBin + 1];
                     //get frame number so that we can get the frame calibration parameters
                     if (spectra.Length > 0)
                     {
-                        intensities[scanNum - startScan] = new int[endBin - startBin+1];
                         out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
                         int numBins = out_len / DATASIZE;
                         int decoded_intensityValue;
