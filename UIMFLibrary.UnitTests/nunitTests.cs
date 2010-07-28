@@ -54,8 +54,8 @@ public class TestClass
         int frameDim = 4;
 
         // set sliding window bounds for frames
-        int loopStartFrames = 300;
-        int loopStopFrames = 700 - frameDim;
+        int loopStartFrames = 1;
+        int loopStopFrames = 300 - frameDim;
         // set sliding window bounds for Scans
         int loopStartScans = 0;
         int loopStopScans = 500 - scanDim;
@@ -83,7 +83,7 @@ public class TestClass
                     endFrame = i + frameDim;
                     startScan = j;
                     endScan = j + scanDim;
-                    //dr.SumScansCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
+                    dr.SumScansCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
                 }
             }
 
@@ -97,7 +97,7 @@ public class TestClass
         stopWatch.Reset();
         
         
-        double[] mzsNormal = null;
+        /*double[] mzsNormal = null;
         int[] intensitiesNormal = null;
 
         if (dr.OpenUIMF(FileName))
@@ -124,14 +124,14 @@ public class TestClass
             timeNormal = ts.TotalSeconds;
             Console.WriteLine("TimeNormal: " + timeNormal);
         }
-        dr.CloseUIMF();
+        dr.CloseUIMF();*/
 
         // Assert that both arrays are the same
-        Assert.AreEqual(mzsNormal, mzsCache);
-        Assert.AreEqual(intensitiesNormal, intensitiesCache);
+        //Assert.AreEqual(mzsNormal, mzsCache);
+        //Assert.AreEqual(intensitiesNormal, intensitiesCache);
         
         // Assert that the normal method is slower
-        Assert.Greater(timeNormal, timeCached);
+        //Assert.Greater(timeNormal, timeCached);
     }
 
     [Test]
@@ -157,8 +157,7 @@ public class TestClass
 
         dr.CloseUIMF();
     }
-
-    
+ 
     private int countNonZeroValues(int[] array)
     {
         int count = 0;

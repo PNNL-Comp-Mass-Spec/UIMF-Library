@@ -7,6 +7,7 @@ using System;
 using System.Data;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Data.SQLite;
 
@@ -16,15 +17,31 @@ namespace UIMFLibrary
 	{
 		private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
 		public SQLiteConnection dbcon_UIMF;
+        // AARON: SQLiteDataReaders might be better managable than currently implement.
 		public SQLiteDataReader mSQLiteDataReader;
-		public SQLiteCommand dbcmd_PreparedStmt;
-		public SQLiteCommand dbcmd_GetCountPerSpec;
+
+        // v1.2 prepared statements
+        public SQLiteCommand dbcmd_SumScans;
+        public SQLiteCommand dbcmd_GetSpectrum;
+        public SQLiteCommand dbcmd_GetCountPerSpec;
+        public SQLiteCommand dbcmd_GetCountPerFrame;
+        public SQLiteCommand dbcmd_SumScansCached;
+        public SQLiteCommand dbcmd_GetFrameParameters;
+
 		private GlobalParameters mGlobalParameters = null;
-		//This .NET version doesn't support generics, however this hash has key as frame number and value as frame parameter object
-		//<int, FrameParameters>
-		private Hashtable mFrameParametersCache = new Hashtable();
+        // AARON: trying to improve performance here by substituting generic
+        //This .NET version doesn't support generics, however this hash has key as frame number and value as frame parameter object
+        //<int, FrameParameters>
+        //private Hashtable mFrameParametersCache = new Hashtable();  
+        private Dictionary<int, FrameParameters> mFrameParametersCache = new Dictionary<int, FrameParameters>();
 		private static int mErrMessageCounter = 0;
 
+        // v1.2 Caching
+        private int cacheFrameStart = -1;
+        private int cacheFrameEnd;
+        List<List<int[]>> binsCache;
+        List<List<int[]>> recordsCache;
+        private double[,] powersOfT;
 
 		public bool OpenUIMF(string FileName)
 		{
@@ -33,9 +50,6 @@ namespace UIMFLibrary
 			{
                 string connectionString = "Data Source = " + FileName + "; Version=3; DateTimeFormat=Ticks;";
 				dbcon_UIMF = new SQLiteConnection(connectionString);
-				dbcmd_GetCountPerSpec = dbcon_UIMF.CreateCommand();
-				dbcmd_GetCountPerSpec.CommandText = "SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum and ScanNum = :ScanNum";
-				dbcmd_GetCountPerSpec.Prepare();
 
 				try
 				{
@@ -55,23 +69,55 @@ namespace UIMFLibrary
 				Console.WriteLine(FileName.ToString() + " does not exists");
 			}
 
-			if (success)
-			{
-				loadPreparedStatements();
-			}
+            if (success)
+            {
+                LoadPrepStmts();
+            }
+
+            // Initialize caching structures
+            binsCache = new List<List<int[]>>();
+            recordsCache = new List<List<int[]>>();
+            powersOfT = new double[mGlobalParameters.Bins, 6];
 
 			return success;
 
 		}
 
+        private void LoadPrepStmts()
+        {
+            dbcmd_SumScans = dbcon_UIMF.CreateCommand();
+            dbcmd_SumScans.CommandText = "SELECT ScanNum, FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
+            dbcmd_SumScans.Prepare();
 
-        private void loadPreparedStatements ()
-		{
-				dbcmd_PreparedStmt = dbcon_UIMF.CreateCommand();
-				dbcmd_PreparedStmt.CommandText = "SELECT ScanNum,FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
-				dbcmd_PreparedStmt.Prepare();
+            dbcmd_SumScansCached = dbcon_UIMF.CreateCommand();
+            dbcmd_SumScansCached.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = :FrameNum ORDER BY ScanNum ASC";
+            dbcmd_SumScansCached.Prepare();
 
-		}
+            dbcmd_GetSpectrum = dbcon_UIMF.CreateCommand();
+            dbcmd_GetSpectrum.CommandText = "SELECT Intensities FROM Frame_Scans WHERE FrameNum = :FrameNum AND ScanNum = :ScanNum";
+            dbcmd_GetSpectrum.Prepare();
+
+            dbcmd_GetCountPerSpec = dbcon_UIMF.CreateCommand();
+            dbcmd_GetCountPerSpec.CommandText = "SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum and ScanNum = :ScanNum";
+            dbcmd_GetCountPerSpec.Prepare();
+
+            dbcmd_GetCountPerFrame = dbcon_UIMF.CreateCommand();
+            dbcmd_GetCountPerFrame.CommandText = "SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum";
+            dbcmd_GetCountPerFrame.Prepare();
+
+            dbcmd_GetFrameParameters = dbcon_UIMF.CreateCommand();
+            dbcmd_GetFrameParameters.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = :FrameNum";
+            dbcmd_GetFrameParameters.Prepare();
+        }
+
+        private void UnloadPrepStmts()
+        {
+            dbcmd_SumScans.Dispose();
+            dbcmd_GetCountPerSpec.Dispose();
+            dbcmd_GetCountPerFrame.Dispose();
+            dbcmd_GetFrameParameters.Dispose();
+            dbcmd_SumScansCached.Dispose();
+        }
 
 		/**
 		 * Overloaded method to close the connection to the UIMF file.
@@ -81,6 +127,8 @@ namespace UIMFLibrary
 
 		public bool CloseUIMF()
 		{
+            UnloadPrepStmts();
+
 			bool success = false;
 			try
 			{
@@ -104,7 +152,6 @@ namespace UIMFLibrary
 			return CloseUIMF();
 		}
 
-
 		//We want to make sure that this method is only called once. On first call, 
 		//we have to populate the global parameters object/
 		//Also this should return a strongly typed object as opposed to a generic one
@@ -112,7 +159,7 @@ namespace UIMFLibrary
 		public GlobalParameters GetGlobalParameters()       
 		{
 			//this variable will disappear in a bit
-			bool success = true;
+			//bool success = true;
 			if (mGlobalParameters == null)
 			{
 				//Retrieve it from the database
@@ -121,7 +168,7 @@ namespace UIMFLibrary
 					//this means that yo'uve called this method without opening the UIMF file.
 					//should throw an exception saying UIMF file not opened here
 					//for now, let's just set an error flag
-						success = false;
+						//success = false;
 						//the custom exception class has to be defined as yet
 				}	
 				else
@@ -190,16 +237,16 @@ namespace UIMFLibrary
 			if ( mFrameParametersCache.ContainsKey(frameNumber) )
 			{
 				//frame parameters object is cached, retrieve it and return
-				fp = (FrameParameters) mFrameParametersCache[frameNumber];
+				//fp = (FrameParameters) mFrameParametersCache[frameNumber];
+                fp = mFrameParametersCache[frameNumber];
 			}
 			else
 			{
 				//else we have to retrieve it and store it in the cache for future reference
 					if ( dbcon_UIMF != null )
 					{
-						SQLiteCommand dbCmd = dbcon_UIMF.CreateCommand();
-						dbCmd.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = " + frameNumber;
-						SQLiteDataReader reader  = dbCmd.ExecuteReader();
+                        dbcmd_GetFrameParameters.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
+                        SQLiteDataReader reader = dbcmd_GetFrameParameters.ExecuteReader();
 						while (reader.Read())
 						{
 							try
@@ -265,7 +312,7 @@ namespace UIMFLibrary
 
 						//store it in the cache for future
 						mFrameParametersCache.Add(frameNumber, fp);
-						dbCmd.Dispose();
+                        dbcmd_GetFrameParameters.Parameters.Clear();
 						reader.Close();
 					}//end of if loop
 			}
@@ -280,14 +327,12 @@ namespace UIMFLibrary
 			{
 				throw new Exception("frameNum should be a positive integer");
 			}
-			//Testing a prepared statement
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":FrameNum1", frameNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":FrameNum2", frameNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":ScanNum1", scanNum));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter(":ScanNum2", scanNum));
 
-			//SQLiteDataReader reader = dbcmd_UIMF.ExecuteReader();
-			SQLiteDataReader reader = dbcmd_PreparedStmt.ExecuteReader();
+			//Testing a prepared statement
+            dbcmd_GetSpectrum.Parameters.Add(new SQLiteParameter(":FrameNum", frameNum));
+            dbcmd_GetSpectrum.Parameters.Add(new SQLiteParameter(":ScanNum", scanNum));
+
+            SQLiteDataReader reader = dbcmd_GetSpectrum.ExecuteReader();
 
 			int nNonZero = 0;
 			
@@ -328,12 +373,35 @@ namespace UIMFLibrary
 				}
 			}
 
-			dbcmd_PreparedStmt.Parameters.Clear();
+            dbcmd_GetSpectrum.Parameters.Clear();
 			reader.Close();
 
 			return nNonZero;
 		}
 
+        public int GetCountPerFrame(int frameNum)
+        {
+            int countPerFrame = 0;
+            dbcmd_GetCountPerFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameNum));
+
+            try
+            {
+                SQLiteDataReader reader = dbcmd_GetCountPerSpec.ExecuteReader();
+                while (reader.Read())
+                {
+                    countPerFrame = Convert.ToInt32(reader[0]);
+                }
+                dbcmd_GetCountPerFrame.Parameters.Clear();
+                reader.Dispose();
+                reader.Close();
+            }
+            catch
+            {
+                countPerFrame = 1;
+            }
+
+            return countPerFrame;
+        }
 
 		public int GetCountPerSpectrum(int frame_num, int scan_num)
 		{
@@ -360,8 +428,6 @@ namespace UIMFLibrary
 			
 			return countPerSpectrum;
 		}
-
-
 
         /**
          * @description:
@@ -411,12 +477,12 @@ namespace UIMFLibrary
 					intensities[i] = new int[endBin - startBin + 1];
 				}
 
-                //now setup queries to retrieve data
-                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum1", fp.FrameNum));
-                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum2", fp.FrameNum));
-                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
-                dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
-                mSQLiteDataReader = dbcmd_PreparedStmt.ExecuteReader();
+                //now setup queries to retrieve data (AARON: there is probably a better query method for this)
+                dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum1", fp.FrameNum));
+                dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum2", fp.FrameNum));
+                dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+                dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+                mSQLiteDataReader = dbcmd_SumScans.ExecuteReader();
 
                 byte[] spectra;
                 byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
@@ -460,10 +526,246 @@ namespace UIMFLibrary
             return intensities;
         }
 
+        // v1.2 caching methods
+        private void cacheSpectra(int startFrame, int endFrame)
+        {
+            //cached.Start();
 
+            // This means a cache has not been created yet
+            if (cacheFrameStart == -1)
+            {
+                binsCache.Clear();
+                recordsCache.Clear();
+                cacheFrameEnd = cacheFrameStart = startFrame;
+            }
 
-		//This method has the implementation since all UIMF files are currently created with 4 byte intensity values.
-		public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+            //removes.Start();
+            while (cacheFrameStart < startFrame)
+            {
+                // remove data from data structures
+                binsCache.RemoveAt(0);
+                recordsCache.RemoveAt(0);
+                cacheFrameStart++;
+            }
+            //removes.Stop();
+
+            byte[] spectra;
+            byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
+            int[] bins;
+            int[] records;
+
+            int prevScan, curScan;
+
+            while (cacheFrameEnd <= endFrame)
+            {
+                // setup prepared statement and execute
+                dbcmd_SumScansCached.Parameters.Add(new SQLiteParameter("FrameNum", cacheFrameEnd));
+                mSQLiteDataReader = dbcmd_SumScansCached.ExecuteReader();
+
+                //news.Start();
+                // create new lists to store bins and intensities
+                List<int[]> binScans = new List<int[]>();
+                List<int[]> recordScans = new List<int[]>();
+                //news.Stop();
+
+                prevScan = -1;
+
+                while (mSQLiteDataReader.Read())
+                {
+                    int ibin = 0;
+                    int out_len;
+                    spectra = (byte[])(mSQLiteDataReader["Intensities"]);
+                    curScan = (int)(mSQLiteDataReader["ScanNum"]);
+
+                    // add nulls for missing scans
+                    while (curScan != prevScan + 1)
+                    {
+                        binScans.Add(null);
+                        recordScans.Add(null);
+                        prevScan++;
+                    }
+
+                    if (spectra.Length > 0)
+                    {
+                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+                        int numBins = out_len / DATASIZE;
+                        int decoded_SpectraRecord;
+
+                        bins = new int[numBins];
+                        records = new int[numBins];
+
+                        for (int i = 0; i < numBins; i++)
+                        {
+                            decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                            if (decoded_SpectraRecord < 0)
+                            {
+                                ibin += -decoded_SpectraRecord;
+                            }
+                            else
+                            {
+                                bins[i] = ibin;
+                                records[i] = decoded_SpectraRecord;
+                                ibin++;
+                            }
+                        }
+
+                        binScans.Add(bins);
+                        recordScans.Add(records);
+                        prevScan++;
+                    }
+                }
+                // clean up
+                dbcmd_SumScansCached.Parameters.Clear();
+                mSQLiteDataReader.Close();
+
+                // add row of scans to cache
+                binsCache.Add(binScans);
+                recordsCache.Add(recordScans);
+                cacheFrameEnd++;
+            }
+
+            //cached.Stop();
+        }
+
+        // this method was implemented to help DeconTools
+        public int SumScansCached(ref double[] mzs, ref double[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan, double minMZ, double maxMZ)
+        {
+            int len = intensities.Length;
+            int[] temp = new int[len];
+            int nonZeroCount = SumScansCached(mzs, temp, frameType, startFrame, endFrame, startScan, endScan);
+            int zeros = 0;  
+
+            // determine if we need to check MZ range.
+            bool skip = false;
+            if (minMZ <= 0 && maxMZ >= 5000)
+            {
+                skip = true;
+            }
+
+            // for all intensities > 0 move them to the front of the array
+            for (int k = 0; k < len; k++)
+            {
+                if (temp[k] != 0 && (skip || (minMZ <= mzs[k] && maxMZ >= mzs[k])))
+                {
+                    mzs[k - zeros] = mzs[k];
+                    intensities[k - zeros] = (double)(temp[k]);
+                }
+                else
+                {
+                    zeros++;
+                }
+            }
+            // resize arrays cutting off the zeroes at the end.
+            Array.Resize(ref mzs, len - zeros);
+            Array.Resize(ref intensities, len - zeros);
+
+            return nonZeroCount;
+        }
+
+        public int SumScansCached(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+        {
+            if (startFrame == 0)
+            {
+                throw new Exception("StartFrame should be a positive integer");
+            }
+
+            // cache when necessary assuming cache is used in a sequential manner
+            if (cacheFrameEnd <= endFrame || cacheFrameStart < startFrame)
+            {
+                //cacheSpectra(201, 210);
+                cacheSpectra(startFrame, endFrame);
+            }
+
+            // used to offset the sliding window inside the cache
+            //int scanoffset = startScan;
+
+            // determine width and height of sliding window
+            int rowCnt = endFrame - startFrame + 1;
+            int colCnt = endScan - startScan + 1;
+
+            int[] bins;
+            int[] records;
+            int row = 0;
+            int col = 0;
+            int nonZeroCount = 0;
+
+            // loop for sliding window
+            while (row < rowCnt)
+            {
+                FrameParameters fp = GetFrameParameters(row + startFrame);
+
+                int ibin = 0;
+                int max_bin_iscan = 0;
+
+                // make sure it isn't a bad frame
+                if (binsCache[row].Count > 0)
+                {
+                    try
+                    {
+                        bins = binsCache[row][col + startScan];
+                        records = recordsCache[row][col + startScan];
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        // this means there is no more data for this row.
+                        col = 0;
+                        row++;
+                        continue;
+                    }
+
+                    if (bins != null)
+                    {
+                        int numBins = bins.Length;
+                        for (int i = 0; i < numBins; i++)
+                        {
+                            if (bins[i] > 0)
+                            {
+                                ibin = bins[i];
+
+                                intensities[ibin] += records[i];
+                                if (mzs[ibin] == 0.0D)
+                                {
+                                    if (powersOfT[ibin, 0] == 0.0D)
+                                    {
+                                        powersOfT[ibin, 0] = (double)ibin * mGlobalParameters.BinWidth / 1000;
+                                        double step = System.Math.Pow(powersOfT[ibin, 0], 2);
+                                        for (int j = 0; j < 5; j++)
+                                        {
+                                            powersOfT[ibin, j+1] = powersOfT[ibin, j] * step;
+                                        }
+                                    }
+                                    double resmasserr = fp.a2 * powersOfT[ibin, 0] + fp.b2 * powersOfT[ibin, 1] + fp.c2 * powersOfT[ibin, 2] + fp.d2 * powersOfT[ibin, 3] + fp.e2 * powersOfT[ibin, 4] + fp.f2 * powersOfT[ibin, 5];
+                                    mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(powersOfT[ibin, 0] - (double)mGlobalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
+                                    mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
+                                }
+                                if (max_bin_iscan < ibin) max_bin_iscan = ibin;
+                            }
+                        }
+                        if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
+                    }
+                }
+
+                // update indexes
+                col++;
+                if (col >= colCnt)
+                {
+                    col = 0;
+                    row++;
+                }
+            }
+            if (nonZeroCount > 0) nonZeroCount++;
+
+            return nonZeroCount;
+        }
+
+        // point the old SumScans methods to the cached version.
+        public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+        {
+            return SumScansCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
+        }
+
+		// This method has the implementation since all UIMF files are currently created with 4 byte intensity values.
+		/*public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
 		{
 			if (startFrame == 0) 
 			{
@@ -536,8 +838,9 @@ namespace UIMFLibrary
 			mSQLiteDataReader.Close();
 			if (nonZeroCount > 0) nonZeroCount++;
 			return nonZeroCount;
-		}
+		}*/
 
+        // AARON: There is a lot of room for improvement in these methods.
 		public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int scanNum)
 			{
 				int startScan = scanNum;
@@ -559,7 +862,8 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
 			return max_bin;
 		}
-		public int SumScans(double[] mzs, int[] intensities, int frameType, int frameNum)
+		
+        public int SumScans(double[] mzs, int[] intensities, int frameType, int frameNum)
 		{
 			int startFrame = frameNum;
 			int endFrame = frameNum;
@@ -574,7 +878,6 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
 			return max_bin;
 		}
-		
 		
 		public int SumScans(double[] mzs, double[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
 		{
@@ -594,7 +897,8 @@ namespace UIMFLibrary
 		{
 			return SumScans(mzs, intensities, frameType, startFrame, endFrame, scanNum, scanNum);
 		}
-		public int SumScans(double[] mzs, double[] intensities, int frameType, int startFrame, int endFrame)
+		
+        public int SumScans(double[] mzs, double[] intensities, int frameType, int startFrame, int endFrame)
 		{
 			int startScan = 0;
 			int endScan= 0;
@@ -614,7 +918,6 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, frameNum, frameNum);
 			return max_bin;
 		}
-
 		
 		public int SumScans(double[] mzs, float[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
 		{			
@@ -651,7 +954,8 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
 			return max_bin;
 		}
-		public int SumScans(double[] mzs, float[] intensities, int frameType, int frameNum)
+		
+        public int SumScans(double[] mzs, float[] intensities, int frameType, int frameNum)
 		{
 			int startScan = 0;
 			int endScan= 0;
@@ -662,7 +966,6 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, frameNum, frameNum, startScan, endScan);
 			return max_bin;
 		}
-		
 		
 		public int SumScans(double[] mzs, short[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
 		{
@@ -678,7 +981,8 @@ namespace UIMFLibrary
 
 			return maxBin;
 		}
-		public int SumScans(double[] mzs, short[] intensities, int frameType, int startFrame, int endFrame, int scanNum)
+		
+        public int SumScans(double[] mzs, short[] intensities, int frameType, int startFrame, int endFrame, int scanNum)
 		{
 			return SumScans(mzs, intensities, frameType, startFrame, endFrame, scanNum, scanNum);
 		}
@@ -696,7 +1000,8 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
 			return max_bin;
 		}
-		public int SumScans(double[] mzs, short[] intensities, int frameType, int frameNum)
+		
+        public int SumScans(double[] mzs, short[] intensities, int frameType, int frameNum)
 		{
 			int startFrame = frameNum;
 			int endFrame = frameNum;
@@ -709,7 +1014,6 @@ namespace UIMFLibrary
 			int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
 			return max_bin;
 		}
-
 
 		// This function extracts BPI from startFrame to endFrame and startScan to endScan
 		// and returns an array BPI[]
@@ -932,7 +1236,6 @@ namespace UIMFLibrary
 
 			return nNonZero;
 		}
-
 		
 		private double[] array_FragmentationSequence(byte[] blob)
 		{
@@ -985,6 +1288,7 @@ namespace UIMFLibrary
 			return Num_Bins;
 		}		
 		
+        // AARON: this has room for improvement, along with all the methods that use it.
 		protected void GetTICorBPI(double[] Data, int frameType, int startFrame, int endFrame, int startScan, int endScan, string FieldName) 
 		{
 			if (startFrame == 0) 
@@ -1033,7 +1337,6 @@ namespace UIMFLibrary
 			
 			Dispose(dbcmd_UIMF,reader);
 		}
-
 		
 		private void Dispose(SQLiteCommand cmd, SQLiteDataReader reader)
 		{
