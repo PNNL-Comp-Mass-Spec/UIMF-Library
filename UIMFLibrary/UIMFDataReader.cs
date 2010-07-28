@@ -102,7 +102,7 @@ namespace UIMFLibrary
             dbcmd_GetCountPerSpec.Prepare();
 
             dbcmd_GetCountPerFrame = dbcon_UIMF.CreateCommand();
-            dbcmd_GetCountPerFrame.CommandText = "SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum";
+            dbcmd_GetCountPerFrame.CommandText = "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum";
             dbcmd_GetCountPerFrame.Prepare();
 
             dbcmd_GetFrameParameters = dbcon_UIMF.CreateCommand();
@@ -386,7 +386,7 @@ namespace UIMFLibrary
 
             try
             {
-                SQLiteDataReader reader = dbcmd_GetCountPerSpec.ExecuteReader();
+                SQLiteDataReader reader = dbcmd_GetCountPerFrame.ExecuteReader();
                 while (reader.Read())
                 {
                     countPerFrame = Convert.ToInt32(reader[0]);

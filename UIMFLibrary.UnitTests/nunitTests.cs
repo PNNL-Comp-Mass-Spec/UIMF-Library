@@ -218,5 +218,32 @@ public class TestClass
 
     }
 
+    [Test]
+    public void testGetCountPerFrame()
+    {
+        string fileName = "c:\\HSer_0pt5_420_100_c4_75um_fr560_Cheetah_0000.uimf";
+        UIMFLibrary.DataReader reader = new DataReader();
+
+        if (reader.OpenUIMF(fileName))
+        {
+            int intFrameNumber = 3;
+            int intNonZeroPointsInFrame = 0;
+            FrameParameters fp = reader.GetFrameParameters(intFrameNumber);
+
+            for (int i = 0; i < fp.Scans; i++)
+            {
+                intNonZeroPointsInFrame += reader.GetCountPerSpectrum(intFrameNumber, i);
+            }
+
+            Console.WriteLine(intNonZeroPointsInFrame);
+
+            intNonZeroPointsInFrame = reader.GetCountPerFrame(intFrameNumber);
+
+            Console.WriteLine(intNonZeroPointsInFrame);
+
+            reader.CloseUIMF();
+        }
+    }
+
 }
 
