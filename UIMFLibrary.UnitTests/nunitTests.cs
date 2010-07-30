@@ -137,23 +137,23 @@ public class TestClass
     [Test]
     public void getScan()
     {
-        string FileName = "c:\\QC_Shew_60min_c1_500_100_10ms_fr700_Cougar_0001.uimf";
+        string FileName = "c:\\QC_Shew_540fr_600scans_01_0000.UIMF";
         UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
 
-        double[] mzsCache = new double[98000];
-        int[] intensitiesCache = new int[98000];
-        double[] mzsNormal = new double[98000];
-        int[] intensitiesNormal = new int[98000];
+        //double[] mzsCache = new double[98000];
+        //int[] intensitiesCache = new int[98000];
+        double[] mzsNormal = new double[400000];
+        int[] intensitiesNormal = new int[400000];
 
         if (dr.OpenUIMF(FileName))
         {
             //dr.GetSpectrum(6, 322, intensitiesNormal, mzsNormal);
             //Console.WriteLine(dr.SumScansCached(mzsCache, intensitiesCache, 0, 6, 6, 322, 322));
-            Console.WriteLine(dr.SumScans(mzsNormal, intensitiesNormal, 0, 6, 6, 322, 322));
+            Console.WriteLine(dr.SumScans(mzsNormal, intensitiesNormal, 0, 6));
         }
 
-        Assert.AreEqual(mzsNormal, mzsCache);
-        Assert.AreEqual(intensitiesNormal, intensitiesCache);
+        //Assert.AreEqual(mzsNormal, mzsCache);
+        //Assert.AreEqual(intensitiesNormal, intensitiesCache);
 
         dr.CloseUIMF();
     }

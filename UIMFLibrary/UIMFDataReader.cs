@@ -721,6 +721,7 @@ namespace UIMFLibrary
                             if (bins[i] > 0)
                             {
                                 ibin = bins[i];
+                                if (ibin >= mGlobalParameters.Bins) break;
 
                                 intensities[ibin] += records[i];
                                 if (mzs[ibin] == 0.0D)
