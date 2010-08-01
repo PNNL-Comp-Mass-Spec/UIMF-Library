@@ -598,10 +598,6 @@ namespace UIMFLibrary
 				}
 				
             }
-            else
-            {
-                Console.Write("Zero returned");
-            }
 
 			return nlzf;
 		}
