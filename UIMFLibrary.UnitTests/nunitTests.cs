@@ -179,7 +179,7 @@ public class TestClass
         string fileName = "c:\\QC_Shew_60min_c1_500_100_10ms_fr700_Cougar_0001.uimf";
         UIMFLibrary.DataReader reader = new DataReader();
         int frameNum  = 10;
-        int startScan = 250;
+        int startScan = 255;
         int endScan = 255;
         int startBin = 0;
         int endBin = 98000;

@@ -451,7 +451,7 @@ namespace UIMFLibrary
             }
 
             //check input parameters
-            if ( fp != null && (endScan - startScan) > 0 && (endBin - startBin) > 0 && fp.Scans > 0)
+            if ( fp != null && (endScan - startScan) >= 0 && (endBin - startBin) > 0 && fp.Scans > 0)
             {
 
                 if (endBin > mGlobalParameters.Bins)
