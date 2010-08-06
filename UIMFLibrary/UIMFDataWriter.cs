@@ -24,7 +24,7 @@ namespace UIMFLibrary
 
 		public void OpenUIMF(string FileName)
 		{
-            string connectionString = "Data Source = " + FileName + "; Version=3";
+            string connectionString = "Data Source = " + FileName + "; Version=3; DateTimeFormat=Ticks;";
 			m_dbConn = new SQLiteConnection(connectionString);
 			try
 			{
@@ -213,7 +213,6 @@ namespace UIMFLibrary
 			m_dbCmdUIMF.Dispose();
 		}
 		
-		
 		//ARS modified insert frame to use a prepared statement instead of reconstructing the query for each and every frame 
 		public void InsertFrame(FrameParameters fp)
 		{
@@ -267,8 +266,6 @@ namespace UIMFLibrary
 			m_dbCmdPrepareInsertFrame.ExecuteNonQuery();
 			m_dbCmdPrepareInsertFrame.Parameters.Clear();
 		}
-
-
 
 		//This function should be called for each scan, intensities is an array including all zeros
 		//TODO:: Deprecate this function since the bpi is calculation using an incorrect calibration function
@@ -328,8 +325,6 @@ namespace UIMFLibrary
             }
 			return nlzf;
 		}
-		
-		
 
 		//This should be the correct signature for the insert scan function
 		//public int InsertScan(FrameParameters fp, int scanNum, int[] intensities, double bin_width)

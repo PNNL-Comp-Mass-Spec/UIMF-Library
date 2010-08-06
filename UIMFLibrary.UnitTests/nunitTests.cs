@@ -21,8 +21,10 @@ public class TestClass
     [Test]
     public void createDB()
     {
-        string FileName = @"c:\\IMS\\testing.uimf";
+        string FileName = "c:\\testing2.uimf";
         UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
+
+        GlobalParameters globals = new GlobalParameters();
 
         if (File.Exists(FileName))
         {
@@ -30,7 +32,17 @@ public class TestClass
         }
         dw.OpenUIMF(FileName);
         dw.CreateTables("double");
+        
+        globals.Bins = 400000;
+        globals.BinWidth = .25;
+        globals.DateStarted = DateTime.Now;
+        globals.FrameDataBlobVersion = 0.1F;
+        globals.NumFrames = 400;
+        globals.TOFIntensityType = "ADC";
+        dw.InsertGlobal(globals);
+
         dw.CloseUIMF(FileName);
+
     }
 
     [Test]
@@ -137,7 +149,7 @@ public class TestClass
     [Test]
     public void getScan()
     {
-        string FileName = "c:\\QC_Shew_540fr_600scans_01_0000.UIMF";
+        string FileName = "c:\\testing2.uimf";
         UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
 
         //double[] mzsCache = new double[98000];
@@ -149,7 +161,7 @@ public class TestClass
         {
             //dr.GetSpectrum(6, 322, intensitiesNormal, mzsNormal);
             //Console.WriteLine(dr.SumScansCached(mzsCache, intensitiesCache, 0, 6, 6, 322, 322));
-            Console.WriteLine(dr.SumScans(mzsNormal, intensitiesNormal, 0, 6));
+            //Console.WriteLine(dr.SumScans(mzsNormal, intensitiesNormal, 0, 6));
         }
 
         //Assert.AreEqual(mzsNormal, mzsCache);
