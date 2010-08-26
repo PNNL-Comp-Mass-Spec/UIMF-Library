@@ -320,7 +320,70 @@ namespace UIMFLibrary
 			
 			return fp;
 		}
-		
+
+        public void GetSpectrum(int frameNum, int scanNum, List<int> bins, List<int> intensities)
+        {
+
+            if (frameNum == 0)
+            {
+                throw new Exception("frameNum should be a positive integer");
+            }
+
+            
+            //Testing a prepared statement
+            dbcmd_GetSpectrum.Parameters.Add(new SQLiteParameter(":FrameNum", frameNum));
+            dbcmd_GetSpectrum.Parameters.Add(new SQLiteParameter(":ScanNum", scanNum));
+
+            SQLiteDataReader reader = dbcmd_GetSpectrum.ExecuteReader();
+
+            int nNonZero = 0;
+
+            byte[] SpectraRecord;
+
+            //Get the number of points that are non-zero in this frame and scan
+            int expectedCount = GetCountPerSpectrum(frameNum, scanNum);
+
+            if (expectedCount > 0)
+            {
+                //this should not be longer than expected count, 
+                byte[] decomp_SpectraRecord = new byte[expectedCount * DATASIZE* 5];
+
+                int ibin = 0;
+                while (reader.Read())
+                {
+                    int out_len;
+                    SpectraRecord = (byte[])(reader["Intensities"]);
+                    if (SpectraRecord.Length > 0)
+                    {
+                        out_len = IMSCOMP_wrapper.decompress_lzf(ref SpectraRecord, SpectraRecord.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+
+                        int numBins = out_len / DATASIZE;
+                        int decoded_SpectraRecord;
+                        for (int i = 0; i < numBins; i++)
+                        {
+                            decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                            if (decoded_SpectraRecord < 0)
+                            {
+                                ibin += -decoded_SpectraRecord;
+                            }
+                            else
+                            {
+                                bins.Add(ibin);
+                                intensities.Add(decoded_SpectraRecord);
+                                ibin++;
+                                nNonZero++;
+                            }
+
+                        }
+                    }
+                }
+
+            }
+            dbcmd_GetSpectrum.Parameters.Clear();
+            reader.Close();
+
+        }
+
 		public int GetSpectrum(int frameNum, int scanNum, int[] spectrum, int[] bins)
 		{
 			if (frameNum == 0)
@@ -355,7 +418,7 @@ namespace UIMFLibrary
 
 					int numBins = out_len / DATASIZE;
 					int decoded_SpectraRecord;
-					for (int i = 0; i < mGlobalParameters.Bins; i++)
+					for (int i = 0; i < numBins; i++)
 					{
 						decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
 						if (decoded_SpectraRecord < 0)
@@ -819,15 +882,6 @@ namespace UIMFLibrary
 								mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
 							}
 							if (max_bin_iscan < ibin) max_bin_iscan = ibin;
-
-                            if (mzs[ibin] == 0.0D)
-                            {
-                                ibin = ibin;
-
-                            }
-
-                            
-
 							ibin++;				
 						}
 					}
