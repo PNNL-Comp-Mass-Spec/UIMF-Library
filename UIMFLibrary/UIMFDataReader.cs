@@ -186,7 +186,8 @@ namespace UIMFLibrary
 						{
 							try
 							{
-								mGlobalParameters.DateStarted = Convert.ToDateTime(reader["DateStarted"]);
+                                
+								mGlobalParameters.DateStarted = Convert.ToString(reader["DateStarted"]);
 								mGlobalParameters.NumFrames = Convert.ToInt32(reader["NumFrames"]);
 								mGlobalParameters.TimeOffset = Convert.ToInt32(reader["TimeOffset"]);
 								mGlobalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"]);
