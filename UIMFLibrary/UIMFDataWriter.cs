@@ -70,7 +70,7 @@ namespace UIMFLibrary
 			// Create m_GlobalParameters Table  
 			m_dbCmdUIMF = m_dbConn.CreateCommand();
 			m_dbCmdUIMF.CommandText = "CREATE TABLE Global_Parameters ( " +
-				"DateStarted DATETIME, " + // date experiment was started
+				"DateStarted STRING, " + // date experiment was started
 				"NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
 				"TimeOffset INT(4) NOT NULL, " + //  Offset from 0. All bin numbers must be offset by this amount  
 				"BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
