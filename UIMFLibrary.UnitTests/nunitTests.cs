@@ -14,15 +14,18 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using UIMFLibrary;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 [TestFixture]
 public class TestClass
 {
+    string FileName = @"C:\\IMS\\IMSTestFiles\\QC_Shew_10_01_pt5_c2_Eagle_10-02-05_0000.uimf";
+    UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
+    UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
+
     [Test]
     public void createDB()
     {
-        string FileName = "c:\\testing2.uimf";
-        UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
 
         GlobalParameters globals = new GlobalParameters();
 
@@ -35,7 +38,7 @@ public class TestClass
         
         globals.Bins = 400000;
         globals.BinWidth = .25;
-        globals.DateStarted = DateTime.Now;
+        globals.DateStarted = DateTime.Now.ToString();
         globals.FrameDataBlobVersion = 0.1F;
         globals.NumFrames = 400;
         globals.TOFIntensityType = "ADC";
@@ -45,14 +48,86 @@ public class TestClass
 
     }
 
+
+
+    [Test]
+    public void getLowestBinNumber()
+    {
+        dr.OpenUIMF(FileName);
+        GlobalParameters gp = dr.GetGlobalParameters();
+        
+        List<int> bins = new List<int>();
+        List<int> inten = new List<int>();
+        int globalMinBin = int.MaxValue;
+
+        double[] mzs = new double[gp.Bins];
+        double[] its = new double[gp.Bins];
+
+        for (int i = 1; i < gp.NumFrames; i++)
+        {
+
+            FrameParameters fp = dr.GetFrameParameters(i);
+            int numScans = fp.Scans;
+            for (int j = 1; j < numScans; j++)
+            {
+
+                dr.GetSpectrum(i, j, bins, inten);
+                if (bins.Count > 0)
+                {
+                    if (bins[0] <= globalMinBin)
+                    {
+                        globalMinBin = bins[0];
+                        Console.WriteLine("Global minimum = " + bins[0].ToString() + " @Frame= " + i.ToString() + " @scan= " + j.ToString());
+                    }
+                    bins.Clear();
+                    inten.Clear();
+                }
+            }
+            Console.WriteLine("Finished processing frame " + i.ToString());
+            
+        }
+
+        Console.WriteLine("Global minimum " + globalMinBin.ToString());
+
+    }
+
+
+    [Test]
+    public void checkDataTime()
+    {
+        dr.OpenUIMF(FileName);
+        GlobalParameters expInfo = dr.GetGlobalParameters();
+        Console.WriteLine(expInfo.DateStarted);
+        dr.CloseUIMF();
+    }
+    [Test]
+
+    public void printBins()
+    {
+
+        dr.OpenUIMF(FileName);
+
+        GlobalParameters datasetInfo = dr.GetGlobalParameters();
+        
+        int bins = datasetInfo.Bins; // will get once file opens
+        double [] mzs = new double[bins];
+        int[] intensities = new int[bins];
+
+        int count = dr.SumScans(mzs, intensities, 0, 3);
+
+        Console.WriteLine("the bin number si wrong");
+
+        dr.CloseUIMF();
+
+
+    }
+
     [Test]
     public void testCache()
     {
         //string FileName = "c:\\Eric_Cntl_500_100_fr120_0000.uimf";
         //string FileName = "c:\\Eric_SurfN_500_100_fr120_0000.uimf";
         // this database has bad data for frame 201
-        string FileName = "c:\\QC_Shew_60min_c1_500_100_10ms_fr700_Cougar_0001.uimf";
-        UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
 
         GlobalParameters datasetInfo = dr.GetGlobalParameters();
         int frameType = 0;
@@ -78,7 +153,7 @@ public class TestClass
 
         Stopwatch stopWatch = new Stopwatch();
         TimeSpan ts;
-        double timeNormal = -1, timeCached = -1;
+        double timeCached = -1;
         
         if (dr.OpenUIMF(FileName))
         {
@@ -149,14 +224,13 @@ public class TestClass
     [Test]
     public void getScan()
     {
-        string FileName = "c:\\testing2.uimf";
-        UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
 
+        double[] mzsCache = new double[98000];
+        int[] intensitiesCache = new int[98000];
+        double[] mzsNormal = new double[98000];
+        int[] intensitiesNormal = new int[98000];
         //double[] mzsCache = new double[98000];
         //int[] intensitiesCache = new int[98000];
-        double[] mzsNormal = new double[400000];
-        int[] intensitiesNormal = new int[400000];
-
         if (dr.OpenUIMF(FileName))
         {
             //dr.GetSpectrum(6, 322, intensitiesNormal, mzsNormal);
@@ -188,8 +262,6 @@ public class TestClass
     [Test]
     public void getIntensityBlock()
     {
-        string fileName = "c:\\QC_Shew_60min_c1_500_100_10ms_fr700_Cougar_0001.uimf";
-        UIMFLibrary.DataReader reader = new DataReader();
         int frameNum  = 10;
         int startScan = 255;
         int endScan = 255;
@@ -197,16 +269,16 @@ public class TestClass
         int endBin = 98000;
 
 
-        if (reader.OpenUIMF(fileName))
+        if (dr.OpenUIMF(FileName))
         {
-            GlobalParameters gp = reader.GetGlobalParameters();
+            GlobalParameters gp = dr.GetGlobalParameters();
 
             int[] abundance = new int[gp.Bins];
             double[] mzs = new double[gp.Bins];
 
             endBin = gp.Bins;
 
-            int[][] intensities = reader.GetIntensityBlock(frameNum, 0, startScan, endScan, startBin, endBin);
+            int[][] intensities = dr.GetIntensityBlock(frameNum, 0, startScan, endScan, startBin, endBin);
             
 
             Assert.AreEqual(intensities.Length, endScan - startScan+1);
@@ -215,7 +287,7 @@ public class TestClass
             //somehow we'll have to validate the returned intensities as well
             for (int i = startScan; i < endScan; i++)
             {
-                int nonZeroCount = reader.GetSpectrum(frameNum, i, abundance, mzs);
+                int nonZeroCount = dr.GetSpectrum(frameNum, i, abundance, mzs);
 
                 //the number of non-zero values returned from getspectrum should be 
                 //equal to the number of non zero values from startBin to endBin
@@ -224,7 +296,7 @@ public class TestClass
  
             }
 
-            reader.CloseUIMF();
+            dr.CloseUIMF();
         }
 
 
@@ -233,27 +305,24 @@ public class TestClass
     [Test]
     public void testGetCountPerFrame()
     {
-        string fileName = "c:\\HSer_0pt5_420_100_c4_75um_fr560_Cheetah_0000.uimf";
-        UIMFLibrary.DataReader reader = new DataReader();
-
-        if (reader.OpenUIMF(fileName))
+        if (dr.OpenUIMF(FileName))
         {
             int intFrameNumber = 3;
             int intNonZeroPointsInFrame = 0;
-            FrameParameters fp = reader.GetFrameParameters(intFrameNumber);
+            FrameParameters fp = dr.GetFrameParameters(intFrameNumber);
 
             for (int i = 0; i < fp.Scans; i++)
             {
-                intNonZeroPointsInFrame += reader.GetCountPerSpectrum(intFrameNumber, i);
+                intNonZeroPointsInFrame += dr.GetCountPerSpectrum(intFrameNumber, i);
             }
 
             Console.WriteLine(intNonZeroPointsInFrame);
 
-            intNonZeroPointsInFrame = reader.GetCountPerFrame(intFrameNumber);
+            intNonZeroPointsInFrame = dr.GetCountPerFrame(intFrameNumber);
 
             Console.WriteLine(intNonZeroPointsInFrame);
-
-            reader.CloseUIMF();
+            dr.CloseUIMF();
+            
         }
     }
 
