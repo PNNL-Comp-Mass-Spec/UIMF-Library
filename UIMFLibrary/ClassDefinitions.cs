@@ -15,7 +15,8 @@ namespace UIMFLibrary
 {
     public class GlobalParameters
     {
-		public DateTime DateStarted;             // 1, Date Experiment was acquired 
+		//public DateTime DateStarted;             // 1, Date Experiment was acquired 
+        public string DateStarted;
         public int NumFrames;                  // 2, Number of frames in dataset
         public int TimeOffset;                 // 3, Offset from 0. All bin numbers must be offset by this amount 
         public double BinWidth;                // 4, Width of TOF bins (in ns) 
