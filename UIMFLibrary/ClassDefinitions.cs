@@ -13,6 +13,12 @@ using System.Data.SQLite;
 
 namespace UIMFLibrary
 {
+    /// <summary>
+    /// Enumeration for details about a FRAME TYPE, whether it's a parent (regular MS) or a fragment (MSMS).
+    /// Prescan is a special type of frame not used for downstream algorithms
+    /// </summary>
+    enum FrameType { MS, MSMS, PRESCAN };
+
     public class GlobalParameters
     {
 		//public DateTime DateStarted;             // 1, Date Experiment was acquired 
