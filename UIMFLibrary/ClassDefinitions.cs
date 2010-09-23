@@ -17,7 +17,7 @@ namespace UIMFLibrary
     /// Enumeration for details about a FRAME TYPE, whether it's a parent (regular MS) or a fragment (MSMS).
     /// Prescan is a special type of frame not used for downstream algorithms
     /// </summary>
-    enum FrameType { MS, MSMS, PRESCAN };
+    enum FrameType { PRESCAN, MS, MSMS };
 
     public class GlobalParameters
     {
