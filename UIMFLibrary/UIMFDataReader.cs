@@ -30,7 +30,7 @@ namespace UIMFLibrary
 
 		private GlobalParameters mGlobalParameters = null;
         // AARON: trying to improve performance here by substituting generic
-        //This .NET version doesn't support generics, however this hash has key as frame number and value as frame parameter object
+        //this hash has key as frame number and value as frame parameter object
         //<int, FrameParameters>
         //private Hashtable mFrameParametersCache = new Hashtable();  
         private Dictionary<int, FrameParameters> mFrameParametersCache = new Dictionary<int, FrameParameters>();
@@ -224,6 +224,18 @@ namespace UIMFLibrary
 			
 			return mGlobalParameters;
 		}
+
+        /// <summary>
+        /// Utility method to return the MS Level for a particular frame
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="frameNumber"></param>
+        /// <returns></returns>
+        public short GetMSLevelForFrame(int frameNumber)
+        {
+            return GetFrameParameters(frameNumber).FrameType;
+        }
 
 		public FrameParameters GetFrameParameters(int frameNumber)
 		{
@@ -505,7 +517,6 @@ namespace UIMFLibrary
          * */
         public int[][] GetIntensityBlock(int frameNum, int frameType, int startScan, int endScan, int startBin, int endBin)
         {
-
             bool proceed = false;
             int[][] intensities = null; 
             FrameParameters fp = null;
@@ -530,6 +541,8 @@ namespace UIMFLibrary
 
                 proceed = true;
             }
+
+            proceed = fp.FrameType == frameType;
 
             if (proceed)
             {
@@ -591,7 +604,7 @@ namespace UIMFLibrary
         }
 
         // v1.2 caching methods
-        private void cacheSpectra(int startFrame, int endFrame)
+        private void cacheSpectra(int startFrame, int endFrame, int frameType)
         {
             //cached.Start();
 
@@ -622,69 +635,75 @@ namespace UIMFLibrary
 
             while (cacheFrameEnd <= endFrame)
             {
-                // setup prepared statement and execute
-                dbcmd_SumScansCached.Parameters.Add(new SQLiteParameter("FrameNum", cacheFrameEnd));
-                mSQLiteDataReader = dbcmd_SumScansCached.ExecuteReader();
-
-                //news.Start();
-                // create new lists to store bins and intensities
-                List<int[]> binScans = new List<int[]>();
-                List<int[]> recordScans = new List<int[]>();
-                //news.Stop();
-
-                prevScan = -1;
-
-                while (mSQLiteDataReader.Read())
+                FrameParameters fp = GetFrameParameters(cacheFrameEnd);
+                //ignore frames that are not of the desired type
+                if (fp.FrameType == frameType)
                 {
-                    int ibin = 0;
-                    int out_len;
-                    spectra = (byte[])(mSQLiteDataReader["Intensities"]);
-                    curScan = (int)(mSQLiteDataReader["ScanNum"]);
+                    // setup prepared statement and execute
+                    dbcmd_SumScansCached.Parameters.Add(new SQLiteParameter("FrameNum", cacheFrameEnd));
+                    mSQLiteDataReader = dbcmd_SumScansCached.ExecuteReader();
 
-                    // add nulls for missing scans
-                    while (curScan != prevScan + 1)
+                    //news.Start();
+                    // create new lists to store bins and intensities
+                    List<int[]> binScans = new List<int[]>();
+                    List<int[]> recordScans = new List<int[]>();
+                    //news.Stop();
+
+                    prevScan = -1;
+
+                    while (mSQLiteDataReader.Read())
                     {
-                        binScans.Add(null);
-                        recordScans.Add(null);
-                        prevScan++;
-                    }
+                        int ibin = 0;
+                        int out_len;
+                        spectra = (byte[])(mSQLiteDataReader["Intensities"]);
+                        curScan = (int)(mSQLiteDataReader["ScanNum"]);
 
-                    if (spectra.Length > 0)
-                    {
-                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
-                        int numBins = out_len / DATASIZE;
-                        int decoded_SpectraRecord;
-
-                        bins = new int[numBins];
-                        records = new int[numBins];
-
-                        for (int i = 0; i < numBins; i++)
+                        // add nulls for missing scans
+                        while (curScan != prevScan + 1)
                         {
-                            decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
-                            if (decoded_SpectraRecord < 0)
-                            {
-                                ibin += -decoded_SpectraRecord;
-                            }
-                            else
-                            {
-                                bins[i] = ibin;
-                                records[i] = decoded_SpectraRecord;
-                                ibin++;
-                            }
+                            binScans.Add(null);
+                            recordScans.Add(null);
+                            prevScan++;
                         }
 
-                        binScans.Add(bins);
-                        recordScans.Add(records);
-                        prevScan++;
-                    }
-                }
-                // clean up
-                dbcmd_SumScansCached.Parameters.Clear();
-                mSQLiteDataReader.Close();
+                        if (spectra.Length > 0)
+                        {
+                            out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+                            int numBins = out_len / DATASIZE;
+                            int decoded_SpectraRecord;
 
-                // add row of scans to cache
-                binsCache.Add(binScans);
-                recordsCache.Add(recordScans);
+                            bins = new int[numBins];
+                            records = new int[numBins];
+
+                            for (int i = 0; i < numBins; i++)
+                            {
+                                decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                                if (decoded_SpectraRecord < 0)
+                                {
+                                    ibin += -decoded_SpectraRecord;
+                                }
+                                else
+                                {
+                                    bins[i] = ibin;
+                                    records[i] = decoded_SpectraRecord;
+                                    ibin++;
+                                }
+                            }
+
+                            binScans.Add(bins);
+                            recordScans.Add(records);
+                            prevScan++;
+                        }
+                    }
+                    // clean up
+                    dbcmd_SumScansCached.Parameters.Clear();
+                    mSQLiteDataReader.Close();
+
+                    // add row of scans to cache
+                    binsCache.Add(binScans);
+                    recordsCache.Add(recordScans);
+                }
+
                 cacheFrameEnd++;
             }
 
@@ -737,7 +756,7 @@ namespace UIMFLibrary
             if (cacheFrameEnd <= endFrame || cacheFrameStart < startFrame)
             {
                 //cacheSpectra(201, 210);
-                cacheSpectra(startFrame, endFrame);
+                cacheSpectra(startFrame, endFrame, frameType);
             }
 
             // used to offset the sliding window inside the cache
@@ -823,78 +842,87 @@ namespace UIMFLibrary
             return nonZeroCount;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mzs">Returned mz values</param>
+        /// <param name="intensities">Returned intensities</param>
+        /// <param name="frameType">Type of frames to sum</param>
+        /// <param name="midFrame">Center frame for sliding window</param>
+        /// <param name="range">Range of sliding window</param>
+        /// <param name="startScan">Start scan number</param>
+        /// <param name="endScan">End scan number</param>
+        /// <returns></returns>
+        public int SumScansRange(double[] mzs, int[] intensities, int frameType, int midFrame, int range, int startScan, int endScan)
+        {
+            //Determine the start frame number and the end frame number for this range
+            int counter = 0;
+
+            FrameParameters fp = GetFrameParameters(midFrame);
+            int startFrame, endFrame;
+            if (fp.FrameType == frameType)
+            {
+                int tempFrame = midFrame - 1;
+                int frameNum = -1 ;
+                //Move to the left
+                while (counter < range)
+                {
+                    frameNum = tempFrame - counter;
+                    fp = GetFrameParameters(frameNum);
+                    if (fp == null)
+                    {
+                        break;
+                    }
+
+                    if (fp.FrameType == frameType)
+                    {
+                        counter++;
+                    }
+                    else
+                    {
+                        tempFrame -= 1;
+                    }
+                }
+
+                Console.WriteLine("Start frame with same frametype is " + frameNum);
+                startFrame = frameNum;
+                counter = 1;
+                tempFrame = midFrame + 1;
+                //move to the right
+                while (counter <= range)
+                {
+                    frameNum = tempFrame + counter;
+                    fp = GetFrameParameters(frameNum);
+                    if (fp == null)
+                    {
+                        break;
+                    }
+
+                    if ( fp.FrameType == frameType)
+                    {
+                        counter++;
+                    }
+                    else
+                    {
+                        tempFrame++;
+                    }
+                }
+
+                endFrame = frameNum-1; //this is to offset since we started at frame + 1
+                Console.WriteLine("Last frame with same frametype is " + frameNum);
+
+                counter = SumScansCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
+            }
+            //else, maybe we generate a warning but not sure
+            return counter;
+        }
+
+
         // point the old SumScans methods to the cached version.
         public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
             return SumScansCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
         }
-
-		// This method has the implementation since all UIMF files are currently created with 4 byte intensity values.
-		/*public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
-		{
-			if (startFrame == 0) 
-			{
-				throw new Exception("StartFrame should be a positive integer");
-				
-			}
-			
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum1", startFrame));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("FrameNum2", endFrame));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
-			dbcmd_PreparedStmt.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
-			mSQLiteDataReader = dbcmd_PreparedStmt.ExecuteReader();
-			byte[] spectra;
-			byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
-
-			int nonZeroCount = 0;
-			int frameNumber = startFrame;
-			while (mSQLiteDataReader.Read())
-			{
-				int ibin = 0;
-				int max_bin_iscan = 0;
-				int out_len;
-				spectra = (byte[])(mSQLiteDataReader["Intensities"]);
-
-				//get frame number so that we can get the frame calibration parameters
-				if (spectra.Length > 0) 
-				{
-
-                    frameNumber = Convert.ToInt32(mSQLiteDataReader["FrameNum"]);
-					FrameParameters fp = GetFrameParameters(frameNumber);
-
-					out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
-					int numBins = out_len / DATASIZE;
-					int decoded_SpectraRecord;
-					for (int i = 0; i < numBins; i++)
-					{
-						decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
-						if (decoded_SpectraRecord < 0)
-						{
-							ibin += -decoded_SpectraRecord;
-						}
-						else
-						{
-							intensities[ibin] += decoded_SpectraRecord;
-							if (mzs[ibin] == 0.0D)
-							{
-								double t = (double)ibin* mGlobalParameters.BinWidth/1000;
-								double resmasserr=fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
-								mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(t - (double)mGlobalParameters.TOFCorrectionTime/1000 - fp.CalibrationIntercept)));
-								mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
-							}
-							if (max_bin_iscan < ibin) max_bin_iscan = ibin;
-							ibin++;				
-						}
-					}
-					if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
-				}
-			}
-
-			dbcmd_PreparedStmt.Parameters.Clear();
-			mSQLiteDataReader.Close();
-			if (nonZeroCount > 0) nonZeroCount++;
-			return nonZeroCount;
-		}*/
 
         // AARON: There is a lot of room for improvement in these methods.
 		public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int scanNum)

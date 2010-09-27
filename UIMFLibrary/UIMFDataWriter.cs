@@ -47,8 +47,35 @@ namespace UIMFLibrary
 			}
 		}
 
+
+        public void UpdateFrameType()
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
+            m_dbCommandUimf.Prepare();
+            
+            for (int i = 1; i < 1201; i++)
+            {
+                int frameType = (i - 1) % 4 == 0 ? 1 : 2;
+                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
+                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
+                m_dbCommandUimf.ExecuteNonQuery();
+                m_dbCommandUimf.Parameters.Clear();
+                        
+
+            }
+
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
 		public bool CloseUIMF(string fileName)
 		{
+            bool status = false;
 			try
 			{
 				if (m_dbConnection != null)
@@ -59,12 +86,14 @@ namespace UIMFLibrary
 					m_dbCommandUimf.Dispose();
 					m_dbConnection.Close();
 				}
-				return true;
+				status = true;
 			}
 			catch
 			{
-				return false;
+				
 			}
+
+            return status;
 		}
 
         /// <summary>

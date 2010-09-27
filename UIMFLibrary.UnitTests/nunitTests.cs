@@ -19,9 +19,41 @@ using System.Collections.Generic;
 [TestFixture]
 public class TestClass
 {
-    string FileName = @"C:\\IMS\\IMSTestFiles\\QC_Shew_10_01_pt5_c2_Eagle_10-02-05_0000.uimf";
+    string FileName = @"C:\\IMS\\SarcopeniaStudy\\HSer_0pt25_380_18_c1_75um_fr2970_Cheetah_0000.uimf";
     UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
     UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
+
+
+    [Test]
+    public void sumScansAndSumScansRangeTest()
+    {
+        int startScan = 75;
+        int endScan = 200;
+
+        int startFrame = 151;
+        int endFrame = 159;
+
+        dr.OpenUIMF(FileName);
+        GlobalParameters gp = dr.GetGlobalParameters();
+
+        double [] mzs1 = new double [gp.Bins];
+        int[] intensities1 = new int[gp.Bins];
+        dr.SumScans(mzs1, intensities1, 0, startFrame, endFrame, startScan, endScan);
+
+
+        int range = 4;
+        int midFrame = 155;
+        double[] mzs2 = new double[gp.Bins];
+        int[] intensities2 = new int[gp.Bins];
+        
+        dr.SumScansRange(mzs2, intensities2, 0, midFrame, range, startScan, endScan);
+
+        Assert.AreEqual(mzs1, mzs2);
+        Assert.AreEqual(intensities1, intensities2);
+
+        dr.CloseUIMF();
+
+    }
 
     [Test]
     public void createDB()
@@ -48,7 +80,22 @@ public class TestClass
 
     }
 
+    [Test]
+    public void updateFrameType()
+    {
+        dw.OpenUIMF(FileName);
+        dw.UpdateFrameType();
+        dw.CloseUIMF(FileName);
 
+    }
+
+    public void getNumberFramesTest()
+    {
+        dr.OpenUIMF(FileName);
+        Console.Write(dr.GetGlobalParameters().NumFrames);
+        dr.CloseUIMF();
+
+    }
 
     [Test]
     public void getLowestBinNumber()
