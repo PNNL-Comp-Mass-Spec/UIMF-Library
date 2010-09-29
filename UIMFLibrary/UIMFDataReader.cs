@@ -1006,9 +1006,7 @@ namespace UIMFLibrary
                     hasMSMS = true;
                     break;
                 }
-
             }
-
             return hasMSMS;
         }
 
