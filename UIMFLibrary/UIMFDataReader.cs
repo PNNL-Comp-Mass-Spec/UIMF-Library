@@ -16,6 +16,7 @@ namespace UIMFLibrary
 	public class DataReader
 	{
 		private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
+        private const int MAXMZ = 5000;
 		public SQLiteConnection dbcon_UIMF;
         // AARON: SQLiteDataReaders might be better managable than currently implement.
 		public SQLiteDataReader mSQLiteDataReader;
@@ -710,6 +711,81 @@ namespace UIMFLibrary
             //cached.Stop();
         }
 
+
+        public int SumScansNonCached(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+        {
+           
+			if (startFrame == 0) 
+			{
+				throw new Exception("StartFrame should be a positive integer");
+			}
+
+            dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum1", startFrame));
+            dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum2", endFrame));
+            dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+            dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+            mSQLiteDataReader = dbcmd_SumScans.ExecuteReader();
+			byte[] spectra;
+			byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
+
+			int nonZeroCount = 0;
+			int frameNumber = startFrame;
+            while (mSQLiteDataReader.Read())
+			{
+				int ibin = 0;
+				int max_bin_iscan = 0;
+				int out_len;
+                spectra = (byte[])(mSQLiteDataReader["Intensities"]);
+
+				//get frame number so that we can get the frame calibration parameters
+				if (spectra.Length > 0) 
+				{
+
+                    frameNumber = Convert.ToInt32(mSQLiteDataReader["FrameNum"]);
+					FrameParameters fp = GetFrameParameters(frameNumber);
+
+					out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+					int numBins = out_len / DATASIZE;
+					int decoded_SpectraRecord;
+					for (int i = 0; i < numBins; i++)
+					{
+						decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+						if (decoded_SpectraRecord < 0)
+						{
+							ibin += -decoded_SpectraRecord;
+						}
+						else
+						{
+							intensities[ibin] += decoded_SpectraRecord;
+							if (mzs[ibin] == 0.0D)
+							{
+								double t = (double)ibin* mGlobalParameters.BinWidth/1000;
+								double resmasserr=fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
+								mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(t - (double)mGlobalParameters.TOFCorrectionTime/1000 - fp.CalibrationIntercept)));
+								mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
+							}
+							if (max_bin_iscan < ibin) max_bin_iscan = ibin;
+
+                            if (mzs[ibin] == 0.0D)
+                            {
+                                ibin = ibin;
+                            }
+							ibin++;				
+						}
+					}
+					if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
+				}
+			}
+
+			dbcmd_SumScans.Parameters.Clear();
+			mSQLiteDataReader.Close();
+			if (nonZeroCount > 0) nonZeroCount++;
+			return nonZeroCount;
+
+
+
+        }
+
         // this method was implemented to help DeconTools
         public int SumScansCached(ref double[] mzs, ref double[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan, double minMZ, double maxMZ)
         {
@@ -720,7 +796,7 @@ namespace UIMFLibrary
 
             // determine if we need to check MZ range.
             bool skip = false;
-            if (minMZ <= 0 && maxMZ >= 5000)
+            if (minMZ <= 0 && maxMZ >= MAXMZ)
             {
                 skip = true;
             }
@@ -884,7 +960,6 @@ namespace UIMFLibrary
                     }
                 }
 
-                Console.WriteLine("Start frame with same frametype is " + frameNum);
                 startFrame = frameNum;
                 counter = 1;
                 tempFrame = midFrame + 1;
@@ -909,12 +984,32 @@ namespace UIMFLibrary
                 }
 
                 endFrame = frameNum-1; //this is to offset since we started at frame + 1
-                Console.WriteLine("Last frame with same frametype is " + frameNum);
-
-                counter = SumScansCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
+                counter = SumScansNonCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
             }
             //else, maybe we generate a warning but not sure
             return counter;
+        }
+
+
+        /// <summary>
+        /// Method to check if this dataset has any MSMS data
+        /// </summary>
+        /// <returns>True if MSMS frames are present</returns>
+        public bool hasMSMSData()
+        {
+            bool hasMSMS = false;
+            for (int i = 1; i <= mGlobalParameters.NumFrames; i++)
+            {
+                FrameParameters fp = GetFrameParameters(i);
+                if (fp.FrameType == 2)
+                {
+                    hasMSMS = true;
+                    break;
+                }
+
+            }
+
+            return hasMSMS;
         }
 
 
