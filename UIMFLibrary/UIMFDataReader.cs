@@ -28,6 +28,7 @@ namespace UIMFLibrary
         public SQLiteCommand dbcmd_GetCountPerFrame;
         public SQLiteCommand dbcmd_SumScansCached;
         public SQLiteCommand dbcmd_GetFrameParameters;
+        public SQLiteCommand dbcmd_PreparedStmt;
 
         private GlobalParameters mGlobalParameters = null;
         // AARON: trying to improve performance here by substituting generic
@@ -1605,7 +1606,15 @@ namespace UIMFLibrary
             return bin;
         }
 
+        public void UpdateCalibrationCoefficients(int frameNum, float slope, float intercept)
+        {
+            dbcmd_PreparedStmt = dbcon_UIMF.CreateCommand();
+            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString() +
+                ", CalibrationIntercept = " + intercept.ToString() + " WHERE FrameNum = " + frameNum.ToString();
 
+            dbcmd_PreparedStmt.ExecuteNonQuery();
+            dbcmd_PreparedStmt.Dispose();
+        }
 
         private void Dispose(SQLiteCommand cmd, SQLiteDataReader reader)
         {
@@ -1613,6 +1622,5 @@ namespace UIMFLibrary
             reader.Dispose();
             reader.Close();
         }
-
     }
 }
