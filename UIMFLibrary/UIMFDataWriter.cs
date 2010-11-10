@@ -47,7 +47,6 @@ namespace UIMFLibrary
 			}
 		}
 
-
         public void UpdateFrameType()
         {
             m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -61,12 +60,8 @@ namespace UIMFLibrary
                 m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
                 m_dbCommandUimf.ExecuteNonQuery();
                 m_dbCommandUimf.Parameters.Clear();
-                        
-
             }
-
         }
-
 
         /// <summary>
         /// 
@@ -465,14 +460,12 @@ namespace UIMFLibrary
                             bpiMz = convertBinToMz(bins[i], binWidth, fp);
                         }
 
-
                         if (i != 0 && bins[i] != bins[i - 1] + 1)
                         {
                             //since the bin numbers are not continuous, add a negative index to the array
                             //and in some cases we have to add the offset from the previous index
                             rlze[index++] = bins[i - 1] - bins[i] + 1;
                         }
-
 
                         //copy the intensity value and increment the index.
                         rlze[index++] = intensities[i];
@@ -486,7 +479,6 @@ namespace UIMFLibrary
                     byte[] spectra = new byte[nlzf];
 
                     Array.Copy(compresedRecord, spectra, nlzf);
-
                     //Insert records
                     if (true)
                     {
@@ -494,15 +486,12 @@ namespace UIMFLibrary
                         m_dbCommandPrepareInsertScan.ExecuteNonQuery();
                         m_dbCommandPrepareInsertScan.Parameters.Clear();
                     }
-
                 }
-
             }
-
             return nonZeroCount;
-            
-
         }
+
+
         //this method takes in a list of bin numbers and intensities and converts them to a run length encoded array
         //which is later compressed at the byte level for reduced size
         public int InsertScan(FrameParameters frameParameters, int scanNum, int [] bins, int[] intensities, double binWidth, int timeOffset)
@@ -565,24 +554,17 @@ namespace UIMFLibrary
 						m_dbCommandPrepareInsertScan.ExecuteNonQuery();
 						m_dbCommandPrepareInsertScan.Parameters.Clear();
 					}
-	
                 }
-                    
             }
-
             return nonZeroCount;
         }
 
-
         public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, int[] intensities, double binWidth)
 		{
-
 			if (frameParameters == null )
 			{
 				return -1;
 			}
-
-
 			int nrlze = 0; 
 			int zero_count = 0;
 			int[] rlze_data = new int[intensities.Length];
@@ -639,7 +621,6 @@ namespace UIMFLibrary
 				}
 				
             }
-
 			return nlzf;
 		}
 
@@ -698,7 +679,6 @@ namespace UIMFLibrary
                 m_dbCommandPrepareInsertScan.ExecuteNonQuery();
                 m_dbCommandPrepareInsertScan.Parameters.Clear();
             }
-
 			
 			return nlzf;
 		}

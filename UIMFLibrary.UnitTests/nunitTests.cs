@@ -340,13 +340,43 @@ public class TestClass
                 //equal to the number of non zero values from startBin to endBin
                 int countsInBlock = countNonZeroValues(intensities[i-startScan]);
                 Assert.AreEqual(nonZeroCount, countsInBlock);
- 
             }
-
             dr.CloseUIMF();
         }
+    }
 
 
+    [Test]
+    public void checkMSMSDataFlag()
+    {
+        dr.OpenUIMF(FileName);
+        Assert.AreEqual(false, dr.hasMSMSData());
+        dr.CloseUIMF();
+    }
+
+    [Test]
+    public void testSumScansCachedVsNonCached()
+    {
+        int startScan = 75;
+        int endScan = 200;
+
+        int startFrame = 151;
+        int endFrame = 159;
+
+        dr.OpenUIMF(FileName);
+        GlobalParameters gp = dr.GetGlobalParameters();
+
+        double[] mzs1 = new double[gp.Bins];
+        int[] intensities1 = new int[gp.Bins];
+        dr.SumScans(mzs1, intensities1, 0, startFrame, endFrame, startScan, endScan);
+
+        double[] mzs2 = new double[gp.Bins];
+        int[] intensities2 = new int[gp.Bins];
+
+        dr.SumScansNonCached(mzs2, intensities2, 0, startFrame, endFrame, startScan, endScan);
+
+        Assert.AreEqual(mzs1, mzs2);
+        Assert.AreEqual(intensities1, intensities2);
     }
 
     [Test]

@@ -15,7 +15,6 @@ namespace UIMFLibrary.UnitTests
         [Test]
         public void readMSLevelDataFromFileContainingBothMS_and_MSMSData()
         {
-
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
 
             UIMFLibrary.DataReader reader = new DataReader();
@@ -27,16 +26,20 @@ namespace UIMFLibrary.UnitTests
 
             double[] xvals = new double[numBins];
             int[] yvals = new int[numBins];
+            double[] xvals1 = new double[numBins];
+            int[] yvals1 = new int[numBins];
 
-
-            reader.SumScansRange(xvals, yvals, 1, 9, 2, 100, 500);
+            reader.SumScansRange(xvals, yvals, 2, 11, 1, 100, 500);
 
             Assert.AreNotEqual(null, xvals);
             Assert.AreNotEqual(0, xvals.Length);
 
 
             //TODO: add additional assertions here
+            reader.SumScans(xvals1, yvals1, 2, 10, 12, 100, 500);
 
+            Assert.AreEqual(xvals, xvals1);
+            Assert.AreEqual(yvals, yvals1);
 
 
         }
@@ -134,6 +137,32 @@ namespace UIMFLibrary.UnitTests
             Console.Write(sb.ToString());
 
 
+        }
+
+
+        public void ExpectedCount_Test()
+        {
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
+
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+
+            int numBins = gp.Bins;
+
+            double[] xvals = new double[numBins];
+            int[] yvals = new int[numBins];
+            double[] xvals1 = new double[numBins];
+            int[] yvals1 = new int[numBins];
+
+
+            int scanNumber = 500;
+
+            Assert.AreEqual(reader.GetCountPerSpectrum(4, scanNumber), reader.GetSpectrum(4, scanNumber, yvals, xvals));
+            
+
+            
         }
 
 
