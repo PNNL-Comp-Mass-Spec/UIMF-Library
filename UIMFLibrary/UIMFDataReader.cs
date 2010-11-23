@@ -606,6 +606,110 @@ namespace UIMFLibrary
             return intensities;
         }
 
+		/**
+         * @description:
+         *         //this method returns all the intensities, summing across the frame dimension
+                   //The return value is a 2-D array that returns all the intensities within the given scan range and bin range
+
+                   //The startScan is stored at the zeroth location and so is the startBin. Callers of this method should offset
+                   //the retrieved values.
+
+         * */
+		public int[][] GetIntensityBlock(int startFrame, int endFrame, int frameType, int startScan, int endScan, int startBin, int endBin)
+		{
+			bool proceed = false;
+			FrameParameters fp = null;
+
+			//initialize the intensities return two-D array
+			int[][] intensities = new int[endScan - startScan + 1][];
+			for (int i = 0; i < endScan - startScan + 1; i++)
+			{
+				intensities[i] = new int[endBin - startBin + 1];
+
+				for (int j = 0; j < endBin - startBin + 1; j++)
+				{
+					intensities[i][j] = 0;
+				}
+			}
+
+			for (int frameNum = startFrame; frameNum <= endFrame; frameNum++)
+			{
+				if (frameNum > 0)
+				{
+					fp = GetFrameParameters(frameNum);
+				}
+
+				//check input parameters
+				if (fp != null && (endScan - startScan) >= 0 && (endBin - startBin) >= 0 && fp.Scans > 0)
+				{
+
+					if (endBin > mGlobalParameters.Bins)
+					{
+						endBin = mGlobalParameters.Bins;
+					}
+
+					if (startBin < 0)
+					{
+						startBin = 0;
+					}
+
+					proceed = true;
+				}
+
+				proceed = (fp.FrameType == frameType);
+
+				if (proceed)
+				{
+					//now setup queries to retrieve data (AARON: there is probably a better query method for this)
+					dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum1", fp.FrameNum));
+					dbcmd_SumScans.Parameters.Add(new SQLiteParameter("FrameNum2", fp.FrameNum));
+					dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+					dbcmd_SumScans.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+					mSQLiteDataReader = dbcmd_SumScans.ExecuteReader();
+
+					byte[] spectra;
+					byte[] decomp_SpectraRecord = new byte[mGlobalParameters.Bins * DATASIZE];
+
+					while (mSQLiteDataReader.Read())
+					{
+						int ibin = 0;
+						int out_len;
+
+						spectra = (byte[])(mSQLiteDataReader["Intensities"]);
+						int scanNum = Convert.ToInt32(mSQLiteDataReader["ScanNum"]);
+
+						//get frame number so that we can get the frame calibration parameters
+						if (spectra.Length > 0)
+						{
+							out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, mGlobalParameters.Bins * DATASIZE);
+							int numBins = out_len / DATASIZE;
+							int decoded_intensityValue;
+							for (int i = 0; i < numBins; i++)
+							{
+								decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+								if (decoded_intensityValue < 0)
+								{
+									ibin += -decoded_intensityValue;
+								}
+								else
+								{
+									if (startBin <= ibin && ibin <= endBin)
+									{
+										intensities[scanNum - startScan][ibin - startBin] += decoded_intensityValue;
+									}
+									ibin++;
+								}
+							}
+						}
+					}
+					mSQLiteDataReader.Close();
+
+				}
+			}
+
+			return intensities;
+		}
+
         // v1.2 caching methods
         private void cacheSpectra(int startFrame, int endFrame, int frameType)
         {
