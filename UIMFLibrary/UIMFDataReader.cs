@@ -114,11 +114,31 @@ namespace UIMFLibrary
 
         private void UnloadPrepStmts()
         {
-            dbcmd_SumScans.Dispose();
-            dbcmd_GetCountPerSpec.Dispose();
-            dbcmd_GetCountPerFrame.Dispose();
-            dbcmd_GetFrameParameters.Dispose();
-            dbcmd_SumScansCached.Dispose();
+            if (dbcmd_SumScans != null)
+            {
+                dbcmd_SumScans.Dispose();
+            }
+
+            if (dbcmd_GetCountPerSpec != null)
+            {
+                dbcmd_GetCountPerSpec.Dispose();
+            }
+
+            if (dbcmd_GetCountPerFrame != null)
+            {
+                dbcmd_GetCountPerFrame.Dispose();
+            }
+
+            if (dbcmd_GetFrameParameters != null)
+            {
+                dbcmd_GetFrameParameters.Dispose();
+            }
+
+            if (dbcmd_SumScansCached != null)
+            {
+                dbcmd_SumScansCached.Dispose();
+            }
+
         }
 
         /**
@@ -1726,5 +1746,7 @@ namespace UIMFLibrary
             reader.Dispose();
             reader.Close();
         }
+
+      
     }
 }
