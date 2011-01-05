@@ -538,6 +538,7 @@ namespace UIMFLibrary
          * @description:
          *         //this method returns all the intensities without summing for that block
                    //The return value is a 2-D array that returns all the intensities within the given scan range and bin range
+                   //The number of rows is equal to endScan-startScan+1 and the number of columns is equal to endBin-startBin+1 
                    //If frame is added to this equation then we'll have to return a 3-D array of data values.
 
                    //The startScan is stored at the zeroth location and so is the startBin. Callers of this method should offset
@@ -1646,6 +1647,42 @@ namespace UIMFLibrary
             }
 
             Dispose(dbcmd_UIMF, reader);
+        }
+
+
+        public void GetLCProfile(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] frameValues, ref int[] intensities)
+        {
+            if (startFrame > endFrame )
+            {
+                throw new System.ArgumentException("Failed to get LCProfile. Input startFrame was greater than input endFrame");
+            }
+
+            frameValues = new int[endFrame - startFrame + 1];
+            intensities = null;
+            for (int frame = startFrame; frame < endFrame; frame++)
+            {
+                int [] driftIntensities = new int[1];
+                int[] driftScanValues = new int[1];
+                frameValues[frame - startFrame] = frame;
+                FrameParameters fp = GetFrameParameters(frame);
+                if (fp.FrameType == frameType)
+                {
+                    GetDriftTimeProfile(frame, frameType, startScan, endScan, targetMZ, toleranceInMZ, ref driftScanValues, ref driftIntensities);
+                    if (intensities == null)
+                    {
+                        intensities = new int[driftIntensities.Length];
+                    }
+
+                    for (int i = 0; i < driftIntensities.Length; i++)
+                    {
+                        intensities[i] += driftIntensities[i];
+                    }
+
+                }
+
+            }
+
+
         }
 
         //Added by Gord. 10/20/2010

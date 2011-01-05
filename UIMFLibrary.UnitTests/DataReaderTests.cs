@@ -133,7 +133,49 @@ namespace UIMFLibrary.UnitTests
 
             Assert.AreEqual(171, scanVals[71]);
             Assert.AreEqual(6770, intensityVals[71]);
+            Assert.AreEqual(stopScan - startScan + 1, scanVals.Length);
+            Console.Write(sb.ToString());
 
+
+        }
+
+        public void GetLCChromatogramTest1()
+        {
+            int startFrame = 600;
+            int endFrame = 800;
+            
+            int startScan = 100;
+            int stopScan = 350;
+            int frameType = 0;
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+            //string filePath = @"D:\Data\UIMF\Sarc\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            double targetMZ = 636.8466;    // see frame 1000, scan 170
+            double toleranceInPPM = 20;
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+            int[] frameVals = null;
+            int[] intensityVals = null;
+
+            //m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+            m_reader.GetLCProfile(startFrame, endFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+                sb.Append(frameVals[i]);
+                sb.Append('\t');
+                sb.Append(intensityVals[i]);
+                sb.Append(Environment.NewLine);
+            }
+
+            //Assert.AreEqual(171, frameVals[71]);
+            //Assert.AreEqual(6770, intensityVals[71]);
+            Assert.AreEqual(endFrame - startFrame + 1, frameVals.Length);
             Console.Write(sb.ToString());
 
 
