@@ -534,6 +534,101 @@ namespace UIMFLibrary
             return countPerSpectrum;
         }
 
+
+        public int[][][] GetIntensityBlock(int startFrame, int endFrame, int frameType, int startScan, int endScan, int startBin, int endBin)
+        {
+            bool proceed = false;
+            int[][][] intensities = null;
+            
+
+            if (startFrame > 0 && endFrame>startFrame)
+            {
+                proceed = true;
+            }
+
+            //check input parameters
+            if (proceed && (endScan - startScan) >= 0 && (endBin - startBin) >= 0 )
+            {
+
+                if (endBin > m_globalParameters.Bins)
+                {
+                    endBin = m_globalParameters.Bins;
+                }
+
+                if (startBin < 0)
+                {
+                    startBin = 0;
+                }
+
+            }
+
+
+            if (proceed)
+            {
+
+                //initialize the intensities return two-D array
+                intensities = new int[endFrame-startFrame+1][][];
+                for (int i = 0; i < endFrame - startFrame + 1; i++)
+                {
+                    intensities[i] = new int[endScan - startScan + 1][];
+                    for (int j = 0; j < endScan - startScan + 1; j++)
+                    {
+                        intensities[i][j] = new int[endBin - startBin + 1];
+                    }
+                }
+
+                //now setup queries to retrieve data (AARON: there is probably a better query method for this)
+                m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrame));
+                m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrame));
+                m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+                m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+                m_sqliteDataReader = m_sumScansCommand.ExecuteReader();
+
+                byte[] spectra;
+                byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
+                while (m_sqliteDataReader.Read())
+                {
+                    int ibin = 0;
+                    int out_len;
+
+                    spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+                    int scanNum = Convert.ToInt32(m_sqliteDataReader["ScanNum"]);
+                    int frameNum = Convert.ToInt32(m_sqliteDataReader["FrameNum"]);
+
+                    //get frame number so that we can get the frame calibration parameters
+                    if (spectra.Length > 0)
+                    {
+                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
+                        int numBins = out_len / DATASIZE;
+                        int decoded_intensityValue;
+                        for (int i = 0; i < numBins; i++)
+                        {
+                            decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                            if (decoded_intensityValue < 0)
+                            {
+                                ibin += -decoded_intensityValue;
+                            }
+                            else
+                            {
+                                if (startBin <= ibin && ibin <= endBin)
+                                {
+                                    intensities[frameNum-startFrame][scanNum - startScan][ibin - startBin] = decoded_intensityValue;
+                                }
+                                ibin++;
+                            }
+                        }
+                    }
+                }
+                m_sqliteDataReader.Close();
+
+            }
+
+            return intensities;
+        }
+
+
+
         /**
          * @description:
          *         //this method returns all the intensities without summing for that block
@@ -643,7 +738,7 @@ namespace UIMFLibrary
                    //the retrieved values.
 
          * */
-		public int[][] GetIntensityBlock(int startFrame, int endFrame, int frameType, int startScan, int endScan, int startBin, int endBin)
+/*		public int[][] GetIntensityBlock(int startFrame, int endFrame, int frameType, int startScan, int endScan, int startBin, int endBin)
 		{
 			bool proceed = false;
 			FrameParameters fp = null;
@@ -736,7 +831,8 @@ namespace UIMFLibrary
 			}
 
 			return intensities;
-		}
+		}*/
+
 
         // v1.2 caching methods
         private void cacheSpectra(int startFrame, int endFrame, int frameType)
@@ -1658,30 +1754,56 @@ namespace UIMFLibrary
             }
 
             frameValues = new int[endFrame - startFrame + 1];
-            intensities = null;
-            for (int frame = startFrame; frame < endFrame; frame++)
+            
+            int [] lowerUpperBins  = GetUpperLowerBinsFromMz(startFrame, targetMZ, toleranceInMZ);
+            intensities = new int[endFrame - startFrame + 1];
+
+            int[][][] frameIntensities = GetIntensityBlock(startFrame, endFrame, frameType, startScan, endScan, lowerUpperBins[0], lowerUpperBins[1]);
+            for (int frame = startFrame; frame <= endFrame; frame++)
             {
-                int [] driftIntensities = new int[1];
-                int[] driftScanValues = new int[1];
-                frameValues[frame - startFrame] = frame;
-                FrameParameters fp = GetFrameParameters(frame);
-                if (fp.FrameType == frameType)
+                int scanSum = 0; 
+                for (int scan = startScan; scan <= endScan; scan++)
                 {
-                    GetDriftTimeProfile(frame, frameType, startScan, endScan, targetMZ, toleranceInMZ, ref driftScanValues, ref driftIntensities);
-                    if (intensities == null)
+
+                    int binSum = 0; 
+                    for (int bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
                     {
-                        intensities = new int[driftIntensities.Length];
+                        binSum += frameIntensities[frame - startFrame][scan - startScan][bin - lowerUpperBins[0]];
                     }
 
-                    for (int i = 0; i < driftIntensities.Length; i++)
-                    {
-                        intensities[i] += driftIntensities[i];
-                    }
-
+                    scanSum += binSum;
                 }
 
+                intensities[frame - startFrame] = scanSum;
+                    
+                frameValues[frame - startFrame] = frame;
+            }
+        }
+
+
+        private int[] GetUpperLowerBinsFromMz(int frameNum, double targetMZ, double toleranceInMZ)
+        {
+            int[] bins = new int[2];
+            double lowerMZ = targetMZ - toleranceInMZ;
+            double upperMZ = targetMZ + toleranceInMZ;
+            FrameParameters fp = GetFrameParameters(frameNum);
+            GlobalParameters gp = this.GetGlobalParameters();
+            bool polynomialCalibrantsAreUsed = (fp.a2 != 0 || fp.b2 != 0 || fp.c2 != 0 || fp.d2 != 0 || fp.e2 != 0 || fp.f2 != 0);
+            if (polynomialCalibrantsAreUsed)
+            {
+
+                //note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
+                // much more complicated.  So someone else can figure that out  :)
+                throw new NotImplementedException("DriftTime profile extraction hasn't been implemented for UIMF files containing polynomial calibration constants.");
             }
 
+            double lowerBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+
+            bins[0] = (int)Math.Round(lowerBin, 0);
+            bins[1] = (int)Math.Round(upperBin, 0);
+
+            return bins;
 
         }
 
