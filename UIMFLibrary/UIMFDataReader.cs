@@ -24,6 +24,7 @@ namespace UIMFLibrary
 
         // v1.2 prepared statements
         public SQLiteCommand m_sumScansCommand;
+        public SQLiteCommand m_getFrameNumbers;
         public SQLiteCommand m_getSpectrumCommand;
         public SQLiteCommand m_getCountPerSpectrumCommand;
         public SQLiteCommand m_getCountPerFrameCommand;
@@ -37,6 +38,7 @@ namespace UIMFLibrary
         //<int, FrameParameters>
         //private Hashtable mFrameParametersCache = new Hashtable();  
         private Dictionary<int, FrameParameters> m_frameParametersCache = new Dictionary<int, FrameParameters>();
+        private int[] m_frameNumbers = null;
         private static int m_errMessageCounter = 0;
 
         // v1.2 Caching
@@ -92,6 +94,10 @@ namespace UIMFLibrary
             m_sumScansCommand.CommandText = "SELECT ScanNum, FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
             m_sumScansCommand.Prepare();
 
+            m_getFrameNumbers = m_uimfDatabaseConnection.CreateCommand();
+            m_getFrameNumbers.CommandText = "SELECT FrameNum from Frame_Parameters";
+            m_getFrameNumbers.Prepare();
+
             m_sumScansCachedCommand = m_uimfDatabaseConnection.CreateCommand();
             m_sumScansCachedCommand.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = :FrameNum ORDER BY ScanNum ASC";
             m_sumScansCachedCommand.Prepare();
@@ -118,6 +124,11 @@ namespace UIMFLibrary
             if (m_sumScansCommand != null)
             {
                 m_sumScansCommand.Dispose();
+            }
+
+            if (m_getFrameNumbers != null)
+            {
+                m_getFrameNumbers.Dispose();
             }
 
             if (m_getCountPerSpectrumCommand != null)
@@ -506,6 +517,33 @@ namespace UIMFLibrary
             }
 
             return countPerFrame;
+        }
+
+        public int[] GetFrameNumbers()
+        {
+
+            if (m_frameNumbers == null)
+            {
+                try
+                {
+                    SQLiteDataReader reader = m_getFrameNumbers.ExecuteReader();
+                    m_frameNumbers = new int[m_globalParameters.NumFrames];
+                    int counter = 0;
+                    while (reader.Read())
+                    {
+
+                        m_frameNumbers[counter++] = Convert.ToInt32(reader[0]);
+                    
+                    }
+                   
+                }
+                catch (Exception e)
+                {
+                }
+            }
+
+            return m_frameNumbers;
+
         }
 
         public int GetCountPerSpectrum(int frame_num, int scan_num)

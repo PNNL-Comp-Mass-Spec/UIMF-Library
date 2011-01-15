@@ -19,7 +19,8 @@ using System.Collections.Generic;
 [TestFixture]
 public class TestClass
 {
-    string FileName = @"C:\\IMS\\SarcopeniaStudy\\HSer_0pt25_380_18_c1_75um_fr2970_Cheetah_0000.uimf";
+    //string FileName = @"C:\\IMS\\SarcopeniaStudy\\HSer_0pt25_380_18_c1_75um_fr2970_Cheetah_0000.uimf";
+    string FileName = "C:\\ProteomicsSoftwareTools\\IMF2UIMF\\trunk\\MikesIMFFiles\\QC_Shew_IMS4_QTOF3_45min_run3_4bit_0000.uimf";
     UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader();
     UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter();
 
@@ -384,20 +385,19 @@ public class TestClass
     {
         if (dr.OpenUIMF(FileName))
         {
-            int intFrameNumber = 3;
-            int intNonZeroPointsInFrame = 0;
-            FrameParameters fp = dr.GetFrameParameters(intFrameNumber);
 
-            for (int i = 0; i < fp.Scans; i++)
+
+            int intFrameNumber = 468;
+            FrameParameters fp = dr.GetFrameParameters(intFrameNumber);
+            GlobalParameters gp = dr.GetGlobalParameters();
+            int [] frameNumbers = dr.GetFrameNumbers();
+
+            for (int i = 0; i < frameNumbers.Length; i++)
             {
-                intNonZeroPointsInFrame += dr.GetCountPerSpectrum(intFrameNumber, i);
+                Console.WriteLine(frameNumbers[i]);
             }
 
-            Console.WriteLine(intNonZeroPointsInFrame);
-
-            intNonZeroPointsInFrame = dr.GetCountPerFrame(intFrameNumber);
-
-            Console.WriteLine(intNonZeroPointsInFrame);
+           
             dr.CloseUIMF();
             
         }

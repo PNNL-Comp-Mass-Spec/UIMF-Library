@@ -16,7 +16,7 @@ namespace UIMFLibrary.UnitTests
         public void readMSLevelDataFromFileContainingBothMS_and_MSMSData()
         {
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
-
+            //string filePath = "C:\\ProteomicsSoftwareTools\\IMF2UIMF\\trunk\\MikesIMFFiles\\QC_Shew_IMS4_QTOF3_45min_run3_4bit_0000.uimf";
             UIMFLibrary.DataReader reader = new DataReader();
             reader.OpenUIMF(filePath);
 
@@ -59,13 +59,20 @@ namespace UIMFLibrary.UnitTests
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < gp.Bins; i++)
+            double prevMz = 0;
+            for (int i = 0; i < 400000; i++)
             {
                 sb.Append(i);
                 sb.Append('\t');
-                decimal mz = (decimal)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
+                double mz = (double)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
 
                 sb.Append(mz);
+
+                sb.Append('\t');
+
+                double ppmDifference = ((mz - prevMz) * Math.Pow(10,6)) / mz;
+                prevMz = mz;
+                sb.Append(ppmDifference);
                 sb.Append(Environment.NewLine);
 
             }
