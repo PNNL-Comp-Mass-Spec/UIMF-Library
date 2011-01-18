@@ -1784,6 +1784,75 @@ namespace UIMFLibrary
         }
 
 
+        /// <summary>
+        /// Returns the x,y,z arrays needed for a surface plot for the elution of the species in both the LC and drifttime dimensions
+        /// </summary>
+        /// <param name="startFrame"></param>
+        /// <param name="endFrame"></param>
+        /// <param name="frameType"></param>
+        /// <param name="startScan"></param>
+        /// <param name="endScan"></param>
+        /// <param name="targetMZ"></param>
+        /// <param name="toleranceInMZ"></param>
+        /// <param name="frameValues"></param>
+        /// <param name="scanValues"></param>
+        /// <param name="intensities"></param>
+        public void Get3DElutionProfile(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] frameValues, ref int[] scanValues, ref int[] intensities)
+        {
+
+            if (startFrame > endFrame)
+            {
+                throw new System.ArgumentException("Failed to get 3D profile. Input startFrame was greater than input endFrame");
+            }
+
+            if (startScan > endScan)
+            {
+                throw new System.ArgumentException("Failed to get 3D profile. Input startScan was greater than input endScan");
+            }
+
+            int lengthOfOutputArrays = (endFrame - startFrame + 1) * (endScan - startScan + 1);
+
+            frameValues = new int[lengthOfOutputArrays];
+            scanValues = new int[lengthOfOutputArrays];
+            intensities = new int[lengthOfOutputArrays];
+
+
+            int[] lowerUpperBins = GetUpperLowerBinsFromMz(startFrame, targetMZ, toleranceInMZ);
+            
+            int[][][] frameIntensities = GetIntensityBlock(startFrame, endFrame, frameType, startScan, endScan, lowerUpperBins[0], lowerUpperBins[1]);
+
+            int counter = 0;
+
+            for (int frame = startFrame; frame <= endFrame; frame++)
+            {
+  
+                for (int scan = startScan; scan <= endScan; scan++)
+                {
+
+                    int sumAcrossBins = 0;
+                    for (int bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
+                    {
+                        int binIntensity = frameIntensities[frame - startFrame][scan-startScan][bin-lowerUpperBins[0]];
+                        sumAcrossBins += binIntensity;
+                    }
+
+                    frameValues[counter] = frame;
+                    scanValues[counter] = scan;
+                    intensities[counter] = sumAcrossBins;
+
+                    counter++;
+
+  
+                }
+
+                
+            }
+
+
+        }
+
+
+
         public void GetLCProfile(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] frameValues, ref int[] intensities)
         {
             if (startFrame > endFrame )
