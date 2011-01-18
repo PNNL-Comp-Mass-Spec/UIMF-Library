@@ -169,8 +169,10 @@ namespace UIMFLibrary.UnitTests
             int[] intensityVals = null;
 
             //m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             m_reader.GetLCProfile(startFrame, endFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
-
+            sw.Stop();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < frameVals.Length; i++)
             {
@@ -184,7 +186,51 @@ namespace UIMFLibrary.UnitTests
             //Assert.AreEqual(6770, intensityVals[71]);
             Assert.AreEqual(endFrame - startFrame + 1, frameVals.Length);
             Console.Write(sb.ToString());
+            Console.WriteLine("Time (ms) = "+sw.ElapsedMilliseconds);
 
+        }
+
+        public void GetLCChromatogramTest2()
+        {
+            int startFrame = 600;
+            int endFrame = 800;
+
+            int startScan = 100;
+            int stopScan = 350;
+            int frameType = 0;
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+            //string filePath = @"D:\Data\UIMF\Sarc\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            double targetMZ = 636.8466;    // see frame 1000, scan 170
+            double toleranceInPPM = 20;
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+            int[] frameVals = null;
+            int[] intensityVals = null;
+
+            //m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            m_reader.GetLCProfile(startFrame, endFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+            sw.Stop();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+                sb.Append(frameVals[i]);
+                sb.Append('\t');
+                sb.Append(intensityVals[i]);
+                sb.Append(Environment.NewLine);
+            }
+
+            //Assert.AreEqual(171, frameVals[71]);
+            //Assert.AreEqual(6770, intensityVals[71]);
+            Assert.AreEqual(endFrame - startFrame + 1, frameVals.Length);
+            Console.Write(sb.ToString());
+            Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
 
         }
 
@@ -261,9 +307,7 @@ namespace UIMFLibrary.UnitTests
 
         }
 
-
-
-        [Test]
+               [Test]
         public void GetIntensityBlockForAGivenMZRange()
         {
             int testFrame = 1000;
@@ -330,10 +374,303 @@ namespace UIMFLibrary.UnitTests
         }
 
 
+        [Test]
+        public void GetIntensityBlock_For_MZRange_test2()
+        {
+            int startFrame = 1000;
+            int stopFrame = 1003;
+
+            int startScan = 150;
+            int stopScan = 200;
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = m_reader.GetGlobalParameters();
+            FrameParameters fp = m_reader.GetFrameParameters(startFrame);
+
+
+            double targetMZ = 636.8466;    // see frame 1000, scan 170
+
+            double toleranceInPPM = 20;
+
+
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+            double lowerMZ = targetMZ - toleranceInMZ;
+            double upperMZ = targetMZ + toleranceInMZ;
+
+            double lowerBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+
+
+            int roundedLowerBin = (int)Math.Round(lowerBin, 0);
+            int roundedUpperBin = (int)Math.Round(upperBin, 0);
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int[][][] intensityBlock = m_reader.GetIntensityBlock(startFrame,stopFrame, 0, startScan, stopScan, roundedLowerBin, roundedUpperBin);
+            sw.Stop();
+
+
+            int lengthOfSecondDimension = stopScan - startScan + 1;
+            int lengthOfBinDimension = roundedUpperBin - roundedLowerBin + 1;
 
 
 
 
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < intensityBlock.GetLength(0); i++)
+            {
+                
+                for (int j = 0; j < lengthOfSecondDimension; j++)
+                {
+                    for (int k = 0; k < lengthOfBinDimension; k++)
+                    {
+                        sb.Append((i+startFrame) + "\t" + (j+startScan) + "\t" + (k+roundedLowerBin) + "\t");
+                        sb.Append(intensityBlock[i][j][k] + Environment.NewLine);
+                       
+
+                    }
+
+                   
+                    
+                }
+               
+            }
+
+            Console.WriteLine(sb.ToString());
+            Console.WriteLine("XIC time = " + sw.ElapsedMilliseconds);
+            return;
+
+
+        }
+
+
+        [Test]
+        public void GetIntensityBlock_For_MZRange_sumNeighboringBins()
+        {
+            int startFrame = 1000;
+            int stopFrame = 1003;
+
+            int startScan = 150;
+            int stopScan = 200;
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = m_reader.GetGlobalParameters();
+            FrameParameters fp = m_reader.GetFrameParameters(startFrame);
+
+
+            double targetMZ = 636.8466;    // see frame 1000, scan 170
+
+            double toleranceInPPM = 20;
+
+
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+            double lowerMZ = targetMZ - toleranceInMZ;
+            double upperMZ = targetMZ + toleranceInMZ;
+
+            double lowerBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+
+
+            int roundedLowerBin = (int)Math.Round(lowerBin, 0);
+            int roundedUpperBin = (int)Math.Round(upperBin, 0);
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int[][][] intensityBlock = m_reader.GetIntensityBlock(startFrame, stopFrame, 0, startScan, stopScan, roundedLowerBin, roundedUpperBin);
+            sw.Stop();
+
+
+            int lengthOfSecondDimension = stopScan - startScan + 1;
+            int lengthOfBinDimension = roundedUpperBin - roundedLowerBin + 1;
+
+
+
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < intensityBlock.GetLength(0); i++)
+            {
+
+                for (int j = 0; j < lengthOfSecondDimension; j++)
+                {
+
+                    int sumAcrossBins = 0;
+                    for (int k = 0; k < lengthOfBinDimension; k++)
+                    {
+                        int binIntensity = intensityBlock[i][j][k];
+                        sumAcrossBins += binIntensity;
+                    }
+
+                    sb.Append((i + startFrame) + "\t" + (j + startScan) + "\t" + sumAcrossBins + Environment.NewLine);
+                }
+
+            }
+
+            Console.WriteLine(sb.ToString());
+            Console.WriteLine("XIC time = " + sw.ElapsedMilliseconds);
+            return;
+
+
+        }
+
+        [Test]
+        public void Get3DElutionProfile_test1()
+        {
+            //int startFrame = 1000;
+            //int stopFrame = 1003;
+
+            int startFrame = 2030;
+            int stopFrame = 2230;
+
+
+            //int startScan = 150;
+            //int stopScan = 200;
+
+
+            int startScan = 110;
+            int stopScan = 210;
+
+
+
+            double targetMZ = 479.5674;    // see frame 2130, scan 153
+
+            double toleranceInPPM = 25;
+
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            int[] frameVals = null;
+            int[] scanVals = null;
+            int[] intensityVals = null;
+
+            m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
+                
+            }
+
+            Console.WriteLine(sb.ToString());
+
+
+        }
+
+
+        [Test]
+        public void Get3DElutionProfile_test2()
+        {
+            //int startFrame = 1000;
+            //int stopFrame = 1003;
+
+            int startFrame = 400;
+            int stopFrame = 600;
+
+
+            //int startScan = 150;
+            //int stopScan = 200;
+
+
+            int startScan = 110;
+            int stopScan = 210;
+
+
+
+            double targetMZ = 463.5389;    // see frame 2130, scan 153
+
+            double toleranceInPPM = 25;
+
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            int[] frameVals = null;
+            int[] scanVals = null;
+            int[] intensityVals = null;
+
+            m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
+
+            }
+
+            Console.WriteLine(sb.ToString());
+
+
+        }
+
+
+        [Test]
+        public void Get3DElutionProfile_test3()
+        {
+            //int startFrame = 1000;
+            //int stopFrame = 1003;
+
+            int startFrame = 400;
+            int stopFrame = 600;
+
+
+            //int startScan = 150;
+            //int stopScan = 200;
+
+
+            int startScan = 110;
+            int stopScan = 210;
+
+
+
+            double targetMZ = 475.7499;    
+
+            double toleranceInPPM = 25;
+
+            double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
+
+
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+
+            int[] frameVals = null;
+            int[] scanVals = null;
+            int[] intensityVals = null;
+
+
+            m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
+
+            }
+
+            Console.WriteLine(sb.ToString());
+
+
+        }
 
 
         private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
