@@ -547,6 +547,7 @@ namespace UIMFLibrary
                         m_frameNumbers[counter++] = Convert.ToInt32(reader[0]);
                     
                     }
+                    reader.Close();
                    
                 }
                 catch (Exception e)
