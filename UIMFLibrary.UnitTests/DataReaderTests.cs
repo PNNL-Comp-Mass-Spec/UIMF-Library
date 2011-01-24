@@ -12,6 +12,89 @@ namespace UIMFLibrary.UnitTests
     {
         DataReader m_reader;
 
+
+        [Test]
+        public void getSpectrumTest()
+        {
+            string filePath = "C:\\ProteomicsSoftwareTools\\IMF2UIMF\\testData\\QC_Shew_IMS4_QTOF3_45min_run1_4bit_0000_inverse.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+            int numBins = gp.Bins;
+
+            double[] xvals = new double[numBins];
+            double[] yvals = new double[numBins];
+
+            reader.GetSpectrum(381, 56, xvals, yvals);
+
+            for (int i = 0; i < xvals.Length; i++)
+            {
+                Console.WriteLine(xvals[i] + "\t" + yvals[i]);
+
+            }
+
+            reader.CloseUIMF();
+
+        }
+
+        [Test]
+        public void variableSummingTest()
+        {
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+
+            int numBins = gp.Bins;
+            double[] xvals = new double[numBins];
+            int[] yvals = new int[numBins];
+            int[] yvals1 = new int[numBins];
+
+
+            int endFrame = 10;
+            int startFrame = 15;
+            int startScan = 350;
+            int endScan = 390;
+
+
+            //sum a fixed range of scans within a set of frames
+            reader.SumScans(xvals, yvals, 0, startFrame, endFrame, startScan, endScan);
+            //reader.GetSpectrum(10, 350, yvals, yvals1);
+
+            Console.WriteLine("Finished running sum scans");
+
+            List<int> frameNumbers = new List<int>();
+            //create a list of frame Numbers
+            for (int i = 0; i < endFrame-startFrame+1; i++)
+            {
+                frameNumbers.Add(i + startFrame);
+            }
+
+            List<List<int>> scanNumbersForEachFrame = new List<List<int>>();
+
+            //create a single list of scan numbers for this test
+            List<int> scanNumbers = new List<int>();
+
+            for (int i = 0; i < endScan-startScan+1; i++)
+            {
+                scanNumbers.Add(i + startScan);
+            }
+
+            for (int i = 0; i < endFrame-startFrame+1; i++)
+            {
+
+                scanNumbersForEachFrame.Add(scanNumbers);
+                
+            }
+
+            reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
+
+            Assert.AreEqual(yvals, yvals1);
+
+        }
+
         [Test]
         public void readMSLevelDataFromFileContainingBothMS_and_MSMSData()
         {
@@ -33,7 +116,6 @@ namespace UIMFLibrary.UnitTests
 
             Assert.AreNotEqual(null, xvals);
             Assert.AreNotEqual(0, xvals.Length);
-
 
             //TODO: add additional assertions here
             reader.SumScans(xvals1, yvals1, 2, 10, 12, 100, 500);
@@ -251,15 +333,11 @@ namespace UIMFLibrary.UnitTests
             double[] xvals1 = new double[numBins];
             int[] yvals1 = new int[numBins];
 
-
             int scanNumber = 500;
-
             Assert.AreEqual(reader.GetCountPerSpectrum(4, scanNumber), reader.GetSpectrum(4, scanNumber, yvals, xvals));
-            
 
-            
-        }
-
+       }
+        
 
         [Test]
         public void GetChromatogram_SpeedTest1()
@@ -372,6 +450,9 @@ namespace UIMFLibrary.UnitTests
 
 
         }
+
+             
+
 
 
         [Test]
@@ -608,6 +689,7 @@ namespace UIMFLibrary.UnitTests
             int[] intensityVals = null;
 
             m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+            int [][] values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ);
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < frameVals.Length; i++)
@@ -616,11 +698,38 @@ namespace UIMFLibrary.UnitTests
 
             }
 
+            for (int i = 0; i < values.Length; i++)
+            {
+                for (int j = 0; j < values[i].Length; j++)
+                {
+                    Console.WriteLine("values[" + (i+startFrame).ToString() + "][" + (j+startScan).ToString() + "]=" + values[i][j].ToString());
+                }
+                
+            }
+            Console.WriteLine("Writing your string buffer");
             Console.WriteLine(sb.ToString());
 
 
         }
+        [Test]
+        public void GetBPISortedList()
+        {
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+            
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
 
+            GlobalParameters gp = m_reader.GetGlobalParameters();
+            FrameParameters fp = m_reader.GetFrameParameters(1);
+
+            double [] bpi = new double [gp.NumFrames*fp.Scans];
+
+            
+            m_reader.GetBPI(bpi, 0, 1, 2400, 0, 600);
+
+
+            m_reader.CloseUIMF();
+        }
 
         [Test]
         public void Get3DElutionProfile_test3()

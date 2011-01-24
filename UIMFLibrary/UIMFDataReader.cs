@@ -18,6 +18,9 @@ namespace UIMFLibrary
     {
         private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
         private const int MAXMZ = 5000;
+        private const string BPI = "BPI";
+        private const string TIC = "TIC";
+            
         public SQLiteConnection m_uimfDatabaseConnection;
         // AARON: SQLiteDataReaders might be better managable than currently implement.
         public SQLiteDataReader m_sqliteDataReader;
@@ -31,6 +34,7 @@ namespace UIMFLibrary
         public SQLiteCommand m_sumScansCachedCommand;
         public SQLiteCommand m_getFrameParametersCommand;
         public SQLiteCommand dbcmd_PreparedStmt;
+        public SQLiteCommand m_sumVariableScansPerFrameCommand;
 
         private GlobalParameters m_globalParameters = null;
         // AARON: trying to improve performance here by substituting generic
@@ -90,6 +94,11 @@ namespace UIMFLibrary
 
         private void LoadPrepStmts()
         {
+            m_sumVariableScansPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
+            
+            
+
+
             m_sumScansCommand = m_uimfDatabaseConnection.CreateCommand();
             m_sumScansCommand.CommandText = "SELECT ScanNum, FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
             m_sumScansCommand.Prepare();
@@ -519,6 +528,9 @@ namespace UIMFLibrary
             return countPerFrame;
         }
 
+        /**
+         * */
+
         public int[] GetFrameNumbers()
         {
 
@@ -664,7 +676,6 @@ namespace UIMFLibrary
 
             return intensities;
         }
-
 
 
         /**
@@ -1156,7 +1167,8 @@ namespace UIMFLibrary
                                     if (m_powersOfT[ibin, 0] == 0.0D)
                                     {
                                         m_powersOfT[ibin, 0] = (double)ibin * m_globalParameters.BinWidth / 1000;
-                                        double step = System.Math.Pow(m_powersOfT[ibin, 0], 2);
+                                        //double step = System.Math.Pow(m_powersOfT[ibin, 0], 2); 
+                                        double step = m_powersOfT[ibin, 0] * m_powersOfT[ibin, 0] ;
                                         for (int j = 0; j < 5; j++)
                                         {
                                             m_powersOfT[ibin, j + 1] = m_powersOfT[ibin, j] * step;
@@ -1279,6 +1291,11 @@ namespace UIMFLibrary
         }
 
 
+/*        public int SumScans(int[] frameNumbers, int[] scanNumbers, int frameType)
+        {
+
+        }*/
+
         // point the old SumScans methods to the cached version.
         public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
@@ -1364,6 +1381,8 @@ namespace UIMFLibrary
             return max_bin;
         }
 
+
+        
         public int SumScans(double[] mzs, float[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
 
@@ -1462,16 +1481,16 @@ namespace UIMFLibrary
 
         // This function extracts BPI from startFrame to endFrame and startScan to endScan
         // and returns an array BPI[]
-        public void GetBPI(double[] BPI, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+        public void GetBPI(double[] bpi, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
-            GetTICorBPI(BPI, frameType, startFrame, endFrame, startScan, endScan, "BPI");
+            GetTICorBPI(bpi, frameType, startFrame, endFrame, startScan, endScan, BPI);
         }
 
         // This function extracts TIC from startFrame to endFrame and startScan to endScan
         // and returns an array TIC[]
-        public void GetTIC(double[] TIC, int frameType, int startFrame, int endFrame, int startScan, int endScan)
+        public void GetTIC(double[] tic, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
-            GetTICorBPI(TIC, frameType, startFrame, endFrame, startScan, endScan, "TIC");
+            GetTICorBPI(tic, frameType, startFrame, endFrame, startScan, endScan, TIC);
         }
 
         public void GetTIC(double[] TIC, int frameType)
@@ -1784,6 +1803,126 @@ namespace UIMFLibrary
         }
 
 
+        public int[][] GetFramesAndScanIntensitiesForAGivenMz(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ )
+        {
+            if (startFrame > endFrame)
+            {
+                throw new System.ArgumentException("Failed to get 3D profile. Input startFrame was greater than input endFrame");
+            }
+
+            if (startScan > endScan)
+            {
+                throw new System.ArgumentException("Failed to get 3D profile. Input startScan was greater than input endScan");
+            }
+
+            int[][] intensityValues = new int[endFrame - startFrame + 1][];
+            int[] lowerUpperBins = GetUpperLowerBinsFromMz(startFrame, targetMZ, toleranceInMZ);
+
+            int[][][] frameIntensities = GetIntensityBlock(startFrame, endFrame, frameType, startScan, endScan, lowerUpperBins[0], lowerUpperBins[1]);
+
+            
+            for (int frame = startFrame; frame <= endFrame; frame++)
+            {
+                intensityValues[frame-startFrame] = new int[endScan-startScan+1];
+                for (int scan = startScan; scan <= endScan; scan++)
+                {
+
+                    int sumAcrossBins = 0;
+                    for (int bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
+                    {
+                        int binIntensity = frameIntensities[frame - startFrame][scan - startScan][bin - lowerUpperBins[0]];
+                        sumAcrossBins += binIntensity;
+                    }
+
+                    intensityValues[frame - startFrame][scan - startScan] = sumAcrossBins;
+
+                }
+            }
+
+            return intensityValues;
+        }
+
+        public void SumScansForVariableRange(List<int> frameNumbers, List<List<int>> scanNumbers, int frameType, double[] mzs, int[] intensities)
+        {
+            SumScansForVariableRange( frameNumbers, scanNumbers, frameType, intensities);
+            FrameParameters fp = GetFrameParameters(frameNumbers[0]);
+            for (int i = 0; i < intensities.Length; i++)
+            {
+                if (intensities[i] > 0)
+                {
+                    mzs[i] = convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, i);
+                }
+
+            }
+
+        }
+
+        public void SumScansForVariableRange(List<int> frameNumbers, List<List<int>> scanNumbers, int frameType, int [] intensities)
+        {
+            System.Text.StringBuilder commandText;
+
+            //intensities = new int[m_globalParameters.Bins];
+
+            //Iterate through each list element to get frame number
+            for (int i = 0; i < frameNumbers.Count; i++)
+            {
+                commandText = new System.Text.StringBuilder("SELECT Intensities FROM Frame_Scans WHERE FrameNum = ");
+                
+                int frameNumber = frameNumbers[i];
+                commandText.Append( frameNumber + " AND ScanNum in (");
+                List<int> correspondingScans = scanNumbers[i];
+
+                for (int j = 0; j < correspondingScans.Count; j++)
+                {
+                    commandText.Append(correspondingScans[j].ToString() + ",");
+                }
+
+                //remove the last comma
+                commandText.Remove(commandText.Length - 1, 1);
+                commandText.Append(");");
+
+                m_sumVariableScansPerFrameCommand.CommandText = commandText.ToString();
+                m_sqliteDataReader = m_sumVariableScansPerFrameCommand.ExecuteReader();
+                byte[] spectra;
+                byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins];
+                
+                while (m_sqliteDataReader.Read())
+                {
+                    int ibin = 0;
+                    int out_len;
+
+                    spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+
+                    //get frame number so that we can get the frame calibration parameters
+                    if (spectra.Length > 0)
+                    {
+                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins);
+                        int numBins = out_len / DATASIZE;
+                        int decoded_intensityValue;
+                        for (int ix = 0; ix < numBins; ix++)
+                        {
+                            decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, ix * DATASIZE);
+                            if (decoded_intensityValue < 0)
+                            {
+                                ibin += -decoded_intensityValue;
+                            }
+                            else
+                            {
+                                intensities[ibin] += decoded_intensityValue;
+                                ibin++;
+                            }
+                        }
+                    }
+                }
+                m_sqliteDataReader.Close();
+
+                //construct query
+
+
+            }
+
+        }
+
         /// <summary>
         /// Returns the x,y,z arrays needed for a surface plot for the elution of the species in both the LC and drifttime dimensions
         /// </summary>
@@ -2020,6 +2159,20 @@ namespace UIMFLibrary
             reader.Close();
         }
 
+        private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
+        {
+            double t = bin * binWidth / 1000;
+            //double residualMassError  = fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
+            double residualMassError = 0;
+
+            double sqrtMZ = (double)(slope * ((t - correctionTimeForTOF / 1000 - intercept)));
+
+            double mz = sqrtMZ * sqrtMZ + residualMassError;
+            return mz;
+
+
+        }        
+        
       
     }
 }

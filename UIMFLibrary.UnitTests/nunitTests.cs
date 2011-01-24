@@ -380,6 +380,7 @@ public class TestClass
         Assert.AreEqual(intensities1, intensities2);
     }
 
+
     [Test]
     public void testGetCountPerFrame()
     {
@@ -396,8 +397,7 @@ public class TestClass
             {
                 Console.WriteLine(frameNumbers[i]);
             }
-
-           
+          
             dr.CloseUIMF();
             
         }
