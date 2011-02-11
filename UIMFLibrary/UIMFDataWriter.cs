@@ -103,26 +103,22 @@ namespace UIMFLibrary
 
 			// Create m_GlobalParameters Table  
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " +
-				"DateStarted STRING, " + // date experiment was started
-				"NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
-				"TimeOffset INT(4) NOT NULL, " + //  Offset from 0. All bin numbers must be offset by this amount  
-				"BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
-				"Bins INT(4) NOT NULL, " + // Total TOF bins in a frame
-				"TOFCorrectionTime FLOAT NOT NULL, " + //Instrument delay time
-				"FrameDataBlobVersion FLOAT NOT NULL, " +// Version of FrameDataBlob in T_Frame  
-				"ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
-				"TOFIntensityType TEXT NOT NULL, " + // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
-				"DatasetType TEXT, " + 
-			"Prescan_TOFPulses INT(4), " +
-				"Prescan_Accumulations INT(4), " +
-				"Prescan_TICThreshold INT(4), " +
-				"Prescan_Continuous BOOL, " +
-				"Prescan_Profile STRING," +
-                "HighPressureFunnelPressure FLOAT," +
-                "IonFunnelTrapPressure FLOAT," +
-                "RearIonFunnelPressure FLOAT, " +
-                "QuadrupolePressure FLOAT)";
+            m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " +
+                "DateStarted STRING, " + // date experiment was started
+                "NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
+                "TimeOffset INT(4) NOT NULL, " + //  Offset from 0. All bin numbers must be offset by this amount  
+                "BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
+                "Bins INT(4) NOT NULL, " + // Total TOF bins in a frame
+                "TOFCorrectionTime FLOAT NOT NULL, " + //Instrument delay time
+                "FrameDataBlobVersion FLOAT NOT NULL, " +// Version of FrameDataBlob in T_Frame  
+                "ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
+                "TOFIntensityType TEXT NOT NULL, " + // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
+                "DatasetType TEXT, " +
+            "Prescan_TOFPulses INT(4), " +
+                "Prescan_Accumulations INT(4), " +
+                "Prescan_TICThreshold INT(4), " +
+                "Prescan_Continuous BOOL, " +
+                "Prescan_Profile STRING)";
 				m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
@@ -802,7 +798,7 @@ namespace UIMFLibrary
 				"voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, " +
 				"PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure" +
                 "RearIonFunnelPressure, QuadrupolePressure) " +
-				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?, ?, ? );";
+				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?,?,? );";
 			m_dbCommandPrepareInsertFrame.Prepare();
 		}
 
