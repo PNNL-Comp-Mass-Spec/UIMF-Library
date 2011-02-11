@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using NUnit.Framework;
 using System.Diagnostics;
+using System.IO;
 
 namespace UIMFLibrary.UnitTests
 {
@@ -12,11 +13,82 @@ namespace UIMFLibrary.UnitTests
     {
         DataReader m_reader;
 
+        [Test]
+        public void getBPIListTest()
+        {
+            string filePath = "C:\\ProteomicsSoftwareTools\\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(filePath);
+
+            Stack<int[]> bpiStack = reader.GetFrameAndScanListByDescendingIntensity();
+
+            Console.WriteLine("The list is " + bpiStack.Count.ToString());
+            reader.CloseUIMF();
+
+        }
+
+
+        private void writeFile(byte[] data, String fileName)
+        {
+
+            StreamWriter writer = null;
+            FileStream ostream = null;
+            try
+            {
+                // Write the text to the file
+                string completeString = System.Text.Encoding.UTF8.GetString(data);
+                if (completeString != null)
+                {
+                    ostream = new FileStream(fileName, FileMode.Create, FileAccess.ReadWrite);
+
+                    writer = new StreamWriter(ostream, new UnicodeEncoding());
+                
+                    writer.Write(completeString);
+                    // Flush the output stream
+                    writer.Flush();
+                }
+            }
+            finally
+            {
+                if (writer != null)
+                {
+                    writer.Close();
+                }
+
+                if (ostream != null)
+                {
+                    ostream.Close();
+                }
+            }
+        }
+
+        [Test]
+        public void writeTableTest()
+        {
+                string filePath = "C:\\proteomicssoftwaretools\\Imf2uimf\\IMSConverterTestfile\\8pepMix_200nM_0001.uimf";
+                UIMFLibrary.DataReader reader = null; 
+                
+                try{
+                    reader = new DataReader();
+                    reader.OpenUIMF(filePath);
+
+                    writeFile(reader.getFileBytesFromTable("AcquireLogFile"), "C:\\proteomicssoftwaretools\\imf2uimf\\IMSConverterTestFile\\AcquireLog.txt");
+                    
+
+                }
+                finally{
+                    if ( reader != null){
+                    reader.CloseUIMF();
+                    }
+                }
+        }
+
+        
 
         [Test]
         public void getSpectrumTest()
         {
-            string filePath = "C:\\ProteomicsSoftwareTools\\IMF2UIMF\\testData\\QC_Shew_IMS4_QTOF3_45min_run1_4bit_0000_inverse.uimf";
+            string filePath = "C:\\ProteomicsSoftwareTools\\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf"; 
             UIMFLibrary.DataReader reader = new DataReader();
             reader.OpenUIMF(filePath);
 
@@ -26,22 +98,54 @@ namespace UIMFLibrary.UnitTests
             double[] xvals = new double[numBins];
             double[] yvals = new double[numBins];
 
-            reader.GetSpectrum(381, 56, xvals, yvals);
+            reader.GetSpectrum(306, 128, yvals, xvals);
 
             for (int i = 0; i < xvals.Length; i++)
             {
                 Console.WriteLine(xvals[i] + "\t" + yvals[i]);
-
             }
 
             reader.CloseUIMF();
 
         }
 
+
+
+        [Test]
+
+        public void sumScansTest()
+        {
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+            List<double> mzsList = new List<double>();
+            List<int> intensityList = new List<int>();
+            int numBins = gp.Bins;
+            double[] xvals = new double[numBins];
+            int[] yvals = new int[numBins];
+            int endFrame = 376;
+            int startFrame = 376;
+            int startScan = 158;
+            int endScan = 158;
+
+            //sum a fixed range of scans within a set of frames
+            int count1 = reader.GetCountPerSpectrum(startFrame, startScan);
+
+            Console.WriteLine("Number of non zero points in this data " + count1.ToString());
+            reader.SumScansNonCached(mzsList, intensityList, 0, startFrame, endFrame, startScan, endScan);
+
+            Assert.AreEqual(count1, mzsList.Count);
+            //Assert.AreEqual(xvals, mzsList.ToArray());
+            reader.CloseUIMF();
+        }
+    
+
         [Test]
         public void variableSummingTest()
         {
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
             UIMFLibrary.DataReader reader = new DataReader();
             reader.OpenUIMF(filePath);
 
@@ -53,10 +157,10 @@ namespace UIMFLibrary.UnitTests
             int[] yvals1 = new int[numBins];
 
 
-            int endFrame = 10;
-            int startFrame = 15;
-            int startScan = 350;
-            int endScan = 390;
+            int endFrame = 564;
+            int startFrame = 484;
+            int startScan = 73;
+            int endScan = 193;
 
 
             //sum a fixed range of scans within a set of frames
@@ -89,9 +193,16 @@ namespace UIMFLibrary.UnitTests
                 
             }
 
-            reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
+            List<double> mzList = new List<double>();
+            List<int> intensityList = new List<int>();
 
-            Assert.AreEqual(yvals, yvals1);
+            reader.SumScansNonCached(frameNumbers, scanNumbersForEachFrame,mzList, intensityList, 0, 5000);
+            //reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
+
+
+            //Assert.AreEqual(yvals, yvals1);
+
+            reader.CloseUIMF();
 
         }
 
@@ -337,6 +448,36 @@ namespace UIMFLibrary.UnitTests
             Assert.AreEqual(reader.GetCountPerSpectrum(4, scanNumber), reader.GetSpectrum(4, scanNumber, yvals, xvals));
 
        }
+        
+
+        [Test]
+        public void GetFramesAndScanIntensitiesForAGivenMzTest(){
+            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+            int startFrame = 306;
+            int startScan = 128;
+            double bpimz = 173.289545940302;
+            double toleranceInMZ = 25 / 1e6 * bpimz;
+            Console.WriteLine("Tolerance in mz  is " + toleranceInMZ);
+            m_reader = new DataReader();
+            m_reader.OpenUIMF(filePath);
+            int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
+
+            for (int i = 0; i < intensityMap.Length; i++)
+            {
+                for (int j = 0; j < intensityMap[i].Length; j++)
+                {
+                    Console.Write(intensityMap[i][j] + ",");
+                    
+                }
+                Console.WriteLine(";");
+            }
+
+            m_reader.CloseUIMF();
+
+             
+
+        }
         
 
         [Test]
@@ -609,20 +750,23 @@ namespace UIMFLibrary.UnitTests
             //int startFrame = 1000;
             //int stopFrame = 1003;
 
-            int startFrame = 2030;
-            int stopFrame = 2230;
+            int startFrame = 525;
+            int startScan = 154;
+            //double bpimz = 173.289545940302;
+
+
+            //int startFrame = 2030;
+            int stopFrame = 326;
 
 
             //int startScan = 150;
             //int stopScan = 200;
 
 
-            int startScan = 110;
-            int stopScan = 210;
-
-
-
-            double targetMZ = 479.5674;    // see frame 2130, scan 153
+            //int startScan = 110;
+            int stopScan = 148;
+            double targetMZ = 295.9078;
+            //479.5674;    // see frame 2130, scan 153
 
             double toleranceInPPM = 25;
 
@@ -638,19 +782,27 @@ namespace UIMFLibrary.UnitTests
             int[] scanVals = null;
             int[] intensityVals = null;
 
-            m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < frameVals.Length; i++)
+            m_reader.Get3DElutionProfile(startFrame-20, startFrame+20, 0, startScan-20, startScan+20, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+            int max = getMax(intensityVals);
+            float[] normInten = new float[intensityVals.Length];
+            for (int i = 0; i < intensityVals.Length; i++)
             {
-                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
+                    normInten[i]= (float)intensityVals[i] / max;
                 
             }
 
-            Console.WriteLine(sb.ToString());
-
+            printAsAMatrix(frameVals, intensityVals, 0.1f);
+            m_reader.CloseUIMF();
 
         }
+
+
+
+        private void findCustomContour(int[][] intensityMap, int lcTolerance, int dtTolerance)
+        {
+
+        }
+
 
 
         [Test]
@@ -659,55 +811,41 @@ namespace UIMFLibrary.UnitTests
             //int startFrame = 1000;
             //int stopFrame = 1003;
 
-            int startFrame = 400;
-            int stopFrame = 600;
+            int startFrame = 524;
+            int stopFrame = 524;
 
 
             //int startScan = 150;
             //int stopScan = 200;
 
 
-            int startScan = 110;
-            int stopScan = 210;
+            int startScan = 128;
+            int stopScan = 128;
 
-
-
-            double targetMZ = 463.5389;    // see frame 2130, scan 153
-
+            double targetMZ = 295.9019;    // see frame 2130, scan 153
             double toleranceInPPM = 25;
-
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-
 
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
             m_reader = new DataReader();
             m_reader.OpenUIMF(filePath);
 
-            int[] frameVals = null;
-            int[] scanVals = null;
-            int[] intensityVals = null;
 
-            m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
-            int [][] values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ);
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < frameVals.Length; i++)
-            {
-                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
-
-            }
+            int [][] values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame-40, startFrame+40, 0, startScan-60, startScan+60, targetMZ, toleranceInMZ);
 
             for (int i = 0; i < values.Length; i++)
             {
                 for (int j = 0; j < values[i].Length; j++)
                 {
-                    Console.WriteLine("values[" + (i+startFrame).ToString() + "][" + (j+startScan).ToString() + "]=" + values[i][j].ToString());
+                        Console.Write(values[i][j].ToString() + ",");
                 }
+                Console.Write("\n");
                 
             }
+
             Console.WriteLine("Writing your string buffer");
-            Console.WriteLine(sb.ToString());
+            m_reader.CloseUIMF();
 
 
         }
@@ -796,6 +934,104 @@ namespace UIMFLibrary.UnitTests
 
         }
 
+
+        private int getMax(int[] values)
+        {
+            int max = 0;
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] > max)
+                {
+                    max = values[i];
+                }
+                
+            }
+            return max;
+        }
+
+
+        private int getMax(int[][] values, out int xcoord, out int ycoord)
+        {
+            int max = 0;
+            xcoord = 0;
+            ycoord = 0;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                for (int j = 0; j < values[i].Length; j++)
+                {
+                    if (values[i][j] > max)
+                    {
+                        max = values[i][j];
+                        xcoord = i;
+                        ycoord = j;
+                    }
+                }
+            }
+
+            return max;
+        }
+
+        private void printAsAMatrix(int [] frameVals, float[] intensityVals, float cutoff ){
+            StringBuilder sb = new StringBuilder();
+            int frameValue = frameVals[0];
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+
+                if (frameValue != frameVals[i])
+                {
+                    sb.Append("\n");
+                    frameValue = frameVals[i];
+                }
+                else
+                {
+                    if (intensityVals[i] < cutoff)
+                    {
+                        sb.Append("0,");
+                    }
+                    else
+                    {
+                        sb.Append(intensityVals[i] + ",");
+                    }
+                }
+
+            }
+
+            Console.WriteLine(sb.ToString());
+
+
+        }
+
+        private void printAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
+        {
+            StringBuilder sb = new StringBuilder();
+            int frameValue = frameVals[0];
+            for (int i = 0; i < frameVals.Length; i++)
+            {
+
+                if (frameValue != frameVals[i])
+                {
+                    sb.Append("\n");
+                    frameValue = frameVals[i];
+                }
+                else
+                {
+                    if (intensityVals[i] < cutoff)
+                    {
+                        sb.Append("0,");
+                    }
+                    else
+                    {
+                        sb.Append(intensityVals[i] + ",");
+                    }
+                }
+
+            }
+
+            Console.WriteLine(sb.ToString());
+
+
+        }
 
 
 

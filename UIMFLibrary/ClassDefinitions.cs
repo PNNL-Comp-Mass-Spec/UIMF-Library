@@ -17,7 +17,7 @@ namespace UIMFLibrary
     /// Enumeration for details about a FRAME TYPE, whether it's a parent (regular MS) or a fragment (MSMS).
     /// Prescan is a special type of frame not used for downstream algorithms
     /// </summary>
-    enum FrameType { PRESCAN, MS, MSMS };
+    enum FrameType { PRESCAN, MS, MSMS, CALIBRATION };
 
     public class GlobalParameters
     {
@@ -37,6 +37,7 @@ namespace UIMFLibrary
 		public int Prescan_TICThreshold;
 		public bool Prescan_Continuous;		   // True or False
 		public string Prescan_Profile;	       // If continuous is true, set this to NULL;
+        
 	}
     public class FrameParameters
     {
@@ -81,6 +82,11 @@ namespace UIMFLibrary
         public double PressureBack;            // 30, Pressure at IMS exit
         public short MPBitOrder;               // 31, Determines original size of bit sequence
         public double[] FragmentationProfile;  // 36, Voltage profile used in fragmentation
+        public float HighPressureFunnelPressure;
+        public float IonFunnelTrapPressure;
+        public float RearIonFunnelPressure;
+        public float QuadrupolePressure;
+
     }
     public class IMSCOMP
     {

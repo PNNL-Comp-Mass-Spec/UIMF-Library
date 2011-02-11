@@ -118,7 +118,11 @@ namespace UIMFLibrary
 				"Prescan_Accumulations INT(4), " +
 				"Prescan_TICThreshold INT(4), " +
 				"Prescan_Continuous BOOL, " +
-				"Prescan_Profile STRING);";
+				"Prescan_Profile STRING," +
+                "HighPressureFunnelPressure FLOAT," +
+                "IonFunnelTrapPressure FLOAT," +
+                "RearIonFunnelPressure FLOAT, " +
+                "QuadrupolePressure FLOAT)";
 				m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
@@ -163,7 +167,12 @@ namespace UIMFLibrary
 				"PressureFront DOUBLE, " + // 29, Pressure at front of Drift Tube 
 				"PressureBack DOUBLE, " + // 30, Pressure at back of Drift Tube 
 				"MPBitOrder INT(1), " + // 31, Determines original size of bit sequence 
-				"FragmentationProfile BLOB);"; // Voltage profile used in fragmentation, Length number of Scans 
+				"FragmentationProfile BLOB," +
+                "HighPressureFunnelPressure FLOAT," +
+                "IonFunnelTrapPressure FLOAT," +
+                "RearIonFunnelPressure FLOAT, " +
+                "QuadrupolePressure FLOAT)"; 
+            // Voltage profile used in fragmentation, Length number of Scans 
 			m_dbCommandUimf.ExecuteNonQuery();			    
 
 			// Create Frame_Scans Table
@@ -222,13 +231,16 @@ namespace UIMFLibrary
         /// <param name="header"></param>
 		public void InsertGlobal(GlobalParameters header)
 		{
+
             m_globalParameters = header;
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters " +
-				"(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, " +
-				"TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile) " +
-				"VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
-				":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile);";
+            m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters " +
+                "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, " +
+                "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, HighPressureFunnelPressure, " +
+                "IonFunnelTrapPressure, RearIonFunnelPressure, QuadrupolePressure) " +
+                "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
+                ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile);";
+                
             
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
@@ -302,8 +314,13 @@ namespace UIMFLibrary
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront)); // 29, Pressure at front of Drift Tube 
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack)); // 30, Pressure at back of Drift Tube 
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder)); // 31, Determines original size of bit sequence 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", convertToBlob(frameParameters.FragmentationProfile)));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", convertToBlob(frameParameters.FragmentationProfile)));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IFTrapPressure", frameParameters.IonFunnelTrapPressure));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
             
+
 			m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
 			m_dbCommandPrepareInsertFrame.Parameters.Clear();
 		}
@@ -684,6 +701,39 @@ namespace UIMFLibrary
 		}
 
 
+        public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
+            try
+            {
+                try
+                {
+                    m_dbCommandUimf.ExecuteNonQuery();
+                }
+                catch (SQLiteException createTable)
+                {
+                    //means table is already present. let's try and insert data values into it.
+                }
+
+
+                m_dbCommandUimf.CommandText = "INSERT INTO " + tableName + " VALUES (:Buffer);";
+                m_dbCommandUimf.Prepare();
+
+                m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Buffer", fileBytesAsBuffer));
+
+                m_dbCommandUimf.ExecuteNonQuery();
+            }
+            finally
+            {
+                m_dbCommandUimf.Parameters.Clear();
+                m_dbCommandUimf.Dispose();
+            }
+
+            return true;   
+
+        }
+
 		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -750,8 +800,9 @@ namespace UIMFLibrary
 				"voltCapInlet, voltEntranceIFTIn, voltEntranceIFTOut, voltEntranceCondLmt, " + 
 				"voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
 				"voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, " +
-				"PressureFront, PressureBack, MPBitOrder, FragmentationProfile) " +
-				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? );";
+				"PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure" +
+                "RearIonFunnelPressure, QuadrupolePressure) " +
+				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?, ?, ? );";
 			m_dbCommandPrepareInsertFrame.Prepare();
 		}
 
@@ -784,6 +835,8 @@ namespace UIMFLibrary
 
 			return "'" + dt_string + "'";
 		}
+
+
 		private byte[] convertToBlob(double[] frag)
 		{
 			// convert the fragmentation profile into an array of bytes
