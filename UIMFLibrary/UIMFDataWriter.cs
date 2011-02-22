@@ -167,7 +167,9 @@ namespace UIMFLibrary
                 "HighPressureFunnelPressure FLOAT," +
                 "IonFunnelTrapPressure FLOAT," +
                 "RearIonFunnelPressure FLOAT, " +
-                "QuadrupolePressure FLOAT)"; 
+                "QuadrupolePressure FLOAT, " +
+                "ESIVoltage FLOAT, " +
+                "FloatVoltage FLOAT);"; 
             // Voltage profile used in fragmentation, Length number of Scans 
 			m_dbCommandUimf.ExecuteNonQuery();			    
 
@@ -215,6 +217,7 @@ namespace UIMFLibrary
 			
 			//ARS made this change to facilitate faster retrieval of scans/spectrums.
 			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
+            m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Parameters(FrameNum, FrameType);";
 			//ARS change ends
 
 			m_dbCommandUimf.ExecuteNonQuery();
@@ -232,12 +235,10 @@ namespace UIMFLibrary
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
             m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters " +
                 "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, " +
-                "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, HighPressureFunnelPressure, " +
-                "IonFunnelTrapPressure, RearIonFunnelPressure, QuadrupolePressure) " +
+                "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile) " +
                 "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
                 ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile);";
                 
-            
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TimeOffset", header.TimeOffset));
@@ -315,6 +316,8 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IFTrapPressure", frameParameters.IonFunnelTrapPressure));
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.FloatVoltage));
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.ESIVoltage));
             
 
 			m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
@@ -797,8 +800,8 @@ namespace UIMFLibrary
 				"voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
 				"voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, " +
 				"PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure" +
-                "RearIonFunnelPressure, QuadrupolePressure) " +
-				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?,?,? );";
+                "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage) " +
+				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 			m_dbCommandPrepareInsertFrame.Prepare();
 		}
 
@@ -807,7 +810,7 @@ namespace UIMFLibrary
 			//This function should be called before looping through each frame and scan
 			m_dbCommandPrepareInsertScan = m_dbConnection.CreateCommand();
 			m_dbCommandPrepareInsertScan.CommandText = "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) " +
-				"VALUES(?,?,?,?,?,?, ?);";
+				"VALUES(?,?,?,?,?,?,?);";
 			m_dbCommandPrepareInsertScan.Prepare();
 			
 		}

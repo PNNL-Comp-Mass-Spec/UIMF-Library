@@ -18,8 +18,11 @@ namespace UIMFLibrary
     {
         private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
         private const int MAXMZ = 5000;
+        private const int PARENTFRAMETYPE = 0;
+        private const int CALIBRATIONFRAMETYPE = 3;
         private const string BPI = "BPI";
         private const string TIC = "TIC";
+
             
         public SQLiteConnection m_uimfDatabaseConnection;
         // AARON: SQLiteDataReaders might be better managable than currently implement.
@@ -36,7 +39,8 @@ namespace UIMFLibrary
         public SQLiteCommand m_getFrameParametersCommand;
         public SQLiteCommand dbcmd_PreparedStmt;
         public SQLiteCommand m_sumVariableScansPerFrameCommand;
-        public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand; 
+        public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
+        public SQLiteCommand m_getAllFrameParameters;
         
 
         private GlobalParameters m_globalParameters = null;
@@ -99,7 +103,10 @@ namespace UIMFLibrary
         {
 
             m_getFileBytesCommand = m_uimfDatabaseConnection.CreateCommand();
-                       
+
+            m_getAllFrameParameters = m_uimfDatabaseConnection.CreateCommand();
+            m_getAllFrameParameters.CommandText = "Select * from Frame_Parameters WHERE FrameType=:FrameType ORDER BY FrameNum";
+            m_getAllFrameParameters.Prepare();
 
             m_sumVariableScansPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand = m_uimfDatabaseConnection.CreateCommand();
@@ -427,6 +434,105 @@ namespace UIMFLibrary
             return byteBuffer;
         }
 
+        public Dictionary<int, FrameParameters> GetAllParentFrameParameters()
+        {
+            return GetAllFrameParameters(PARENTFRAMETYPE);
+        }
+
+        public Dictionary<int, FrameParameters> GetAllCalibrationFrameParameters()
+        {
+            return GetAllFrameParameters(CALIBRATIONFRAMETYPE);
+        }
+
+        /**
+         * Returns the list of all frame parameters in order of sorted frame numbers
+         * 
+         */ 
+        public Dictionary<int, FrameParameters> GetAllFrameParameters(int frameType)
+        {
+            SQLiteDataReader reader = null;
+
+            try
+            {
+                m_getAllFrameParameters.Parameters.Add(new SQLiteParameter(":FrameType", frameType));
+
+                reader = m_getAllFrameParameters.ExecuteReader();
+                while (reader.Read())
+                {
+                    FrameParameters fp = new FrameParameters();
+                    fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
+                    if (!m_frameParametersCache.ContainsKey(fp.FrameNum))
+                    {
+                        fp.Duration = Convert.ToDouble(reader["Duration"]);
+                        fp.Accumulations = Convert.ToInt32(reader["Accumulations"]);
+                        fp.FrameType = (short)Convert.ToInt16(reader["FrameType"]);
+                        fp.Scans = Convert.ToInt32(reader["Scans"]);
+                        fp.IMFProfile = Convert.ToString(reader["IMFProfile"]);
+                        fp.TOFLosses = Convert.ToDouble(reader["TOFLosses"]);
+                        fp.AverageTOFLength = Convert.ToDouble(reader["AverageTOFLength"]);
+                        fp.CalibrationSlope = Convert.ToDouble(reader["CalibrationSlope"]);
+                        fp.CalibrationIntercept = Convert.ToDouble(reader["CalibrationIntercept"]);
+                        fp.Temperature = Convert.ToDouble(reader["Temperature"]);
+                        fp.voltHVRack1 = Convert.ToDouble(reader["voltHVRack1"]);
+                        fp.voltHVRack2 = Convert.ToDouble(reader["voltHVRack2"]);
+                        fp.voltHVRack3 = Convert.ToDouble(reader["voltHVRack3"]);
+                        fp.voltHVRack4 = Convert.ToDouble(reader["voltHVRack4"]);
+                        fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"]); // 14, Capilary Inlet Voltage
+                        fp.voltEntranceIFTIn = Convert.ToDouble(reader["voltEntranceIFTIn"]); // 15, IFT In Voltage
+                        fp.voltEntranceIFTOut = Convert.ToDouble(reader["voltEntranceIFTOut"]); // 16, IFT Out Voltage
+                        fp.voltEntranceCondLmt = Convert.ToDouble(reader["voltEntranceCondLmt"]); // 17, Cond Limit Voltage
+                        fp.voltTrapOut = Convert.ToDouble(reader["voltTrapOut"]); // 18, Trap Out Voltage
+                        fp.voltTrapIn = Convert.ToDouble(reader["voltTrapIn"]); // 19, Trap In Voltage
+                        fp.voltJetDist = Convert.ToDouble(reader["voltJetDist"]);              // 20, Jet Disruptor Voltage
+                        fp.voltQuad1 = Convert.ToDouble(reader["voltQuad1"]);                // 21, Fragmentation Quadrupole Voltage
+                        fp.voltCond1 = Convert.ToDouble(reader["voltCond1"]);                // 22, Fragmentation Conductance Voltage
+                        fp.voltQuad2 = Convert.ToDouble(reader["voltQuad2"]);                // 23, Fragmentation Quadrupole Voltage
+                        fp.voltCond2 = Convert.ToDouble(reader["voltCond2"]);                // 24, Fragmentation Conductance Voltage
+                        fp.voltIMSOut = Convert.ToDouble(reader["voltIMSOut"]);               // 25, IMS Out Voltage
+                        fp.voltExitIFTIn = Convert.ToDouble(reader["voltExitIFTIn"]);            // 26, IFT In Voltage
+                        fp.voltExitIFTOut = Convert.ToDouble(reader["voltExitIFTOut"]);           // 27, IFT Out Voltage
+                        fp.voltExitCondLmt = Convert.ToDouble(reader["voltExitCondLmt"]);           // 28, Cond Limit Voltage
+                        fp.PressureFront = Convert.ToDouble(reader["PressureFront"]);
+                        fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
+                        fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
+                        fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
+                        fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
+                        fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
+                        fp.ESIVoltage = Convert.ToDouble(reader["ESIVoltage"]);
+                        fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
+                        fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
+                        fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
+
+                        try
+                        {
+                            fp.a2 = Convert.ToDouble(reader["a2"]);
+                            fp.b2 = Convert.ToDouble(reader["b2"]);
+                            fp.c2 = Convert.ToDouble(reader["c2"]);
+                            fp.d2 = Convert.ToDouble(reader["d2"]);
+                            fp.e2 = Convert.ToDouble(reader["e2"]);
+                        }
+                        catch
+                        {
+                            if (m_errMessageCounter <= 10)
+                            {
+                                Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF, please get the newest version from \\\\floyd\\software");
+                                m_errMessageCounter++;
+                            }
+                        }
+
+                        m_frameParametersCache.Add(fp.FrameNum, fp);
+                    }
+                }
+
+            }   //end of if loop
+            finally
+            {
+                m_getAllFrameParameters.Parameters.Clear();
+                reader.Close();
+            }
+
+            return m_frameParametersCache;
+        }
 
         public void GetSpectrum(int frameNum, int scanNum, List<int> bins, List<int> intensities)
         {
@@ -577,9 +683,9 @@ namespace UIMFLibrary
             return countPerFrame;
         }
 
-        /**
-         * */
-
+     
+        //TODO: CHANGE THIS METHOD TO USE A FRAMETYPE
+        //-- deprecate in next release
         public int[] GetFrameNumbers()
         {
 
@@ -607,6 +713,7 @@ namespace UIMFLibrary
             return m_frameNumbers;
 
         }
+
 
         public int GetCountPerSpectrum(int frame_num, int scan_num)
         {
@@ -1754,12 +1861,12 @@ namespace UIMFLibrary
 
         public int[][] GetFramesAndScanIntensitiesForAGivenMz(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ )
         {
-            if (startFrame > endFrame)
+            if (startFrame > endFrame || startFrame <= 0)
             {
                 throw new System.ArgumentException("Failed to get 3D profile. Input startFrame was greater than input endFrame");
             }
 
-            if (startScan > endScan)
+            if (startScan > endScan || startScan < 0)
             {
                 throw new System.ArgumentException("Failed to get 3D profile. Input startScan was greater than input endScan");
             }

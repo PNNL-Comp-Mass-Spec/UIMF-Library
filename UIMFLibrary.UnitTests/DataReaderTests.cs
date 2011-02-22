@@ -12,6 +12,7 @@ namespace UIMFLibrary.UnitTests
     public class DataReaderTests
     {
         DataReader m_reader;
+        string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
         [Test]
         public void getBPIListTest()
@@ -750,31 +751,12 @@ namespace UIMFLibrary.UnitTests
             //int startFrame = 1000;
             //int stopFrame = 1003;
 
-            int startFrame = 525;
-            int startScan = 154;
-            //double bpimz = 173.289545940302;
-
-
-            //int startFrame = 2030;
-            int stopFrame = 326;
-
-
-            //int startScan = 150;
-            //int stopScan = 200;
-
-
-            //int startScan = 110;
-            int stopScan = 148;
-            double targetMZ = 295.9078;
-            //479.5674;    // see frame 2130, scan 153
-
+            int startFrame = 1280;
+            int startScan = 163;
+            double targetMZ = 464.25486;
             double toleranceInPPM = 25;
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-
-
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
-
             m_reader = new DataReader();
             m_reader.OpenUIMF(filePath);
 
@@ -797,30 +779,11 @@ namespace UIMFLibrary.UnitTests
         }
 
 
-
-        private void findCustomContour(int[][] intensityMap, int lcTolerance, int dtTolerance)
-        {
-
-        }
-
-
-
         [Test]
         public void Get3DElutionProfile_test2()
         {
-            //int startFrame = 1000;
-            //int stopFrame = 1003;
-
             int startFrame = 524;
-            int stopFrame = 524;
-
-
-            //int startScan = 150;
-            //int stopScan = 200;
-
-
             int startScan = 128;
-            int stopScan = 128;
 
             double targetMZ = 295.9019;    // see frame 2130, scan 153
             double toleranceInPPM = 25;

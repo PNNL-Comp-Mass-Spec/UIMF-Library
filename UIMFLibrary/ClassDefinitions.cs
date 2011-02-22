@@ -82,11 +82,12 @@ namespace UIMFLibrary
         public double PressureBack;            // 30, Pressure at IMS exit
         public short MPBitOrder;               // 31, Determines original size of bit sequence
         public double[] FragmentationProfile;  // 36, Voltage profile used in fragmentation
-        public float HighPressureFunnelPressure;
-        public float IonFunnelTrapPressure;
-        public float RearIonFunnelPressure;
-        public float QuadrupolePressure;
-
+        public double HighPressureFunnelPressure;
+        public double IonFunnelTrapPressure;
+        public double RearIonFunnelPressure;
+        public double QuadrupolePressure;
+        public double ESIVoltage;
+        public double FloatVoltage;
     }
     public class IMSCOMP
     {
