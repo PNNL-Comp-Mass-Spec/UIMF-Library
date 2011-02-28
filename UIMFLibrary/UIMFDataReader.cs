@@ -543,12 +543,19 @@ namespace UIMFLibrary
                         fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
                         fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                         fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
-                        fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
-                        fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
-                        fp.ESIVoltage = Convert.ToDouble(reader["ESIVoltage"]);
-                        fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
-                        fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
-                        fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
+
+                        try
+                        {
+                            fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
+                            fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
+                            fp.ESIVoltage = Convert.ToDouble(reader["ESIVoltage"]);
+                            fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
+                            fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
+                            fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
+                        }
+                        catch (IndexOutOfRangeException i)
+                        {
+                        }
 
                         try
                         {
