@@ -88,7 +88,10 @@ namespace UIMFLibrary
         public double QuadrupolePressure;
         public double ESIVoltage;
         public double FloatVoltage;
+        public int CalibrationDone = -1;
+
     }
+
     public class IMSCOMP
     {
         public const string dll = "IMSCOMP.dll";

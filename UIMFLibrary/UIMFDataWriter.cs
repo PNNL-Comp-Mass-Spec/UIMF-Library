@@ -11,6 +11,8 @@ using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Data.SQLite;
+using System.Collections.Generic;
+using System.Text;
 
 namespace UIMFLibrary
 {
@@ -114,7 +116,7 @@ namespace UIMFLibrary
                 "ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
                 "TOFIntensityType TEXT NOT NULL, " + // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
                 "DatasetType TEXT, " +
-            "Prescan_TOFPulses INT(4), " +
+                "Prescan_TOFPulses INT(4), " +
                 "Prescan_Accumulations INT(4), " +
                 "Prescan_TICThreshold INT(4), " +
                 "Prescan_Continuous BOOL, " +
@@ -122,56 +124,57 @@ namespace UIMFLibrary
 				m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
-			m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
-				"FrameNum INT(4) PRIMARY KEY, " + // 0, Contains the frame number 
-				"StartTime DOUBLE, " + // 1, Start time of frame  
-				"Duration DOUBLE, " + // 2, Duration of frame  
-				"Accumulations INT(2), " + // 3, Number of collected and summed acquisitions in a frame 
-				"FrameType SHORT, " + // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
-				"Scans INT(4), " + // 5, Number of TOF scans  
-				"IMFProfile STRING, " + 
-				"TOFLosses DOUBLE, " + 
-				"AverageTOFLength DOUBLE NOT NULL, " + // 6, Average time between TOF trigger pulses
-				"CalibrationSlope DOUBLE, " + // 7, Value of k0  
-				"CalibrationIntercept DOUBLE, " + // 8, Value of t0  
-				"a2 DOUBLE, "+
-				"b2 DOUBLE, "+
-				"c2 DOUBLE, "+
-				"d2 DOUBLE, "+
-				"e2 DOUBLE, "+
-				"f2 DOUBLE, "+
-				"Temperature DOUBLE, " + // 9, Ambient temperature
-				"voltHVRack1 DOUBLE, " + // 10, HVRack Voltage 
-				"voltHVRack2 DOUBLE, " + // 11, HVRack Voltage 
-				"voltHVRack3 DOUBLE, " + // 12, HVRack Voltage 
-				"voltHVRack4 DOUBLE, " + // 13, HVRack Voltage 
-				"voltCapInlet DOUBLE, " + // 14, Capilary Inlet Voltage
-				"voltEntranceIFTIn DOUBLE, " + // 15, IFT In Voltage
-				"voltEntranceIFTOut DOUBLE, " + // 16, IFT Out Voltage
-				"voltEntranceCondLmt DOUBLE, " + // 17, Cond Limit Voltage
-				"voltTrapOut DOUBLE, " + // 18, Trap Out Voltage
-				"voltTrapIn DOUBLE, " + // 19, Trap In Voltage
-				"voltJetDist DOUBLE, " +              // 20, Jet Disruptor Voltage
-				"voltQuad1 DOUBLE, " +                // 21, Fragmentation Quadrupole Voltage
-				"voltCond1 DOUBLE, " +                // 22, Fragmentation Conductance Voltage
-				"voltQuad2 DOUBLE, " +                // 23, Fragmentation Quadrupole Voltage
-				"voltCond2 DOUBLE, " +                // 24, Fragmentation Conductance Voltage
-				"voltIMSOut DOUBLE, " +               // 25, IMS Out Voltage
-				"voltExitIFTIn DOUBLE, " +            // 26, IFT In Voltage
-				"voltExitIFTOut DOUBLE, " +           // 27, IFT Out Voltage
-				"voltExitCondLmt DOUBLE, " +          // 28, Cond Limit Voltage
-				"PressureFront DOUBLE, " + // 29, Pressure at front of Drift Tube 
-				"PressureBack DOUBLE, " + // 30, Pressure at back of Drift Tube 
-				"MPBitOrder INT(1), " + // 31, Determines original size of bit sequence 
-				"FragmentationProfile BLOB," +
-                "HighPressureFunnelPressure FLOAT," +
-                "IonFunnelTrapPressure FLOAT," +
-                "RearIonFunnelPressure FLOAT, " +
-                "QuadrupolePressure FLOAT, " +
-                "ESIVoltage FLOAT, " +
-                "FloatVoltage FLOAT);"; 
-            // Voltage profile used in fragmentation, Length number of Scans 
-			m_dbCommandUimf.ExecuteNonQuery();			    
+                m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
+                    "FrameNum INT(4) PRIMARY KEY, " + // 0, Contains the frame number 
+                "StartTime DOUBLE, " + // 1, Start time of frame  
+                "Duration DOUBLE, " + // 2, Duration of frame  
+                "Accumulations INT(2), " + // 3, Number of collected and summed acquisitions in a frame 
+                "FrameType SHORT, " + // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+                "Scans INT(4), " + // 5, Number of TOF scans  
+                "IMFProfile STRING, " + //6
+                "TOFLosses DOUBLE, " + //+ //7
+                "AverageTOFLength DOUBLE NOT NULL, " + // 8, Average time between TOF trigger pulses
+                "CalibrationSlope DOUBLE, " + // 9, Value of k0  
+                "CalibrationIntercept DOUBLE, " + // 10, Value of t0  
+                "a2 DOUBLE, " + //11
+                "b2 DOUBLE, " + //12
+                "c2 DOUBLE, " + //13
+                "d2 DOUBLE, " + //14
+                "e2 DOUBLE, " + //15
+                "f2 DOUBLE, " + //16
+                "Temperature DOUBLE, " + // 17, Ambient temperature
+                "voltHVRack1 DOUBLE, " + // 18, HVRack Voltage 
+                "voltHVRack2 DOUBLE, " + // 19, HVRack Voltage 
+                "voltHVRack3 DOUBLE, " + // 20, HVRack Voltage 
+                "voltHVRack4 DOUBLE, " + // 21, HVRack Voltage 
+                "voltCapInlet DOUBLE, " + // 22, Capilary Inlet Voltage
+                "voltEntranceIFTIn DOUBLE, " + // 23, IFT In Voltage
+                "voltEntranceIFTOut DOUBLE, " + // 24, IFT Out Voltage
+                "voltEntranceCondLmt DOUBLE, " + // 25, Cond Limit Voltage
+                "voltTrapOut DOUBLE, " + // 26, Trap Out Voltage
+                "voltTrapIn DOUBLE, " + // 27, Trap In Voltage
+                "voltJetDist DOUBLE, " +              // 28, Jet Disruptor Voltage
+                "voltQuad1 DOUBLE, " +                // 29, Fragmentation Quadrupole Voltage
+                "voltCond1 DOUBLE, " +                // 30, Fragmentation Conductance Voltage
+                "voltQuad2 DOUBLE, " +                // 31, Fragmentation Quadrupole Voltage
+                "voltCond2 DOUBLE, " +                // 32, Fragmentation Conductance Voltage
+                "voltIMSOut DOUBLE, " +               // 33, IMS Out Voltage
+                "voltExitIFTIn DOUBLE, " +            // 34, IFT In Voltage
+                "voltExitIFTOut DOUBLE, " +           // 35, IFT Out Voltage
+                "voltExitCondLmt DOUBLE, " +          // 36, Cond Limit Voltage
+                "PressureFront DOUBLE, " + // 37, Pressure at front of Drift Tube 
+                "PressureBack DOUBLE, " + // 38, Pressure at back of Drift Tube 
+                "MPBitOrder INT(1), " + // 39, Determines original size of bit sequence 
+                "FragmentationProfile BLOB," + // + //40
+                "HighPressureFunnelPressure DOUBLE, " +  //41
+                "IonFunnelTrapPressure DOUBLE , " +
+                "RearIonFunnelPressure DOUBLE, " +
+                "QuadrupolePressure DOUBLE, " +  //44
+                "ESIVoltage DOUBLE, " +  //45
+                "FloatVoltage DOUBLE, CALIBRATIONDONE INT);";  //46*/
+
+                //Voltage profile used in fragmentation, Length number of Scans 
+                m_dbCommandUimf.ExecuteNonQuery();			    
 
 			// Create Frame_Scans Table
 			if (System.String.Equals(dataType, "double"))
@@ -217,7 +220,7 @@ namespace UIMFLibrary
 			
 			//ARS made this change to facilitate faster retrieval of scans/spectrums.
 			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
-            m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Parameters(FrameNum, FrameType);";
+           // m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
 			//ARS change ends
 
 			m_dbCommandUimf.ExecuteNonQuery();
@@ -271,55 +274,66 @@ namespace UIMFLibrary
 				PrepareInsertFrame();
 			}
 
+            m_dbCommandPrepareInsertFrame.Parameters.Clear();
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));  // 0, Primary Key, Contains the frame number
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime)); // 1, Start time of frame
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration)); // 2, Duration of frame  
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Accumulations", frameParameters.Accumulations)); // 3, Number of collected and summed acquisitions in a frame 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", frameParameters.FrameType)); // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", frameParameters.FrameType)); // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans)); // 5, Number of TOF scans  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile)); 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses)); 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength)); // 6, Average time between TOF trigger pulses
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope)); // 7, Value of k0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2)); // 8, Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature)); // 9, Ambient temperature
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1)); // 10, HVRack Voltage 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2)); // 11, HVRack Voltage 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3)); // 12, HVRack Voltage 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4)); // 13, HVRack Voltage 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet)); // 14, Capilary Inlet Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceIFTIn)); // 15, IFT In Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceIFTOut)); // 16, IFT Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 17, Cond Limit Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut)); // 18, Trap Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn)); // 19, Trap In Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));              // 20, Jet Disruptor Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));                // 21, Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));                // 22, Fragmentation Conductance Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));                // 23, Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));                // 24, Fragmentation Conductance Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));               // 25, IMS Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitIFTIn));            // 26, IFT In Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitIFTOut));           // 27, IFT Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));          // 28, Cond Limit Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront)); // 29, Pressure at front of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack)); // 30, Pressure at back of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder)); // 31, Determines original size of bit sequence 
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", convertToBlob(frameParameters.FragmentationProfile)));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IFTrapPressure", frameParameters.IonFunnelTrapPressure));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.FloatVoltage));
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.ESIVoltage));
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile)); //6
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses)); //7
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength)); // 8, Average time between TOF trigger pulses
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope)); // 9, Value of k0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept)); // 10, Value of t0  
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2)); // 11 Value of t0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2)); // 12, Value of t0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2)); // 13, Value of t0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2)); // 14, Value of t0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2)); // 15, Value of t0  
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2)); // 16, Value of t0  
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature)); // 17, Ambient temperature
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1)); // 18, HVRack Voltage 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2)); // 19, HVRack Voltage 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3)); // 20, HVRack Voltage 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4)); // 21, HVRack Voltage 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet)); // 22, Capilary Inlet Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceIFTIn)); // 23, IFT In Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceIFTOut)); // 24, IFT Out Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut)); // 26, Trap Out Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn)); // 27, Trap In Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));              // 28, Jet Disruptor Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));                // 29, Fragmentation Quadrupole Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));                // 30, Fragmentation Conductance Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));                // 31, Fragmentation Quadrupole Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));                // 32, Fragmentation Conductance Voltage
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));               // 33, IMS Out Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitIFTIn));            // 34, IFT In Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitIFTOut));           // 35, IFT Out Voltage
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));          // 36, Cond Limit Voltage
+			
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront)); // 37, Pressure at front of Drift Tube 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack)); // 38, Pressure at back of Drift Tube 
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder)); // 39, Determines original size of bit sequence 
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", convertToBlob(frameParameters.FragmentationProfile)));//40
             
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));//41
+            
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure));//42
 
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));//43
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));//44
+           
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));//45
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));//46
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));//47
+           
 			m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
 			m_dbCommandPrepareInsertFrame.Parameters.Clear();
 		}
@@ -700,6 +714,7 @@ namespace UIMFLibrary
 		}
 
 
+
         public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
         {
             m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -782,6 +797,26 @@ namespace UIMFLibrary
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Dispose();
 		}
+
+        public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
+        {
+            StringBuilder commandText = new StringBuilder("UPDATE Frame_Parameters SET ");
+            for (int i = 0; i < parameters.Count-1; i++)
+            {
+                commandText.Append(parameters[i] + "=" + values[i] + ",");
+            }
+
+            commandText.Append(parameters[parameters.Count - 1] + "=" + values[values.Count - 1]);
+
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = commandText.ToString() + " WHERE FrameNum = " + frameNumber;
+            //Console.WriteLine(m_dbCommandUimf.CommandText);
+            this.m_dbCommandUimf.ExecuteNonQuery();
+            m_dbCommandUimf.Dispose();
+
+
+        }
+
 		public void UpdateFrameParameter(int frameNumber, string parameterName, string parameterValue)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -793,7 +828,23 @@ namespace UIMFLibrary
 		private void PrepareInsertFrame()
 		{
 			m_dbCommandPrepareInsertFrame = m_dbConnection.CreateCommand();
-			m_dbCommandPrepareInsertFrame.CommandText = "INSERT INTO Frame_Parameters " +
+
+            m_dbCommandPrepareInsertFrame.CommandText = "INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses," +
+                "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " +
+                "voltCapInlet, voltEntranceIFTIn, voltEntranceIFTOut, voltEntranceCondLmt, " +
+                "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
+                "voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
+                "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone)" +
+                "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses," +
+                ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, " +
+                ":voltCapInlet, :voltEntranceIFTIn, :voltEntranceIFTOut,:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
+                ":voltIMSOut,:voltExitIFTIn,:voltExitIFTOut,:voltExitCondLmt, " +
+                ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " +
+                ":HPPressure, :IPTrapPressure, " +
+                ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone);";
+
+
+			/*m_dbCommandPrepareInsertFrame.CommandText = "INSERT INTO Frame_Parameters " +
 				"(FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses, AverageTOFLength, " +
 				"CalibrationSlope, CalibrationIntercept, a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " + 
 				"voltCapInlet, voltEntranceIFTIn, voltEntranceIFTOut, voltEntranceCondLmt, " + 
@@ -801,7 +852,14 @@ namespace UIMFLibrary
 				"voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, " +
 				"PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure" +
                 "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage) " +
-				"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+                
+                "VALUES(:FrameNum,:StartTime,:Duration,:Accumulations,:FrameType,:Scans,:IMFProfile,:TOFLosses,:AverageTOFLength," +
+                ":CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, " +
+                ":voltCapInlet, :voltEntranceIFTIn, :voltEntranceIFTOut,:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
+                ":voltIMSOut,:voltExitIFTIn,:voltExitIFTOut,:voltExitCondLmt, " +
+                ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile,:HPPressure, :IPTrapPressure, " +
+                ":RIPressure,:QuadPressure,:ESIVoltage,:FloatVoltage);";*/
+
 			m_dbCommandPrepareInsertFrame.Prepare();
 		}
 

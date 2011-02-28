@@ -218,7 +218,7 @@ public class TestClass
                     endFrame = i + frameDim;
                     startScan = j;
                     endScan = j + scanDim;
-                    dr.SumScansCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
+                    dr.SumScansNonCached(mzsCache, intensitiesCache, frameType, startFrame, endFrame, startScan, endScan);
                 }
             }
 

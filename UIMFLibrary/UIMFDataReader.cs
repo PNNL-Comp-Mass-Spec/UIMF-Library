@@ -357,6 +357,14 @@ namespace UIMFLibrary
                             fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
                             fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                             fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
+                            fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
+                            fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
+                            fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
+                            fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
+                            fp.QuadrupolePressure = Convert.ToDouble(reader["ESIVoltage"]);
+                            fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
+                            fp.CalibrationDone = Convert.ToInt16(reader["CALIBRATIONDONE"]);
+
                             try
                             {
                                 fp.a2 = Convert.ToDouble(reader["a2"]);
@@ -389,6 +397,36 @@ namespace UIMFLibrary
             }
             return fp;
         }
+
+
+         public List<string> getCalibrationTableNames()
+        {
+            SQLiteDataReader reader = null;
+            SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
+            cmd.CommandText = "SELECT NAME FROM Sqlite_master where type='table' ORDER BY NAME";
+            List<string> calibrationTableNames = new List<string>();
+            try
+            {
+
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    string tableName = Convert.ToString(reader["Name"]);
+                    if (tableName.Contains("Calib"))
+                    {
+                        calibrationTableNames.Add(tableName);
+                    }
+                }
+            }
+            catch (Exception a)
+            {
+            }
+
+            return calibrationTableNames;
+            
+        }
+
+
 
         public bool tableExists(string tableName)
         {
@@ -1128,132 +1166,6 @@ namespace UIMFLibrary
 
         }
 
-        // this method was implemented to help DeconTools
-        public int SumScansCached(ref double[] mzs, ref double[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan, double minMZ, double maxMZ)
-        {
-            int len = intensities.Length;
-            int[] temp = new int[len];
-            int nonZeroCount = SumScansCached(mzs, temp, frameType, startFrame, endFrame, startScan, endScan);
-            int zeros = 0;
-
-            // determine if we need to check MZ range.
-            bool skip = false;
-            if (minMZ <= 0 && maxMZ >= MAXMZ)
-            {
-                skip = true;
-            }
-
-            // for all intensities > 0 move them to the front of the array
-            for (int k = 0; k < len; k++)
-            {
-                if (temp[k] != 0 && (skip || (minMZ <= mzs[k] && maxMZ >= mzs[k])))
-                {
-                    mzs[k - zeros] = mzs[k];
-                    intensities[k - zeros] = (double)(temp[k]);
-                }
-                else
-                {
-                    zeros++;
-                }
-            }
-            // resize arrays cutting off the zeroes at the end.
-            Array.Resize(ref mzs, len - zeros);
-            Array.Resize(ref intensities, len - zeros);
-
-            return nonZeroCount;
-        }
-
-        public int SumScansCached(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
-        {
-            if (startFrame == 0)
-            {
-                throw new Exception("StartFrame should be a positive integer");
-            }
-
-            // used to offset the sliding window inside the cache
-            //int scanoffset = startScan;
-
-            // determine width and height of sliding window
-            int rowCnt = endFrame - startFrame + 1;
-            int colCnt = endScan - startScan + 1;
-
-            int[] bins;
-            int[] records;
-            int row = 0;
-            int col = 0;
-            int nonZeroCount = 0;
-
-            // loop for sliding window
-            while (row < rowCnt)
-            {
-                FrameParameters fp = GetFrameParameters(row + startFrame);
-
-                int ibin = 0;
-                int max_bin_iscan = 0;
-
-                // make sure it isn't a bad frame
-                if (m_binsCache[row].Count > 0)
-                {
-                    try
-                    {
-                        bins = m_binsCache[row][col + startScan];
-                        records = m_recordsCache[row][col + startScan];
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        // this means there is no more data for this row.
-                        col = 0;
-                        row++;
-                        continue;
-                    }
-
-                    if (bins != null)
-                    {
-                        int numBins = bins.Length;
-                        for (int i = 0; i < numBins; i++)
-                        {
-                            if (bins[i] > 0)
-                            {
-                                ibin = bins[i];
-                                if (ibin >= m_globalParameters.Bins) break;
-
-                                intensities[ibin] += records[i];
-                                if (mzs[ibin] == 0.0D)
-                                {
-                                    if (m_powersOfT[ibin, 0] == 0.0D)
-                                    {
-                                        m_powersOfT[ibin, 0] = (double)ibin * m_globalParameters.BinWidth / 1000;
-                                        //double step = System.Math.Pow(m_powersOfT[ibin, 0], 2); 
-                                        double step = m_powersOfT[ibin, 0] * m_powersOfT[ibin, 0] ;
-                                        for (int j = 0; j < 5; j++)
-                                        {
-                                            m_powersOfT[ibin, j + 1] = m_powersOfT[ibin, j] * step;
-                                        }
-                                    }
-                                    double resmasserr = fp.a2 * m_powersOfT[ibin, 0] + fp.b2 * m_powersOfT[ibin, 1] + fp.c2 * m_powersOfT[ibin, 2] + fp.d2 * m_powersOfT[ibin, 3] + fp.e2 * m_powersOfT[ibin, 4] + fp.f2 * m_powersOfT[ibin, 5];
-                                    mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(m_powersOfT[ibin, 0] - (double)m_globalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
-                                    mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
-                                }
-                                if (max_bin_iscan < ibin) max_bin_iscan = ibin;
-                            }
-                        }
-                        if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
-                    }
-                }
-
-                // update indexes
-                col++;
-                if (col >= colCnt)
-                {
-                    col = 0;
-                    row++;
-                }
-            }
-            if (nonZeroCount > 0) nonZeroCount++;
-
-            return nonZeroCount;
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -1355,7 +1267,7 @@ namespace UIMFLibrary
         // point the old SumScans methods to the cached version.
         public int SumScans(double[] mzs, int[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
-            return SumScansCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
+            return SumScansNonCached(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
         }
 
         // AARON: There is a lot of room for improvement in these methods.
@@ -2023,7 +1935,7 @@ namespace UIMFLibrary
 
         }
 
-        public void SumScansForVariableRange(List<int> frameNumbers, List<List<int>> scanNumbers, int frameType, int [] intensities)
+        public void SumScansForVariableRange(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, int frameType, int [] intensities)
         {
             System.Text.StringBuilder commandText;
 
@@ -2036,7 +1948,7 @@ namespace UIMFLibrary
                 
                 int frameNumber = frameNumbers[i];
                 commandText.Append( frameNumber + " AND ScanNum in (");
-                List<int> correspondingScans = scanNumbers[i];
+                List<ushort> correspondingScans = scanNumbers[i];
 
                 for (int j = 0; j < correspondingScans.Count; j++)
                 {
