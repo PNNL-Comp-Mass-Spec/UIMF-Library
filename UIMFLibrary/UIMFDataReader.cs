@@ -357,13 +357,22 @@ namespace UIMFLibrary
                             fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
                             fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                             fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
-                            fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
-                            fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
-                            fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
-                            fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
-                            fp.QuadrupolePressure = Convert.ToDouble(reader["ESIVoltage"]);
-                            fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
-                            fp.CalibrationDone = Convert.ToInt16(reader["CALIBRATIONDONE"]);
+
+                            //these are some of the new parameter tables, so files that don't have these tables would break with the old data.
+                            try
+                            {
+                                fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
+                                fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
+                                fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
+                                fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
+                                fp.QuadrupolePressure = Convert.ToDouble(reader["ESIVoltage"]);
+                                fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
+                                fp.CalibrationDone = Convert.ToInt16(reader["CalibrationDone"]);
+                            }
+                            catch (IndexOutOfRangeException i)
+                            {
+                                //ignore since the file does not have those values.
+                            }
 
                             try
                             {
@@ -1811,7 +1820,9 @@ namespace UIMFLibrary
         }
 
 
-
+        public void SumScansNonCached(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, List<double> mzList, List<double> intensityList, double minMz, double maxMz){
+            SumScansNonCached(frameNumbers, scanNumbers, mzList, intensityList, minMz, maxMz);
+        }
 
         public void SumScansNonCached(List<int> frameNumbers, List<List<int>> scanNumbers, List<double> mzList, List<double> intensityList, double minMz, double maxMz)
         {

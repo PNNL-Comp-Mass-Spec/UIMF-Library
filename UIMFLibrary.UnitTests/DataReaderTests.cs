@@ -207,6 +207,22 @@ namespace UIMFLibrary.UnitTests
 
         }
 
+
+        [Test]
+        public void getFrameParametersTest()
+        {
+            string sarcUIMFFile1 = "C:\\ProteomicsSoftwareTools\\SmartSummingTestFiles\\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(sarcUIMFFile1);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+            FrameParameters fp = reader.GetFrameParameters(1);
+
+            Console.WriteLine(fp.AverageTOFLength);
+
+            reader.CloseUIMF();
+        }
+
         [Test]
         public void readMSLevelDataFromFileContainingBothMS_and_MSMSData()
         {
@@ -235,6 +251,7 @@ namespace UIMFLibrary.UnitTests
             Assert.AreEqual(xvals, xvals1);
             Assert.AreEqual(yvals, yvals1);
 
+            reader.CloseUIMF();
 
         }
 
