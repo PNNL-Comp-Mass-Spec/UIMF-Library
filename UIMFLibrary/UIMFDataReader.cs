@@ -322,6 +322,8 @@ namespace UIMFLibrary
                     {
                         try
                         {
+                            int columnMissingCounter = 0;
+
                             fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
                             fp.StartTime = Convert.ToDouble(reader["StartTime"]);
                             fp.Duration = Convert.ToDouble(reader["Duration"]);
@@ -358,38 +360,29 @@ namespace UIMFLibrary
                             fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                             fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
-                            //these are some of the new parameter tables, so files that don't have these tables would break with the old data.
-                            try
-                            {
-                                fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
-                                fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
-                                fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
-                                fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
-                                fp.QuadrupolePressure = Convert.ToDouble(reader["ESIVoltage"]);
-                                fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
-                                fp.CalibrationDone = Convert.ToInt16(reader["CalibrationDone"]);
-                            }
-                            catch (IndexOutOfRangeException i)
-                            {
-                                //ignore since the file does not have those values.
-                            }
+                            fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
+                            fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
+                            fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
+                            fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0, ref columnMissingCounter);
+                            fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
+                            fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
+                            fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
 
-                            try
+                            fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
+                            fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
+                            fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
+                            fp.d2 = TryGetFrameParam(reader, "d2", 0, ref columnMissingCounter);
+                            fp.e2 = TryGetFrameParam(reader, "e2", 0, ref columnMissingCounter);
+
+                            if (columnMissingCounter > 0)
                             {
-                                fp.a2 = Convert.ToDouble(reader["a2"]);
-                                fp.b2 = Convert.ToDouble(reader["b2"]);
-                                fp.c2 = Convert.ToDouble(reader["c2"]);
-                                fp.d2 = Convert.ToDouble(reader["d2"]);
-                                fp.e2 = Convert.ToDouble(reader["e2"]);
-                            }
-                            catch
-                            {
-                                if (m_errMessageCounter <= 10)
+                                if (m_errMessageCounter < 10)
                                 {
-                                    Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF, please get the newest version from \\\\floyd\\software");
+                                    Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (missing one or more expected columns); please get the newest version from \\\\floyd\\software");
                                     m_errMessageCounter++;
                                 }
                             }
+
                         }
                         catch (Exception ex)
                         {
@@ -435,7 +428,37 @@ namespace UIMFLibrary
             
         }
 
+         protected double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue, ref int columnMissingCounter)
+         {
+             double Result = DefaultValue;
 
+             try
+             {
+                 Result = Convert.ToDouble(reader[ColumnName]);
+             }
+             catch (IndexOutOfRangeException i)
+             {
+                 columnMissingCounter += 1;
+             }
+
+             return Result;
+         }
+
+         protected int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue, ref int columnMissingCounter)
+         {
+             int Result = DefaultValue;
+
+             try
+             {
+                 Result = Convert.ToInt32(reader[ColumnName]);
+             }
+             catch (IndexOutOfRangeException i)
+             {
+                 columnMissingCounter += 1;
+             }
+
+             return Result;
+         }
 
         public bool tableExists(string tableName)
         {
@@ -507,6 +530,8 @@ namespace UIMFLibrary
                 while (reader.Read())
                 {
                     FrameParameters fp = new FrameParameters();
+                    int columnMissingCounter = 0;
+
                     fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
                     if (!m_frameParametersCache.ContainsKey(fp.FrameNum))
                     {
@@ -544,35 +569,19 @@ namespace UIMFLibrary
                         fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                         fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
-                        try
-                        {
-                            fp.HighPressureFunnelPressure = Convert.ToDouble(reader["HighPressureFunnelPressure"]);
-                            fp.IonFunnelTrapPressure = Convert.ToDouble(reader["IonFunnelTrapPressure"]);
-                            fp.ESIVoltage = Convert.ToDouble(reader["ESIVoltage"]);
-                            fp.FloatVoltage = Convert.ToDouble(reader["FloatVoltage"]);
-                            fp.RearIonFunnelPressure = Convert.ToDouble(reader["RearIonFunnelPressure"]);
-                            fp.QuadrupolePressure = Convert.ToDouble(reader["QuadrupolePressure"]);
-                        }
-                        catch (IndexOutOfRangeException i)
-                        {
-                        }
+                        fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
+                        fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
+                        fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
+                        fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0, ref columnMissingCounter);
+                        fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
+                        fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
+                        fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
 
-                        try
-                        {
-                            fp.a2 = Convert.ToDouble(reader["a2"]);
-                            fp.b2 = Convert.ToDouble(reader["b2"]);
-                            fp.c2 = Convert.ToDouble(reader["c2"]);
-                            fp.d2 = Convert.ToDouble(reader["d2"]);
-                            fp.e2 = Convert.ToDouble(reader["e2"]);
-                        }
-                        catch
-                        {
-                            if (m_errMessageCounter <= 10)
-                            {
-                                Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF, please get the newest version from \\\\floyd\\software");
-                                m_errMessageCounter++;
-                            }
-                        }
+                        fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
+                        fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
+                        fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
+                        fp.d2 = TryGetFrameParam(reader, "d2", 0, ref columnMissingCounter);
+                        fp.e2 = TryGetFrameParam(reader, "e2", 0, ref columnMissingCounter);
 
                         m_frameParametersCache.Add(fp.FrameNum, fp);
                     }
