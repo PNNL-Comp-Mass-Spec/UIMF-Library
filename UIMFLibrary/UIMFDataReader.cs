@@ -1140,50 +1140,62 @@ namespace UIMFLibrary
 
             int nonZeroCount = 0;
             int frameNumber = startFrame;
+            
+
             while (m_sqliteDataReader.Read())
             {
-                int ibin = 0;
-                int max_bin_iscan = 0;
-                int out_len;
-                spectra = (byte[])(m_sqliteDataReader["Intensities"]);
-
-                //get frame number so that we can get the frame calibration parameters
-                if (spectra.Length > 0)
+                try
                 {
-
-                    frameNumber = Convert.ToInt32(m_sqliteDataReader["FrameNum"]);
-                    FrameParameters fp = GetFrameParameters(frameNumber);
-
-                    out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
-                    int numBins = out_len / DATASIZE;
-                    int decoded_SpectraRecord;
-                    for (int i = 0; i < numBins; i++)
-                    {
-                        decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
-                        if (decoded_SpectraRecord < 0)
+                        int ibin = 0;
+                        int max_bin_iscan = 0;
+                        int out_len;
+                        spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+    
+                        //get frame number so that we can get the frame calibration parameters
+                        if (spectra.Length > 0)
                         {
-                            ibin += -decoded_SpectraRecord;
-                        }
-                        else
-                        {
-                            intensities[ibin] += decoded_SpectraRecord;
-                            if (mzs[ibin] == 0.0D)
+
+                            frameNumber = Convert.ToInt32(m_sqliteDataReader["FrameNum"]);
+                            FrameParameters fp = GetFrameParameters(frameNumber);
+
+                            out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
+                            int numBins = out_len / DATASIZE;
+                            int decoded_SpectraRecord;
+                            for (int i = 0; i < numBins; i++)
                             {
-                                double t = (double)ibin * m_globalParameters.BinWidth / 1000;
-                                double resmasserr = fp.a2 * t + fp.b2 * System.Math.Pow(t, 3) + fp.c2 * System.Math.Pow(t, 5) + fp.d2 * System.Math.Pow(t, 7) + fp.e2 * System.Math.Pow(t, 9) + fp.f2 * System.Math.Pow(t, 11);
-                                mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
-                                mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
+                                decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                                if (decoded_SpectraRecord < 0)
+                                {
+                                    ibin += -decoded_SpectraRecord;
+                                }   
+                                else
+                                {
+            
+                                    intensities[ibin] += decoded_SpectraRecord;
+                                    if (mzs[ibin] == 0.0D)
+                                    {
+                                        double t = (double)ibin * m_globalParameters.BinWidth / 1000;
+                                        double resmasserr = fp.a2 * t + fp.b2 * System.Math.Pow(t, 3) + fp.c2 * System.Math.Pow(t, 5) + fp.d2 * System.Math.Pow(t, 7) + fp.e2 * System.Math.Pow(t, 9) + fp.f2 * System.Math.Pow(t, 11);
+                                        mzs[ibin] = (double)(fp.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
+                                        mzs[ibin] = mzs[ibin] * mzs[ibin] + resmasserr;
+                                    }
+                                    if (max_bin_iscan < ibin) max_bin_iscan = ibin;
+                                    ibin++;
+                                }
                             }
-                            if (max_bin_iscan < ibin) max_bin_iscan = ibin;
-                            ibin++;
+                            if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
                         }
                     }
-                    if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
-                }
-            }
+                    catch (IndexOutOfRangeException outOfRange)
+                    {
+                        //do nothing, the bin numbers were outside the range 
+                    }
 
-            m_sumScansCommand.Parameters.Clear();
-            m_sqliteDataReader.Close();
+                }
+                m_sumScansCommand.Parameters.Clear();
+                m_sqliteDataReader.Close();
+
+
             if (nonZeroCount > 0) nonZeroCount++;
             return nonZeroCount;
 
@@ -1926,40 +1938,43 @@ namespace UIMFLibrary
 
                 while (m_sqliteDataReader.Read())
                 {
-                    int ibin = 0;
-                    int out_len;
 
-                    spectra = (byte[])(m_sqliteDataReader["Intensities"]);
-
-                    //get frame number so that we can get the frame calibration parameters
-                    if (spectra.Length > 0)
+                    try
                     {
-                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins);
-                        int numBins = out_len / DATASIZE;
-                        int decoded_intensityValue;
-                        for (int ix = 0; ix < numBins; ix++)
+                        int ibin = 0;
+                        int out_len;
+
+                        spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+
+                        //get frame number so that we can get the frame calibration parameters
+                        if (spectra.Length > 0)
                         {
-                            decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, ix * DATASIZE);
-                            if (decoded_intensityValue < 0)
+                            out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins);
+                            int numBins = out_len / DATASIZE;
+                            int decoded_intensityValue;
+                            for (int ix = 0; ix < numBins; ix++)
                             {
-                                ibin += -decoded_intensityValue;
-                            }
-                            else
-                            {
-                                intensities[ibin] += decoded_intensityValue;
-                                ibin++;
+                                decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, ix * DATASIZE);
+                                if (decoded_intensityValue < 0)
+                                {
+                                    ibin += -decoded_intensityValue;
+                                }
+                                else
+                                {
+                                    intensities[ibin] += decoded_intensityValue;
+                                    ibin++;
+                                }
                             }
                         }
                     }
+                    catch (IndexOutOfRangeException e)
+                    {
+                        //do nothing
+                    }
                 }
+                m_sumVariableScansPerFrameCommand.Dispose();
                 m_sqliteDataReader.Close();
-
-                //construct query
-
-
             }
-
-
         }
 
         public void SumScansForVariableRange(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, int frameType, int [] intensities)
@@ -1993,39 +2008,40 @@ namespace UIMFLibrary
                 
                 while (m_sqliteDataReader.Read())
                 {
-                    int ibin = 0;
-                    int out_len;
-
-                    spectra = (byte[])(m_sqliteDataReader["Intensities"]);
-
-                    //get frame number so that we can get the frame calibration parameters
-                    if (spectra.Length > 0)
+                    try
                     {
-                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins);
-                        int numBins = out_len / DATASIZE;
-                        int decoded_intensityValue;
-                        for (int ix = 0; ix < numBins; ix++)
+                        int ibin = 0;
+                        int out_len;
+                        spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+                        //get frame number so that we can get the frame calibration parameters
+                        if (spectra.Length > 0)
                         {
-                            decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, ix * DATASIZE);
-                            if (decoded_intensityValue < 0)
+                            out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins);
+                            int numBins = out_len / DATASIZE;
+                            int decoded_intensityValue;
+                            for (int ix = 0; ix < numBins; ix++)
                             {
-                                ibin += -decoded_intensityValue;
-                            }
-                            else
-                            {
-                                intensities[ibin] += decoded_intensityValue;
-                                ibin++;
+                                decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, ix * DATASIZE);
+                                if (decoded_intensityValue < 0)
+                                {
+                                    ibin += -decoded_intensityValue;
+                                }
+                                else
+                                {
+                                    intensities[ibin] += decoded_intensityValue;
+                                    ibin++;
+                                }
                             }
                         }
                     }
+                    catch (IndexOutOfRangeException e)
+                    {
+                        //do nothing
+                    }
                 }
                 m_sqliteDataReader.Close();
-
                 //construct query
-
-
             }
-
         }
 
         /// <summary>

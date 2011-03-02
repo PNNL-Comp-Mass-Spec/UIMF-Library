@@ -84,22 +84,47 @@ namespace UIMFLibrary.UnitTests
                 }
         }
 
-        
+
+        public void getSpectrumBins()
+        {
+            string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
+            UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
+            reader.OpenUIMF(filePath);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+            int numBins = gp.Bins;
+
+            List<int> bins = new List<int>();
+            List<int> intensities = new List<int>();
+
+            reader.GetSpectrum(6, 285, bins, intensities);
+
+            for (int i = 0; i < bins.Count; i++)
+            {
+                Console.WriteLine(bins[i] + "\t" + intensities[i]);
+            }
+
+            reader.CloseUIMF();
+
+        }
 
         [Test]
         public void getSpectrumTest()
         {
-            string filePath = "C:\\ProteomicsSoftwareTools\\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf"; 
-            UIMFLibrary.DataReader reader = new DataReader();
+            string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF"; 
+            UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
             reader.OpenUIMF(filePath);
 
             GlobalParameters gp = reader.GetGlobalParameters();
             int numBins = gp.Bins;
 
             double[] xvals = new double[numBins];
-            double[] yvals = new double[numBins];
+            int[] yvals = new int[numBins];
 
-            reader.GetSpectrum(306, 128, yvals, xvals);
+   //         reader.SumScansNonCached(xvals, yvals, 0, 6, 6, 285, 285);
+
+            
+            reader.GetSpectrum(6, 285, yvals, xvals);
 
             for (int i = 0; i < xvals.Length; i++)
             {
@@ -199,14 +224,25 @@ namespace UIMFLibrary.UnitTests
 
             reader.SumScansNonCached(frameNumbers, scanNumbersForEachFrame,mzList, intensityList, 0, 5000);
             //reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
-
-
             //Assert.AreEqual(yvals, yvals1);
-
             reader.CloseUIMF();
 
         }
 
+        [Test]
+        public void getAllParentFrameParametersTest()
+        {
+            string sarcUIMFFile1 = "C:\\ProteomicsSoftwareTools\\SmartSummingTestFiles\\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+            UIMFLibrary.DataReader reader = new DataReader();
+            reader.OpenUIMF(sarcUIMFFile1);
+
+            GlobalParameters gp = reader.GetGlobalParameters();
+            Dictionary<int, FrameParameters> allParentFrameParameters = reader.GetAllParentFrameParameters() ;
+
+            Console.WriteLine(allParentFrameParameters.Keys.Count);
+
+            reader.CloseUIMF();
+        }
 
         [Test]
         public void getFrameParametersTest()
