@@ -37,6 +37,7 @@ namespace UIMFLibrary
 		public int Prescan_TICThreshold;
 		public bool Prescan_Continuous;		   // True or False
 		public string Prescan_Profile;	       // If continuous is true, set this to NULL;
+        public string InstrumentName;          // Name of the system on which data was acquired
         
 	}
     public class FrameParameters

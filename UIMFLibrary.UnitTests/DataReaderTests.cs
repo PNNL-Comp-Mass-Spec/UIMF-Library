@@ -108,6 +108,13 @@ namespace UIMFLibrary.UnitTests
 
         }
 
+        public void fileCopyTest()
+        {
+            string inputPath = "C:\\ProteomicsSoftwareTools\\SmartSummingTestFiles\\BSA_0pt01_2_20Sep10_Cheetah_10-08-05_0000.uimf";
+            string outputPath = "C:\\ProteomicsSoftwareTools\\SmartSummingTestFiles\\BSA_0pt01_2_20Sep10_Cheetah_10-08-05_0000.uimf1";
+            File.Copy(inputPath, outputPath);
+        }
+
         [Test]
         public void getSpectrumTest()
         {

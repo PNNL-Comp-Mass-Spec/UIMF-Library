@@ -268,6 +268,14 @@ namespace UIMFLibrary
                             m_globalParameters.ScanDataBlobVersion = (float)Convert.ToDouble((reader["ScanDataBlobVersion"]));
                             m_globalParameters.TOFIntensityType = Convert.ToString(reader["TOFIntensityType"]);
                             m_globalParameters.DatasetType = Convert.ToString(reader["DatasetType"]);
+                            try
+                            {
+                                m_globalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"]);
+                            }
+                            catch (Exception e)
+                            {
+                                //ignore since it may not be present in all previous versions
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -1975,6 +1983,61 @@ namespace UIMFLibrary
                 m_sumVariableScansPerFrameCommand.Dispose();
                 m_sqliteDataReader.Close();
             }
+        }
+
+
+        public void GetFrameData(int frameNumber, List<int> scanNumberList, List<int> bins, List<int> intensities, List<int> spectrumCountList )
+        {
+            m_sumScansCachedCommand.Parameters.Clear();
+            m_sumScansCachedCommand.Parameters.Add(new SQLiteParameter(":FrameNum", frameNumber));
+            SQLiteDataReader reader = m_sumScansCachedCommand.ExecuteReader();
+            byte[] spectra = null;
+            byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins];
+
+            while (reader.Read())
+            {
+                int scanNum = Convert.ToInt32(reader["ScanNum"]);
+                spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+              
+                
+                if (spectra.Length > 0)
+                {
+
+                    scanNumberList.Add(scanNum);
+
+                    FrameParameters fp = GetFrameParameters(frameNumber);
+
+                    int out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
+                    int numBins = out_len / DATASIZE;
+                    int decoded_SpectraRecord;
+                    int nonZeroCount = 0;
+                    int ibin = 0;
+                    for (int i = 0; i < numBins; i++)
+                    {
+                        decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+                        if (decoded_SpectraRecord < 0)
+                        {
+                            ibin += -decoded_SpectraRecord;
+                        }
+                        else
+                        {
+
+                            bins.Add(ibin);
+                            intensities.Add(decoded_SpectraRecord);
+                            nonZeroCount++;
+                            ibin++;
+                        }
+                    }
+                    spectrumCountList.Add(nonZeroCount);
+                }                    
+
+
+
+            }
+
+
+
+
         }
 
         public void SumScansForVariableRange(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, int frameType, int [] intensities)

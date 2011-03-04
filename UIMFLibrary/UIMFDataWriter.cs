@@ -120,7 +120,8 @@ namespace UIMFLibrary
                 "Prescan_Accumulations INT(4), " +
                 "Prescan_TICThreshold INT(4), " +
                 "Prescan_Continuous BOOL, " +
-                "Prescan_Profile STRING)";
+                "Prescan_Profile STRING, " +
+                "Instrument_Name STRING)";
 				m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
@@ -238,9 +239,9 @@ namespace UIMFLibrary
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
             m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters " +
                 "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, " +
-                "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile) " +
+                "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) " +
                 "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
-                ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile);";
+                ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
                 
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
@@ -257,6 +258,7 @@ namespace UIMFLibrary
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", header.Prescan_Continuous));
 			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Profile", header.Prescan_Profile));
+            m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Instrument_name", header.InstrumentName));
             
 			m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Parameters.Clear();
