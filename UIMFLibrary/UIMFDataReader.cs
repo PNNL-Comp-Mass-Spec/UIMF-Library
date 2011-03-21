@@ -20,10 +20,12 @@ namespace UIMFLibrary
         private const int MAXMZ = 5000;
         private const int PARENTFRAMETYPE = 0;
         private const int CALIBRATIONFRAMETYPE = 3;
+        private const int NUMCALIBRATIONFRAMES = 20;
+
         private const string BPI = "BPI";
         private const string TIC = "TIC";
 
-        private Dictionary<int, FrameParameters> m_frameParametersCache = new Dictionary<int, FrameParameters>();
+        private Dictionary<int, FrameParameters> m_frameParametersCache;
             
         public SQLiteConnection m_uimfDatabaseConnection;
         // AARON: SQLiteDataReaders might be better managable than currently implement.
@@ -64,6 +66,7 @@ namespace UIMFLibrary
                     //populate the global parameters object since it's going to be used anyways.
                     //I can't imagine a scenario where that wouldn't be the case.
                     m_globalParameters = GetGlobalParameters();
+                    m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
                     success = true;
                 }
                 catch (Exception ex)
@@ -82,14 +85,11 @@ namespace UIMFLibrary
             }
 
             // Initialize caching structures
-
             return success;
-
         }
 
         private void LoadPrepStmts()
         {
-
             m_getFileBytesCommand = m_uimfDatabaseConnection.CreateCommand();
 
             m_getAllFrameParameters = m_uimfDatabaseConnection.CreateCommand();
@@ -402,7 +402,7 @@ namespace UIMFLibrary
             SQLiteDataReader reader = null;
             SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
             cmd.CommandText = "SELECT NAME FROM Sqlite_master where type='table' ORDER BY NAME";
-            List<string> calibrationTableNames = new List<string>();
+            List<string> calibrationTableNames = new List<string>(NUMCALIBRATIONFRAMES);
             try
             {
 
@@ -510,6 +510,7 @@ namespace UIMFLibrary
             return GetAllFrameParameters(CALIBRATIONFRAMETYPE);
         }
 
+
         /**
          * Returns the list of all frame parameters in order of sorted frame numbers
          * 
@@ -564,7 +565,6 @@ namespace UIMFLibrary
                         fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
                         fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
                         fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
-
                         fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
                         fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
                         fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
@@ -572,7 +572,6 @@ namespace UIMFLibrary
                         fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
                         fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
                         fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
-
                         fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
                         fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
                         fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
@@ -1008,7 +1007,7 @@ namespace UIMFLibrary
             }
 
             GlobalParameters gp = GetGlobalParameters();
-            List<int> binValues = new List<int>();
+            List<int> binValues = new List<int>(gp.Bins);
             int returnCount = SumScansNonCached(binValues, intensities, frameType, startFrame, endFrame, startScan, endScan);
 
             //now convert each of the bin values to mz values
@@ -1038,16 +1037,16 @@ namespace UIMFLibrary
 
             if (bins == null)
             {
-                bins = new List<int>();
+                bins = new List<int>(m_globalParameters.Bins);
             }
 
             if (intensities == null)
             {
-                intensities = new List<int>();
+                intensities = new List<int>(m_globalParameters.Bins);
             }
 
 
-            Dictionary<int, int> binsDict = new Dictionary<int, int>();
+            Dictionary<int, int> binsDict = new Dictionary<int, int>(m_globalParameters.Bins);
             if (startFrame == 0)
             {
                 throw new Exception("StartFrame should be a positive integer");
@@ -1140,8 +1139,6 @@ namespace UIMFLibrary
 
             int nonZeroCount = 0;
             int frameNumber = startFrame;
-            
-
             while (m_sqliteDataReader.Read())
             {
                 try
@@ -1191,7 +1188,6 @@ namespace UIMFLibrary
                 }
                 m_sumScansCommand.Parameters.Clear();
                 m_sqliteDataReader.Close();
-
 
             if (nonZeroCount > 0) nonZeroCount++;
             return nonZeroCount;
@@ -1382,9 +1378,7 @@ namespace UIMFLibrary
         
         public int SumScans(double[] mzs, float[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
-
             int[] intIntensities = new int[intensities.Length];
-
             int max_bin = SumScans(mzs, intIntensities, frameType, startFrame, endFrame, startScan, endScan);
 
             for (int i = 0; i < intIntensities.Length; i++)
@@ -1430,16 +1424,12 @@ namespace UIMFLibrary
 
         public int SumScans(double[] mzs, short[] intensities, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
-
             int[] intInts = new int[intensities.Length];
-
             int maxBin = SumScans(mzs, intInts, frameType, startFrame, endFrame, startScan, endScan);
-
             for (int i = 0; i < intensities.Length; i++)
             {
                 intensities[i] = (short)intInts[i];
             }
-
             return maxBin;
         }
 
@@ -1467,13 +1457,8 @@ namespace UIMFLibrary
             int startFrame = frameNum;
             int endFrame = frameNum;
             int startScan = 0;
-            int endScan = 0;
-
             FrameParameters fp = GetFrameParameters(frameNum);
-            endScan = fp.Scans - 1;
-
-            int max_bin = SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, endScan);
-            return max_bin;
+            return SumScans(mzs, intensities, frameType, startFrame, endFrame, startScan, fp.Scans-1);
         }
 
         // This function extracts BPI from startFrame to endFrame and startScan to endScan
@@ -1507,8 +1492,6 @@ namespace UIMFLibrary
             //if that was not the case then we could just do away with seraching for any frame
             int startScan = 0;
             int endScan = 0;
-
-
             for (int i = startFrame; i < endFrame; i++)
             {
                 FrameParameters fp = GetFrameParameters(i);
@@ -1524,9 +1507,7 @@ namespace UIMFLibrary
         public void GetTIC(float[] TIC, int frameType, int startFrame, int endFrame, int startScan, int endScan)
         {
 
-            double[] data;
-
-            data = new double[1];
+            double[] data = new double[1];
             GetTICorBPI(data, frameType, startFrame, endFrame, startScan, endScan, "TIC");
 
             if (TIC == null || TIC.Length < data.Length)
@@ -1712,7 +1693,6 @@ namespace UIMFLibrary
         private int CheckInputArguments(ref int frameType, int startFrame, ref int endFrame, ref int endScan, ref int endBin)
         {
             // This function checks input arguments and assign default values when some arguments are set to -1
-
             int NumFrames = m_globalParameters.NumFrames;
             FrameParameters startFp = null;
 
@@ -1740,7 +1720,6 @@ namespace UIMFLibrary
 
 
             //This line could easily cause a null pointer exception since startFp is not defined. check this.
-
             if (endScan == -1) endScan = startFp.Scans - 1;
 
             int Num_Bins = m_globalParameters.Bins;
@@ -1750,12 +1729,11 @@ namespace UIMFLibrary
         }
 
         // AARON: this has room for improvement, along with all the methods that use it.
-        protected void GetTICorBPI(double[] Data, int frameType, int startFrame, int endFrame, int startScan, int endScan, string FieldName)
+        protected void GetTICorBPI(double[] data, int frameType, int startFrame, int endFrame, int startScan, int endScan, string FieldName)
         {
             if (startFrame == 0)
             {
                 throw new Exception("StartFrame should be a positive integer");
-
             }
 
             // Make sure endFrame is valid
@@ -1766,9 +1744,9 @@ namespace UIMFLibrary
             int nframes = endFrame - startFrame + 1;
 
             // Make sure TIC is initialized
-            if (Data == null || Data.Length < nframes)
+            if (data == null || data.Length < nframes)
             {
-                Data = new double[nframes];
+                data = new double[nframes];
             }
 
             // Construct the SQL
@@ -1792,7 +1770,7 @@ namespace UIMFLibrary
             int ncount = 0;
             while (reader.Read())
             {
-                Data[ncount] = Convert.ToDouble(reader["Value"]);
+                data[ncount] = Convert.ToDouble(reader["Value"]);
                 ncount++;
             }
 
@@ -1846,7 +1824,7 @@ namespace UIMFLibrary
 
         public void SumScansNonCached(List<int> frameNumbers, List<List<int>> scanNumbers, List<double> mzList, List<double> intensityList, double minMz, double maxMz)
         {
-            List<int> iList = new List<int>();
+            List<int> iList = new List<int>(m_globalParameters.Bins);
 
             SumScansNonCached(frameNumbers, scanNumbers, mzList, iList, minMz, maxMz);
 
@@ -1930,7 +1908,6 @@ namespace UIMFLibrary
 
                 while (reader.Read())
                 {
-
                     try
                     {
                         int ibin = 0;
@@ -1982,7 +1959,6 @@ namespace UIMFLibrary
                 int scanNum = Convert.ToInt32(reader["ScanNum"]);
                 spectra = (byte[])(reader["Intensities"]);
               
-                
                 if (spectra.Length > 0)
                 {
 
@@ -2004,7 +1980,6 @@ namespace UIMFLibrary
                         }
                         else
                         {
-
                             bins.Add(ibin);
                             intensities.Add(decoded_SpectraRecord);
                             nonZeroCount++;
@@ -2013,9 +1988,6 @@ namespace UIMFLibrary
                     }
                     spectrumCountList.Add(nonZeroCount);
                 }                    
-
-
-
             }
 
             reader.Close();
@@ -2026,9 +1998,6 @@ namespace UIMFLibrary
         public void SumScansForVariableRange(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, int frameType, int [] intensities)
         {
             System.Text.StringBuilder commandText;
-
-            //intensities = new int[m_globalParameters.Bins];
-
             //Iterate through each list element to get frame number
             for (int i = 0; i < frameNumbers.Count; i++)
             {
@@ -2131,33 +2100,21 @@ namespace UIMFLibrary
 
             for (int frame = startFrame; frame <= endFrame; frame++)
             {
-  
                 for (int scan = startScan; scan <= endScan; scan++)
                 {
-
                     int sumAcrossBins = 0;
                     for (int bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
                     {
                         int binIntensity = frameIntensities[frame - startFrame][scan-startScan][bin-lowerUpperBins[0]];
                         sumAcrossBins += binIntensity;
                     }
-
                     frameValues[counter] = frame;
                     scanValues[counter] = scan;
                     intensities[counter] = sumAcrossBins;
-
                     counter++;
-
-  
                 }
-
-                
             }
-
-
         }
-
-
 
         public void GetLCProfile(int startFrame, int endFrame, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] frameValues, ref int[] intensities)
         {
@@ -2177,18 +2134,15 @@ namespace UIMFLibrary
                 int scanSum = 0; 
                 for (int scan = startScan; scan <= endScan; scan++)
                 {
-
                     int binSum = 0; 
                     for (int bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
                     {
                         binSum += frameIntensities[frame - startFrame][scan - startScan][bin - lowerUpperBins[0]];
                     }
-
                     scanSum += binSum;
                 }
 
                 intensities[frame - startFrame] = scanSum;
-                    
                 frameValues[frame - startFrame] = frame;
             }
         }
@@ -2204,7 +2158,6 @@ namespace UIMFLibrary
             bool polynomialCalibrantsAreUsed = (fp.a2 != 0 || fp.b2 != 0 || fp.c2 != 0 || fp.d2 != 0 || fp.e2 != 0 || fp.f2 != 0);
             if (polynomialCalibrantsAreUsed)
             {
-
                 //note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
                 // much more complicated.  So someone else can figure that out  :)
                 throw new NotImplementedException("DriftTime profile extraction hasn't been implemented for UIMF files containing polynomial calibration constants.");
@@ -2212,12 +2165,9 @@ namespace UIMFLibrary
 
             double lowerBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
             double upperBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
-
             bins[0] = (int)Math.Round(lowerBin, 0);
             bins[1] = (int)Math.Round(upperBin, 0);
-
             return bins;
-
         }
 
         //Added by Gord. 10/20/2010
@@ -2234,7 +2184,6 @@ namespace UIMFLibrary
         /// <param name="intensities">outputted intensities</param>
         public void GetDriftTimeProfile(int frameNum, int frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] scanValues, ref int[] intensities)
         {
-
             if (startScan > endScan)
             {
                 throw new System.ArgumentException("Failed to get DriftTimeProfile. Input startScan was greater than input endScan.");
@@ -2242,14 +2191,12 @@ namespace UIMFLibrary
 
             double lowerMZ = targetMZ - toleranceInMZ;
             double upperMZ = targetMZ + toleranceInMZ;
-
             FrameParameters fp = GetFrameParameters(frameNum);
             GlobalParameters gp = this.GetGlobalParameters();
 
             bool polynomialCalibrantsAreUsed = (fp.a2 != 0 || fp.b2 != 0 || fp.c2 != 0 || fp.d2 != 0 || fp.e2 != 0 || fp.f2 != 0);
             if (polynomialCalibrantsAreUsed)
             {
-                
                 //note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
                 // much more complicated.  So someone else can figure that out  :)
                 throw new NotImplementedException("DriftTime profile extraction hasn't been implemented for UIMF files containing polynomial calibration constants.");
@@ -2257,12 +2204,10 @@ namespace UIMFLibrary
 
             double lowerBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
             double upperBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
-
             int roundedLowerBin = (int)Math.Round(lowerBin, 0);
             int roundedUpperBin = (int)Math.Round(upperBin, 0);
 
             int[][] intensityBlock = GetIntensityBlock(frameNum, frameType, startScan, endScan, roundedLowerBin, roundedUpperBin);
-
             int lengthOfSecondDimension = roundedUpperBin - roundedLowerBin + 1;
             int scanArrayLength = endScan - startScan + 1;
 
@@ -2281,10 +2226,6 @@ namespace UIMFLibrary
                 scanValues[i] = startScan + i;
                 intensities[i] = sumAcrossBins;
             }
-
-
-
-
         }
 
         /// <summary>
@@ -2300,13 +2241,10 @@ namespace UIMFLibrary
         public double getBinClosestToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, double targetMZ)
         {
             //NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
-
             double binCorrection = (correctionTimeForTOF / 1000) / binWidth;
             double bin = (Math.Sqrt(targetMZ) / slope + intercept) / binWidth * 1000;
-
             //TODO:  have a test case with a TOFCorrectionTime > 0 and verify the binCorrection adjustment
-            bin = bin + binCorrection;
-            return bin;
+            return bin + binCorrection;
         }
 
         public void UpdateCalibrationCoefficients(int frameNum, float slope, float intercept)
@@ -2329,23 +2267,17 @@ namespace UIMFLibrary
         private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
         {
             double t = bin * binWidth / 1000;
-            //double residualMassError  = fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
-            double residualMassError = 0;
-
             double term1 = (double)(slope * ((t - correctionTimeForTOF / 1000 - intercept)));
             return term1 * term1;
-
         }
 
         public Stack<int[]> GetFrameAndScanListByDescendingIntensity()
         {
-
-            
-            Stack<int[]> tuples = new Stack<int[]>();
+            FrameParameters fp = GetFrameParameters(1);
+            Stack<int[]> tuples = new Stack<int[]>(m_globalParameters.NumFrames * fp.Scans);
             int[] values = new int[3];
 
             m_sqliteDataReader = m_getFramesAndScanByDescendingIntensityCommand.ExecuteReader();
-
             while (m_sqliteDataReader.Read())
             {
                 values = new int[3];
