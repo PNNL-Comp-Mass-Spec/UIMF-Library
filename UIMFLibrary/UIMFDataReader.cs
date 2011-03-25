@@ -66,7 +66,9 @@ namespace UIMFLibrary
                     //populate the global parameters object since it's going to be used anyways.
                     //I can't imagine a scenario where that wouldn't be the case.
                     m_globalParameters = GetGlobalParameters();
-                    m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
+
+                    //i've increased the capacity to twice the number of frames to avoid re-hashing of keys
+                    m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames*2);
                     success = true;
                 }
                 catch (Exception ex)
@@ -298,7 +300,7 @@ namespace UIMFLibrary
                 throw new Exception("FrameNum should be a positive integer");
             }
 
-            FrameParameters fp = new FrameParameters();
+            FrameParameters fp = null;
 
             //now check in cache first
             if (m_frameParametersCache.ContainsKey(frameNumber))
@@ -314,6 +316,7 @@ namespace UIMFLibrary
                 {
                     m_getFrameParametersCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     SQLiteDataReader reader = m_getFrameParametersCommand.ExecuteReader();
+                    fp = new FrameParameters();
                     while (reader.Read())
                     {
                         try
@@ -1649,9 +1652,9 @@ namespace UIMFLibrary
                         else
                         {
                             double t = (double)ibin * m_globalParameters.BinWidth / 1000;
-                            double ResidualMassError = fp.a2 * t + fp.b2 * System.Math.Pow(t, 3) + fp.c2 * System.Math.Pow(t, 5) + fp.d2 * System.Math.Pow(t, 7) + fp.e2 * System.Math.Pow(t, 9) + fp.f2 * System.Math.Pow(t, 11);
+                           // double ResidualMassError = fp.a2 * t + fp.b2 * System.Math.Pow(t, 3) + fp.c2 * System.Math.Pow(t, 5) + fp.d2 * System.Math.Pow(t, 7) + fp.e2 * System.Math.Pow(t, 9) + fp.f2 * System.Math.Pow(t, 11);
                             mzs[nNonZero] = (double)(fp.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
-                            mzs[nNonZero] = mzs[nNonZero] * mzs[nNonZero] + ResidualMassError;
+                            mzs[nNonZero] = mzs[nNonZero] * mzs[nNonZero];// +ResidualMassError;
                             spectrum[nNonZero] = decoded_SpectraRecord;
                             ibin++;
                             nNonZero++;
