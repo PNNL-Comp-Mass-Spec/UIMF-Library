@@ -141,4 +141,52 @@ namespace UIMFLibrary
 			}
 		}
 	}
+
+
+    // /////////////////////////////////////////////////////////////////////
+    // Calibrate TOF to m/z according to formula mass = (k * (t-t0))^2
+    //
+    public class MZ_Calibrator
+    {
+        private double K;
+        private double T0;
+
+        public MZ_Calibrator(double k, double t0)
+        {
+            this.K = k;
+            this.T0 = t0;
+        }
+
+        public double TOFtoMZ(double TOFValue)
+        {
+            double r = this.K * (TOFValue - this.T0);
+            return r * r;
+        }
+
+        public int MZtoTOF(double mz)
+        {
+            double r = (Math.Sqrt(mz));
+            return (int)(((r / this.K) + this.T0) + .5); // .5 for rounding
+        }
+
+        public string Description
+        {
+            get
+            {
+                return "mz = (k*(t-t0))^2";
+            }
+        }
+
+        public double k
+        {
+            get { return this.K; }
+            set { this.K = value; }
+        }
+
+        public double t0
+        {
+            get { return this.T0; }
+            set { this.T0 = value; }
+        }
+    }
 }
