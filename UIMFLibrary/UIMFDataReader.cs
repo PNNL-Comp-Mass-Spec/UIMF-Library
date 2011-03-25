@@ -317,6 +317,7 @@ namespace UIMFLibrary
                     m_getFrameParametersCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     SQLiteDataReader reader = m_getFrameParametersCommand.ExecuteReader();
                     fp = new FrameParameters();
+
                     while (reader.Read())
                     {
                         try
@@ -360,28 +361,46 @@ namespace UIMFLibrary
                             fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
                             fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
-                            fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
-                            fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
-                            fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0, ref columnMissingCounter);
-                            fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
-                            fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
-                            fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
-
-                            fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
-                            fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
-                            fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
-                            fp.d2 = TryGetFrameParam(reader, "d2", 0, ref columnMissingCounter);
-                            fp.e2 = TryGetFrameParam(reader, "e2", 0, ref columnMissingCounter);
-
                             if (columnMissingCounter > 0)
                             {
-                                if (m_errMessageCounter < 10)
+                                if (m_errMessageCounter < 5)
                                 {
                                     Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (missing one or more expected columns); please get the newest version from \\\\floyd\\software");
                                     m_errMessageCounter++;
                                 }
                             }
+                            else
+                            {
+                                fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
+                                fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
+                                fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0, ref columnMissingCounter);
+                                fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
+                                fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
+                                fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
+                            }
 
+                            
+                            fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
+                            if (columnMissingCounter > 0)
+                            {
+                                fp.b2 = 0;
+                                fp.c2 = 0;
+                                fp.d2 = 0;
+                                fp.e2 = 0;
+                                fp.f2 = 0;
+                                if (m_errMessageCounter < 5)
+                                {
+                                    Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (missing one or more expected columns); please get the newest version from \\\\floyd\\software");
+                                    m_errMessageCounter++;
+                                }
+                            }
+                            else
+                            {
+                                fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
+                                fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
+                                fp.d2 = TryGetFrameParam(reader, "d2", 0, ref columnMissingCounter);
+                                fp.e2 = TryGetFrameParam(reader, "e2", 0, ref columnMissingCounter);
+                            }
                         }
                         catch (Exception ex)
                         {
