@@ -775,6 +775,12 @@ namespace UIMFLibrary
             return countPerFrame;
         }
 
+        // returns the frame numbers associated with the current frame_type
+        public int[] GetFrameNumbers()
+        {
+            return this.array_FrameNum;
+        }
+
         public int[] GetFrameNumbers(int frame_type)
         {
             this.set_FrameType(frame_type);
