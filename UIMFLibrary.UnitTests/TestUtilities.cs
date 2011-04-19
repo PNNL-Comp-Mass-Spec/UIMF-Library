@@ -126,6 +126,41 @@ namespace UIMFLibrary.UnitTests
         }
 
 
+        public static void displayFrameParameters(FrameParameters fp)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            string separator = Environment.NewLine;
+
+            sb.Append("avg TOF length = \t"+ fp.AverageTOFLength);
+            sb.Append(separator);
+            sb.Append("cal intercept = \t" + fp.CalibrationIntercept);
+            sb.Append(separator);
+            sb.Append("cal slope = \t" + fp.CalibrationSlope);
+            sb.Append(separator);
+            sb.Append("frame type = \t" + fp.FrameType);
+            sb.Append(separator);
+            sb.Append("pressure back = \t" + fp.PressureBack);
+            sb.Append(separator);
+            sb.Append("pressure front = \t" + fp.PressureFront);
+            sb.Append(separator);
+            sb.Append("high pressure funnel pressure= \t" + fp.HighPressureFunnelPressure);
+            sb.Append(separator);
+            sb.Append("ion funnel trap pressure= \t" + fp.IonFunnelTrapPressure);
+            sb.Append(separator);
+            sb.Append("quadrupole pressure = \t" + fp.QuadrupolePressure);
+            sb.Append(separator);
+            sb.Append("rear ion funnel pressure = \t" + fp.RearIonFunnelPressure);
+            sb.Append(separator);
+            sb.Append("start time = \t" + fp.StartTime);
+            sb.Append(separator);
+            sb.Append("num scans = \t" + fp.Scans);
+            sb.Append(separator);
+            sb.Append("IMF profile = \t" + fp.IMFProfile);
+
+            Console.WriteLine(sb.ToString());
+
+        }
 
 
         public static void display2DChromatogram(int[] frameORScanVals, int[] intensityVals)

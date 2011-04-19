@@ -306,11 +306,42 @@ namespace UIMFLibrary
             return GetFrameParameters(this.array_FrameNum[frame_index]).FrameType;
         }
 
+        
+        //TODO:  verify that we are getting the pressure from the correct column
+        /// <summary>
+        /// Returns the key frame pressure value that is used in the calculation of drift time 
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <returns>Frame pressure used in drift time calc</returns>
+        public double GetFramePressureForCalculationOfDriftTime(int frame_index)
+        {
+
+            /*
+             * [gord] A little history..
+             * Earlier UIMF files have the column 'PressureBack' but not the 
+             * newer 'RearIonFunnelPressure' or 'IonFunnelTrapPressure'
+             * 
+             * So, will first check for old format
+             * if there is a value there, will use it.  If not,
+             * look for newer columns and use these values. 
+             */
+
+            FrameParameters fp = GetFrameParameters(frame_index);
+            double pressure = fp.PressureBack;
+
+            if (pressure == 0) pressure = fp.RearIonFunnelPressure;
+            if (pressure == 0) pressure = fp.IonFunnelTrapPressure;
+            
+            return pressure;
+
+        }
+
+
         public FrameParameters GetFrameParameters(int frame_index)
         {
             if (frame_index < 0)
             {
-                throw new Exception("FrameNum should be a positive integer");
+                throw new Exception("FrameIndex should be greater than or equal to zero.");
             }
 
             FrameParameters fp = new FrameParameters();
@@ -550,6 +581,8 @@ namespace UIMFLibrary
         }
 
 
+
+        //TODO: determine who uses this... if nobody, then delete.
         /**
          * Returns the list of all frame parameters in order of sorted frame numbers
          * 
@@ -838,12 +871,12 @@ namespace UIMFLibrary
             {
                 throw new ArgumentOutOfRangeException("Error getting intensities. Check the start and stop Frames values.");
             }
-           
+
             bool inputScanRangesAreOK = (startScan >= 0 && endScan >= startScan);
             if (!inputScanRangesAreOK)
             {
                 throw new ArgumentOutOfRangeException("Error getting intensities. Check the start and stop IMS Scan values.");
-  
+
             }
 
 
@@ -2222,7 +2255,7 @@ namespace UIMFLibrary
             bins[1] = (int)Math.Round(upperBin, 0);
             return bins;
         }
-   
+
         /// <summary>
         /// Returns the bin value that corresponds to an m/z value.  
         /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)

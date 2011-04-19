@@ -12,9 +12,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     public class DataReaderTests
     {
         DataReader m_reader;
-        string uimfStandardFile1 = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
-    
-
+      
 
         [Test]
         public void getSpectrumTest()
@@ -52,7 +50,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void sumScansTest()
         {
             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(uimfStandardFile1);
+            reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             GlobalParameters gp = reader.GetGlobalParameters();
             List<double> mzsList = new List<double>();
@@ -81,7 +79,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void variableSummingTest()
         {
             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(uimfStandardFile1);
+            reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             GlobalParameters gp = reader.GetGlobalParameters();
 
@@ -166,7 +164,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void getAllParentFrameParametersTest()
         {
             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(uimfStandardFile1);
+            reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             GlobalParameters gp = reader.GetGlobalParameters();
             Dictionary<int, FrameParameters> allParentFrameParameters = reader.GetAllParentFrameParameters();
@@ -180,7 +178,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void getFrameParametersTest()
         {
              UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(uimfStandardFile1);
+            reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             GlobalParameters gp = reader.GetGlobalParameters();
             FrameParameters fp = reader.GetFrameParameters(1);
@@ -327,7 +325,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void getBPIListTest()
         {
             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(uimfStandardFile1);
+            reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             Stack<int[]> bpiStack = reader.GetFrameAndScanListByDescendingIntensity();
 
