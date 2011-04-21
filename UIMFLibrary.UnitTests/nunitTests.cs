@@ -77,7 +77,7 @@ public class TestClass
         globals.TOFIntensityType = "ADC";
         dw.InsertGlobal(globals);
 
-        dw.CloseUIMF(FileName);
+        dw.CloseUIMF();
 
     }
 
@@ -86,7 +86,7 @@ public class TestClass
     {
         dw.OpenUIMF(FileName);
         dw.UpdateFrameType();
-        dw.CloseUIMF(FileName);
+        dw.CloseUIMF();
 
     }
 

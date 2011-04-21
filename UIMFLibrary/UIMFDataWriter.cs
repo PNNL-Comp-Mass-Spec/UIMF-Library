@@ -1,9 +1,11 @@
 ﻿/////////////////////////////////////////////////////////////////////////
 // This file includes a library of functions to create a UIMF format file
 // Author: Yan Shi, PNNL, December 2008
-// Modified by: 
-//				William F. Danielson				
-//				Anuj R. Shah, May 19th 2010
+// Updates by:
+//			William F. Danielson				
+//			Anuj R. Shah
+//          Matthew Monroe
+//
 /////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -49,28 +51,31 @@ namespace UIMFLibrary
 			}
 		}
 
-        public void UpdateFrameType()
-        {
-            m_dbCommandUimf = m_dbConnection.CreateCommand();
-            m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
-            m_dbCommandUimf.Prepare();
+        /// <summary>
+        /// This is likely a legacy function; it sets the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc.
+        /// Furthermore, it's hard-coded to process frames 0 through 1200
+        /// </summary>
+        //public void UpdateFrameType()
+        //{
+        //    m_dbCommandUimf = m_dbConnection.CreateCommand();
+        //    m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
+        //    m_dbCommandUimf.Prepare();
             
-            for (int i = 1; i < 1201; i++)
-            {
-                int frameType = (i - 1) % 4 == 0 ? 1 : 2;
-                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
-                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
-                m_dbCommandUimf.ExecuteNonQuery();
-                m_dbCommandUimf.Parameters.Clear();
-            }
-        }
+        //    for (int i = 1; i < 1201; i++)
+        //    {
+        //        int frameType = (i - 1) % 4 == 0 ? 1 : 2;
+        //        m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
+        //        m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
+        //        m_dbCommandUimf.ExecuteNonQuery();
+        //        m_dbCommandUimf.Parameters.Clear();
+        //    }
+        //}
 
         /// <summary>
-        /// 
+        /// Close the UIMF file
         /// </summary>
-        /// <param name="fileName"></param>
         /// <returns></returns>
-		public bool CloseUIMF(string fileName)
+		public bool CloseUIMF()
 		{
             bool status = false;
 			try
@@ -85,13 +90,18 @@ namespace UIMFLibrary
 				}
 				status = true;
 			}
-			catch
+			catch (Exception ex)
 			{
-				
+                Console.WriteLine("Exception closing .UIMF file: " + ex.Message);
 			}
 
             return status;
 		}
+
+        public bool CloseUIMF(string fileName)
+        {
+            return CloseUIMF();
+        }
 
         /// <summary>
         /// Method to create the table struture within a UIMF file. THis must be called
@@ -103,7 +113,7 @@ namespace UIMFLibrary
 
 			// https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
 
-			// Create m_GlobalParameters Table  
+			// Create Global_Parameters Table  
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
             m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " +
                 "DateStarted STRING, " + // date experiment was started
@@ -124,7 +134,7 @@ namespace UIMFLibrary
                 "Instrument_Name STRING)";
 				m_dbCommandUimf.ExecuteNonQuery();
 
-			// Create Frame_parameters Table
+			   // Create Frame_parameters Table
                 m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
                     "FrameNum INT(4) PRIMARY KEY, " + // 0, Contains the frame number 
                 "StartTime DOUBLE, " + // 1, Start time of frame  
@@ -221,12 +231,100 @@ namespace UIMFLibrary
 			
 			//ARS made this change to facilitate faster retrieval of scans/spectrums.
 			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
-           // m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
+            // m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
 			//ARS change ends
 
 			m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Dispose();
 		}
+
+        /// <summary>
+        /// Deletes all of the scans for the specified frame
+        /// </summary>
+        /// <param name="frameNum">The frame number to delete</param>
+        /// <param name="UpdateScanCountInFrameParams">If true, then will update the Scans column to be 0 for the deleted frames</param>
+        public void DeleteFrameScans(int frameNum, bool UpdateScanCountInFrameParams)
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            if (UpdateScanCountInFrameParams)
+            {
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET Scans = 0 WHERE FrameNum = " + frameNum.ToString() + "; ";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+            }
+
+            m_dbCommandUimf.Dispose();
+
+            this.FlushUIMF();
+        }
+
+        /// <summary>
+        /// Deletes the scans for all frames in the file
+        /// </summary>
+        /// <param name="UpdateScanCountInFrameParams">If true, then will update the Scans column to be 0 for the deleted frames</param>
+        public void DeleteAllFrameScans(int frame_type, bool UpdateScanCountInFrameParams)
+        {
+
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " +
+                                          "WHERE FrameNum IN (SELECT FrameNum " +
+                                                             "FROM Frame_Parameters " +
+                                                             "WHERE FrameType = " + frame_type.ToString() + ");";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            if (UpdateScanCountInFrameParams)
+            {
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters " +
+                                              "SET Scans = 0 " +
+                                              "WHERE FrameType = " + frame_type.ToString() + ";";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+            }
+
+            m_dbCommandUimf.Dispose();
+
+            this.FlushUIMF();
+
+        }
+
+        /// <summary>
+        /// Commits the currently open transaction, then starts a new one
+        /// Note that a transaction is started when OpenUIMF() is called, then commited when CloseUIMF() is called
+        /// </summary>
+        public void FlushUIMF()
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            System.Threading.Thread.Sleep(100);
+
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
+            m_dbCommandUimf.ExecuteNonQuery();
+            
+        }
+
+        /// <summary>
+        /// Updates the scan count for the given frame
+        /// </summary>
+        /// <param name="frameNum">The frame number to update</param>
+        /// <param name="NumScans">The new scan count</param>
+        public void UpdateFrameScanCount(int frameNum, int NumScans)
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            
+            m_dbCommandUimf.CommandText = " UPDATE Frame_Parameters " + 
+                                          " SET Scans = " + NumScans.ToString() + 
+                                          " WHERE FrameNum = " + frameNum.ToString() + "; ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            m_dbCommandUimf.Dispose();
+
+        }
 
         /// <summary>
         /// Method to enter the details of the global parameters for the experiment
@@ -341,7 +439,7 @@ namespace UIMFLibrary
 		}
 
 		//This function should be called for each scan, intensities is an array including all zeros
-		//TODO:: Deprecate this function since the bpi is calculation using an incorrect calibration function
+		//TODO:: Deprecate this function since the bpi is calculated using an incorrect calibration function
 		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, double[] intensities, double binWidth)
 		{	
 			//RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
@@ -352,6 +450,9 @@ namespace UIMFLibrary
 			double bpi = 0;
 			double bpiMz = 0;
             int datatypeSize = 8;
+
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
 			for ( int i = 0; i < intensities.Length; i++)
 			{
@@ -414,6 +515,9 @@ namespace UIMFLibrary
 			double bpiMz = 0;
             int datatypeSize = 4;
 
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+
 			for ( int i = 0; i < intensities.Length; i++)
 			{
 				float x = intensities[i];
@@ -464,6 +568,9 @@ namespace UIMFLibrary
         public int InsertScan(FrameParameters fp, int scanNum, System.Collections.Generic.List<int> bins, System.Collections.Generic.List<int> intensities, double binWidth, int timeOffset)
         {
             int nonZeroCount = 0;
+
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
             if (fp != null)
             {
@@ -529,6 +636,9 @@ namespace UIMFLibrary
         public int InsertScan(FrameParameters frameParameters, int scanNum, int [] bins, int[] intensities, double binWidth, int timeOffset)
         {
             int nonZeroCount = 0;
+
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
             if (frameParameters != null)
             {
@@ -605,6 +715,9 @@ namespace UIMFLibrary
 			double bpi_mz = 0;
             int datatypeSize = 4;
 
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+
 			//Calculate TIC and BPI
 			for ( int i = 0; i < intensities.Length; i++)
 			{
@@ -666,6 +779,9 @@ namespace UIMFLibrary
 			double bpi_mz = 0;
 			int nonZeroIntensities = 0;
             int datatypeSize = 2;
+
+            if (m_globalParameters == null)
+                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
 			//Calculate TIC and BPI
 			for ( int i = 0; i < intensities.Length; i++)
@@ -764,15 +880,15 @@ namespace UIMFLibrary
 			try
 			{
 				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "Alter TABLE m_GlobalParameters Add " + parameterName.ToString() + " " + parameterType.ToString();
-				m_dbCommandUimf.CommandText += " UPDATE m_GlobalParameters SET " + parameterName.ToString() + " = " + parameterValue;
+                m_dbCommandUimf.CommandText = "Alter TABLE Global_Parameters Add " + parameterName.ToString() + " " + parameterType.ToString();
+                m_dbCommandUimf.CommandText += " UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
 				this.m_dbCommandUimf.ExecuteNonQuery();
 				m_dbCommandUimf.Dispose();
 			}
 			catch
 			{
                 m_dbCommandUimf = m_dbConnection.CreateCommand();
-                m_dbCommandUimf.CommandText = "UPDATE m_GlobalParameters SET " + parameterName.ToString() + " = " + parameterValue;
+                m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
                 this.m_dbCommandUimf.ExecuteNonQuery();
                 m_dbCommandUimf.Dispose();
                 Console.WriteLine("Parameter " + parameterName + " already exists, its value will be updated to " + parameterValue);
@@ -795,7 +911,7 @@ namespace UIMFLibrary
         public void UpdateGlobalParameter(string parameterName, string parameterValue)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-            m_dbCommandUimf.CommandText = "UPDATE m_GlobalParameters SET " + parameterName.ToString() + " = " + parameterValue;
+            m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Dispose();
 		}
@@ -826,6 +942,47 @@ namespace UIMFLibrary
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Dispose();
 		}
+
+        public void PostLogEntry(string EntryType, string Message, string PostedBy)
+        {
+            // Check whether the Log_Entries table needs to be created
+            
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+
+            if (!DataReader.TableExists(m_dbConnection, "Log_Entries"))
+            {
+                // Log_Entries not found; need to create it
+                
+                m_dbCommandUimf.CommandText = "CREATE TABLE Log_Entries ( " +
+                    "Entry_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "Posted_By STRING, " +
+                    "Posting_Time STRING, " +
+                    "Type STRING, " +
+                    "Message STRING)";
+
+                m_dbCommandUimf.ExecuteNonQuery();
+
+            }
+
+            if (String.IsNullOrEmpty(EntryType))
+                EntryType = "Normal";
+
+            if (String.IsNullOrEmpty(PostedBy))
+                PostedBy = "";
+
+            if (String.IsNullOrEmpty(Message))
+                Message = "";
+
+            // Now add a log entry
+            m_dbCommandUimf.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + 
+                                          "VALUES (" + 
+                                             "datetime('now'), " + 
+                                             "'" + PostedBy  + "', " + 
+                                             "'" + EntryType + "', " + 
+                                             "'" + Message   + "')";
+
+            m_dbCommandUimf.ExecuteNonQuery();
+        }
 
 		private void PrepareInsertFrame()
 		{
@@ -910,6 +1067,8 @@ namespace UIMFLibrary
 		
 		private double convertBinToMz( int binNumber, double binWidth, FrameParameters frameParameters)
 		{
+            // mz = (k * (t-t0))^2
+
 			double t = binNumber * binWidth/1000;
 			double resMassErr = frameParameters.a2*t + frameParameters.b2 * System.Math.Pow(t,3)+ frameParameters.c2 * System.Math.Pow(t,5) + frameParameters.d2 * System.Math.Pow(t,7) + frameParameters.e2 * System.Math.Pow(t,9) + frameParameters.f2 * System.Math.Pow(t,11);
 			double mz = (double)(frameParameters.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime/1000 - frameParameters.CalibrationIntercept)));
@@ -917,5 +1076,6 @@ namespace UIMFLibrary
 			return mz;
 		}
 
+     
 	}
 }
