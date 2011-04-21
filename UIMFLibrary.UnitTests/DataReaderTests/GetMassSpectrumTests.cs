@@ -39,7 +39,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, testFrameScanInfo1.startFrame,
                 testFrameScanInfo1.stopFrame, testFrameScanInfo1.startScan, testFrameScanInfo1.stopScan);
 
-            TestUtilities.displayRawMassSpectrum(mzValues, intensities);
+            //TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 
 
             int nonZeroCount = (from n in mzValues where n != 0 select n).Count();
@@ -71,7 +71,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int stopScan = 260;
 
             int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame,stopFrame, startScan, stopScan);
-            TestUtilities.displayRawMassSpectrum(mzValues, intensities);
+            //TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 
             dr.CloseUIMF();
 
@@ -97,7 +97,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int stopScan = 150;
 
             int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
-            TestUtilities.displayRawMassSpectrum(mzValues, intensities);
+            //TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 
         }
 

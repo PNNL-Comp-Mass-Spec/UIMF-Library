@@ -13,39 +13,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     {
         DataReader m_reader;
       
-
-        [Test]
-        public void getSpectrumTest()
-        {
-            string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
-            UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
-            reader.OpenUIMF(filePath);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-            int numBins = gp.Bins;
-
-            double[] xvals = new double[numBins];
-            int[] yvals = new int[numBins];
-
-            //         reader.SumScansNonCached(xvals, yvals, 0, 6, 6, 285, 285);
-
-
-            reader.GetSpectrum(6, 285, yvals, xvals);
-
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < xvals.Length; i++)
-            {
-                sb.Append(xvals[i] + "\t" + yvals[i]);
-                sb.Append(Environment.NewLine);
-            }
-
-            Console.WriteLine(sb.ToString());
-
-            reader.CloseUIMF();
-
-        }
-
+   
         [Test]
         public void sumScansTest()
         {
@@ -74,68 +42,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             reader.CloseUIMF();
         }
 
-        //TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this 
-        [Test]
-        public void variableSummingTest()
-        {
-            UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(FileRefs.uimfStandardFile1);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-
-            int numBins = gp.Bins;
-            double[] xvals = new double[numBins];
-            int[] yvals = new int[numBins];
-            int[] yvals1 = new int[numBins];
-
-
-            int endFrame = 564;
-            int startFrame = 484;
-            int startScan = 73;
-            int endScan = 193;
-
-
-            //sum a fixed range of scans within a set of frames
-            reader.SumScans(xvals, yvals, 0, startFrame, endFrame, startScan, endScan);
-            //reader.GetSpectrum(10, 350, yvals, yvals1);
-
-            Console.WriteLine("Finished running sum scans");
-
-            List<int> frameNumbers = new List<int>();
-            //create a list of frame Numbers
-            for (int i = 0; i < endFrame - startFrame + 1; i++)
-            {
-                frameNumbers.Add(i + startFrame);
-            }
-
-            List<List<int>> scanNumbersForEachFrame = new List<List<int>>();
-
-            //create a single list of scan numbers for this test
-            List<int> scanNumbers = new List<int>();
-
-            for (int i = 0; i < endScan - startScan + 1; i++)
-            {
-                scanNumbers.Add(i + startScan);
-            }
-
-            for (int i = 0; i < endFrame - startFrame + 1; i++)
-            {
-
-                scanNumbersForEachFrame.Add(scanNumbers);
-
-            }
-
-            List<double> mzList = new List<double>();
-            List<int> intensityList = new List<int>();
-
-            reader.SumScansNonCached(frameNumbers, scanNumbersForEachFrame, mzList, intensityList, 0, 5000);
-            //reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
-            //Assert.AreEqual(yvals, yvals1);
-            reader.CloseUIMF();
-
-        }
-
-
+   
         [Test]
         public void getSpectrumBins()
         {
@@ -151,10 +58,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             reader.GetSpectrum(6, 285, bins, intensities);
 
-            for (int i = 0; i < bins.Count; i++)
-            {
-                Console.WriteLine(bins[i] + "\t" + intensities[i]);
-            }
+            //for (int i = 0; i < bins.Count; i++)
+            //{
+            //    Console.WriteLine(bins[i] + "\t" + intensities[i]);
+            //}
 
             reader.CloseUIMF();
 
@@ -169,7 +76,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             GlobalParameters gp = reader.GetGlobalParameters();
             FrameParameters fp = reader.GetFrameParameters(1);
 
-            Console.WriteLine(fp.AverageTOFLength);
+            //Console.WriteLine(fp.AverageTOFLength);
 
             reader.CloseUIMF();
         }
@@ -237,7 +144,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             }
 
-            Console.Write(sb.ToString());
+           // Console.Write(sb.ToString());
 
 
         }
@@ -262,8 +169,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         }
  
+
         [Test]
-        public void ExpectedCount_Test()
+        public void countPerSpectrum_test1()
         {
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
 
@@ -284,48 +192,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         }
         
-        [Test]
-        public void GetBPISortedList()
-        {
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
-
-            m_reader = new DataReader();
-            m_reader.OpenUIMF(filePath);
-
-            GlobalParameters gp = m_reader.GetGlobalParameters();
-            FrameParameters fp = m_reader.GetFrameParameters(1);
-
-            double[] bpi = new double[gp.NumFrames * fp.Scans];
-
-
-            int startFrame = 500;
-            int stopFrame = 800;
-
-            m_reader.GetBPI(bpi, 0, startFrame, stopFrame, 0, 600);
-
-
-            m_reader.CloseUIMF();
-        }
-
-        [Test]
-        public void getBPIListTest()
-        {
-            UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(FileRefs.uimfStandardFile1);
-
-            Stack<int[]> bpiStack = reader.GetFrameAndScanListByDescendingIntensity();
-
-            Console.WriteLine("The list is " + bpiStack.Count.ToString());
-            reader.CloseUIMF();
-
-        }
-
-
-
-
-
-        //TODO:   test seems to write out mostly zeros....  we should test a region richer in intensity data
-        //TODO:  is this method the same as another??  Check against Get3DProfile
+        
+  
+        //TODO:  need to test something  (assert)
         [Test]
         public void GetFramesAndScanIntensitiesForAGivenMzTest()
         {
@@ -340,21 +209,127 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             m_reader.OpenUIMF(filePath);
             int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
 
-            for (int i = 0; i < intensityMap.Length; i++)
-            {
-                for (int j = 0; j < intensityMap[i].Length; j++)
-                {
-                    Console.Write(intensityMap[i][j] + ",");
+            //for (int i = 0; i < intensityMap.Length; i++)
+            //{
+            //    for (int j = 0; j < intensityMap[i].Length; j++)
+            //    {
+            //        Console.Write(intensityMap[i][j] + ",");
 
-                }
-                Console.WriteLine(";");
-            }
+            //    }
+            //    Console.WriteLine(";");
+            //}
 
             m_reader.CloseUIMF();
 
 
 
         }
+
+
+        ////TODO: this test fails... not sure we need it.
+        //[Test]
+        //public void GetBPISortedList()
+        //{
+        //    string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+        //    m_reader = new DataReader();
+        //    m_reader.OpenUIMF(filePath);
+
+        //    GlobalParameters gp = m_reader.GetGlobalParameters();
+        //    FrameParameters fp = m_reader.GetFrameParameters(1);
+
+        //    double[] bpi = new double[gp.NumFrames * fp.Scans];
+
+
+        //    int startFrame = 500;
+        //    int stopFrame = 800;
+
+        //    m_reader.GetBPI(bpi, 0, startFrame, stopFrame, 0, 600);
+
+
+        //    m_reader.CloseUIMF();
+        //}
+
+
+        ////TODO: this takes a long time.  Not sure we need it
+        //[Test]
+        //public void getBPIListTest()
+        //{
+        //    UIMFLibrary.DataReader reader = new DataReader();
+        //    reader.OpenUIMF(FileRefs.uimfStandardFile1);
+
+        //    Stack<int[]> bpiStack = reader.GetFrameAndScanListByDescendingIntensity();
+
+        //    Console.WriteLine("The list is " + bpiStack.Count.ToString());
+        //    reader.CloseUIMF();
+
+        //}
+
+        //TODO:   test seems to write out mostly zeros....  we should test a region richer in intensity data
+        //TODO:  is this method the same as another??  Check against Get3DProfile
+       
+        //TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this 
+        //[Test]
+        //public void variableSummingTest()
+        //{
+        //    UIMFLibrary.DataReader reader = new DataReader();
+        //    reader.OpenUIMF(FileRefs.uimfStandardFile1);
+
+        //    GlobalParameters gp = reader.GetGlobalParameters();
+
+        //    int numBins = gp.Bins;
+        //    double[] xvals = new double[numBins];
+        //    int[] yvals = new int[numBins];
+        //    int[] yvals1 = new int[numBins];
+
+
+        //    int endFrame = 564;
+        //    int startFrame = 484;
+        //    int startScan = 73;
+        //    int endScan = 193;
+
+
+        //    //sum a fixed range of scans within a set of frames
+        //    reader.SumScans(xvals, yvals, 0, startFrame, endFrame, startScan, endScan);
+        //    //reader.GetSpectrum(10, 350, yvals, yvals1);
+
+        //    Console.WriteLine("Finished running sum scans");
+
+        //    List<int> frameNumbers = new List<int>();
+        //    //create a list of frame Numbers
+        //    for (int i = 0; i < endFrame - startFrame + 1; i++)
+        //    {
+        //        frameNumbers.Add(i + startFrame);
+        //    }
+
+        //    List<List<int>> scanNumbersForEachFrame = new List<List<int>>();
+
+        //    //create a single list of scan numbers for this test
+        //    List<int> scanNumbers = new List<int>();
+
+        //    for (int i = 0; i < endScan - startScan + 1; i++)
+        //    {
+        //        scanNumbers.Add(i + startScan);
+        //    }
+
+        //    for (int i = 0; i < endFrame - startFrame + 1; i++)
+        //    {
+
+        //        scanNumbersForEachFrame.Add(scanNumbers);
+
+        //    }
+
+        //    List<double> mzList = new List<double>();
+        //    List<int> intensityList = new List<int>();
+
+        //    reader.SumScansNonCached(frameNumbers, scanNumbersForEachFrame, mzList, intensityList, 0, 5000);
+        //    //reader.SumScansForVariableRange(frameNumbers, scanNumbersForEachFrame, 0, yvals1);
+        //    //Assert.AreEqual(yvals, yvals1);
+        //    reader.CloseUIMF();
+
+        //}
+
+
 
     
         //TODO:  fix paths;  move this test somewhere else
@@ -380,6 +355,40 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         //            reader.CloseUIMF();
         //        }
         //    }
+        //}
+
+
+        //TODO: update this with a standard UIMF file
+        //[Test]
+        //public void getSpectrumTest()
+        //{
+        //    string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
+        //    UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
+        //    reader.OpenUIMF(filePath);
+
+        //    GlobalParameters gp = reader.GetGlobalParameters();
+        //    int numBins = gp.Bins;
+
+        //    double[] xvals = new double[numBins];
+        //    int[] yvals = new int[numBins];
+
+        //    //         reader.SumScansNonCached(xvals, yvals, 0, 6, 6, 285, 285);
+
+
+        //    reader.GetSpectrum(6, 285, yvals, xvals);
+
+
+        //    StringBuilder sb = new StringBuilder();
+        //    for (int i = 0; i < xvals.Length; i++)
+        //    {
+        //        sb.Append(xvals[i] + "\t" + yvals[i]);
+        //        sb.Append(Environment.NewLine);
+        //    }
+
+        //    //Console.WriteLine(sb.ToString());
+
+        //    reader.CloseUIMF();
+
         //}
 
 

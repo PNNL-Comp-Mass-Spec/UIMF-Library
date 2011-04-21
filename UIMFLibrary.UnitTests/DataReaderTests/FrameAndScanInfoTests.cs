@@ -17,7 +17,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             reader.OpenUIMF(FileRefs.uimfStandardFile1);
             int numFrames = reader.GetGlobalParameters().NumFrames;
 
-            Console.WriteLine("Number of frames = " + numFrames);
+            //Console.WriteLine("Number of frames = " + numFrames);
             Assert.AreEqual(3220, numFrames);
         }
 
@@ -44,7 +44,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int testFrame = 0;
 
             FrameParameters fp = reader.GetFrameParameters(testFrame);
-            TestUtilities.displayFrameParameters(fp);
+            //TestUtilities.displayFrameParameters(fp);
 
         }
 
@@ -59,7 +59,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int firstFrame = 0;
 
             FrameParameters fp = reader.GetFrameParameters(firstFrame);
-            TestUtilities.displayFrameParameters(fp);
+            //TestUtilities.displayFrameParameters(fp);
 
 
         }
@@ -79,7 +79,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Console.WriteLine("Last frame = " + lastFrame);
 
             FrameParameters fp = reader.GetFrameParameters(lastFrame);
-            TestUtilities.displayFrameParameters(fp);
+            //TestUtilities.displayFrameParameters(fp);
 
 
         }
@@ -111,9 +111,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double pressureBackLastFrame = reader.GetFrameParameters(lastFrame).PressureBack;
             double pressureBackSecondToLastFrame = reader.GetFrameParameters(secondToLastFrame).PressureBack;
 
-            Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
+            //Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
 
-            Console.WriteLine("Pressure for frame "+lastFrame + " = " + pressureBackLastFrame);
+            //Console.WriteLine("Pressure for frame "+lastFrame + " = " + pressureBackLastFrame);
+
+            Assert.AreEqual(4.127, (decimal)pressureBackLastFrame);
+
 
         }
 
