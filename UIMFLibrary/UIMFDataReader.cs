@@ -11,7 +11,6 @@
 /////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Data;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,6 +25,14 @@ namespace UIMFLibrary
         public const int FRAME_TYPE_FRAGMENTATION = 1;     // MS/MS frame
         public const int FRAME_TYPE_PRESCAN = 2;
         public const int FRAME_TYPE_CALIBRATION = 3;
+
+        public enum iFrameType
+        {
+            MS = 0,
+            Fragmentation = 1,
+            Prescan = 2,
+            Calibration = 3
+        }
 
         private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
         
@@ -123,6 +130,29 @@ namespace UIMFLibrary
             reader.Close();
         }
 
+        public iFrameType FrameTypeIntToEnum(int frame_type)
+        {
+            switch (frame_type)
+            {
+                case 0:
+                    return iFrameType.MS;
+                case 1:
+                    return iFrameType.Fragmentation;
+                case 2:
+                    return iFrameType.Prescan;
+                case 3:
+                    return iFrameType.Calibration;
+                default:
+                    throw new InvalidCastException("Invalid frame type: " + frame_type);
+            }
+
+        }
+
+        public int FrameTypeEnumToInt(iFrameType eFrameType)
+        {
+            return Convert.ToInt32(eFrameType);
+        }
+
         /// <summary>
         /// Returns the bin value that corresponds to an m/z value.  
         /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
@@ -178,7 +208,7 @@ namespace UIMFLibrary
                     }
                 }
             }
-            catch (Exception a)
+            catch (Exception)
             {
             }
 
@@ -355,7 +385,7 @@ namespace UIMFLibrary
         {
             if (frame_index < 0)
             {
-                throw new Exception("FrameIndex should be greater than or equal to zero.");
+                throw new ArgumentOutOfRangeException("FrameIndex should be greater than or equal to zero.");
             }
 
             FrameParameters fp = new FrameParameters();
@@ -463,7 +493,7 @@ namespace UIMFLibrary
                     {
                         oGlobalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"]);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         //ignore since it may not be present in all previous versions
                     }
@@ -622,7 +652,7 @@ namespace UIMFLibrary
             
         }
 
-        public int GetSpectrum(int frame_index, int scanNum, int[] spectrum, int[] bins)
+        public int GetSpectrum(int frame_index, int scanNum, int[] intensities, int[] bins)
         {
             if (frame_index < 0)
             {
@@ -674,7 +704,7 @@ namespace UIMFLibrary
                         else
                         {
                             bins[nNonZero] = ibin;
-                            spectrum[nNonZero] = decoded_SpectraRecord;
+                            intensities[nNonZero] = decoded_SpectraRecord;
                             ibin++;
                             nNonZero++;
                         }
@@ -688,37 +718,43 @@ namespace UIMFLibrary
             return nNonZero;
         }
 
-        // This function extracts intensities from frameNum and scanNum,
-        // and returns number of non-zero intensities found in this spectrum and two arrays spectrum[] and mzs[]
-        public int GetSpectrum(int frame_index, int scanNum, double[] spectrum, double[] mzs)
+        /// <summary>
+        /// Extracts intensities from given frame and scan 
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="intensities"></param>
+        /// <param name="mzs"></param>
+        /// <returns>Number of non-zero intensities found in this spectrum</returns>
+        public int GetSpectrum(int frame_index, int scanNum, double[] intensities, double[] mzs)
         {
             int nNonZero = 0;
-            int[] intSpec = new int[spectrum.Length];
+            int[] intSpec = new int[intensities.Length];
 
             nNonZero = GetSpectrum(frame_index, scanNum, intSpec, mzs);
             for (int i = 0; i < intSpec.Length; i++)
             {
-                spectrum[i] = intSpec[i];
+                intensities[i] = intSpec[i];
             }
             return nNonZero;
         }
 
-        public int GetSpectrum(int frame_index, int scanNum, float[] spectrum, double[] mzs)
+        public int GetSpectrum(int frame_index, int scanNum, float[] intensities, double[] mzs)
         {
             int nNonZero = 0;
-            int[] intSpec = new int[spectrum.Length];
+            int[] intSpec = new int[intensities.Length];
 
             nNonZero = GetSpectrum(frame_index, scanNum, intSpec, mzs);
 
             for (int i = 0; i < intSpec.Length; i++)
             {
-                spectrum[i] = intSpec[i];
+                intensities[i] = intSpec[i];
             }
 
             return nNonZero;
         }
 
-        public int GetSpectrum(int frame_index, int scanNum, int[] spectrum, double[] mzs)
+        public int GetSpectrum(int frame_index, int scanNum, int[] intensities, double[] mzs)
         {
             ValidateFrameIndex("GetSpectrum", frame_index, true);
             if (scanNum < 0)
@@ -759,7 +795,7 @@ namespace UIMFLibrary
                             double ResidualMassError = fp.a2 * t + fp.b2 * System.Math.Pow(t, 3) + fp.c2 * System.Math.Pow(t, 5) + fp.d2 * System.Math.Pow(t, 7) + fp.e2 * System.Math.Pow(t, 9) + fp.f2 * System.Math.Pow(t, 11);
                             mzs[nNonZero] = (double)(fp.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime / 1000 - fp.CalibrationIntercept)));
                             mzs[nNonZero] = mzs[nNonZero] * mzs[nNonZero] + ResidualMassError;
-                            spectrum[nNonZero] = decoded_SpectraRecord;
+                            intensities[nNonZero] = decoded_SpectraRecord;
                             ibin++;
                             nNonZero++;
                         }
@@ -771,16 +807,16 @@ namespace UIMFLibrary
             return nNonZero;
         }
 
-        public int GetSpectrum(int frame_index, int scanNum, short[] spectrum, double[] mzs)
+        public int GetSpectrum(int frame_index, int scanNum, short[] intensities, double[] mzs)
         {
             int nNonZero = 0;
-            int[] intSpec = new int[spectrum.Length];
+            int[] intSpec = new int[intensities.Length];
 
             nNonZero = GetSpectrum(frame_index, scanNum, intSpec, mzs);
 
             for (int i = 0; i < intSpec.Length; i++)
             {
-                spectrum[i] = (short)intSpec[i];
+                intensities[i] = (short)intSpec[i];
             }
 
             return nNonZero;
@@ -979,7 +1015,7 @@ namespace UIMFLibrary
         {
             int current_frame_type = this.CurrentFrameType;
 
-            int frag_frames = set_FrameType(FRAME_TYPE_FRAGMENTATION);
+            int frag_frames = set_FrameType(iFrameType.Fragmentation);
 
             bool hasMSMS = (frag_frames > 0 ? true : false);
             this.set_FrameType(current_frame_type);
@@ -1064,9 +1100,10 @@ namespace UIMFLibrary
                 for (int i = 0; i < 4; i++)
                 {
                     // Set the frame type
-                    // Legacy .UIMF files will have a frame type of 0 for most frames
-                    // Newer .UIMF files will have frame types of 1 for normal frames, 2 for fragmentation frames, and 3 for calibration frames
-
+                    // First try iFrameType.MS
+                    // Then try iFrameType.Fragmentation
+                    // etc.
+                    
                     // Choose the best frame type for MS spectra
                     if (this.set_FrameType(i, true) > 0)
                         break;
@@ -1087,7 +1124,7 @@ namespace UIMFLibrary
                 fp.StartTime = Convert.ToDouble(reader["StartTime"]);
                 fp.Duration = Convert.ToDouble(reader["Duration"]);
                 fp.Accumulations = Convert.ToInt32(reader["Accumulations"]);
-                fp.FrameType = (short)Convert.ToInt16(reader["FrameType"]);
+                fp.FrameType = Convert.ToInt16(reader["FrameType"]);
                 fp.Scans = Convert.ToInt32(reader["Scans"]);
                 fp.IMFProfile = Convert.ToString(reader["IMFProfile"]);
                 fp.TOFLosses = Convert.ToDouble(reader["TOFLosses"]);
@@ -1116,7 +1153,7 @@ namespace UIMFLibrary
                 fp.voltExitCondLmt = Convert.ToDouble(reader["voltExitCondLmt"]);           // 28, Cond Limit Voltage
                 fp.PressureFront = Convert.ToDouble(reader["PressureFront"]);
                 fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
-                fp.MPBitOrder = (short)Convert.ToInt32(reader["MPBitOrder"]);
+                fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"]);
                 fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
                 fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
@@ -1170,17 +1207,40 @@ namespace UIMFLibrary
 
         }
 
-        // v1.2 caching methods
-        /**
-         * This method returns the mz values and the intensities as lists
-         * */
+        /// <summary>
+        /// Convert the array of bytes defining a fragmentation sequence to an array of doubles
+        /// </summary>
+        /// <param name="blob"></param>
+        /// <returns></returns>
+        private double[] array_FragmentationSequence(byte[] blob)
+        {
+            double[] frag = new double[blob.Length / 8];
 
+            for (int i = 0; i < frag.Length; i++)
+                frag[i] = BitConverter.ToDouble(blob, i * 8);
+
+            return frag;
+        }
+
+        // v1.2 caching methods
+      
+        /// <summary>
+        /// Returns the mz values and the intensities as lists
+        /// </summary>
+        /// <param name="mzs"></param>
+        /// <param name="intensities"></param>
+        /// <param name="frame_type"></param>
+        /// <param name="start_frame_index"></param>
+        /// <param name="end_frame_index"></param>
+        /// <param name="startScan"></param>
+        /// <param name="endScan"></param>
+        /// <returns></returns>
         public int SumScansNonCached(List<double> mzs, List<int> intensities, int frame_type, int start_frame_index, int end_frame_index, int startScan, int endScan)
         {
 
             if ((start_frame_index > end_frame_index) || (startScan > endScan))
             {
-                throw new Exception("Please check whether startFrame < endFrame and startScan < endScan");
+                throw new ArgumentOutOfRangeException("Please check whether startFrame < endFrame and startScan < endScan");
             }
 
             GlobalParameters gp = GetGlobalParameters();
@@ -1197,7 +1257,7 @@ namespace UIMFLibrary
 
                 }
             }
-            catch (NullReferenceException ne)
+            catch (NullReferenceException)
             {
                 throw new Exception("Some of the frame parameters are missing ");
             }
@@ -1206,10 +1266,17 @@ namespace UIMFLibrary
         }
 
 
-        /**
-         * This method returns the bin values and the intensities as lists
-         * */
-
+        /// <summary>
+        /// Returns the bin values and the intensities as lists
+        /// </summary>
+        /// <param name="bins"></param>
+        /// <param name="intensities"></param>
+        /// <param name="frame_type"></param>
+        /// <param name="start_frame_index"></param>
+        /// <param name="end_frame_index"></param>
+        /// <param name="startScan"></param>
+        /// <param name="endScan"></param>
+        /// <returns></returns>
         public int SumScansNonCached(List<int> bins, List<int> intensities, int frame_type, int start_frame_index, int end_frame_index, int startScan, int endScan)
         {
 
@@ -1361,7 +1428,7 @@ namespace UIMFLibrary
                         if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
                     }
                 }
-                catch (IndexOutOfRangeException outOfRange)
+                catch (IndexOutOfRangeException)
                 {
                     //Console.WriteLine("Error thrown when summing scans.  Error details: " + outOfRange.Message);
 
@@ -1377,7 +1444,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// 
+        /// Returns the bin values and the intensities as arrays
         /// </summary>
         /// <param name="mzs">Returned mz values</param>
         /// <param name="intensities">Returned intensities</param>
@@ -1418,7 +1485,6 @@ namespace UIMFLibrary
             return SumScansNonCached(mzs, intensities, frame_type, start_frame_index, end_frame_index, startScan, endScan);
         }
 
-        // April 2011 Note: There is a lot of room for improvement in these methods.
         public int SumScans(double[] mzs, int[] intensities, int frame_type, int start_frame_index, int end_frame_index, int scanNum)
         {
             int startScan = scanNum;
@@ -1496,9 +1562,7 @@ namespace UIMFLibrary
             int max_bin = SumScans(mzs, intensities, frame_type, frame_index, frame_index);
             return max_bin;
         }
-
-
-
+        
         public int SumScans(double[] mzs, float[] intensities, int frame_type, int start_frame_index, int end_frame_index, int startScan, int endScan)
         {
             int[] intIntensities = new int[intensities.Length];
@@ -1588,17 +1652,6 @@ namespace UIMFLibrary
             int startScan = 0;
             FrameParameters fp = GetFrameParameters(frame_index);
             return SumScans(mzs, intensities, frame_type, start_frame_index, end_frame_index, startScan, fp.Scans - 1);
-        }
-
-        private double[] array_FragmentationSequence(byte[] blob)
-        {
-            // convert the array of bytes to an array of doubles
-            double[] frag = new double[blob.Length / 8];
-
-            for (int i = 0; i < frag.Length; i++)
-                frag[i] = BitConverter.ToDouble(blob, i * 8);
-
-            return frag;
         }
 
         // April 2011: Unused function
@@ -1764,7 +1817,7 @@ namespace UIMFLibrary
                             }
                         }
                     }
-                    catch (IndexOutOfRangeException e)
+                    catch (IndexOutOfRangeException)
                     {
                         //do nothing
                     }
@@ -1829,7 +1882,7 @@ namespace UIMFLibrary
                             }
                         }
                     }
-                    catch (IndexOutOfRangeException e)
+                    catch (IndexOutOfRangeException)
                     {
                         //do nothing
                     }
@@ -1848,7 +1901,7 @@ namespace UIMFLibrary
             {
                 Result = Convert.ToDouble(reader[ColumnName]);
             }
-            catch (IndexOutOfRangeException i)
+            catch (IndexOutOfRangeException)
             {
                 columnMissingCounter += 1;
             }
@@ -1864,7 +1917,7 @@ namespace UIMFLibrary
             {
                 Result = Convert.ToInt32(reader[ColumnName]);
             }
-            catch (IndexOutOfRangeException i)
+            catch (IndexOutOfRangeException)
             {
                 columnMissingCounter += 1;
             }
@@ -2427,27 +2480,49 @@ namespace UIMFLibrary
         /// <summary>
         /// Set the frame type
         /// </summary>
-        /// <param name="frame_type">Frame type to set; 0 or 1 for normal frames, 2 for fragmentation spectra, 3 for calibration frames</param>
+        /// <param name="frame_type">Frame type to set; see iFrameType for types</param>
         /// <returns>The number of frames in the file that have the given frame type</returns>
         public int set_FrameType(int frame_type)
         {
-            bool ForceReload = false;
-            return set_FrameType(frame_type, ForceReload);
+            bool force_reload = false;
+            return set_FrameType(frame_type, force_reload);
+        }
+
+        /// <summary>
+        /// Set the frame type (using enum iFrameType)
+        /// </summary>
+        /// <param name="eFrameType">Frame type to set; see iFrameType for types</param>
+        /// <returns>The number of frames in the file that have the given frame type</returns>
+        public int set_FrameType(iFrameType eFrameType)
+        {
+            bool force_reload = false;
+            return set_FrameType(eFrameType, force_reload);
+        }
+
+        /// <summary>
+        /// Set the frame type (using enum iFrameType)
+        /// </summary>
+        /// <param name="eFrameType">Frame type to set; see iFrameType for types</param>
+        /// <param name="ForceReload">True to force a re-load of the data from the Frame_Parameters table</param>
+        /// <returns>The number of frames in the file that have the given frame type</returns>
+        public int set_FrameType(iFrameType eFrameType, bool force_reload)
+        {
+            return set_FrameType(FrameTypeEnumToInt(eFrameType), force_reload);
         }
 
         /// <summary>
         /// Set the frame type
         /// </summary>
-        /// <param name="frame_type">Frame type to set; 0 or 1 for normal frames, 2 for fragmentation spectra, 3 for calibration frames</param>
+        /// <param name="frame_type">Frame type to set; see iFrameType for types</param>
         /// <param name="ForceReload">True to force a re-load of the data from the Frame_Parameters table</param>
         /// <returns>The number of frames in the file that have the given frame type</returns>
-        public int set_FrameType(int frame_type, bool ForceReload)
+        public int set_FrameType(int frame_type, bool force_reload)
         {
             int frame_count;
             int i;
 
             // If the frame type is already correct, then we don't need to re-query the database
-            if (this.CurrentFrameType == frame_type && !ForceReload)
+            if (this.CurrentFrameType == frame_type && !force_reload)
                 return this.m_FrameNumArray.Length;
 
             m_CurrentFrameType = frame_type;
@@ -2564,7 +2639,6 @@ namespace UIMFLibrary
             else
             {
                 throw new Exception("UIMFLibrary accumulate_PlotData: Compression == 0");
-                return frame_data;
             }
 
             // Create a calibration lookup table -- for speed
@@ -2750,7 +2824,7 @@ namespace UIMFLibrary
                             {
                                 mobility_data[current_scan] += int_BinIntensity;
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 throw new Exception(mobility_index.ToString() + "  " + current_scan.ToString());
                             }

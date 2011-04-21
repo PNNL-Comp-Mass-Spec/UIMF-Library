@@ -9,7 +9,6 @@
 /////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Data.SQLite;
@@ -843,7 +842,7 @@ namespace UIMFLibrary
                 {
                     m_dbCommandUimf.ExecuteNonQuery();
                 }
-                catch (SQLiteException createTable)
+                catch (SQLiteException)
                 {
                     //means table is already present. let's try and insert data values into it.
                 }
