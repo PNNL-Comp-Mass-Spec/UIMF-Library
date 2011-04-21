@@ -189,12 +189,10 @@ namespace UIMFLibrary
 
         public List<string> getCalibrationTableNames()
         {
-            const int NUMCALIBRATIONFRAMES = 20;        // Typical max number of calibration frames
-
             SQLiteDataReader reader = null;
             SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
             cmd.CommandText = "SELECT NAME FROM Sqlite_master WHERE type='table' ORDER BY NAME";
-            List<string> calibrationTableNames = new List<string>(NUMCALIBRATIONFRAMES);
+            List<string> calibrationTableNames = new List<string>();
             try
             {
 
@@ -202,14 +200,15 @@ namespace UIMFLibrary
                 while (reader.Read())
                 {
                     string tableName = Convert.ToString(reader["Name"]);
-                    if (tableName.Contains("Calib"))
+                    if (tableName.StartsWith("Calib_"))
                     {
                         calibrationTableNames.Add(tableName);
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                throw new Exception("Exception finding calibration table names: " + ex.ToString());
             }
 
             return calibrationTableNames;
