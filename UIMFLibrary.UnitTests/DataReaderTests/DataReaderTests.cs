@@ -159,21 +159,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             reader.CloseUIMF();
 
         }
-
-        [Test]
-        public void getAllParentFrameParametersTest()
-        {
-            UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(FileRefs.uimfStandardFile1);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-            Dictionary<int, FrameParameters> allParentFrameParameters = reader.GetAllParentFrameParameters();
-
-            Console.WriteLine(allParentFrameParameters.Keys.Count);
-
-            reader.CloseUIMF();
-        }
-
+             
         [Test]
         public void getFrameParametersTest()
         {

@@ -43,19 +43,17 @@ namespace UIMFLibrary
         public SQLiteDataReader m_sqliteDataReader;
 
         // v1.2 prepared statements
-        public SQLiteCommand m_sumScansCommand;
-        public SQLiteCommand m_getFileBytesCommand;
-        public SQLiteCommand m_getFrameNumbers;
-        public SQLiteCommand m_getSpectrumCommand;
         public SQLiteCommand m_getCountPerSpectrumCommand;
         public SQLiteCommand m_getCountPerFrameCommand;
-        public SQLiteCommand m_sumScansCachedCommand;
+        public SQLiteCommand m_getFileBytesCommand;
+        public SQLiteCommand m_getFrameNumbers;
         public SQLiteCommand m_getFrameParametersCommand;
-        public SQLiteCommand dbcmd_PreparedStmt;
-        public SQLiteCommand m_sumVariableScansPerFrameCommand;
         public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
-        public SQLiteCommand m_getAllFrameParameters;
-
+        public SQLiteCommand m_getSpectrumCommand;
+        public SQLiteCommand m_sumScansCommand;
+        public SQLiteCommand m_sumScansCachedCommand;
+        public SQLiteCommand m_sumVariableScansPerFrameCommand;
+        public SQLiteCommand dbcmd_PreparedStmt;
 
         private GlobalParameters m_globalParameters = null;
 
@@ -124,73 +122,6 @@ namespace UIMFLibrary
             reader.Dispose();
             reader.Close();
         }
-
-        /// <summary>
-        /// Returns the frame parameters for all parent (MS1) spectra
-        /// The UIMFDemultiplexer app calls this function
-        /// </summary>
-        /// <returns>Dictionary of frame parameters</returns>
-        public Dictionary<int, FrameParameters> GetAllParentFrameParameters()
-        {
-            set_FrameType(FRAME_TYPE_MS);
-            return GetAllFrameParameters(this.CurrentFrameType);
-        }
-
-        /// <summary>
-        /// Returns the frame parameters for all calibration spectra
-        /// The UIMFDemultiplexer app calls this function
-        /// </summary>
-        /// <returns>Dictionary of frame parameters</returns>
-        public Dictionary<int, FrameParameters> GetAllCalibrationFrameParameters()
-        {
-            return GetAllFrameParameters(FRAME_TYPE_CALIBRATION);
-        }
-
-        /// <summary>
-        /// Returns the list of all frame parameters in order of sorted frame numbers
-        /// The UIMFDemultiplexer app calls this function
-        /// </summary>
-        /// <param name="frame_type"></param>
-        /// <returns>Dictionary of frame parameters</returns>
-        public Dictionary<int, FrameParameters> GetAllFrameParameters(int frame_type)
-        {
-            SQLiteDataReader reader = null;
-
-            try
-            {
-                // Clear the cache to make sure we only get frames of the specified type
-                m_frameParametersCache.Clear();
-
-                // Initialize the prepared statement
-                m_getAllFrameParameters.Parameters.Add(new SQLiteParameter(":FrameType", frame_type));
-
-                reader = m_getAllFrameParameters.ExecuteReader();
-                while (reader.Read())
-                {
-                    FrameParameters fp = new FrameParameters();
-
-                    int iFrameNum = Convert.ToInt32(reader["FrameNum"]);
-
-                    // Skip any frames already present in m_frameParametersCache
-                    if (!m_frameParametersCache.ContainsKey(iFrameNum))
-                    {
-                        if (PopulateFrameParameters(fp, reader))
-                        {
-                            m_frameParametersCache.Add(fp.FrameNum, fp);
-                        }
-                    }
-                     
-                }
-            }
-            finally
-            {
-                m_getAllFrameParameters.Parameters.Clear();
-                reader.Close();
-            }
-
-            return m_frameParametersCache;
-        }
-        
 
         /// <summary>
         /// Returns the bin value that corresponds to an m/z value.  
@@ -1061,11 +992,6 @@ namespace UIMFLibrary
         {
             m_getFileBytesCommand = m_uimfDatabaseConnection.CreateCommand();
 
-            // Table: Frame_Parameters
-            m_getAllFrameParameters = m_uimfDatabaseConnection.CreateCommand();
-            m_getAllFrameParameters.CommandText = "Select * from Frame_Parameters WHERE FrameType=:FrameType ORDER BY FrameNum";
-            m_getAllFrameParameters.Prepare();
-
             m_getFrameNumbers = m_uimfDatabaseConnection.CreateCommand();
             m_getFrameNumbers.CommandText = "SELECT FrameNum FROM Frame_Parameters WHERE FrameType = :FrameType";
             m_getFrameNumbers.Prepare();
@@ -1076,6 +1002,7 @@ namespace UIMFLibrary
 
             // Table: Frame_Scans
             m_sumVariableScansPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
+
             m_getFramesAndScanByDescendingIntensityCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand.CommandText = "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
             m_getFramesAndScanByDescendingIntensityCommand.Prepare();
@@ -1100,8 +1027,6 @@ namespace UIMFLibrary
             m_getCountPerFrameCommand.CommandText = "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum";
             m_getCountPerFrameCommand.Prepare();
         }
-
-
 
         public bool OpenUIMF(string FileName)
         {
@@ -1967,35 +1892,35 @@ namespace UIMFLibrary
 
         private void UnloadPrepStmts()
         {
-            if (m_sumScansCommand != null)
-            {
-                m_sumScansCommand.Dispose();
-            }
-
-            if (m_getFrameNumbers != null)
-            {
-                m_getFrameNumbers.Dispose();
-            }
-
             if (m_getCountPerSpectrumCommand != null)
-            {
                 m_getCountPerSpectrumCommand.Dispose();
-            }
 
             if (m_getCountPerFrameCommand != null)
-            {
                 m_getCountPerFrameCommand.Dispose();
-            }
+
+            if (m_getFileBytesCommand != null)
+                m_getFileBytesCommand.Dispose();
+
+            if (m_getFrameNumbers != null)
+                m_getFrameNumbers.Dispose();
 
             if (m_getFrameParametersCommand != null)
-            {
                 m_getFrameParametersCommand.Dispose();
-            }
+
+            if (m_getFramesAndScanByDescendingIntensityCommand != null)
+                m_getFramesAndScanByDescendingIntensityCommand.Dispose();
+
+            if (m_getSpectrumCommand != null)
+                m_getSpectrumCommand.Dispose();
+
+            if (m_sumScansCommand != null)
+                m_sumScansCommand.Dispose();
 
             if (m_sumScansCachedCommand != null)
-            {
                 m_sumScansCachedCommand.Dispose();
-            }
+
+            if (m_sumVariableScansPerFrameCommand != null)
+                m_sumVariableScansPerFrameCommand.Dispose();
 
         }
         

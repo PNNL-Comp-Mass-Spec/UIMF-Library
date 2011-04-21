@@ -576,10 +576,10 @@ namespace UIMFLibrary
             {
                 if (bins != null && intensities != null && bins.Count != 0 && intensities.Count != 0 && bins.Count == intensities.Count)
                 {
-                    //that is the total number of datapoints that are to be encoded
+                    //that is the total number of data points that are to be encoded
                     nonZeroCount = bins.Count;
 
-                    int[] rlze = new int[bins.Count* 2]; //this is the maximum length required assuming that there are no continuous values
+                    int[] rlze = new int[bins.Count * 2]; //this is the maximum length required assuming that there are no continuous values
 
                     //now iterate through both arrays and attempt to run length zero encode the values
                     int tic = 0;
