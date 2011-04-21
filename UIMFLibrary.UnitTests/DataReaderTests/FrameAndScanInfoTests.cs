@@ -84,8 +84,19 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         }
 
+        [Test]
+        public void getGlobalParams_test1()
+        {
+            UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
 
+            reader.OpenUIMF(FileRefs.uimfStandardDemultiplexedFile1);
+            GlobalParameters gp = reader.GetGlobalParameters();
+            DateTime dt = DateTime.Parse(gp.DateStarted);
 
+            reader.CloseUIMF();
+
+            Assert.AreEqual("4/7/2011 6:40:30 AM", dt.ToString());
+        }
 
 
         [Test]
