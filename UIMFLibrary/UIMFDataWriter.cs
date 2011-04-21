@@ -52,24 +52,24 @@ namespace UIMFLibrary
 		}
 
         /// <summary>
-        /// This is likely a legacy function; it sets the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc.
-        /// Furthermore, it's hard-coded to process frames 0 through 1200
+        /// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
+        /// It is used in the nunit tests
         /// </summary>
-        //public void UpdateFrameType()
-        //{
-        //    m_dbCommandUimf = m_dbConnection.CreateCommand();
-        //    m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
-        //    m_dbCommandUimf.Prepare();
-            
-        //    for (int i = 1; i < 1201; i++)
-        //    {
-        //        int frameType = (i - 1) % 4 == 0 ? 1 : 2;
-        //        m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
-        //        m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
-        //        m_dbCommandUimf.ExecuteNonQuery();
-        //        m_dbCommandUimf.Parameters.Clear();
-        //    }
-        //}
+        public void UpdateFrameType(int start_frame_num, int end_frame_num)
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
+            m_dbCommandUimf.Prepare();
+
+            for (int i = start_frame_num; i <= end_frame_num; i++)
+            {
+                int frameType = i % 4 == 0 ? 1 : 2;
+                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
+                m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
+                m_dbCommandUimf.ExecuteNonQuery();
+                m_dbCommandUimf.Parameters.Clear();
+            }
+        }
 
         /// <summary>
         /// Close the UIMF file

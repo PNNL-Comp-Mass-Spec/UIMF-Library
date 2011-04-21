@@ -85,7 +85,7 @@ public class TestClass
     public void updateFrameType()
     {
         dw.OpenUIMF(FileName);
-        dw.UpdateFrameType();
+        dw.UpdateFrameType(0, 1200);
         dw.CloseUIMF();
 
     }
