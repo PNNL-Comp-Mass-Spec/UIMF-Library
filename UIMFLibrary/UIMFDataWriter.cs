@@ -835,25 +835,28 @@ namespace UIMFLibrary
         public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
         {
             m_dbCommandUimf = m_dbConnection.CreateCommand();
-            m_dbCommandUimf.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
             try
             {
-                try
+                if (!DataReader.TableExists(m_dbConnection, tableName))
                 {
+                    // Create the table
+                    m_dbCommandUimf.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
                     m_dbCommandUimf.ExecuteNonQuery();
                 }
-                catch (SQLiteException)
+                else
                 {
-                    //means table is already present. let's try and insert data values into it.
+                    // Delete the data currently in the table
+                    m_dbCommandUimf.CommandText = "DELETE FROM " + tableName + ";";
+                    m_dbCommandUimf.ExecuteNonQuery();
                 }
-
-
+                
                 m_dbCommandUimf.CommandText = "INSERT INTO " + tableName + " VALUES (:Buffer);";
                 m_dbCommandUimf.Prepare();
 
                 m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Buffer", fileBytesAsBuffer));
 
                 m_dbCommandUimf.ExecuteNonQuery();
+               
             }
             finally
             {
