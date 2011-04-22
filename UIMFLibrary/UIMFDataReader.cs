@@ -21,17 +21,19 @@ namespace UIMFLibrary
 {
     public class DataReader
     {
-        public const int FRAME_TYPE_MS = 0;                // Normal MS
-        public const int FRAME_TYPE_FRAGMENTATION = 1;     // MS/MS frame
-        public const int FRAME_TYPE_PRESCAN = 2;
+        public const int FRAME_TYPE_MS = 0;                // Normal MS (legacy data)
+        public const int FRAME_TYPE_MS1 = 1;               // Normal MS
+        public const int FRAME_TYPE_FRAGMENTATION = 2;     // MS/MS frame
         public const int FRAME_TYPE_CALIBRATION = 3;
+        public const int FRAME_TYPE_PRESCAN = 4;
 
         public enum iFrameType
         {
             MS = 0,
-            Fragmentation = 1,
-            Prescan = 2,
-            Calibration = 3
+            MS1 = 1,
+            Fragmentation = 2,
+            Calibration = 3,
+            Prescan = 4            
         }
 
         private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
@@ -137,11 +139,13 @@ namespace UIMFLibrary
                 case 0:
                     return iFrameType.MS;
                 case 1:
-                    return iFrameType.Fragmentation;
+                    return iFrameType.MS1;
                 case 2:
-                    return iFrameType.Prescan;
+                    return iFrameType.Fragmentation;
                 case 3:
                     return iFrameType.Calibration;
+                case 4:
+                    return iFrameType.Prescan;
                 default:
                     throw new InvalidCastException("Invalid frame type: " + frame_type);
             }
@@ -980,8 +984,9 @@ namespace UIMFLibrary
             // Construct the SQL
             string SQL = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + FieldName + ") AS Value " +
                          " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum " +
-                         " WHERE Frame_Parameters.FrameType = " + frame_type.ToString() +
-                         " FrameNum >= " + this.m_FrameNumArray[start_frame_index] + " AND FrameNum <= " + this.m_FrameNumArray[end_frame_index];
+                         " WHERE Frame_Parameters.FrameType = " + frame_type.ToString() + " AND " +
+                               " Frame_Parameters.FrameNum >= " + this.m_FrameNumArray[start_frame_index] + " AND " +
+                               " Frame_Parameters.FrameNum <= " + this.m_FrameNumArray[end_frame_index];
 
             if (!(startScan == 0 && endScan == 0))
             {
@@ -1096,11 +1101,11 @@ namespace UIMFLibrary
             if (success)
             {
                 LoadPrepStmts();
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i <= 4; i++)
                 {
                     // Set the frame type
                     // First try iFrameType.MS
-                    // Then try iFrameType.Fragmentation
+                    // Then try iFrameType.MS1, etc.
                     // etc.
                     
                     // Choose the best frame type for MS spectra

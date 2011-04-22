@@ -92,6 +92,65 @@ namespace UIMFLibrary
         public double FloatVoltage;
         public int CalibrationDone = -1;
 
+        public void CopyTo(out FrameParameters Target)
+        {
+            Target = new FrameParameters();
+
+            Target.FrameNum = this.FrameNum;
+            Target.StartTime = this.StartTime;
+            Target.Duration = this.Duration;
+            Target.Accumulations = this.Accumulations;
+            Target.FrameType = this.FrameType;
+            Target.Scans = this.Scans;
+            Target.IMFProfile = this.IMFProfile;
+            Target.TOFLosses = this.TOFLosses;
+            Target.AverageTOFLength = this.AverageTOFLength;
+            Target.CalibrationSlope = this.CalibrationSlope;
+            Target.CalibrationIntercept = this.CalibrationIntercept;
+            Target.a2 = this.a2;
+            Target.b2 = this.b2;
+            Target.c2 = this.c2;
+            Target.d2 = this.d2;
+            Target.e2 = this.e2;
+            Target.f2 = this.f2;
+            Target.Temperature = this.Temperature;
+            Target.voltHVRack1 = this.voltHVRack1;
+            Target.voltHVRack2 = this.voltHVRack2;
+            Target.voltHVRack3 = this.voltHVRack3;
+            Target.voltHVRack4 = this.voltHVRack4;
+            Target.voltCapInlet = this.voltCapInlet;
+            Target.voltEntranceIFTIn = this.voltEntranceIFTIn;
+            Target.voltEntranceIFTOut = this.voltEntranceIFTOut;
+            Target.voltEntranceCondLmt = this.voltEntranceCondLmt;
+            Target.voltTrapOut = this.voltTrapOut;
+            Target.voltTrapIn  = this.voltTrapIn ;
+            Target.voltJetDist = this.voltJetDist;
+            Target.voltQuad1 = this.voltQuad1;
+            Target.voltCond1 = this.voltCond1;
+            Target.voltQuad2 = this.voltQuad2;
+            Target.voltCond2 = this.voltCond2;
+            Target.voltIMSOut = this.voltIMSOut;
+            Target.voltExitIFTIn = this.voltExitIFTIn;
+            Target.voltExitIFTOut = this.voltExitIFTOut;
+            Target.voltExitCondLmt = this.voltExitCondLmt;
+            Target.PressureFront = this.PressureFront;
+            Target.PressureBack = this.PressureBack;
+            Target.MPBitOrder = this.MPBitOrder;
+
+            if (FragmentationProfile != null)
+            {
+                Target.FragmentationProfile = new double[this.FragmentationProfile.Length];
+                Array.Copy(this.FragmentationProfile, Target.FragmentationProfile, this.FragmentationProfile.Length);
+            }
+            
+            Target.HighPressureFunnelPressure = this.HighPressureFunnelPressure;
+            Target.IonFunnelTrapPressure = this.IonFunnelTrapPressure;
+            Target.RearIonFunnelPressure = this.RearIonFunnelPressure;
+            Target.QuadrupolePressure = this.QuadrupolePressure;
+            Target.ESIVoltage = this.ESIVoltage;
+            Target.FloatVoltage = this.FloatVoltage;
+            Target.CalibrationDone = this.CalibrationDone;
+        }
     }
 
     public class IMSCOMP
