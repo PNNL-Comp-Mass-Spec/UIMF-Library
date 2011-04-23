@@ -21,68 +21,87 @@ namespace UIMFLibrary
 {
     public class DataReader
     {
-        public const int FRAME_TYPE_MS = 0;                // Normal MS (legacy data)
-        public const int FRAME_TYPE_MS1 = 1;               // Normal MS
-        public const int FRAME_TYPE_FRAGMENTATION = 2;     // MS/MS frame
-        public const int FRAME_TYPE_CALIBRATION = 3;
-        public const int FRAME_TYPE_PRESCAN = 4;
+        #region "Constants and Enums"
 
-        public enum iFrameType
-        {
-            MS = 0,
-            MS1 = 1,
-            Fragmentation = 2,
-            Calibration = 3,
-            Prescan = 4            
-        }
+            public const int FRAME_TYPE_MS = 0;                // Normal MS (legacy data)
+            public const int FRAME_TYPE_MS1 = 1;               // Normal MS
+            public const int FRAME_TYPE_FRAGMENTATION = 2;     // MS/MS frame
+            public const int FRAME_TYPE_CALIBRATION = 3;
+            public const int FRAME_TYPE_PRESCAN = 4;
 
-        private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
-        
-        // No longer used: private const int MAXMZ = 5000;
+            protected const int MAX_FRAME_TYPE_INDEX = 4;
 
-        private const string BPI = "BPI";
-        private const string TIC = "TIC";
+            public enum iFrameType
+            {
+                MS = 0,
+                MS1 = 1,
+                Fragmentation = 2,
+                Calibration = 3,
+                Prescan = 4
+            }
 
-        // This dictionary stores true frame numbers; not frame indices
-        private Dictionary<int, FrameParameters> m_frameParametersCache;
+            private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
 
-        public SQLiteConnection m_uimfDatabaseConnection;
-        
-        // April 2011 Note: SQLiteDataReaders might be better managable than currently implement.
-        public SQLiteDataReader m_sqliteDataReader;
+            // No longer used: private const int MAXMZ = 5000;
 
-        // v1.2 prepared statements
-        public SQLiteCommand m_getCountPerSpectrumCommand;
-        public SQLiteCommand m_getCountPerFrameCommand;
-        public SQLiteCommand m_getFileBytesCommand;
-        public SQLiteCommand m_getFrameNumbers;
-        public SQLiteCommand m_getFrameParametersCommand;
-        public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
-        public SQLiteCommand m_getSpectrumCommand;
-        public SQLiteCommand m_sumScansCommand;
-        public SQLiteCommand m_sumScansCachedCommand;
-        public SQLiteCommand m_sumVariableScansPerFrameCommand;
-        public SQLiteCommand dbcmd_PreparedStmt;
+            private const string BPI = "BPI";
+            private const string TIC = "TIC";
 
-        private GlobalParameters m_globalParameters = null;
+        #endregion
 
-        // The frame parameters for the most recent call to GetFrameParameters
-        public FrameParameters m_frameParameters = null;
+        #region "Structures"
+            public struct udtFrameInfoType
+            {
+                public int FrameType;
+                public int FrameIndex;
+            }
+        #endregion
 
-        private int m_MostRecentFrameParam_FrameIndex;
+        #region "Class-wide variables"
 
-        private static int m_errMessageCounter = 0;
+            // This dictionary stores true frame numbers; not frame indices
+            private Dictionary<int, FrameParameters> m_frameParametersCache;
 
-        public UIMFLibrary.MZ_Calibrator mz_Calibration;
-        private double[] calibration_table = new double[0];
+            public SQLiteConnection m_uimfDatabaseConnection;
+            
+            // April 2011 Note: SQLiteDataReaders might be better managable than currently implement.
+            public SQLiteDataReader m_sqliteDataReader;
 
-        // The current frame_type; start off at -1 to force population of m_FrameNumArray
-        private int m_CurrentFrameType = -1;
+            // v1.2 prepared statements
+            public SQLiteCommand m_getCountPerSpectrumCommand;
+            public SQLiteCommand m_getCountPerFrameCommand;
+            public SQLiteCommand m_getFileBytesCommand;
+            public SQLiteCommand m_getFrameNumbers;
+            public SQLiteCommand m_getFrameParametersCommand;
+            public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
+            public SQLiteCommand m_getSpectrumCommand;
+            public SQLiteCommand m_sumScansCommand;
+            public SQLiteCommand m_sumScansCachedCommand;
+            public SQLiteCommand m_sumVariableScansPerFrameCommand;
+            public SQLiteCommand dbcmd_PreparedStmt;
 
-        // This array maps from frame index to frame number
-        private int[] m_FrameNumArray = null;
+            private GlobalParameters m_globalParameters = null;
 
-        #region "Properties"
+            // The frame parameters for the most recent call to GetFrameParameters
+            public FrameParameters m_frameParameters = null;
+
+            private int m_MostRecentFrameParam_FrameIndex;
+
+            private static int m_errMessageCounter = 0;
+
+            public UIMFLibrary.MZ_Calibrator mz_Calibration;
+            private double[] calibration_table = new double[0];
+
+            // The current frame_type; start off at -1 to force population of m_FrameNumArray
+            private int m_CurrentFrameType = -1;
+
+            // This array maps from frame index to frame number
+            // It only contains frame numbers that are type m_CurrentFrameType
+            private int[] m_FrameNumArray = null;
+
+        #endregion
+
+            #region "Properties"
             public int CurrentFrameType
             {
                 get {return m_CurrentFrameType;}
@@ -323,34 +342,59 @@ namespace UIMFLibrary
             return tuples;
         }
 
-        //TODO:  verify that we are getting the pressure from the correct column
         /// <summary>
-        /// Returns the key frame pressure value that is used in the calculation of drift time 
+        /// Returns the frame index for the given frame number
+        /// Only searches frame numbers of the current frame type (get_FrameType)
         /// </summary>
-        /// <param name="frame_index"></param>
-        /// <returns>Frame pressure used in drift time calc</returns>
-        public double GetFramePressureForCalculationOfDriftTime(int frame_index)
+        /// <param name="frame_number"></param>
+        /// <returns>Frame Index if found; otherwise; a negative number if not a valid frame number</returns>
+        public int GetFrameIndex(int frame_number)
         {
+            return get_FrameIndex(frame_number);
+        }
 
-            /*
-             * [gord, April 2011] A little history..
-             * Earlier UIMF files have the column 'PressureBack' but not the 
-             * newer 'RearIonFunnelPressure' or 'IonFunnelTrapPressure'
-             * 
-             * So, will first check for old format
-             * if there is a value there, will use it.  If not,
-             * look for newer columns and use these values. 
-             */
+        /// <summary>
+        /// Determines the frame index for a given frame number, regrdless of frame type
+        /// Will auto-set frame_type if the frame_number is found
+        /// </summary>
+        /// <param name="frame_number"></param>
+        /// <returns>Frame index if found; -1 if not found</returns>
+        public int GetFrameIndexAllFrameTypes(int frame_number)
+        {
+            int iFrameIndex;
 
-            FrameParameters fp = GetFrameParameters(frame_index);
-            double pressure = fp.PressureBack;
+            iFrameIndex = get_FrameIndex(frame_number);
 
-            if (pressure == 0) pressure = fp.RearIonFunnelPressure;
-            if (pressure == 0) pressure = fp.IonFunnelTrapPressure;
+            if (iFrameIndex >= 0)
+                return iFrameIndex;
+            else
+            {
+                // Try other frame types
+                int iFrameTypeSaved = m_CurrentFrameType;
+                int iFrameCount;
 
-            return pressure;
+                for (int i = 0; i <= MAX_FRAME_TYPE_INDEX; i++)
+                {
+                    if (i != iFrameTypeSaved)
+                    {
+                        iFrameCount = set_FrameType(i);
+                        if (iFrameCount > 0)
+                        {
+                            iFrameIndex = get_FrameIndex(frame_number);
+                            if (iFrameIndex >= 0)
+                                return iFrameIndex;
+                        }
+                    }
+                }
+
+                // If we reach this code, then we never did find the frame_number
+                // Change the frame_type back to iFrameTypeSaved and return -1
+                set_FrameType(iFrameTypeSaved);
+                return -1;
+            }
 
         }
+
 
         /// <summary>
         /// Returns the frame numbers associated with the current frame_type
@@ -382,6 +426,35 @@ namespace UIMFLibrary
             ValidateFrameIndex("GetFrameNumByIndex", frame_index);
 
             return this.m_FrameNumArray[frame_index];
+        }
+
+        //TODO:  verify that we are getting the pressure from the correct column
+        /// <summary>
+        /// Returns the key frame pressure value that is used in the calculation of drift time 
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <returns>Frame pressure used in drift time calc</returns>
+        public double GetFramePressureForCalculationOfDriftTime(int frame_index)
+        {
+
+            /*
+             * [gord, April 2011] A little history..
+             * Earlier UIMF files have the column 'PressureBack' but not the 
+             * newer 'RearIonFunnelPressure' or 'IonFunnelTrapPressure'
+             * 
+             * So, will first check for old format
+             * if there is a value there, will use it.  If not,
+             * look for newer columns and use these values. 
+             */
+
+            FrameParameters fp = GetFrameParameters(frame_index);
+            double pressure = fp.PressureBack;
+
+            if (pressure == 0) pressure = fp.RearIonFunnelPressure;
+            if (pressure == 0) pressure = fp.IonFunnelTrapPressure;
+
+            return pressure;
+
         }
 
         public FrameParameters GetFrameParameters(int frame_index)
@@ -561,9 +634,47 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Utility method to return the MS Level for a particular frame
-        /// 
-        /// 
+        /// Constructs a master list of all frame numbers in the file, regardless of frame type
+        /// </summary>
+        /// <returns>Returns a dictionary object that has frame number as the key and frame info as the value</returns>
+        public System.Collections.Generic.Dictionary<int, udtFrameInfoType> GetMasterFrameList()
+        {
+
+            System.Collections.Generic.Dictionary<int, udtFrameInfoType> dctMasterFrameList = new System.Collections.Generic.Dictionary<int, udtFrameInfoType>();
+            udtFrameInfoType udtFrameInfo;
+
+            int iFrameCount = 0;
+            int[] iFrameNumbers;
+            int iFrameTypeSaved = m_CurrentFrameType;
+
+            for (int frame_type = 0; frame_type <= MAX_FRAME_TYPE_INDEX; frame_type++)
+            {
+                iFrameCount = set_FrameType(frame_type);
+
+                if (iFrameCount > 0)
+                {
+                    iFrameNumbers = GetFrameNumbers();
+
+                    for (int intIndex = 0; intIndex <= iFrameNumbers.Length - 1; intIndex++)
+                    {
+                        if (!dctMasterFrameList.ContainsKey(iFrameNumbers[intIndex]))
+                        {
+                            udtFrameInfo.FrameType = frame_type;
+                            udtFrameInfo.FrameIndex = intIndex;
+                            dctMasterFrameList.Add(iFrameNumbers[intIndex], udtFrameInfo);
+                        }
+                    }
+                }
+            }
+
+            set_FrameType(iFrameTypeSaved);
+
+            return dctMasterFrameList;
+
+        }
+
+        /// <summary>
+        /// Utility method to return the MS Level for a particular frame index
         /// </summary>
         /// <param name="frameNumber"></param>
         /// <returns></returns>
@@ -572,7 +683,13 @@ namespace UIMFLibrary
             return GetFrameParameters(frame_index).FrameType;
         }
 
-
+        /// <summary>
+        /// Extracts bins and intensities from given frame index and scan number
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="bins"></param>
+        /// <param name="intensities"></param>
         public void GetSpectrum(int frame_index, int scanNum, List<int> bins, List<int> intensities)
         {
             if (frame_index < 0)
@@ -655,6 +772,14 @@ namespace UIMFLibrary
             
         }
 
+        /// <summary>
+        /// Extracts intensities and bins from given frame index and scan number
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="intensities"></param>
+        /// <param name="bins"></param>
+        /// <returns></returns>
         public int GetSpectrum(int frame_index, int scanNum, int[] intensities, int[] bins)
         {
             if (frame_index < 0)
@@ -722,7 +847,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Extracts intensities from given frame and scan 
+        /// Extracts intensities and mzs from given frame index and scan number
         /// </summary>
         /// <param name="frame_index"></param>
         /// <param name="scanNum"></param>
@@ -742,6 +867,14 @@ namespace UIMFLibrary
             return nNonZero;
         }
 
+        /// <summary>
+        /// Extracts intensities and mzs from given frame index and scan number
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="intensities"></param>
+        /// <param name="mzs"></param>
+        /// <returns></returns>
         public int GetSpectrum(int frame_index, int scanNum, float[] intensities, double[] mzs)
         {
             int nNonZero = 0;
@@ -757,6 +890,14 @@ namespace UIMFLibrary
             return nNonZero;
         }
 
+        /// <summary>
+        /// Extracts intensities and mzs from given frame index and scan number
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="intensities"></param>
+        /// <param name="mzs"></param>
+        /// <returns></returns>
         public int GetSpectrum(int frame_index, int scanNum, int[] intensities, double[] mzs)
         {
             ValidateFrameIndex("GetSpectrum", frame_index, true);
@@ -810,6 +951,14 @@ namespace UIMFLibrary
             return nNonZero;
         }
 
+        /// <summary>
+        /// Extracts intensities and mzs from given frame index and scan number
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="scanNum"></param>
+        /// <param name="intensities"></param>
+        /// <param name="mzs"></param>
+        /// <returns></returns>
         public int GetSpectrum(int frame_index, int scanNum, short[] intensities, double[] mzs)
         {
             int nNonZero = 0;
@@ -2471,11 +2620,21 @@ namespace UIMFLibrary
             this.GetFrameParameters(m_MostRecentFrameParam_FrameIndex);
         }
 
+        /// <summary>
+        /// Returns the frame index for the given frame number
+        /// Only searches frame numbers of the current frame type (get_FrameType)
+        /// </summary>
+        /// <param name="frame_number"></param>
+        /// <returns>Frame Index if found; otherwise; a negative number if not a valid frame number</returns>
         public int get_FrameIndex(int frame_number)
         {
             return Array.BinarySearch(this.m_FrameNumArray, frame_number);           
         }
 
+        /// <summary>
+        /// Returns the current frame type
+        /// </summary>
+        /// <returns></returns>
         public int get_FrameType()
         {
             return this.CurrentFrameType;
