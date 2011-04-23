@@ -261,10 +261,11 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Deletes the scans for all frames in the file
+        /// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Parameters for all frames.
         /// </summary>
         /// <param name="UpdateScanCountInFrameParams">If true, then will update the Scans column to be 0 for the deleted frames</param>
-        public void DeleteAllFrameScans(int frame_type, bool UpdateScanCountInFrameParams)
+        /// <remarks>As an alternative to using this function, use CloneUIMF() in the DataReader class</remarks>
+        public void DeleteAllFrameScans(int frame_type, bool UpdateScanCountInFrameParams, bool bShrinkDatabaseAfterDelete)
         {
 
             m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -283,9 +284,19 @@ namespace UIMFLibrary
                 this.m_dbCommandUimf.ExecuteNonQuery();
             }
 
+            TransactionCommit();
+            System.Threading.Thread.Sleep(100);
+
+            if (bShrinkDatabaseAfterDelete)
+            {
+                m_dbCommandUimf.CommandText = "VACUUM;";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+            }
+
+            TransactionBegin();
+
             m_dbCommandUimf.Dispose();
 
-            this.FlushUIMF();
 
         }
 
@@ -295,16 +306,24 @@ namespace UIMFLibrary
         /// </summary>
         public void FlushUIMF()
         {
-            m_dbCommandUimf = m_dbConnection.CreateCommand();
-            m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
-            m_dbCommandUimf.ExecuteNonQuery();
-
+            TransactionCommit();
             System.Threading.Thread.Sleep(100);
+            TransactionBegin();
+            
+        }
 
+        private void TransactionBegin()
+        {
             m_dbCommandUimf = m_dbConnection.CreateCommand();
             m_dbCommandUimf.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
             m_dbCommandUimf.ExecuteNonQuery();
-            
+        }
+
+        private void TransactionCommit()
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
+            m_dbCommandUimf.ExecuteNonQuery();
         }
 
         /// <summary>

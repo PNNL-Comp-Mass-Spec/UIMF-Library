@@ -101,12 +101,150 @@ namespace UIMFLibrary
 
         #endregion
 
-            #region "Properties"
+        #region "Properties"
             public int CurrentFrameType
             {
                 get {return m_CurrentFrameType;}
             }
         #endregion
+
+        /// <summary>
+        /// Clones this database, but doesn't copy data in the Frame_Scans table
+        /// </summary>
+        /// <param name="sTargetDBPath"></param>
+        /// <returns></returns>
+        public bool CloneUIMF(string sTargetDBPath)
+        {
+            System.Collections.Generic.List<string> sTablesToSkipCopyingData = new System.Collections.Generic.List<string>();
+
+            sTablesToSkipCopyingData.Add("Frame_Scans");
+
+            return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData);
+        }
+
+        public bool CloneUIMF(string sTargetDBPath, System.Collections.Generic.List<string> sTablesToSkipCopyingData)
+        {
+            bool bSuccess = false;
+
+            try
+            {
+                System.Collections.Generic.Dictionary<string, string> dctTableInfo;
+                System.Collections.Generic.Dictionary<string, string> dctIndexInfo;
+
+                // Define the tables to skip when cloning the database
+                // Get list of tables in source DB
+                dctTableInfo = CloneUIMFGetObjects("table");
+
+                // Get list of indices in source DB
+                dctIndexInfo = CloneUIMFGetObjects("index");
+
+                if (System.IO.File.Exists(sTargetDBPath))
+	                System.IO.File.Delete(sTargetDBPath);
+
+                try
+                {
+                               
+                    string sTargetConnectionString = "Data Source = " + sTargetDBPath + "; Version=3; DateTimeFormat=Ticks;";
+                    SQLiteConnection cnTargetDB = new SQLiteConnection(sTargetConnectionString);
+	           
+		            cnTargetDB.Open();
+                    SQLiteCommand cmdTargetDB = cnTargetDB.CreateCommand();
+                        
+                    // Create each table
+                    Dictionary<string, string>.Enumerator dctEnum;
+
+                    dctEnum = dctTableInfo.GetEnumerator();
+                    while (dctEnum.MoveNext())
+                    {
+                        cmdTargetDB.CommandText = dctEnum.Current.Value;
+                        cmdTargetDB.ExecuteNonQuery();
+                    }
+                    
+                    // Create each index
+                    dctEnum= dctIndexInfo.GetEnumerator();
+                    while (dctEnum.MoveNext())
+                    {
+                        cmdTargetDB.CommandText = dctEnum.Current.Value;
+                        cmdTargetDB.ExecuteNonQuery();
+                    }
+
+                    cmdTargetDB.Dispose();
+                    cnTargetDB.Close();
+
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error initializing cloned database", ex);
+                }
+
+                try
+                {
+                    // Attach the target DB to this DB
+                    SQLiteCommand cmdSourceDB = new SQLiteCommand(m_uimfDatabaseConnection);
+                    cmdSourceDB.CommandText = "ATTACH DATABASE '" + sTargetDBPath + "' AS TargetDB;";
+                    cmdSourceDB.ExecuteNonQuery();
+
+                    // Populate each table
+                    Dictionary<string, string>.Enumerator dctEnum;                    
+
+                    dctEnum = dctTableInfo.GetEnumerator();
+
+                    while (dctEnum.MoveNext())
+                    {
+                        if (!sTablesToSkipCopyingData.Contains(dctEnum.Current.Key))
+                        {
+                            string sSql = "INSERT INTO TargetDB." + dctEnum.Current.Key + " SELECT * FROM main." + dctEnum.Current.Key + ";";
+
+                            cmdSourceDB.CommandText = sSql;
+                            cmdSourceDB.ExecuteNonQuery();
+                        }
+                    }
+
+                    // Detach the target DB
+                    cmdSourceDB.CommandText = "DETACH DATABASE 'TargetDB';";
+                    cmdSourceDB.ExecuteNonQuery();
+
+                    cmdSourceDB.Dispose();
+
+                    bSuccess = true;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error copying data into cloned database database", ex);
+                }
+
+                      
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error cloning database: " + ex.Message, ex);
+            }
+
+
+            return bSuccess;
+        }
+
+        private System.Collections.Generic.Dictionary<string, string> CloneUIMFGetObjects(string sObjectType)
+        {
+            System.Collections.Generic.Dictionary<string, string> sObjects;
+
+            sObjects = new System.Collections.Generic.Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+
+            SQLiteDataReader reader = null;
+            SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
+
+            cmd.CommandText = "SELECT name, sql FROM main.sqlite_master WHERE type='" + sObjectType + "' ORDER BY NAME";
+
+            reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                sObjects.Add(Convert.ToString(reader["Name"]), Convert.ToString(reader["sql"]));
+            }
+            reader.Dispose();
+            reader.Close();
+
+            return sObjects;
+        }
 
 
         public bool CloseUIMF()
