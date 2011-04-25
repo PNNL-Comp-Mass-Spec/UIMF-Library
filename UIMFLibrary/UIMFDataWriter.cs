@@ -238,6 +238,72 @@ namespace UIMFLibrary
 		}
 
         /// <summary>
+        /// Deletes the frame from the Frame_Parameters table and from the Frame_Scans table
+        /// </summary>
+        /// <param name="frameNum"></param>
+        /// <param name="UpdateGlobalParameters">If true, then decrements the NumFrames value in the Global_Parameters table</param>
+        public void DeleteFrame(int frameNum, bool UpdateGlobalParameters)
+        {
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum = " + frameNum.ToString() + "; ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            if (UpdateGlobalParameters)
+            {
+                m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - 1 WHERE NumFrames > 0; ";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+            }
+
+            m_dbCommandUimf.Dispose();
+
+            this.FlushUIMF();
+        }
+
+        public void DeleteFrames(List<int> frameNums, bool UpdateGlobalParameters)
+        {
+            StringBuilder sFrameList = new StringBuilder();
+
+            // Construct a comma-separated list of frame numbers
+            foreach (int frameNum in frameNums)
+                sFrameList.Append(frameNum + ",");
+                        
+            m_dbCommandUimf = m_dbConnection.CreateCommand();
+
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',') + "); ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',') + "); ";
+            this.m_dbCommandUimf.ExecuteNonQuery();
+
+            if (UpdateGlobalParameters)
+            {
+                m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - " + frameNums.Count + "; ";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+
+                // Make sure NumFrames is >= 0
+
+                m_dbCommandUimf.CommandText = "SELECT NumFrames FROM Global_Parameters; ";
+                object objResult = this.m_dbCommandUimf.ExecuteScalar();
+
+                if (Convert.ToInt32(objResult) < 0)
+                {
+                    m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames 0; ";
+                    this.m_dbCommandUimf.ExecuteNonQuery();
+                }
+
+            }
+
+            m_dbCommandUimf.Dispose();
+
+            this.FlushUIMF();
+        }
+
+
+        /// <summary>
         /// Deletes all of the scans for the specified frame
         /// </summary>
         /// <param name="frameNum">The frame number to delete</param>
@@ -975,7 +1041,7 @@ namespace UIMFLibrary
                 // Log_Entries not found; need to create it
                 
                 m_dbCommandUimf.CommandText = "CREATE TABLE Log_Entries ( " +
-                    "Entry_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "Entry_ID INTEGER PRIMARY KEY, " +
                     "Posted_By STRING, " +
                     "Posting_Time STRING, " +
                     "Type STRING, " +

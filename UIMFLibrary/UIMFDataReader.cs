@@ -55,6 +55,14 @@ namespace UIMFLibrary
                 public int FrameType;
                 public int FrameIndex;
             }
+
+            public struct udtLogEntryType
+            {
+                public string Posted_By;
+                public DateTime Posting_Time;
+                public string Type;
+                public string Message;
+            }        
         #endregion
 
         #region "Class-wide variables"
@@ -769,6 +777,71 @@ namespace UIMFLibrary
             }
 
             reader.Close();
+        }
+
+        public System.Collections.Generic.SortedList<int, udtLogEntryType> GetLogEntries(string EntryType, string PostedBy)
+        {
+            System.Collections.Generic.SortedList<int, udtLogEntryType> lstLogEntries = new System.Collections.Generic.SortedList<int, udtLogEntryType>();
+
+            if (TableExists("Log_Entries"))
+            {
+                
+                SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
+                
+                string sSql = "SELECT Entry_ID, Posted_By, Posting_Time, Type, Message FROM Log_Entries";
+                string sWhere = String.Empty;
+
+                if (!String.IsNullOrEmpty(EntryType))
+                    sWhere = "WHERE Type = '" + EntryType + "'";
+
+                if (!String.IsNullOrEmpty(PostedBy))
+                {
+                    if (sWhere.Length == 0)
+                        sWhere = "WHERE";
+                    else
+                        sWhere += " AND";
+
+                    sWhere += " Posted_By = '" + PostedBy + "'";
+                }
+                 
+                if (sWhere.Length > 0)
+                    sSql += " " + sWhere;
+
+                sSql += " ORDER BY Entry_ID;";
+
+                dbCmd.CommandText = sSql;
+
+                SQLiteDataReader reader = dbCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    try
+                    {
+                        udtLogEntryType udtLogEntry = new udtLogEntryType();
+                        
+                        int iEntryID = Convert.ToInt32(reader["Entry_ID"]);
+                        udtLogEntry.Posted_By = Convert.ToString(reader["Posted_By"]);
+                        
+                        string sPostingTime = Convert.ToString(reader["Posting_Time"]);
+                        DateTime.TryParse(sPostingTime, out udtLogEntry.Posting_Time);                    
+
+                        udtLogEntry.Type = Convert.ToString(reader["Type"]);
+                        udtLogEntry.Message = Convert.ToString(reader["Message"]);
+
+                        lstLogEntries.Add(iEntryID, udtLogEntry);
+                     
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Failed to get global parameters " + ex.ToString());
+                    }
+                }
+
+                dbCmd.Dispose();
+                reader.Close();
+            }
+
+            return lstLogEntries;
+
         }
 
         /// <summary>
