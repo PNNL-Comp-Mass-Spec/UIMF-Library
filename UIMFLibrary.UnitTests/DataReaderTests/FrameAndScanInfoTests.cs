@@ -34,7 +34,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         }
 
-
+        //TODO:  assert some values
         [Test]
         public void getFrameInfo_demultiplexedFrame0_Test1()
         {
@@ -49,7 +49,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
 
-
+        //TODO:  assert some values
         [Test]
         public void getFrameInfo_demultiplexed_firstFrame_Test1()
         {
@@ -67,6 +67,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
 
+        //TODO:  assert some values
         [Test]
         public void getFrameInfo_demultiplexed_lastFrame_Test1()
         {
