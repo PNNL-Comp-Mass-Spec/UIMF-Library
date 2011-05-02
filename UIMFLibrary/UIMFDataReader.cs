@@ -22,6 +22,7 @@ namespace UIMFLibrary
     public class DataReader
     {
         #region "Constants and Enums"
+            public const int FRAME_TYPE_COUNT = 5;
 
             public const int FRAME_TYPE_MS = 0;                // Normal MS (legacy data)
             public const int FRAME_TYPE_MS1 = 1;               // Normal MS
@@ -33,11 +34,11 @@ namespace UIMFLibrary
 
             public enum iFrameType
             {
-                MS = 0,
-                MS1 = 1,
-                Fragmentation = 2,
-                Calibration = 3,
-                Prescan = 4
+                MS = FRAME_TYPE_MS,
+                MS1 = FRAME_TYPE_MS1,
+                Fragmentation = FRAME_TYPE_FRAGMENTATION,
+                Calibration = FRAME_TYPE_CALIBRATION,
+                Prescan = FRAME_TYPE_PRESCAN
             }
 
             private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
@@ -341,7 +342,25 @@ namespace UIMFLibrary
                 default:
                     throw new InvalidCastException("Invalid frame type: " + frame_type);
             }
+        }
 
+        public string FrameTypeDescription(int frame_type)
+        {
+            switch (frame_type)
+            {
+                case 0:
+                    return "MS";
+                case 1:
+                    return "MS";
+                case 2:
+                    return "Fragmentation";
+                case 3:
+                    return "Calibration";
+                case 4:
+                    return "Prescan";
+                default:
+                    throw new InvalidCastException("Invalid frame type: " + frame_type);
+            }
         }
 
         public int FrameTypeEnumToInt(iFrameType eFrameType)
