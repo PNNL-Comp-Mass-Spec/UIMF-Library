@@ -12,28 +12,26 @@ using System.Data.SQLite;
 
 namespace UIMFLibrary
 {
-    
+
     //TODO:  This seems completely unused. If so, we need to delete this enum.   Instead of this, we are currently using the short 'FrameType' the FrameParameters class
     /// <summary>
     /// Enumeration for details about a FRAME TYPE, whether it's a parent (regular MS) or a fragment (MSMS).
     /// Prescan is a special type of frame not used for downstream algorithms
     /// </summary>
-    enum FrameType { PRESCAN, MS, MSMS, CALIBRATION };
-
     public class GlobalParameters
     {
 		//public DateTime DateStarted;             // 1, Date Experiment was acquired 
         public string DateStarted;
         public int NumFrames;                  // 2, Number of frames in dataset
-        public int TimeOffset;                 // 3, Offset from 0. All bin numbers must be offset by this amount 
-        public double BinWidth;                // 4, Width of TOF bins (in ns) 
+        public int TimeOffset;                 // 3, Offset from 0. All bin numbers must be offset by this amount
+        public double BinWidth;                // 4, Width of TOF bins (in ns)
         public int Bins;                       // 5, Total number of TOF bins in frame
 		public float TOFCorrectionTime;
-        public float FrameDataBlobVersion;     // 6, Version of FrameDataBlob in T_Frame 
-        public float ScanDataBlobVersion;      // 7, Version of ScanInfoBlob in T_Frame 
-        public string TOFIntensityType;        // 8, Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
-        public string DatasetType;             // 9, Type of dataset (HMS/HMSMS/HMS-MSn) 
-		public int Prescan_TOFPulses;		   // 10 - 14, Prescan parameters
+        public float FrameDataBlobVersion;     // 6, Version of FrameDataBlob in T_Frame
+        public float ScanDataBlobVersion;      // 7, Version of ScanInfoBlob in T_Frame
+        public string TOFIntensityType;        // 8, Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float)
+        public string DatasetType;             // 9, Type of dataset (HMS/HMSMS/HMS-MSn)
+		public int Prescan_TOFPulses;		   // 10 - 14, Prescan parameter
 		public int Prescan_Accumulations;
 		public int Prescan_TICThreshold;
 		public bool Prescan_Continuous;		   // True or False
