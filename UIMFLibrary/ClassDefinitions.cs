@@ -13,11 +13,6 @@ using System.Data.SQLite;
 namespace UIMFLibrary
 {
 
-    //TODO:  This seems completely unused. If so, we need to delete this enum.   Instead of this, we are currently using the short 'FrameType' the FrameParameters class
-    /// <summary>
-    /// Enumeration for details about a FRAME TYPE, whether it's a parent (regular MS) or a fragment (MSMS).
-    /// Prescan is a special type of frame not used for downstream algorithms
-    /// </summary>
     public class GlobalParameters
     {
 		//public DateTime DateStarted;             // 1, Date Experiment was acquired 

@@ -329,15 +329,15 @@ namespace UIMFLibrary
         {
             switch (frame_type)
             {
-                case 0:
+                case FRAME_TYPE_MS:
                     return iFrameType.MS;
-                case 1:
+                case FRAME_TYPE_MS1:
                     return iFrameType.MS1;
-                case 2:
+                case FRAME_TYPE_FRAGMENTATION:
                     return iFrameType.Fragmentation;
-                case 3:
+                case FRAME_TYPE_CALIBRATION:
                     return iFrameType.Calibration;
-                case 4:
+                case FRAME_TYPE_PRESCAN:
                     return iFrameType.Prescan;
                 default:
                     throw new InvalidCastException("Invalid frame type: " + frame_type);
@@ -348,15 +348,15 @@ namespace UIMFLibrary
         {
             switch (frame_type)
             {
-                case 0:
+                case FRAME_TYPE_MS:
                     return "MS";
-                case 1:
+                case FRAME_TYPE_MS1:
                     return "MS";
-                case 2:
+                case FRAME_TYPE_FRAGMENTATION:
                     return "Fragmentation";
-                case 3:
+                case FRAME_TYPE_CALIBRATION:
                     return "Calibration";
-                case 4:
+                case FRAME_TYPE_PRESCAN:
                     return "Prescan";
                 default:
                     throw new InvalidCastException("Invalid frame type: " + frame_type);
@@ -482,9 +482,11 @@ namespace UIMFLibrary
             return countPerSpectrum;
         }
 
-        /**
-         * Method to provide the bytes from tables that store metadata files 
-         */
+        /// <summary>
+        /// Method to provide the bytes from tables that store metadata files 
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
         public byte[] getFileBytesFromTable(string tableName)
         {
             SQLiteDataReader reader = null;
