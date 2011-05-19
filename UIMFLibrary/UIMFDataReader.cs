@@ -3265,6 +3265,29 @@ namespace UIMFLibrary
 
         #endregion
 
+        
+        /// <summary>
+        /// Gets the maximum frame index value
+        /// </summary>
+        /// <returns></returns>
+        public int GetFrameIndexMax()
+        {
+            bool frameArrayIsEmpty = (this.m_FrameNumArray==null || this.m_FrameNumArray.Length==0);
+
+            if (frameArrayIsEmpty)
+            {
+                return -1;
+            }
+            else
+            {
+                return m_FrameNumArray.Length - 1;
+            }
+
+
+        }
+
+
+
     }
 
 }
