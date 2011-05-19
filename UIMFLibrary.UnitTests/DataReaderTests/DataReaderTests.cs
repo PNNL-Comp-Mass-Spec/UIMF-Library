@@ -46,7 +46,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void getSpectrumBins()
         {
-            string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
+            string filePath = @"\\proto-10\IMS_TOF_2\2010_4\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
             UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
             reader.OpenUIMF(filePath);
 
