@@ -441,14 +441,18 @@ namespace UIMFLibrary
                 SQLiteDataReader reader = m_getCountPerFrameCommand.ExecuteReader();
                 while (reader.Read())
                 {
-                    countPerFrame = Convert.ToInt32(reader[0]);
+                    if (reader.IsDBNull(0))
+                        countPerFrame = 1;
+                    else
+                        countPerFrame = Convert.ToInt32(reader[0]);
                 }
                 m_getCountPerFrameCommand.Parameters.Clear();
                 reader.Dispose();
                 reader.Close();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("Exception looking up sum(nonzerocount) for frame " + this.m_FrameNumArray[frame_index] + ": " + ex.Message);
                 countPerFrame = 1;
             }
 
@@ -1472,7 +1476,7 @@ namespace UIMFLibrary
             m_getCountPerSpectrumCommand.Prepare();
 
             m_getCountPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
-            m_getCountPerFrameCommand.CommandText = "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum";
+            m_getCountPerFrameCommand.CommandText = "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum AND NOT NonZeroCount IS NULL";
             m_getCountPerFrameCommand.Prepare();
         }
 
