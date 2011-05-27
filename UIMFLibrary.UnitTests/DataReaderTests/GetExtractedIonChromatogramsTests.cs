@@ -12,7 +12,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     {
 
         DataReader m_reader;
-        string uimfStandardFile1 = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+        
 
 
         //TODO:  update this test to use the standand UIMF file reference ('Sarc_MS_90)
@@ -179,7 +179,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int[] intensityVals = null;
 
             m_reader = new DataReader();
-            m_reader.OpenUIMF(uimfStandardFile1);
+            m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             m_reader.GetDriftTimeProfile(startFrame-2, startFrame+2, frameType, startScan-100, startScan+100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
             
@@ -204,7 +204,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int frameType = 0;
 
             m_reader = new DataReader();
-            m_reader.OpenUIMF(uimfStandardFile1);
+            m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             double targetMZ = 636.8466;    // see frame 1000, scan 170
             double toleranceInPPM = 20;
@@ -250,7 +250,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
             m_reader = new DataReader();
-            m_reader.OpenUIMF(uimfStandardFile1);
+            m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             int[] frameVals = null;
             int[] scanVals = null;
@@ -285,7 +285,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
             m_reader = new DataReader();
-            m_reader.OpenUIMF(uimfStandardFile1);
+            m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
             int[] frameVals = null;
             int[] scanVals = null;
@@ -326,7 +326,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
             m_reader = new DataReader();
-            m_reader.OpenUIMF(uimfStandardFile1);
+            m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
 
             int[][] values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 60, startScan + 60, targetMZ, toleranceInMZ);
@@ -385,8 +385,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int[] scanVals = null;
             int[] intensityVals = null;
 
-
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+            sw.Stop();
+            Console.WriteLine("Time in millisec for extracting 3D profile = " + sw.ElapsedMilliseconds);
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < frameVals.Length; i++)
