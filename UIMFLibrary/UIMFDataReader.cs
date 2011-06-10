@@ -119,20 +119,58 @@ namespace UIMFLibrary
         #endregion
 
         /// <summary>
-        /// Clones this database, but doesn't copy data in the Frame_Scans table
+        /// Clones this database, but doesn't copy data in the Frame_Scans table for frame types MS and MS1
         /// </summary>
         /// <param name="sTargetDBPath"></param>
-        /// <returns></returns>
+        /// <returns>True if success, false if a problem</returns>
         public bool CloneUIMF(string sTargetDBPath)
         {
             System.Collections.Generic.List<string> sTablesToSkipCopyingData = new System.Collections.Generic.List<string>();
-
             sTablesToSkipCopyingData.Add("Frame_Scans");
 
             return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData);
         }
 
+        /// <summary>
+        /// Clones this database, but doesn't copy data in tables sTablesToSkipCopyingData
+        /// If the Frame_Scans table is skipped, will still copy data for frame types Calibration and Prescan
+        /// </summary>
+        /// <param name="sTargetDBPath"></param>
+        /// <returns></returns>
         public bool CloneUIMF(string sTargetDBPath, System.Collections.Generic.List<string> sTablesToSkipCopyingData)
+        {
+
+            System.Collections.Generic.List<DataReader.iFrameType> eFrameScanFrameTypeDataToAlwaysCopy = new System.Collections.Generic.List<DataReader.iFrameType>();
+            eFrameScanFrameTypeDataToAlwaysCopy.Add(iFrameType.Calibration);
+            eFrameScanFrameTypeDataToAlwaysCopy.Add(iFrameType.Prescan);
+
+            return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData, eFrameScanFrameTypeDataToAlwaysCopy);
+        }
+
+        /// <summary>
+        /// Clones this database, but doesn't copy data in table Frame_Scans
+        /// However, will still copy data for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy
+        /// </summary>
+        /// <param name="sTargetDBPath"></param>
+        /// <returns>True if success, false if a problem</returns>
+        public bool CloneUIMF(string sTargetDBPath, System.Collections.Generic.List<DataReader.iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
+        {
+
+            System.Collections.Generic.List<string> sTablesToSkipCopyingData = new System.Collections.Generic.List<string>();
+            sTablesToSkipCopyingData.Add("Frame_Scans");
+
+            return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData, eFrameScanFrameTypeDataToAlwaysCopy);
+        }
+
+        /// <summary>
+        /// Clones this database, but doesn't copy data in tables sTablesToSkipCopyingData
+        /// If the Frame_Scans table is skipped, will still copy data for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy
+        /// </summary>
+        /// <param name="sTargetDBPath"></param>
+        /// <returns>True if success, false if a problem</returns>
+        public bool CloneUIMF(string sTargetDBPath, 
+                              System.Collections.Generic.List<string> sTablesToSkipCopyingData, 
+                              System.Collections.Generic.List<DataReader.iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
         {
             bool bSuccess = false;
             string sCurrentTable = string.Empty;
@@ -208,17 +246,37 @@ namespace UIMFLibrary
 
                         while (dctEnum.MoveNext())
                         {
-                            if (!sTablesToSkipCopyingData.Contains(dctEnum.Current.Key))
+                            sCurrentTable = string.Copy(dctEnum.Current.Key);
+
+                            if (!sTablesToSkipCopyingData.Contains(sCurrentTable))
                             {
-                                sCurrentTable = string.Copy(dctEnum.Current.Key);
-                                //string sSql = "INSERT INTO TargetDB." + dctEnum.Current.Key + " SELECT * FROM main." + dctEnum.Current.Key + ";";
+                                //string sSql = "INSERT INTO TargetDB." + sCurrentTable + " SELECT * FROM main." + sCurrentTable + ";";
                                 //cmdSourceDB.CommandText = sSql;
                                 //cmdSourceDB.ExecuteNonQuery();
 
-                                string sSql = "INSERT INTO main." + dctEnum.Current.Key + " SELECT * FROM SourceDB." + dctEnum.Current.Key + ";";
+                                string sSql = "INSERT INTO main." + sCurrentTable + " SELECT * FROM SourceDB." + sCurrentTable + ";";
 
                                 cmdTargetDB.CommandText = sSql;
                                 cmdTargetDB.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                if (sCurrentTable.ToLower() == "Frame_Scans".ToLower() && 
+                                    eFrameScanFrameTypeDataToAlwaysCopy != null && 
+                                    eFrameScanFrameTypeDataToAlwaysCopy.Count > 0)
+                                {
+                                    // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
+                                    for (int i = 0; i < eFrameScanFrameTypeDataToAlwaysCopy.Count; i++)
+                                    {
+                                        string sSql = "INSERT INTO main." + sCurrentTable + 
+                                                      " SELECT * FROM SourceDB." + sCurrentTable +
+                                                      " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " + 
+                                                                          "WHERE FrameType = " + FrameTypeEnumToInt(eFrameScanFrameTypeDataToAlwaysCopy[i]).ToString() + ");";
+
+                                        cmdTargetDB.CommandText = sSql;
+                                        cmdTargetDB.ExecuteNonQuery();
+                                    }
+                                }
                             }
                         }
 
@@ -353,7 +411,7 @@ namespace UIMFLibrary
                 case FRAME_TYPE_MS1:
                     return "MS";
                 case FRAME_TYPE_FRAGMENTATION:
-                    return "Fragmentation";
+                    return "MS/MS";
                 case FRAME_TYPE_CALIBRATION:
                     return "Calibration";
                 case FRAME_TYPE_PRESCAN:

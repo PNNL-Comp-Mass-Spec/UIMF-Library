@@ -40,7 +40,7 @@ namespace UIMFLibrary
 		public double StartTime;               // 1, Start time of frame, in minutes
         public double Duration;                // 2, Duration of frame, in seconds
         public int Accumulations;              // 3, Number of collected and summed acquisitions in a frame 
-        public short FrameType;                // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+        public short FrameType;                // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 2=Prescan; 3=Calibration; 4=Multiplex 
         public int Scans;                      // 5, Number of TOF scans
 		public string IMFProfile;			   // new, IMFProfile Name
 		public double TOFLosses;			   // new TOF Losses

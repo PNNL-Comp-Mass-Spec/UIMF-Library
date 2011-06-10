@@ -139,7 +139,7 @@ namespace UIMFLibrary
                 "StartTime DOUBLE, " + // 1, Start time of frame  
                 "Duration DOUBLE, " + // 2, Duration of frame  
                 "Accumulations INT(2), " + // 3, Number of collected and summed acquisitions in a frame 
-                "FrameType SHORT, " + // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+                "FrameType SHORT, " + // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 2=Prescan; 3=Calibration; 4=Multiplex 
                 "Scans INT(4), " + // 5, Number of TOF scans  
                 "IMFProfile STRING, " + //6
                 "TOFLosses DOUBLE, " + //+ //7
@@ -463,8 +463,8 @@ namespace UIMFLibrary
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime)); // 1, Start time of frame
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration)); // 2, Duration of frame  
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Accumulations", frameParameters.Accumulations)); // 3, Number of collected and summed acquisitions in a frame 
-			
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", frameParameters.FrameType)); // 4, Bitmap: 0=MS (Regular); 1=MS/MS (Frag); 2=Prescan; 4=Multiplex 
+
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", frameParameters.FrameType)); // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 2=Prescan; 3=Calibration; 4=Multiplex 
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans)); // 5, Number of TOF scans  
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile)); //6
 			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses)); //7
