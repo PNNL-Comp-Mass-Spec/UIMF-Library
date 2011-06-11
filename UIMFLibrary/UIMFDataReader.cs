@@ -752,7 +752,7 @@ namespace UIMFLibrary
             }
 
             this.mz_Calibration = new UIMFLibrary.MZ_Calibrator(fp.CalibrationSlope / 10000.0,
-                fp.CalibrationIntercept * 10000.0);
+                                                                fp.CalibrationIntercept * 10000.0);
 
             return fp;
         }
@@ -2901,18 +2901,38 @@ namespace UIMFLibrary
         // //////////////////////////////////////////////////////////////////////////////////////
         // //////////////////////////////////////////////////////////////////////////////////////
         //
+
         public void update_CalibrationCoefficients(int frame_index, float slope, float intercept)
+        {
+            bool bAutoCalibrating = false;
+            update_CalibrationCoefficients(frame_index, slope, intercept, bAutoCalibrating);
+        }
+
+        /// <summary>
+        /// Update the calibration coefficients for a single frame
+        /// </summary>
+        /// <param name="frame_index"></param>
+        /// <param name="slope"></param>
+        /// <param name="intercept"></param>
+        public void update_CalibrationCoefficients(int frame_index, float slope, float intercept, bool bAutoCalibrating)
         {
             if (frame_index > this.m_FrameNumArray.Length)
                 return;
 
             dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
-            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString() +
-                ", CalibrationIntercept = " + intercept.ToString() + " WHERE FrameNum = " + this.m_FrameNumArray[frame_index].ToString();
+            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters " +
+                                             "SET CalibrationSlope = " + slope.ToString() + ", " +
+                                                 "CalibrationIntercept = " + intercept.ToString();
+            if (bAutoCalibrating)
+                dbcmd_PreparedStmt.CommandText += ", CALIBRATIONDONE = 1";
+
+            dbcmd_PreparedStmt.CommandText += " WHERE FrameNum = " + this.m_FrameNumArray[frame_index].ToString();
 
             dbcmd_PreparedStmt.ExecuteNonQuery();
             dbcmd_PreparedStmt.Dispose();
 
+            // Make sure the mz_Calibration object is up-to-date
+            // These values will likely also get updated via the call to reset_FrameParameters (which then calls GetFrameParameters)
             this.mz_Calibration.k = slope / 10000.0;
             this.mz_Calibration.t0 = intercept * 10000.0;
 
@@ -2921,19 +2941,40 @@ namespace UIMFLibrary
 
         public void updateAll_CalibrationCoefficients(float slope, float intercept)
         {
+            bool bAutoCalibrating = false;
+            updateAll_CalibrationCoefficients(slope, intercept, bAutoCalibrating);
+        }
+
+        /// <summary>
+        /// /// Update the calibration coefficients for all frames
+        /// </summary>
+        /// <param name="slope"></param>
+        /// <param name="intercept"></param>
+        public void updateAll_CalibrationCoefficients(float slope, float intercept, bool bAutoCalibrating)
+        {
             dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
-            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString() +
-                ", CalibrationIntercept = " + intercept.ToString();
+            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters " +
+                                             "SET CalibrationSlope = " + slope.ToString() + ", " +
+                                                 "CalibrationIntercept = " + intercept.ToString();
+            if (bAutoCalibrating)
+                dbcmd_PreparedStmt.CommandText += ", CALIBRATIONDONE = 1";
 
             dbcmd_PreparedStmt.ExecuteNonQuery();
             dbcmd_PreparedStmt.Dispose();
 
-            /*
-            this.mz_Calibration.k = slope / 10000.0;
-            this.mz_Calibration.t0 = intercept * 10000.0;
-            */
-
             this.reset_FrameParameters();
+        }
+
+        /// <summary>
+        /// Post a new log entry to table Log_Entries
+        /// </summary>
+        /// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
+        /// <param name="Message">Log message</param>
+        /// <param name="PostedBy">Process or application posting the log message</param>
+        /// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
+        public void PostLogEntry(string EntryType, string Message, string PostedBy)
+        {
+            DataWriter.PostLogEntry(m_uimfDatabaseConnection, EntryType, Message, PostedBy);
         }
 
         public void reset_FrameParameters()

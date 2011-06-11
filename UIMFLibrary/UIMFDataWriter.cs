@@ -37,9 +37,10 @@ namespace UIMFLibrary
 			try
 			{
 				m_dbConnection.Open();
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
-				m_dbCommandUimf.ExecuteNonQuery();
+
+                // Note that the following call will instantiate m_dbCommandUimf
+                TransactionBegin();
+
 				PrepareInsertFrame();
 				PrepareInsertScan();
 				
@@ -81,9 +82,8 @@ namespace UIMFLibrary
 			{
 				if (m_dbConnection != null)
 				{
-					m_dbCommandUimf = m_dbConnection.CreateCommand();
-					m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
-					m_dbCommandUimf.ExecuteNonQuery();
+                    TransactionCommit();
+
 					m_dbCommandUimf.Dispose();
 					m_dbConnection.Close();
 				}
@@ -350,6 +350,7 @@ namespace UIMFLibrary
                 this.m_dbCommandUimf.ExecuteNonQuery();
             }
 
+            // Commmit the currently open transaction
             TransactionCommit();
             System.Threading.Thread.Sleep(100);
 
@@ -359,6 +360,7 @@ namespace UIMFLibrary
                 this.m_dbCommandUimf.ExecuteNonQuery();
             }
 
+            // Open a new transaction
             TransactionBegin();
 
             m_dbCommandUimf.Dispose();
@@ -374,8 +376,7 @@ namespace UIMFLibrary
         {
             TransactionCommit();
             System.Threading.Thread.Sleep(100);
-            TransactionBegin();
-            
+            TransactionBegin();            
         }
 
         private void TransactionBegin()
@@ -1030,24 +1031,45 @@ namespace UIMFLibrary
 			m_dbCommandUimf.Dispose();
 		}
 
+        /// <summary>
+        /// Post a new log entry to table Log_Entries
+        /// </summary>
+        /// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
+        /// <param name="Message">Log message</param>
+        /// <param name="PostedBy">Process or application posting the log message</param>
+        /// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
         public void PostLogEntry(string EntryType, string Message, string PostedBy)
         {
-            // Check whether the Log_Entries table needs to be created
-            
-            m_dbCommandUimf = m_dbConnection.CreateCommand();
+            PostLogEntry(m_dbConnection, EntryType, Message, PostedBy);            
+        }
 
-            if (!DataReader.TableExists(m_dbConnection, "Log_Entries"))
+        /// <summary>
+        /// Post a new log entry to table Log_Entries
+        /// </summary>
+        /// <param name="oConnection">Database connection object</param>
+        /// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
+        /// <param name="Message">Log message</param>
+        /// <param name="PostedBy">Process or application posting the log message</param>
+        /// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
+        public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
+        {
+            // Check whether the Log_Entries table needs to be created
+
+            SQLiteCommand cmdPostLogEntry;
+            cmdPostLogEntry = oConnection.CreateCommand();
+
+            if (!DataReader.TableExists(oConnection, "Log_Entries"))
             {
                 // Log_Entries not found; need to create it
                 
-                m_dbCommandUimf.CommandText = "CREATE TABLE Log_Entries ( " +
+                cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " +
                     "Entry_ID INTEGER PRIMARY KEY, " +
                     "Posted_By STRING, " +
                     "Posting_Time STRING, " +
                     "Type STRING, " +
                     "Message STRING)";
 
-                m_dbCommandUimf.ExecuteNonQuery();
+                cmdPostLogEntry.ExecuteNonQuery();
 
             }
 
@@ -1061,14 +1083,15 @@ namespace UIMFLibrary
                 Message = "";
 
             // Now add a log entry
-            m_dbCommandUimf.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + 
+            cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + 
                                           "VALUES (" + 
                                              "datetime('now'), " + 
                                              "'" + PostedBy  + "', " + 
                                              "'" + EntryType + "', " + 
                                              "'" + Message   + "')";
 
-            m_dbCommandUimf.ExecuteNonQuery();
+            cmdPostLogEntry.ExecuteNonQuery();
+            cmdPostLogEntry.Dispose();            
         }
 
 		private void PrepareInsertFrame()

@@ -2,6 +2,8 @@ UIMFLibrary Revision History
 
 Version 1.3.4178; June 10, 2011
 	- Renamed description for FrameType 3 to be "MS/MS" instead of "Fragmentation"
+	- Added ability to update the CalibrationDone column when calling update_CalibrationCoefficients or updateAll_CalibrationCoefficients
+	- Added PostLogEntry function to the DataReader class
 
 Version 1.3.4170; June 2, 2011
 	- Overloaded CloneUIMF to include versions with parameter eFrameScanFrameTypeDataToAlwaysCopy
