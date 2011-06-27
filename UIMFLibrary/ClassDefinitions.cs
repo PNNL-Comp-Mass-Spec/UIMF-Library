@@ -36,54 +36,55 @@ namespace UIMFLibrary
 	}
     public class FrameParameters
     {
-        public int FrameNum;                   // 0, Primary Key, Contains the frame number
-		public double StartTime;               // 1, Start time of frame, in minutes
-        public double Duration;                // 2, Duration of frame, in seconds
-        public int Accumulations;              // 3, Number of collected and summed acquisitions in a frame 
-        public short FrameType;                // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 2=Prescan; 3=Calibration; 4=Multiplex 
-        public int Scans;                      // 5, Number of TOF scans
-		public string IMFProfile;			   // new, IMFProfile Name
-		public double TOFLosses;			   // new TOF Losses
-        public double AverageTOFLength;        // 6, Average time between TOF trigger pulses 
-        public double CalibrationSlope;        // 7, Value of k0
-        public double CalibrationIntercept;    // 8, Value of t0
-		public double a2;	//The six parameters below are coefficients for residual mass error correction
-		public double b2;	//ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-		public double c2;
-		public double d2;
-		public double e2;
-		public double f2;
-		public double Temperature;             // 9, Ambient temperature
-        public double voltHVRack1;             // 10, Voltage setting in the IMS system
-        public double voltHVRack2;             // 11, Voltage setting in the IMS system
-        public double voltHVRack3;             // 12, Voltage setting in the IMS system
-        public double voltHVRack4;             // 13, Voltage setting in the IMS system
-        public double voltCapInlet;            // 14, Capilary Inlet Voltage 
-        public double voltEntranceIFTIn;       // 15, IFT In Voltage 
-        public double voltEntranceIFTOut;      // 16, IFT Out Voltage 
-        public double voltEntranceCondLmt;     // 17, Cond Limit Voltage
-        public double voltTrapOut;             // 18, Trap Out Voltage
-        public double voltTrapIn ;             // 19, Trap In Voltage
-        public double voltJetDist;             // 20, Jet Disruptor Voltage
-        public double voltQuad1;               // 21, Fragmentation Quadrupole Voltage
-        public double voltCond1;               // 22, Fragmentation Conductance Voltage
-        public double voltQuad2;               // 23, Fragmentation Quadrupole Voltage
-        public double voltCond2;               // 24, Fragmentation Conductance Voltage
-        public double voltIMSOut;              // 25, IMS Out Voltage
-        public double voltExitIFTIn;           // 26, IFT In Voltage
-        public double voltExitIFTOut;          // 27, IFT Out Voltage
-        public double voltExitCondLmt;         // 28, Cond Limit Voltage
-        public double PressureFront;           // 29, Pressure at IMS entrance
-        public double PressureBack;            // 30, Pressure at IMS exit
-        public short MPBitOrder;               // 31, Determines original size of bit sequence
-        public double[] FragmentationProfile;  // 36, Voltage profile used in fragmentation
-        public double HighPressureFunnelPressure;
-        public double IonFunnelTrapPressure;
-        public double RearIonFunnelPressure;
-        public double QuadrupolePressure;
-        public double ESIVoltage;
-        public double FloatVoltage;
-        public int CalibrationDone = -1;
+        public int FrameNum;                           // 0, Frame number (primary key)     
+        public double StartTime;                       // 1, Start time of frame, in minutes
+        public double Duration;                        // 2, Duration of frame, in seconds 
+        public int Accumulations;                      // 3, Number of collected and summed acquisitions in a frame 
+        public short FrameType;                        // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+        public int Scans;                              // 5, Number of TOF scans  
+        public string IMFProfile;			           // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+        public double TOFLosses;			           // 7, Number of TOF Losses
+        public double AverageTOFLength;                // 8, Average time between TOF trigger pulses
+        public double CalibrationSlope;                // 9, Value of k0  
+        public double CalibrationIntercept;            // 10, Value of t0  
+        public double a2;	                           // 11, These six parameters below are coefficients for residual mass error correction
+        public double b2;	                           // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
+        public double c2;                              // 13
+        public double d2;                              // 14
+        public double e2;                              // 15
+        public double f2;                              // 16
+        public double Temperature;                     // 17, Ambient temperature
+        public double voltHVRack1;                     // 18, Voltage setting in the IMS system
+        public double voltHVRack2;                     // 19, Voltage setting in the IMS system
+        public double voltHVRack3;                     // 20, Voltage setting in the IMS system
+        public double voltHVRack4;                     // 21, Voltage setting in the IMS system
+        public double voltCapInlet;                    // 22, Capilary Inlet Voltage
+        public double voltEntranceIFTIn;               // 23, IFT In Voltage
+        public double voltEntranceIFTOut;              // 24, IFT Out Voltage
+        public double voltEntranceCondLmt;             // 25, Cond Limit Voltage
+        public double voltTrapOut;                     // 26, Trap Out Voltage
+        public double voltTrapIn;                      // 27, Trap In Voltage
+        public double voltJetDist;                     // 28, Jet Disruptor Voltage
+        public double voltQuad1;                       // 29, Fragmentation Quadrupole Voltage
+        public double voltCond1;                       // 30, Fragmentation Conductance Voltage
+        public double voltQuad2;                       // 31, Fragmentation Quadrupole Voltage
+        public double voltCond2;                       // 32, Fragmentation Conductance Voltage
+        public double voltIMSOut;                      // 33, IMS Out Voltage
+        public double voltExitIFTIn;                   // 34, IFT In Voltage
+        public double voltExitIFTOut;                  // 35, IFT Out Voltage
+        public double voltExitCondLmt;                 // 36, Cond Limit Voltage
+        public double PressureFront;                   // 37, Pressure at front of Drift Tube 
+        public double PressureBack;                    // 38, Pressure at back of Drift Tube 
+        public short MPBitOrder;                       // 39, Determines original size of bit sequence 
+        public double[] FragmentationProfile;          // 40, Voltage profile used in fragmentation
+        public double HighPressureFunnelPressure;      // 41
+        public double IonFunnelTrapPressure;           // 42
+        public double RearIonFunnelPressure;           // 43
+        public double QuadrupolePressure;              // 44
+        public double ESIVoltage;                      // 45
+        public double FloatVoltage;                    // 46
+        public int CalibrationDone = -1;               // 47, Set to 1 after a frame has been calibrated
+        public int Decoded = 0;                        // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
 
         public void CopyTo(out FrameParameters Target)
         {
@@ -143,6 +144,7 @@ namespace UIMFLibrary
             Target.ESIVoltage = this.ESIVoltage;
             Target.FloatVoltage = this.FloatVoltage;
             Target.CalibrationDone = this.CalibrationDone;
+            Target.Decoded = this.Decoded;
         }
     }
 

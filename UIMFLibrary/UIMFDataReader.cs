@@ -810,7 +810,7 @@ namespace UIMFLibrary
                     catch
                     {
                         m_errMessageCounter++;
-                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF, please get the newest version from \\\\floyd\\software");
+                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                     }
                     oGlobalParameters.Prescan_TOFPulses = Convert.ToInt32(reader["Prescan_TOFPulses"]);
                     oGlobalParameters.Prescan_Accumulations = Convert.ToInt32(reader["Prescan_Accumulations"]);
@@ -1497,6 +1497,68 @@ namespace UIMFLibrary
             return hasMSMS;
         }
 
+        /// <summary>
+        /// Returns True if all frames with frame types 0 through 3 have CalibrationDone > 0 in frame_parameters
+        /// </summary>
+        /// <returns></returns>
+        public bool IsCalibrated()
+        {
+            int iMaxFrameTypeToExamine = FRAME_TYPE_CALIBRATION;
+            return IsCalibrated(iMaxFrameTypeToExamine);
+        }
+
+        /// <summary>
+        /// Returns True if all frames have CalibrationDone > 0 in frame_parameters
+        /// </summary>
+        /// <param name="iMaxFrameTypeToExamine">Maximum frame type to examine when checking for calibrated frames</param>
+        /// <returns></returns>
+        public bool IsCalibrated(int iMaxFrameTypeToExamine)
+        {
+            bool bIsCalibrated = false;
+
+      
+            SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
+            dbCmd.CommandText = "SELECT FrameType, COUNT(*)  AS FrameCount, SUM(IFNULL(CalibrationDone, 0)) AS FramesCalibrated " +
+                                "FROM frame_parameters " +
+                                "GROUP BY FrameType;";
+            SQLiteDataReader reader = dbCmd.ExecuteReader();
+
+            int iFrameType = -1;
+            int iFrameCount = 0;
+            int iCalibratedFrameCount = 0;
+
+            int iFrameTypeCount = 0;
+            int iFrameTypeCountCalibrated = 0;
+
+            while (reader.Read())
+            {
+                iFrameType = -1;
+                try
+                {
+                    iFrameType = Convert.ToInt32(reader[0]);
+                    iFrameCount = Convert.ToInt32(reader[1]);
+                    iCalibratedFrameCount = Convert.ToInt32(reader[2]);
+
+                    if (iMaxFrameTypeToExamine < 0 || iFrameType <= iMaxFrameTypeToExamine)
+                    {
+                        iFrameTypeCount += 1;
+                        if (iFrameCount == iCalibratedFrameCount)
+                            iFrameTypeCountCalibrated += 1;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception determing if all frames are calibrated; error occurred with FrameType " + iFrameType + ": " + ex.Message);
+                }
+            }
+            Dispose(dbCmd, reader);
+
+            if (iFrameTypeCount == iFrameTypeCountCalibrated)
+                bIsCalibrated = true;
+
+            return bIsCalibrated;
+        }
 
         private void LoadPrepStmts()
         {
@@ -1593,7 +1655,7 @@ namespace UIMFLibrary
         {
             try
             {
-                int columnMissingCounter = 0;
+                bool columnMissing = false;
 
                 fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
                 fp.StartTime = Convert.ToDouble(reader["StartTime"]);
@@ -1631,28 +1693,29 @@ namespace UIMFLibrary
                 fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"]);
                 fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
-                fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, ref columnMissingCounter);
-                if (columnMissingCounter > 0)
+                fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, out columnMissing);
+                if (columnMissing)
                 {
                     if (m_errMessageCounter < 5)
                     {
-                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (missing one or more expected columns); please get the newest version from \\\\floyd\\software");
+                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (HighPressureFunnelPressure is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");
                         m_errMessageCounter++;
                     }
                 }
                 else
                 {
-                    fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0, ref columnMissingCounter);
-                    fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0, ref columnMissingCounter);
-                    fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0, ref columnMissingCounter);
-                    fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0, ref columnMissingCounter);
-                    fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0, ref columnMissingCounter);
-                    fp.CalibrationDone = TryGetFrameParamInt32(reader, "CALIBRATIONDONE", 0, ref columnMissingCounter);
+                    fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0);
+                    fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0);
+                    fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0);
+                    fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0);
+                    fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0);
+                    fp.CalibrationDone = TryGetFrameParamInt32(reader, "CalibrationDone", 0);
+                    fp.Decoded = TryGetFrameParamInt32(reader, "Decoded", 0);
                 }
 
 
-                fp.a2 = TryGetFrameParam(reader, "a2", 0, ref columnMissingCounter);
-                if (columnMissingCounter > 0)
+                fp.a2 = TryGetFrameParam(reader, "a2", 0, out columnMissing);
+                if (columnMissing)
                 {
                     fp.b2 = 0;
                     fp.c2 = 0;
@@ -1661,16 +1724,17 @@ namespace UIMFLibrary
                     fp.f2 = 0;
                     if (m_errMessageCounter < 5)
                     {
-                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (missing one or more expected columns); please get the newest version from \\\\floyd\\software");
+                        Console.WriteLine("Warning: this UIMF file is created with an old version of IMF2UIMF (b2 calibration column is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");
                         m_errMessageCounter++;
                     }
                 }
                 else
                 {
-                    fp.b2 = TryGetFrameParam(reader, "b2", 0, ref columnMissingCounter);
-                    fp.c2 = TryGetFrameParam(reader, "c2", 0, ref columnMissingCounter);
-                    fp.d2 = TryGetFrameParam(reader, "d2", 0, ref columnMissingCounter);
-                    fp.e2 = TryGetFrameParam(reader, "e2", 0, ref columnMissingCounter);
+                    fp.b2 = TryGetFrameParam(reader, "b2", 0);
+                    fp.c2 = TryGetFrameParam(reader, "c2", 0);
+                    fp.d2 = TryGetFrameParam(reader, "d2", 0);
+                    fp.e2 = TryGetFrameParam(reader, "e2", 0);
+                    fp.f2 = TryGetFrameParam(reader, "f2", 0);
                 }
 
                 return true;
@@ -2368,9 +2432,16 @@ namespace UIMFLibrary
         }
 
 
-        protected double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue, ref int columnMissingCounter)
+        protected double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue)
+        {
+            bool columnMissing;
+            return TryGetFrameParam(reader, ColumnName, DefaultValue, out columnMissing);
+        }
+
+        protected double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue, out bool columnMissing)
         {
             double Result = DefaultValue;
+            columnMissing = false;
 
             try
             {
@@ -2378,15 +2449,22 @@ namespace UIMFLibrary
             }
             catch (IndexOutOfRangeException)
             {
-                columnMissingCounter += 1;
+                columnMissing = true;
             }
 
             return Result;
         }
 
-        protected int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue, ref int columnMissingCounter)
+        protected int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue)
+        {
+            bool columnMissing;
+            return TryGetFrameParamInt32(reader, ColumnName, DefaultValue, out columnMissing);
+        }
+
+        protected int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue, out bool columnMissing)
         {
             int Result = DefaultValue;
+            columnMissing = false;
 
             try
             {
@@ -2394,7 +2472,7 @@ namespace UIMFLibrary
             }
             catch (IndexOutOfRangeException)
             {
-                columnMissingCounter += 1;
+                columnMissing = true;
             }
 
             return Result;
@@ -2412,6 +2490,24 @@ namespace UIMFLibrary
 
             SQLiteDataReader rdr = cmd.ExecuteReader();
             if (rdr.HasRows)
+                return true;
+            else
+                return false;
+        }
+
+        public bool TableHasColumn(string tableName, string columnName)
+        {
+            return TableHasColumn(m_uimfDatabaseConnection, tableName, columnName);
+        }
+
+        public static bool TableHasColumn(SQLiteConnection oConnection, string tableName, string columnName)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(oConnection);
+            cmd.CommandText = "Select * From '" + tableName + "' Limit 1;";
+
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+            
+            if (rdr.GetOrdinal(columnName) >= 0)
                 return true;
             else
                 return false;
@@ -2924,7 +3020,7 @@ namespace UIMFLibrary
                                              "SET CalibrationSlope = " + slope.ToString() + ", " +
                                                  "CalibrationIntercept = " + intercept.ToString();
             if (bAutoCalibrating)
-                dbcmd_PreparedStmt.CommandText += ", CALIBRATIONDONE = 1";
+                dbcmd_PreparedStmt.CommandText += ", CalibrationDone = 1";
 
             dbcmd_PreparedStmt.CommandText += " WHERE FrameNum = " + this.m_FrameNumArray[frame_index].ToString();
 
@@ -2957,7 +3053,7 @@ namespace UIMFLibrary
                                              "SET CalibrationSlope = " + slope.ToString() + ", " +
                                                  "CalibrationIntercept = " + intercept.ToString();
             if (bAutoCalibrating)
-                dbcmd_PreparedStmt.CommandText += ", CALIBRATIONDONE = 1";
+                dbcmd_PreparedStmt.CommandText += ", CalibrationDone = 1";
 
             dbcmd_PreparedStmt.ExecuteNonQuery();
             dbcmd_PreparedStmt.Dispose();
