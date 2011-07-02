@@ -987,20 +987,70 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="parameterName"></param>
         /// <param name="parameterType"></param>
+        /// <remarks>The new column will have Null values for all existing rows</remarks>
         public void AddFrameParameter(string parameterName, string parameterType)
+        {
+            try
+            {
+                m_dbCommandUimf = m_dbConnection.CreateCommand();
+                m_dbCommandUimf.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " + parameterType;
+                this.m_dbCommandUimf.ExecuteNonQuery();
+                m_dbCommandUimf.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error adding parameter " + parameterName + " to the Frame_Parameters table:" + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Add a column to the Frame_Parameters table
+        /// </summary>
+        /// <param name="parameterName">Parameter name (aka column name in the database)</param>
+        /// <param name="parameterType">Parameter type</param>
+        /// <param name="defaultValue">Value to assign to all rows</param>
+        public void AddFrameParameter(string parameterName, string parameterType, int defaultValue)
+        {
+            AddFrameParameter(parameterName, parameterType);
+
+            try
+            {
+                m_dbCommandUimf = m_dbConnection.CreateCommand();
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + defaultValue.ToString() + " WHERE " + parameterName + " IS NULL";
+                this.m_dbCommandUimf.ExecuteNonQuery();
+
+                m_dbCommandUimf.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Add a column to the Frame_Parameters table
+        /// </summary>
+        /// <param name="parameterName">Parameter name (aka column name in the database)</param>
+        /// <param name="parameterType">Parameter type</param>
+        /// <param name="defaultValue">Value to assign to all rows</param>
+        public void AddFrameParameter(string parameterName, string parameterType, string defaultValue)
 		{
+            AddFrameParameter(parameterName, parameterType);
+
 			try
 			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-                m_dbCommandUimf.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName.ToString() + " " + parameterType.ToString();
+                m_dbCommandUimf = m_dbConnection.CreateCommand();
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = '" + defaultValue + "' WHERE " + parameterName + " IS NULL";
 				this.m_dbCommandUimf.ExecuteNonQuery();
+
 				m_dbCommandUimf.Dispose();
 			}
-			catch
+			catch (Exception ex)
 			{
-                Console.WriteLine("Parameter " + parameterName + " already exists (AddFrameParameter)");
+                Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
 			}
 		}
+
         public void UpdateGlobalParameter(string parameterName, string parameterValue)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
@@ -1036,7 +1086,7 @@ namespace UIMFLibrary
             ValidateFrameParameterColumns();
 
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName.ToString() + " = " + parameterValue + " WHERE FrameNum = " + frameNumber;
+			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + parameterValue + " WHERE FrameNum = " + frameNumber;
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			m_dbCommandUimf.Dispose();
 		}
@@ -1145,7 +1195,7 @@ namespace UIMFLibrary
             {
                 if (!DataReader.TableHasColumn(m_dbConnection, "Frame_Parameters", "Decoded"))
                 {
-                    AddFrameParameter("Decoded", "INT");
+                    AddFrameParameter("Decoded", "INT", 0);
                 }
 
                 m_FrameParameterColumnsVerified = true;
