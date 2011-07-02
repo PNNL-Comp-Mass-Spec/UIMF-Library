@@ -2445,7 +2445,10 @@ namespace UIMFLibrary
 
             try
             {
-                Result = Convert.ToDouble(reader[ColumnName]);
+                if (!DBNull.Value.Equals(reader[ColumnName]))
+                    Result = Convert.ToDouble(reader[ColumnName]);
+                else
+                    Result = DefaultValue;
             }
             catch (IndexOutOfRangeException)
             {
@@ -2468,7 +2471,10 @@ namespace UIMFLibrary
 
             try
             {
-                Result = Convert.ToInt32(reader[ColumnName]);
+                if (! DBNull.Value.Equals(reader[ColumnName]))
+                    Result = Convert.ToInt32(reader[ColumnName]);
+                else
+                    Result = DefaultValue;
             }
             catch (IndexOutOfRangeException)
             {
