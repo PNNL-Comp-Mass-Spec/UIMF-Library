@@ -15,7 +15,7 @@ namespace UIMFLibrary
 
     public class GlobalParameters
     {
-		//public DateTime DateStarted;             // 1, Date Experiment was acquired 
+		//public DateTime DateStarted;         // 1, Date Experiment was acquired 
         public string DateStarted;
         public int NumFrames;                  // 2, Number of frames in dataset
         public int TimeOffset;                 // 3, Offset from 0. All bin numbers must be offset by this amount
@@ -59,8 +59,8 @@ namespace UIMFLibrary
         public double voltHVRack3;                     // 20, Voltage setting in the IMS system
         public double voltHVRack4;                     // 21, Voltage setting in the IMS system
         public double voltCapInlet;                    // 22, Capilary Inlet Voltage
-        public double voltEntranceIFTIn;               // 23, IFT In Voltage
-        public double voltEntranceIFTOut;              // 24, IFT Out Voltage
+        public double voltEntranceHPFIn;               // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
+        public double voltEntranceHPFOut;              // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
         public double voltEntranceCondLmt;             // 25, Cond Limit Voltage
         public double voltTrapOut;                     // 26, Trap Out Voltage
         public double voltTrapIn;                      // 27, Trap In Voltage
@@ -70,8 +70,8 @@ namespace UIMFLibrary
         public double voltQuad2;                       // 31, Fragmentation Quadrupole Voltage
         public double voltCond2;                       // 32, Fragmentation Conductance Voltage
         public double voltIMSOut;                      // 33, IMS Out Voltage
-        public double voltExitIFTIn;                   // 34, IFT In Voltage
-        public double voltExitIFTOut;                  // 35, IFT Out Voltage
+        public double voltExitHPFIn;                   // 34, HPF In Voltage  (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
+        public double voltExitHPFOut;                  // 35, HPF Out Voltage (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
         public double voltExitCondLmt;                 // 36, Cond Limit Voltage
         public double PressureFront;                   // 37, Pressure at front of Drift Tube 
         public double PressureBack;                    // 38, Pressure at back of Drift Tube 
@@ -85,6 +85,43 @@ namespace UIMFLibrary
         public double FloatVoltage;                    // 46
         public int CalibrationDone = -1;               // 47, Set to 1 after a frame has been calibrated
         public int Decoded = 0;                        // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+
+        /// <summary>
+        /// Included for backwards compatibility
+        /// </summary>
+        public double voltEntranceIFTOut
+        {
+            get { return this.voltEntranceHPFOut; }
+            set { this.voltEntranceHPFOut = value; }
+        }
+
+        /// <summary>
+        /// Included for backwards compatibility
+        /// </summary>
+        public double voltEntranceIFTIn
+        {
+            get { return this.voltEntranceHPFIn; }
+            set { this.voltEntranceHPFIn = value; }
+        }
+
+        /// <summary>
+        /// Included for backwards compatibility
+        /// </summary>
+        public double voltExitIFTOut
+        {
+            get { return this.voltExitHPFOut; }
+            set { this.voltExitHPFOut = value; }
+        }
+
+        /// <summary>
+        /// Included for backwards compatibility
+        /// </summary>
+        public double voltExitIFTIn
+        {
+            get { return this.voltExitHPFIn; }
+            set { this.voltExitHPFIn = value; }
+        }
+
 
         public void CopyTo(out FrameParameters Target)
         {
@@ -113,8 +150,8 @@ namespace UIMFLibrary
             Target.voltHVRack3 = this.voltHVRack3;
             Target.voltHVRack4 = this.voltHVRack4;
             Target.voltCapInlet = this.voltCapInlet;
-            Target.voltEntranceIFTIn = this.voltEntranceIFTIn;
-            Target.voltEntranceIFTOut = this.voltEntranceIFTOut;
+            Target.voltEntranceHPFIn = this.voltEntranceHPFIn;
+            Target.voltEntranceHPFOut = this.voltEntranceHPFOut;
             Target.voltEntranceCondLmt = this.voltEntranceCondLmt;
             Target.voltTrapOut = this.voltTrapOut;
             Target.voltTrapIn  = this.voltTrapIn ;
@@ -124,8 +161,8 @@ namespace UIMFLibrary
             Target.voltQuad2 = this.voltQuad2;
             Target.voltCond2 = this.voltCond2;
             Target.voltIMSOut = this.voltIMSOut;
-            Target.voltExitIFTIn = this.voltExitIFTIn;
-            Target.voltExitIFTOut = this.voltExitIFTOut;
+            Target.voltExitHPFIn = this.voltExitHPFIn;
+            Target.voltExitHPFOut = this.voltExitHPFOut;
             Target.voltExitCondLmt = this.voltExitCondLmt;
             Target.PressureFront = this.PressureFront;
             Target.PressureBack = this.PressureBack;

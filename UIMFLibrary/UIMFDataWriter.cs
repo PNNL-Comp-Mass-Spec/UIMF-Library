@@ -161,8 +161,8 @@ namespace UIMFLibrary
                     "voltHVRack3 DOUBLE, " +                         // 20, Voltage setting in the IMS system
                     "voltHVRack4 DOUBLE, " +                         // 21, Voltage setting in the IMS system
                     "voltCapInlet DOUBLE, " +                        // 22, Capilary Inlet Voltage
-                    "voltEntranceIFTIn DOUBLE, " +                   // 23, IFT In Voltage
-                    "voltEntranceIFTOut DOUBLE, " +                  // 24, IFT Out Voltage
+                    "voltEntranceHPFIn DOUBLE, " +                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
+                    "voltEntranceHPFOut DOUBLE, " +                  // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
                     "voltEntranceCondLmt DOUBLE, " +                 // 25, Cond Limit Voltage
                     "voltTrapOut DOUBLE, " +                         // 26, Trap Out Voltage
                     "voltTrapIn DOUBLE, " +                          // 27, Trap In Voltage
@@ -172,8 +172,8 @@ namespace UIMFLibrary
                     "voltQuad2 DOUBLE, " +                           // 31, Fragmentation Quadrupole Voltage
                     "voltCond2 DOUBLE, " +                           // 32, Fragmentation Conductance Voltage
                     "voltIMSOut DOUBLE, " +                          // 33, IMS Out Voltage
-                    "voltExitIFTIn DOUBLE, " +                       // 34, IFT In Voltage
-                    "voltExitIFTOut DOUBLE, " +                      // 35, IFT Out Voltage
+                    "voltExitHPFIn DOUBLE, " +                       // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
+                    "voltExitHPFOut DOUBLE, " +                      // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
                     "voltExitCondLmt DOUBLE, " +                     // 36, Cond Limit Voltage
                     "PressureFront DOUBLE, " +                       // 37, Pressure at front of Drift Tube 
                     "PressureBack DOUBLE, " +                        // 38, Pressure at back of Drift Tube 
@@ -487,8 +487,8 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));                 // 20, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));                 // 21, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));               // 22, Capilary Inlet Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceIFTIn));     // 23, IFT In Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceIFTOut));   // 24, IFT Out Voltage
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));     // 23, HPF In Voltage
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));   // 24, HPF Out Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));                 // 26, Trap Out Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));                   // 27, Trap In Voltage
@@ -499,8 +499,8 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));                     // 32, Fragmentation Conductance Voltage
 
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));                   // 33, IMS Out Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitIFTIn));             // 34, IFT In Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitIFTOut));           // 35, IFT Out Voltage
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));             // 34, HPF In Voltage
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));           // 35, HPF Out Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));         // 36, Cond Limit Voltage
 
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront));             // 37, Pressure at front of Drift Tube 
@@ -1160,14 +1160,14 @@ namespace UIMFLibrary
 
             m_dbCommandPrepareInsertFrame.CommandText = "INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses," +
                 "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " +
-                "voltCapInlet, voltEntranceIFTIn, voltEntranceIFTOut, voltEntranceCondLmt, " +
+                "voltCapInlet, voltEntranceHPFIn, voltEntranceHPFOut, voltEntranceCondLmt, " +
                 "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
-                "voltIMSOut, voltExitIFTIn, voltExitIFTOut, voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
+                "voltIMSOut, voltExitHPFIn, voltExitHPFOut, voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
                 "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)" +
                 "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses," +
                 ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, " +
-                ":voltCapInlet, :voltEntranceIFTIn, :voltEntranceIFTOut,:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
-                ":voltIMSOut,:voltExitIFTIn,:voltExitIFTOut,:voltExitCondLmt, " +
+                ":voltCapInlet, :voltEntranceHPFIn, :voltEntranceHPFOut,:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
+                ":voltIMSOut,:voltExitHPFIn,:voltExitHPFOut,:voltExitCondLmt, " +
                 ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " +
                 ":HPPressure, :IPTrapPressure, " +
                 ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
