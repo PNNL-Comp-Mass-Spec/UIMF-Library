@@ -109,6 +109,8 @@ namespace UIMFLibrary
             // It only contains frame numbers that are type m_CurrentFrameType
             private int[] m_FrameNumArray = null;
 
+            private bool m_PressureInMTorr;
+
         #endregion
 
         #region "Properties"
@@ -375,7 +377,60 @@ namespace UIMFLibrary
         {
             return CloseUIMF();
         }
-        
+
+        /// <summary>
+        /// Examines the pressure columns to determine whether they are in torr or mTorr
+        /// </summary>
+        private void DeterminePressureUnits()
+        {
+            bool bMilliTorr;
+
+            try
+            {
+                m_PressureInMTorr = false;
+
+                SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
+
+                bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
+                if (bMilliTorr) m_PressureInMTorr = true;
+
+                bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "IonFunnelTrapPressure");
+                if (bMilliTorr) m_PressureInMTorr = true;
+                
+                bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "RearIonFunnelPressure");
+                if (bMilliTorr) m_PressureInMTorr = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception determining whether pressure columns are in milliTorr: " + ex.Message);
+
+            }
+        }
+
+        private bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
+        {
+            bool bMilliTorr = false;
+            try
+            {
+                cmd.CommandText = "SELECT Avg(" + columnName + ") AS AvgPressure FROM " + tableName + " WHERE " + columnName + " > 0;";
+
+                object objResult = cmd.ExecuteScalar();
+
+                if (Convert.ToSingle(objResult) > 100)
+                {
+                   bMilliTorr = true;
+                }             
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception examining pressure column " + columnName + " in table " + tableName + ": " + ex.Message);
+            }
+
+            return bMilliTorr;
+        }
+
+
         private void Dispose(SQLiteCommand cmd, SQLiteDataReader reader)
         {
             cmd.Dispose();
@@ -1645,6 +1700,9 @@ namespace UIMFLibrary
                     if (this.set_FrameType(i, true) > 0)
                         break;
                 }
+
+                // Lookup whether the pressure columns are in torr or mTorr
+                DeterminePressureUnits();
             }
 
             // Initialize caching structures
@@ -1711,6 +1769,15 @@ namespace UIMFLibrary
                     fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0);
                     fp.CalibrationDone = TryGetFrameParamInt32(reader, "CalibrationDone", 0);
                     fp.Decoded = TryGetFrameParamInt32(reader, "Decoded", 0);
+
+                    if (m_PressureInMTorr)
+                    {
+                        // Divide each of the pressures by 1000 to convert from milliTorr to Torr
+                        fp.HighPressureFunnelPressure /= 1000.0;
+                        fp.IonFunnelTrapPressure /= 1000.0;
+                        fp.RearIonFunnelPressure /= 1000.0;
+                        fp.QuadrupolePressure /= 1000.0;
+                    }
                 }
 
 

@@ -1,5 +1,9 @@
 UIMFLibrary Revision History
 
+Version 1.3.4212; July 14, 2011
+	- Added support for the pressure columns in the Frame_Parameters having values with units of milliTorr instead of Torr
+		- Auto-converting values to Torr when reading data with PopulateFrameParameters	
+
 Version 1.3.4200; July 2, 2011
 	- Overloaded AddFrameParameter to support defining a default integer or string value when adding a column
 
