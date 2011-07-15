@@ -3098,7 +3098,7 @@ namespace UIMFLibrary
             double ave_duration;
 
             dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
-            dbcmd_PreparedStmt.CommandText = "SELECT sum(duration) FROM Frame_parameters WHERE frame_type=" + this.CurrentFrameType.ToString();
+            dbcmd_PreparedStmt.CommandText = "SELECT sum(duration) FROM Frame_parameters WHERE FrameType=" + this.CurrentFrameType.ToString();
             this.m_sqliteDataReader = this.dbcmd_PreparedStmt.ExecuteReader();
 
             double total_duration = Convert.ToInt32(this.m_sqliteDataReader[0]);
