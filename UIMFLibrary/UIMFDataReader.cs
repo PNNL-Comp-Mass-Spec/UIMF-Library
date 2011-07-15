@@ -3093,6 +3093,27 @@ namespace UIMFLibrary
         // //////////////////////////////////////////////////////////////////////////////////////
         //
 
+        public double get_AveFrameDuration_Seconds()
+        {
+            double ave_duration;
+
+            dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
+            dbcmd_PreparedStmt.CommandText = "SELECT sum(duration) FROM Frame_parameters WHERE frame_type=" + this.CurrentFrameType.ToString();
+            this.m_sqliteDataReader = this.dbcmd_PreparedStmt.ExecuteReader();
+
+            double total_duration = Convert.ToInt32(this.m_sqliteDataReader[0]);
+            dbcmd_PreparedStmt.Dispose();
+
+            double total_frames = (double) set_FrameType(this.CurrentFrameType, false);
+
+            if (total_frames > 0)
+                ave_duration = total_duration / total_frames;
+            else
+                ave_duration = total_duration;
+
+            return ave_duration;
+        }
+
         public void update_CalibrationCoefficients(int frame_index, float slope, float intercept)
         {
             bool bAutoCalibrating = false;
