@@ -412,14 +412,16 @@ namespace UIMFLibrary
             bool bMilliTorr = false;
             try
             {
-                cmd.CommandText = "SELECT Avg(" + columnName + ") AS AvgPressure FROM " + tableName + " WHERE " + columnName + " > 0;";
+                cmd.CommandText = "SELECT Avg(" + columnName + ") AS AvgPressure FROM " + tableName + " WHERE IFNULL(" + columnName + ", 0) > 0;";
 
                 object objResult = cmd.ExecuteScalar();
-
-                if (Convert.ToSingle(objResult) > 100)
+                if (objResult != null && objResult != DBNull.Value)
                 {
-                   bMilliTorr = true;
-                }             
+                    if (Convert.ToSingle(objResult) > 100)
+                    {
+                        bMilliTorr = true;
+                    }
+                }
 
             }
             catch (Exception ex)
