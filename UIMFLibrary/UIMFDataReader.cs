@@ -2893,6 +2893,86 @@ namespace UIMFLibrary
             return intensities;
         }
 
+		public double[][] GetIntensityBlockForDemultiplexing(int frame_index, int frame_type, int segmentLength, Dictionary<int, int> scanToIndexMap)
+		{
+			set_FrameType(frame_type);
+			ValidateFrameIndex("GetIntensityBlock", frame_index, frame_type, true);
+
+			FrameParameters frameParameters = GetFrameParameters(frame_index);
+
+			int numBins = m_globalParameters.Bins;
+			int numScans = frameParameters.Scans;
+
+			// The number of scans has to be divisble by the given segment length
+			if (numScans % segmentLength != 0)
+			{
+				throw new Exception("Number of scans of " + numScans + " is not divisible by the given segment length of " + segmentLength);
+			}
+
+			// Initialize the intensities 2-D array
+			double[][] intensities = new double[numBins][];
+			for (int i = 0; i < numBins; i++)
+			{
+				intensities[i] = new double[numScans];
+			}
+
+			// Now setup queries to retrieve data
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameParameters.FrameNum));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameParameters.FrameNum));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
+
+			byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+			
+			using (m_sqliteDataReader = m_sumScansCommand.ExecuteReader())
+			{
+				while (m_sqliteDataReader.Read())
+				{
+					int ibin = 0;
+
+					byte[] spectra = (byte[])(m_sqliteDataReader["Intensities"]);
+					int scanNum = Convert.ToInt32(m_sqliteDataReader["ScanNum"]);
+
+					if (spectra.Length > 0)
+					{
+						int out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int numReturnedBins = out_len / DATASIZE;
+						for (int i = 0; i < numReturnedBins; i++)
+						{
+							int decoded_intensityValue = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
+
+							if (decoded_intensityValue < 0)
+							{
+								ibin += -decoded_intensityValue;
+							}
+							else
+							{
+								//Console.WriteLine(scanNum);
+								intensities[ibin][scanToIndexMap[scanNum]] = decoded_intensityValue;
+								ibin++;
+							}
+						}
+					}
+				}
+			}
+
+			return intensities;
+		}
+
+		private int ConvertScanToIndex(int scanNumber, int segmentSize, int numSegments)
+		{
+			if (scanNumber == 0)
+			{
+				return 0;
+			}
+			else
+			{
+				int modValue = scanNumber % segmentSize;
+				int indexValue = (scanNumber / segmentSize) + (modValue * numSegments);
+				return indexValue;
+			}
+		}
+
         /// <summary>
         /// This method returns all the intensities without summing for that block
         /// The number of rows is equal to endScan-startScan+1 and the number of columns is equal to endBin-startBin+1 
@@ -2978,9 +3058,9 @@ namespace UIMFLibrary
                         }
                     }
                 }
-                m_sqliteDataReader.Close();
-
             }
+
+			m_sqliteDataReader.Close();
 
             return intensities;
         }
