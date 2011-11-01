@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMFLibrary", "UIMFLibrary\UIMFLibrary.csproj", "{25849DAD-D507-4429-ACA4-2DB63F9EAF52}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMFLibrary.UnitTests", "UIMFLibrary.UnitTests\UIMFLibrary.UnitTests.csproj", "{AF8626A9-1CEB-4179-9F09-590B1B9C0157}"

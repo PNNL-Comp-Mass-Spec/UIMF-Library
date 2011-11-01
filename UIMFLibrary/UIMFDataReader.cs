@@ -1719,6 +1719,22 @@ namespace UIMFLibrary
 
                 fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
                 fp.StartTime = Convert.ToDouble(reader["StartTime"]);
+
+				if (fp.StartTime > 1E+17) 
+				{
+					// StartTime is stored as Ticks in this file
+					// Auto-compute the correct start time
+					System.DateTime dtRunStarted;
+					if (System.DateTime.TryParse(m_globalParameters.DateStarted, out dtRunStarted))
+					{
+						Int64 lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;
+						if (lngTickDifference >= 0) 
+						{
+							fp.StartTime = dtRunStarted.AddTicks(lngTickDifference).Subtract(dtRunStarted).TotalMinutes;
+						}
+					}
+				}
+
                 fp.Duration = Convert.ToDouble(reader["Duration"]);
                 fp.Accumulations = Convert.ToInt32(reader["Accumulations"]);
                 fp.FrameType = Convert.ToInt16(reader["FrameType"]);

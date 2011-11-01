@@ -86,6 +86,21 @@ namespace UIMFLibrary
         public int CalibrationDone = -1;               // 47, Set to 1 after a frame has been calibrated
         public int Decoded = 0;                        // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
 
+		/// <summary>
+		/// This constructor assumes the developer will manually store a value in StartTime
+		/// </summary>
+		public FrameParameters() {
+		}
+
+		/// <summary>
+		/// This constructor auto-populates StartTime using Now minutes dtRunStartTime using the correct format
+		/// </summary>
+		/// <param name="dtRunStartTime"></param>
+		public FrameParameters(System.DateTime dtRunStartTime) {
+			StartTime = System.DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
+		}
+
+
         /// <summary>
         /// Included for backwards compatibility
         /// </summary>

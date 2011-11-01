@@ -46,7 +46,8 @@ namespace UIMFLibrary
 				PrepareInsertScan();
 
                 m_FrameParameterColumnsVerified = false;
-				
+
+
 			}
 			catch (Exception ex)
 			{
