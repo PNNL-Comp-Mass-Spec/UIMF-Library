@@ -335,7 +335,7 @@ namespace UIMFLibrary
         }
 
 
-        private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
+        private double ConvertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
         {
             double t = bin * binWidth / 1000;
             double term1 = (double)(slope * ((t - correctionTimeForTOF / 1000 - intercept)));
@@ -443,7 +443,7 @@ namespace UIMFLibrary
         /// <param name="correctionTimeForTOF"></param>
         /// <param name="targetMZ"></param>
         /// <returns></returns>
-        public double getBinClosestToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, double targetMZ)
+        public double GetBinClosestToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, double targetMZ)
         {
             //NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
             double binCorrection = (correctionTimeForTOF / 1000) / binWidth;
@@ -467,7 +467,7 @@ namespace UIMFLibrary
             GetTICorBPI(bpi, frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
         }
 
-        public List<string> getCalibrationTableNames()
+        public List<string> GetCalibrationTableNames()
         {
             SQLiteDataReader reader = null;
             SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
@@ -556,7 +556,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="tableName"></param>
         /// <returns></returns>
-        public byte[] getFileBytesFromTable(string tableName)
+        public byte[] GetFileBytesFromTable(string tableName)
         {
             SQLiteDataReader reader = null;
             byte[] byteBuffer = null;
@@ -1271,7 +1271,7 @@ namespace UIMFLibrary
 		public void GetTIC(double[] TIC, iFrameType frameType)
         {
             int startFrameNumber = 0;
-			int endFrameNumber = this.get_NumFrames(frameType);
+			int endFrameNumber = this.GetNumberOfFrames(frameType);
 
 			GetTIC(TIC, frameType, startFrameNumber, endFrameNumber);
         }
@@ -1432,7 +1432,7 @@ namespace UIMFLibrary
         /// Method to check if this dataset has any MSMS data
         /// </summary>
         /// <returns>True if MSMS frames are present</returns>
-        public bool hasMSMSData()
+        public bool HasMSMSData()
         {
 			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
 			dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
@@ -1675,7 +1675,7 @@ namespace UIMFLibrary
                 fp.PressureFront = Convert.ToDouble(reader["PressureFront"]);
                 fp.PressureBack = Convert.ToDouble(reader["PressureBack"]);
                 fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"]);
-                fp.FragmentationProfile = array_FragmentationSequence((byte[])(reader["FragmentationProfile"]));
+                fp.FragmentationProfile = ArrayFragmentationSequence((byte[])(reader["FragmentationProfile"]));
 
                 fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, out columnMissing);
                 if (columnMissing)
@@ -1744,7 +1744,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="blob"></param>
         /// <returns></returns>
-        private double[] array_FragmentationSequence(byte[] blob)
+        private double[] ArrayFragmentationSequence(byte[] blob)
         {
             double[] frag = new double[blob.Length / 8];
 
@@ -1785,7 +1785,7 @@ namespace UIMFLibrary
                 for (int i = 0; i < binValues.Count; i++)
                 {
                     FrameParameters fp = GetFrameParameters(startFrameNumber++);
-                    mzs.Add(convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, binValues[i]));
+                    mzs.Add(ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, binValues[i]));
 
                 }
             }
@@ -1940,7 +1940,7 @@ namespace UIMFLibrary
                                 intensities[ibin] += decoded_SpectraRecord;
                                 if (mzs[ibin] == 0.0D)
                                 {
-                                    mzs[ibin] = convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, ibin);
+                                    mzs[ibin] = ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, ibin);
                                 }
                                 if (max_bin_iscan < ibin) max_bin_iscan = ibin;
                                 ibin++;
@@ -2254,7 +2254,7 @@ namespace UIMFLibrary
             {
                 if (intensities[i] > 0)
                 {
-                    double mz = convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, i);
+                    double mz = ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, i);
                     if (minMz <= mz && mz <= maxMz)
                     {
                         mzList.Add(mz);
@@ -2521,15 +2521,7 @@ namespace UIMFLibrary
 
         }
         
-        public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
-        {
-            dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
-            dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString() +
-                ", CalibrationIntercept = " + intercept.ToString() + " WHERE FrameNum = " + frameNumber.ToString();
-
-            dbcmd_PreparedStmt.ExecuteNonQuery();
-            dbcmd_PreparedStmt.Dispose();
-        }
+        
 
         #region "Get Blocks of Data"
 
@@ -2969,8 +2961,8 @@ namespace UIMFLibrary
                 throw new NotImplementedException("DriftTime profile extraction hasn't been implemented for UIMF files containing polynomial calibration constants.");
             }
 
-            double lowerBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
-            double upperBin = getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+            double lowerBin = GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
             bins[0] = (int)Math.Round(lowerBin, 0);
             bins[1] = (int)Math.Round(upperBin, 0);
             return bins;
@@ -2991,7 +2983,7 @@ namespace UIMFLibrary
         // //////////////////////////////////////////////////////////////////////////////////////
         //
 
-        public double get_AveFrameDuration_Seconds()
+        public double GetAverageFrameDurationInSeconds()
         {
 			// TODO: Bill Implement
 			//double ave_duration;
@@ -3014,10 +3006,10 @@ namespace UIMFLibrary
         	return 0;
         }
 
-        public void update_CalibrationCoefficients(int frameNumber, float slope, float intercept)
+        public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
         {
             bool bAutoCalibrating = false;
-            update_CalibrationCoefficients(frameNumber, slope, intercept, bAutoCalibrating);
+            UpdateCalibrationCoefficients(frameNumber, slope, intercept, bAutoCalibrating);
         }
 
         /// <summary>
@@ -3026,7 +3018,7 @@ namespace UIMFLibrary
         /// <param name="frameNumber"></param>
         /// <param name="slope"></param>
         /// <param name="intercept"></param>
-        public void update_CalibrationCoefficients(int frameNumber, float slope, float intercept, bool bAutoCalibrating)
+        public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept, bool bAutoCalibrating)
         {
             dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
             dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters " +
@@ -3045,13 +3037,13 @@ namespace UIMFLibrary
             this.mz_Calibration.k = slope / 10000.0;
             this.mz_Calibration.t0 = intercept * 10000.0;
 
-            this.reset_FrameParameters();
+            this.ResetFrameParameters();
         }
 
-        public void updateAll_CalibrationCoefficients(float slope, float intercept)
+        public void UpdateAllCalibrationCoefficients(float slope, float intercept)
         {
             bool bAutoCalibrating = false;
-            updateAll_CalibrationCoefficients(slope, intercept, bAutoCalibrating);
+            UpdateAllCalibrationCoefficients(slope, intercept, bAutoCalibrating);
         }
 
         /// <summary>
@@ -3059,7 +3051,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="slope"></param>
         /// <param name="intercept"></param>
-        public void updateAll_CalibrationCoefficients(float slope, float intercept, bool bAutoCalibrating)
+        public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool bAutoCalibrating)
         {
             dbcmd_PreparedStmt = m_uimfDatabaseConnection.CreateCommand();
             dbcmd_PreparedStmt.CommandText = "UPDATE Frame_Parameters " +
@@ -3071,7 +3063,7 @@ namespace UIMFLibrary
             dbcmd_PreparedStmt.ExecuteNonQuery();
             dbcmd_PreparedStmt.Dispose();
 
-            this.reset_FrameParameters();
+            this.ResetFrameParameters();
         }
 
         /// <summary>
@@ -3086,7 +3078,7 @@ namespace UIMFLibrary
             DataWriter.PostLogEntry(m_uimfDatabaseConnection, EntryType, Message, PostedBy);
         }
 
-        public void reset_FrameParameters()
+        public void ResetFrameParameters()
         {
             this.m_frameParametersCache.Clear();
         }
@@ -3095,7 +3087,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frametype"></param>
         /// <returns></returns>
-        public int get_NumFrames(iFrameType frameType)
+        public int GetNumberOfFrames(iFrameType frameType)
         {
 			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
 			dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
@@ -3115,7 +3107,7 @@ namespace UIMFLibrary
 			return count;
         }
 
-        public double get_pixelMZ(int bin)
+        public double GetPixelMZ(int bin)
         {
             if ((calibration_table != null) && (bin < calibration_table.Length))
                 return calibration_table[bin];
@@ -3128,12 +3120,12 @@ namespace UIMFLibrary
             get { return (double)(this.m_globalParameters.BinWidth * 10.0); }
         }
 
-        public int[][] accumulate_FrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int[][] frame_data, int y_compression)
+        public int[][] AccumulateFrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int[][] frame_data, int y_compression)
         {
-            return this.accumulate_FrameData(frameNumber, flag_TOF, start_scan, start_bin, 0, this.m_globalParameters.Bins, frame_data, y_compression);
+            return this.AccumulateFrameData(frameNumber, flag_TOF, start_scan, start_bin, 0, this.m_globalParameters.Bins, frame_data, y_compression);
         }
 
-        public int[][] accumulate_FrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int min_mzbin, int max_mzbin, int[][] frame_data, int y_compression)
+        public int[][] AccumulateFrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int min_mzbin, int max_mzbin, int[][] frame_data, int y_compression)
         {
             int i;
 
@@ -3278,12 +3270,12 @@ namespace UIMFLibrary
             return frame_data;
         }
 
-        public int[] get_MobilityData(int frame_index)
+        public int[] GetMobilityData(int frame_index)
         {
-            return get_MobilityData(frame_index, 0, this.m_globalParameters.Bins);
+            return GetMobilityData(frame_index, 0, this.m_globalParameters.Bins);
         }
 
-        public int[] get_MobilityData(int frameNumber, int min_mzbin, int max_mzbin)
+        public int[] GetMobilityData(int frameNumber, int min_mzbin, int max_mzbin)
         {
             int[] mobility_data = new int[0];
             int mobility_index;
