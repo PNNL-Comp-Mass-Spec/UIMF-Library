@@ -97,13 +97,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double[] xvals1 = new double[numBins];
             int[] yvals1 = new int[numBins];
 
-            reader.SumScansRange(xvals, yvals, 2, 11, 1, 100, 500);
+            reader.SumScansRange(xvals, yvals, DataReader.iFrameType.Fragmentation, 11, 1, 100, 500);
 
             Assert.AreNotEqual(null, xvals);
             Assert.AreNotEqual(0, xvals.Length);
 
             //TODO: add additional assertions here
-            reader.SumScans(xvals1, yvals1, 2, 10, 12, 100, 500);
+			reader.SumScans(xvals1, yvals1, DataReader.iFrameType.Fragmentation, 10, 12, 100, 500);
 
             Assert.AreEqual(xvals, xvals1);
             Assert.AreEqual(yvals, yvals1);

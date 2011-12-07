@@ -160,8 +160,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             //Console.WriteLine(sb.ToString());
             Console.WriteLine("XIC time = " + sw.ElapsedMilliseconds);
             return;
-
-
         }
 
           [Test]
@@ -171,7 +169,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int startScan = 150;
             double targetMZ = 451.55;
             double toleranceInPPM = 10;
-            int frameType = 0;
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
            
@@ -181,7 +178,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             m_reader = new DataReader();
             m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
-            m_reader.GetDriftTimeProfile(startFrame-2, startFrame+2, frameType, startScan-100, startScan+100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+			m_reader.GetDriftTimeProfile(startFrame - 2, startFrame + 2, DataReader.iFrameType.MS, startScan - 100, startScan + 100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
             
 
             
@@ -201,7 +198,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             int startScan = 100;
             int stopScan = 350;
-            int frameType = 0;
 
             m_reader = new DataReader();
             m_reader.OpenUIMF(FileRefs.uimfStandardFile1);
@@ -216,7 +212,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             //m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            m_reader.GetLCProfile(startFrame, endFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+			m_reader.GetLCProfile(startFrame, endFrame, DataReader.iFrameType.MS, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
             sw.Stop();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < frameVals.Length; i++)
@@ -232,17 +228,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Assert.AreEqual(endFrame - startFrame + 1, frameVals.Length);
             //Console.Write(sb.ToString());
             Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
-
         }
 
 
         [Test]
         public void GetLCChromatogramTest3()
         {
-            int frameType = 0;
-
-
-
             int startFrame = 1280;
             int startScan = 163;
             double targetMZ = 464.25486;
@@ -258,15 +249,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            m_reader.GetLCProfile(startFrame - 200, startFrame + 200, frameType, startScan-2, startScan+2, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+			m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.iFrameType.MS, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
             sw.Stop();
 
             Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
 
             //TestUtilities.display2DChromatogram(frameVals, intensityVals);
-           
-
-
         }
 
 

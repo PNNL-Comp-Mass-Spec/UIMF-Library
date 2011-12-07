@@ -28,7 +28,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
              UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
             reader.OpenUIMF(FileRefs.uimfStandardFile1);
-            double avgTOFLength = reader.GetFrameParameters(0).AverageTOFLength;
+            double avgTOFLength = reader.GetFrameParameters(1).AverageTOFLength;
 
             Assert.AreEqual(162555.56m, (decimal)avgTOFLength);
 
