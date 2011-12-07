@@ -44,8 +44,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double lowerMZ = targetMZ - toleranceInMZ;
             double upperMZ = targetMZ + toleranceInMZ;
 
-            double lowerBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
-            double upperBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+            double lowerBin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
 
 
             int roundedLowerBin = (int)Math.Round(lowerBin, 0);
@@ -119,8 +119,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double lowerMZ = targetMZ - toleranceInMZ;
             double upperMZ = targetMZ + toleranceInMZ;
 
-            double lowerBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
-            double upperBin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
+            double lowerBin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, lowerMZ);
+            double upperBin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, upperMZ);
 
 
             int roundedLowerBin = (int)Math.Round(lowerBin, 0);

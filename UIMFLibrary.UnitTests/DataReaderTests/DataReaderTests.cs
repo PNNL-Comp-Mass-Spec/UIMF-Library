@@ -163,7 +163,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
             double targetMZ = 774.399419388646;     // expect bin 80145
-            double bin = m_reader.getBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, targetMZ);
+            double bin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, targetMZ);
 
             Assert.AreEqual(80145.0000000000, Math.Round(bin, 10));
 

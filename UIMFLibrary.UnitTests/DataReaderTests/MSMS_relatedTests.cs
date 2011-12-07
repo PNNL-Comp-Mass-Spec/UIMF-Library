@@ -15,7 +15,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             UIMFLibrary.DataReader reader = new DataReader();
             reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
-            Assert.AreEqual(false, reader.hasMSMSData());
+            Assert.AreEqual(false, reader.HasMSMSData());
             reader.CloseUIMF();
         }
 
@@ -26,7 +26,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             UIMFLibrary.DataReader reader = new DataReader();
             reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
-            Assert.AreEqual(false, reader.hasMSMSData());
+            Assert.AreEqual(false, reader.HasMSMSData());
             reader.CloseUIMF();
         }
 
