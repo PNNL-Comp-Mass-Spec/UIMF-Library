@@ -2206,11 +2206,6 @@ namespace UIMFLibrary
         //    return Num_Bins;
         //}
 
-        public void SumScansNonCached(List<ushort> frameNumbers, List<List<ushort>> scanNumbers, List<double> mzList, List<double> intensityList, double minMz, double maxMz)
-        {
-            SumScansNonCached(frameNumbers, scanNumbers, mzList, intensityList, minMz, maxMz);
-        }
-
         public void SumScansNonCached(List<int> frameNumbers, List<List<int>> scanNumbers, List<double> mzList, List<double> intensityList, double minMz, double maxMz)
         {
             List<int> iList = new List<int>(m_globalParameters.Bins);
