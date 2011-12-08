@@ -20,7 +20,7 @@ using System.Data.SQLite;
 
 namespace UIMFLibrary
 {
-    public class DataReader
+    public class DataReader : IDisposable
     {
         #region "Constants and Enums"
             public enum iFrameType
@@ -90,12 +90,41 @@ namespace UIMFLibrary
 
         #endregion
 
-		public DataReader()
+		public DataReader(FileSystemInfo uimfFileInfo)
 		{
-			m_uimfFilePath = string.Empty;
-			m_globalParameters = null;
 			m_errMessageCounter = 0;
 			m_calibrationTable = new double[0];
+
+			if (uimfFileInfo.Exists)
+			{
+				string connectionString = "Data Source = " + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
+				m_uimfDatabaseConnection = new SQLiteConnection(connectionString);
+
+				try
+				{
+					m_uimfDatabaseConnection.Open();
+					m_uimfFilePath = uimfFileInfo.FullName;
+
+					// Populate the global parameters object
+					m_globalParameters = DataReader.GetGlobalParametersFromTable(m_uimfDatabaseConnection);
+
+					// Initialize the frame parameters cache
+					m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
+
+					LoadPrepStmts();
+
+					// Lookup whether the pressure columns are in torr or mTorr
+					DeterminePressureUnits();
+				}
+				catch (Exception ex)
+				{
+					throw new Exception("Failed to open UIMF file: " + ex.ToString());
+				}
+			}
+			else
+			{
+				throw new Exception("UIMF file not found: " + uimfFileInfo.FullName);
+			}
 		}
 
 		public int[][] AccumulateFrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int min_mzbin, int max_mzbin, int[][] frame_data, int y_compression)
@@ -440,28 +469,6 @@ namespace UIMFLibrary
 
 
             return bSuccess;
-        }
-
-        public bool CloseUIMF()
-        {
-            UnloadPrepStmts();
-
-            bool success = false;
-            try
-            {
-                if (m_uimfDatabaseConnection != null)
-                {
-                    success = true;
-                    m_uimfDatabaseConnection.Close();
-                    m_uimfFilePath = string.Empty;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Failed to close UIMF file " + ex.ToString());
-            }
-
-            return success;
         }
 
         public string FrameTypeDescription(iFrameType frameType)
@@ -1415,49 +1422,6 @@ namespace UIMFLibrary
             return bIsCalibrated;
         }
 
-        public bool OpenUIMF(string FileName)
-        {
-            bool success = false;
-            if (File.Exists(FileName))
-            {
-                string connectionString = "Data Source = " + FileName + "; Version=3; DateTimeFormat=Ticks;";
-                m_uimfDatabaseConnection = new SQLiteConnection(connectionString);
-
-                try
-                {
-                    m_uimfDatabaseConnection.Open();
-                    m_uimfFilePath = String.Copy(FileName);
-
-                    // Populate the global parameters object
-                    m_globalParameters = DataReader.GetGlobalParametersFromTable(m_uimfDatabaseConnection);
-
-                    // Initialize the frame parameters cache
-                    m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
-
-                    success = true;
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception("Failed to open UIMF file: " + ex.ToString());
-                }
-            }
-            else
-            {
-                Console.WriteLine("File not found: " + FileName);
-            }
-
-            if (success)
-            {
-                LoadPrepStmts();
-
-                // Lookup whether the pressure columns are in torr or mTorr
-                DeterminePressureUnits();
-            }
-
-            // Initialize caching structures
-            return success;
-        }
-
 		/// <summary>
 		/// Post a new log entry to table Log_Entries
 		/// </summary>
@@ -2317,6 +2281,28 @@ namespace UIMFLibrary
 				m_sumVariableScansPerFrameCommand.Dispose();
 
 		}
-    }
+
+		#region IDisposable Members
+
+		public void Dispose()
+		{
+			try
+			{
+				UnloadPrepStmts();
+
+				if (m_uimfDatabaseConnection != null)
+				{
+					m_uimfDatabaseConnection.Close();
+					m_uimfDatabaseConnection.Dispose();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Failed to close UIMF file " + ex.ToString());
+			}
+		}
+
+		#endregion
+	}
 
 }

@@ -17,75 +17,68 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void getSpectrumBins()
         {
             string filePath = @"\\proto-10\IMS_TOF_2\2010_4\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
-            UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
-            reader.OpenUIMF(filePath);
+			using (DataReader reader = new DataReader(new FileInfo(filePath)))
+			{
+				GlobalParameters gp = reader.GetGlobalParameters();
+				int numBins = gp.Bins;
 
-            GlobalParameters gp = reader.GetGlobalParameters();
-            int numBins = gp.Bins;
+				List<int> bins = new List<int>();
+				List<int> intensities = new List<int>();
 
-            List<int> bins = new List<int>();
-            List<int> intensities = new List<int>();
+				reader.GetSpectrum(6, 285, bins, intensities);
 
-            reader.GetSpectrum(6, 285, bins, intensities);
-
-            //for (int i = 0; i < bins.Count; i++)
-            //{
-            //    Console.WriteLine(bins[i] + "\t" + intensities[i]);
-            //}
-
-            reader.CloseUIMF();
-
+				//for (int i = 0; i < bins.Count; i++)
+				//{
+				//    Console.WriteLine(bins[i] + "\t" + intensities[i]);
+				//}
+			}
         }
              
         [Test]
         public void getFrameParametersTest()
         {
-             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(FileRefs.uimfStandardFile1);
+			using (DataReader reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			{
+				GlobalParameters gp = reader.GetGlobalParameters();
+				FrameParameters fp = reader.GetFrameParameters(1);
 
-            GlobalParameters gp = reader.GetGlobalParameters();
-            FrameParameters fp = reader.GetFrameParameters(1);
-
-            //Console.WriteLine(fp.AverageTOFLength);
-
-            reader.CloseUIMF();
+				//Console.WriteLine(fp.AverageTOFLength);
+			}
         }
 
         [Test]
         public void displayMZValueForEachBin_Test1()
         {
             int testFrame = 1000;
-
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
-            m_reader = new DataReader();
-            m_reader.OpenUIMF(filePath);
-            GlobalParameters gp = m_reader.GetGlobalParameters();
-            FrameParameters fp = m_reader.GetFrameParameters(testFrame);
+			using (m_reader = new DataReader(new FileInfo(filePath)))
+			{
+				GlobalParameters gp = m_reader.GetGlobalParameters();
+				FrameParameters fp = m_reader.GetFrameParameters(testFrame);
 
-            StringBuilder sb = new StringBuilder();
+				StringBuilder sb = new StringBuilder();
 
-            double prevMz = 0;
-            for (int i = 0; i < 400000; i++)
-            {
-                sb.Append(i);
-                sb.Append('\t');
-                double mz = (double)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
+				double prevMz = 0;
+				for (int i = 0; i < 400000; i++)
+				{
+					sb.Append(i);
+					sb.Append('\t');
+					double mz = (double)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
 
-                sb.Append(mz);
+					sb.Append(mz);
 
-                sb.Append('\t');
+					sb.Append('\t');
 
-                double ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
-                prevMz = mz;
-                sb.Append(ppmDifference);
-                sb.Append(Environment.NewLine);
+					double ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
+					prevMz = mz;
+					sb.Append(ppmDifference);
+					sb.Append(Environment.NewLine);
 
-            }
+				}
 
-           // Console.Write(sb.ToString());
-
-
+				// Console.Write(sb.ToString());
+			}
         }
   
         //TODO:  need to test something  (assert)
@@ -99,24 +92,20 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double bpimz = 173.289545940302;
             double toleranceInMZ = 25 / 1e6 * bpimz;
             Console.WriteLine("Tolerance in mz  is " + toleranceInMZ);
-            m_reader = new DataReader();
-            m_reader.OpenUIMF(filePath);
-            int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
+			using (m_reader = new DataReader(new FileInfo(filePath)))
+			{
+				int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
 
-            //for (int i = 0; i < intensityMap.Length; i++)
-            //{
-            //    for (int j = 0; j < intensityMap[i].Length; j++)
-            //    {
-            //        Console.Write(intensityMap[i][j] + ",");
+				//for (int i = 0; i < intensityMap.Length; i++)
+				//{
+				//    for (int j = 0; j < intensityMap[i].Length; j++)
+				//    {
+				//        Console.Write(intensityMap[i][j] + ",");
 
-            //    }
-            //    Console.WriteLine(";");
-            //}
-
-            m_reader.CloseUIMF();
-
-
-
+				//    }
+				//    Console.WriteLine(";");
+				//}
+			}
         }
 
 
