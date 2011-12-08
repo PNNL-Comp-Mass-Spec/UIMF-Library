@@ -102,12 +102,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Assert.AreNotEqual(null, xvals);
             Assert.AreNotEqual(0, xvals.Length);
 
-            //TODO: add additional assertions here
-			reader.SumScans(xvals1, yvals1, DataReader.iFrameType.Fragmentation, 10, 12, 100, 500);
-
-            Assert.AreEqual(xvals, xvals1);
-            Assert.AreEqual(yvals, yvals1);
-
             reader.CloseUIMF();
 
         }
