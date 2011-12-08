@@ -12,36 +12,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     public class DataReaderTests
     {
         DataReader m_reader;
-      
-   
-        [Test]
-        public void sumScansTest()
-        {
-            UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(FileRefs.uimfStandardFile1);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-            List<double> mzsList = new List<double>();
-            List<int> intensityList = new List<int>();
-            int numBins = gp.Bins;
-            double[] xvals = new double[numBins];
-            int[] yvals = new int[numBins];
-            int endFrame = 376;
-            int startFrame = 376;
-            int startScan = 158;
-            int endScan = 158;
-
-            //sum a fixed range of scans within a set of frames
-            int count1 = reader.GetCountPerSpectrum(startFrame, startScan);
-
-            Console.WriteLine("Number of non zero points in this data " + count1.ToString());
-            reader.SumScansNonCached(mzsList, intensityList, 0, startFrame, endFrame, startScan, endScan);
-
-            Assert.AreEqual(count1, mzsList.Count);
-            //Assert.AreEqual(xvals, mzsList.ToArray());
-            reader.CloseUIMF();
-        }
-
    
         [Test]
         public void getSpectrumBins()
@@ -82,31 +52,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
-        public void readMSLevelDataFromFileContainingBothMS_and_MSMSData()
-        {
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
-             UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(filePath);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-
-            int numBins = gp.Bins;
-
-            double[] xvals = new double[numBins];
-            int[] yvals = new int[numBins];
-            double[] xvals1 = new double[numBins];
-            int[] yvals1 = new int[numBins];
-
-            reader.SumScansRange(xvals, yvals, DataReader.iFrameType.Fragmentation, 11, 1, 100, 500);
-
-            Assert.AreNotEqual(null, xvals);
-            Assert.AreNotEqual(0, xvals.Length);
-
-            reader.CloseUIMF();
-
-        }
-
-        [Test]
         public void displayMZValueForEachBin_Test1()
         {
             int testFrame = 1000;
@@ -142,51 +87,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
         }
-
-        [Test]
-        public void getClosestMZForGivenBin_Test1()
-        {
-            int testFrame = 1000;
-
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
-
-            m_reader = new DataReader();
-            m_reader.OpenUIMF(filePath);
-            GlobalParameters gp = m_reader.GetGlobalParameters();
-            FrameParameters fp = m_reader.GetFrameParameters(testFrame);
-
-
-            double targetMZ = 774.399419388646;     // expect bin 80145
-            double bin = m_reader.GetBinClosestToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, targetMZ);
-
-            Assert.AreEqual(80145.0000000000, Math.Round(bin, 10));
-
-        }
- 
-
-        [Test]
-        public void countPerSpectrum_test1()
-        {
-            string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\QC_Shew_MSMS_500_100_fr1200_c2_Ek_0000.uimf";
-
-            UIMFLibrary.DataReader reader = new DataReader();
-            reader.OpenUIMF(filePath);
-
-            GlobalParameters gp = reader.GetGlobalParameters();
-
-            int numBins = gp.Bins;
-
-            double[] xvals = new double[numBins];
-            int[] yvals = new int[numBins];
-            double[] xvals1 = new double[numBins];
-            int[] yvals1 = new int[numBins];
-
-            int scanNumber = 500;
-            Assert.AreEqual(reader.GetCountPerSpectrum(4, scanNumber), reader.GetSpectrum(4, scanNumber, yvals, xvals));
-
-        }
-        
-        
   
         //TODO:  need to test something  (assert)
         [Test]
