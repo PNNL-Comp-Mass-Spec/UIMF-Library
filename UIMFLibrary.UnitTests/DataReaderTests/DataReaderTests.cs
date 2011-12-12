@@ -19,7 +19,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void TestGetSpectrum()
 		{
-			const string filePath = @"D:\Data\Sarc\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
@@ -43,7 +43,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void TestGetSpectrumAsBins()
 		{
-			const string filePath = @"D:\Data\Sarc\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
@@ -69,7 +69,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void TestGetSpectrumEquality()
 		{
-			const string filePath = @"D:\Data\Sarc\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 			
