@@ -12,27 +12,25 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     public class DataReaderTests
     {
         DataReader m_reader;
-   
-        [Test]
-        public void getSpectrumBins()
-        {
-            string filePath = @"\\proto-10\IMS_TOF_2\2010_4\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
+
+		[Test]
+		public void TestGetSpectrum()
+		{
+			string filePath = @"\\proto-10\IMS_TOF_2\2010_4\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
 			using (DataReader reader = new DataReader(new FileInfo(filePath)))
 			{
 				GlobalParameters gp = reader.GetGlobalParameters();
 				int numBins = gp.Bins;
 
-				List<int> bins = new List<int>();
-				List<int> intensities = new List<int>();
+				int[] bins;
+				int[] intensities;
 
-				reader.GetSpectrum(6, 285, bins, intensities);
+				int nonZeroCount = reader.GetSpectrum(6, 285, out bins, out intensities);
 
-				//for (int i = 0; i < bins.Count; i++)
-				//{
-				//    Console.WriteLine(bins[i] + "\t" + intensities[i]);
-				//}
+				Assert.AreEqual(nonZeroCount, 369);
+				Assert.AreEqual(intensities.Sum(), 60089);
 			}
-        }
+		}
              
         [Test]
         public void getFrameParametersTest()

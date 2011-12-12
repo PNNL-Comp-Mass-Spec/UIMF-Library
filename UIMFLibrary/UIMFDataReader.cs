@@ -1183,13 +1183,16 @@ namespace UIMFLibrary
 		}
 
         /// <summary>
-        /// Extracts bins and intensities from given frame number and scan number
+		/// Extracts bins and intensities from given frame number and scan number.
+		/// Each entry into bins[] will be bin number that contained a non-zero intensity value.
+		/// The index of the bin number in bins[] will match the index of the corresponding intensity value in intensities[].
         /// </summary>
-        /// <param name="frameNumber"></param>
-        /// <param name="scanNumber"></param>
-        /// <param name="bins"></param>
-        /// <param name="intensities"></param>
-        public void GetSpectrum(int frameNumber, int scanNumber, List<int> bins, List<int> intensities)
+        /// <param name="frameNumber">The frame number of the desired spectrum.</param>
+        /// <param name="scanNumber">The scan number of the desired spectrum.</param>
+        /// <param name="bins">The bin numbers that contained non-zero intensity values.</param>
+        /// <param name="intensities">The corresponding intensity values of the non-zero bin numbers.</param>
+        /// <returns>The number of non-zero bins found in the spectrum.</returns>
+        public int GetSpectrum(int frameNumber, int scanNumber, out int[] bins, out int[] intensities)
         {
             if (frameNumber < 0)
             {
@@ -1205,70 +1208,61 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter(":FrameNum", frameNumber));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter(":ScanNum", scanNumber));
 
+			int nNonZero = 0;
+			bins = new int[0];
+			intensities = new int[0];
 
-            SQLiteDataReader reader = null;
-
-            try
+			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
-                reader = m_getSpectrumCommand.ExecuteReader();
+            	//Get the number of points that are non-zero in this frame and scan
+				int expectedCount = GetCountPerSpectrum(frameNumber, scanNumber);
 
-                int nNonZero = 0;
+				if (expectedCount > 0)
+				{
+					//this should not be longer than expected count, 
+					byte[] decompSpectraRecord = new byte[expectedCount * DATASIZE * 5];
 
-                byte[] SpectraRecord;
+					int binIndex = 0;
+					if (reader.Read())
+					{
+                    	byte[] spectraRecord = (byte[])(reader["Intensities"]);
+                    	if (spectraRecord.Length > 0)
+						{
+							int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
 
-                //Get the number of points that are non-zero in this frame and scan
-                int expectedCount = GetCountPerSpectrum(frameNumber, scanNumber);
+							int numBins = outputLength / DATASIZE;
 
-                if (expectedCount > 0)
-                {
-                    //this should not be longer than expected count, 
-                    byte[] decomp_SpectraRecord = new byte[expectedCount * DATASIZE * 5];
+                        	// Allocate the maximum possible for these arrays. Later on we will re-size them.
+							bins = new int[numBins];
+							intensities = new int[numBins];
 
-                    int ibin = 0;
-                    while (reader.Read())
-                    {
-                        int out_len;
-                        SpectraRecord = (byte[])(reader["Intensities"]);
-                        if (SpectraRecord.Length > 0)
-                        {
-                            out_len = IMSCOMP_wrapper.decompress_lzf(ref SpectraRecord, SpectraRecord.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
+							for (int i = 0; i < numBins; i++)
+							{
+                            	int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                            	if (decodedSpectraRecord < 0)
+								{
+									binIndex += -decodedSpectraRecord;
+								}
+								else
+								{
+									bins[nNonZero] = binIndex;
+                                	intensities[nNonZero] = decodedSpectraRecord;
+									binIndex++;
+									nNonZero++;
+								}
+							}
 
-                            int numBins = out_len / DATASIZE;
-                            int decoded_SpectraRecord;
-                            for (int i = 0; i < numBins; i++)
-                            {
-                                decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
-                                if (decoded_SpectraRecord < 0)
-                                {
-                                    ibin += -decoded_SpectraRecord;
-                                }
-                                else
-                                {
-                                    bins.Add(ibin);
-                                    intensities.Add(decoded_SpectraRecord);
-                                    ibin++;
-                                    nNonZero++;
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (reader != null)
-                    reader.Close();
-                throw new Exception("Error in UIMFDataReader.GetSpectrum: " + ex.ToString(), ex);
-            }
-            finally
-            {
-                if (reader != null)
-                    reader.Close();                
-            }
+                        	// Resize the arrays to cut-off all the extra 0 values at the end
+							Array.Resize(ref bins, nNonZero);
+							Array.Resize(ref intensities, nNonZero);
+						}
+					}
+				}
+			}
 
             m_getSpectrumCommand.Parameters.Clear();
-            
+
+        	return nNonZero;
         }
 
         /// <summary>
