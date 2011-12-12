@@ -34,8 +34,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int[] intensities = new int[gp.Bins];
 				double[] mzValues = new double[gp.Bins];
 
-				int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, testFrameScanInfo1.startFrame,
-					testFrameScanInfo1.stopFrame, testFrameScanInfo1.startScan, testFrameScanInfo1.stopScan);
+				//int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, testFrameScanInfo1.startFrame, testFrameScanInfo1.stopFrame, testFrameScanInfo1.startScan, testFrameScanInfo1.stopScan);
 
 				//TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 
@@ -61,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int startScan = 250;
 				int stopScan = 260;
 
-				int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
+				//int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
 				//TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 			}
         }
@@ -81,7 +80,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int startScan = 110;
 				int stopScan = 150;
 
-				int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
+				//int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
 				//TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 			}
         }
@@ -104,14 +103,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 					int[] intensities = new int[gp.Bins];
 					double[] mzValues = new double[gp.Bins];
 
-					int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame,
-						frame, lowerScan, upperScan);
+					//int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame, frame, lowerScan, upperScan);
 
 					//jump back
-					nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame - 1, frame - 1, lowerScan, upperScan);
+					//nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame - 1, frame - 1, lowerScan, upperScan);
 
 					//and ahead... just testing it's ability to jump around
-					nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame + 2, frame + 2, lowerScan, upperScan);
+					//nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame + 2, frame + 2, lowerScan, upperScan);
 				}
 			}
         }

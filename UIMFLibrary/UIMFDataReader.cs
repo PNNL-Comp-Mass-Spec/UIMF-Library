@@ -471,6 +471,13 @@ namespace UIMFLibrary
             return bSuccess;
         }
 
+		public static double ConvertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
+		{
+			double t = bin * binWidth / 1000;
+			double term1 = (double)(slope * ((t - correctionTimeForTOF / 1000 - intercept)));
+			return term1 * term1;
+		}
+
         public string FrameTypeDescription(iFrameType frameType)
         {
             switch (frameType)
@@ -1182,88 +1189,180 @@ namespace UIMFLibrary
 				return -1;
 		}
 
-        /// <summary>
-		/// Extracts bins and intensities from given frame number and scan number.
-		/// Each entry into bins[] will be bin number that contained a non-zero intensity value.
-		/// The index of the bin number in bins[] will match the index of the corresponding intensity value in intensities[].
-        /// </summary>
-        /// <param name="frameNumber">The frame number of the desired spectrum.</param>
-        /// <param name="scanNumber">The scan number of the desired spectrum.</param>
-        /// <param name="bins">The bin numbers that contained non-zero intensity values.</param>
-        /// <param name="intensities">The corresponding intensity values of the non-zero bin numbers.</param>
-        /// <returns>The number of non-zero bins found in the spectrum.</returns>
-        public int GetSpectrum(int frameNumber, int scanNumber, out int[] bins, out int[] intensities)
-        {
-            if (frameNumber < 0)
-            {
-				throw new ArgumentOutOfRangeException("frameNumber must be >= 0");
-            }
-            
-            if (scanNumber < 0)
-            {
-				throw new ArgumentOutOfRangeException("scanNumber must be >= 0");
-            }
+		/// <summary>
+		/// Extracts m/z values and intensities from given frame number and scan number.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="frameNumber">The frame number of the desired spectrum.</param>
+		/// <param name="scanNumber">The scan number of the desired spectrum.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrum(int frameNumber, int scanNumber, out double[] mzArray, out int[] intensityArray)
+		{
+			return GetSpectrum(frameNumber, frameNumber, scanNumber, scanNumber, out mzArray, out intensityArray);
+		}
 
-            //Testing a prepared statement
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter(":FrameNum", frameNumber));
-            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter(":ScanNum", scanNumber));
+		/// <summary>
+		/// Extracts m/z values and intensities from given frame range and scan range.
+		/// The intensity values of each m/z value are summed across the frame range. The result is a spectrum for a single frame.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrum(int startFrameNumber, int endFrameNumber, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
+		{
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
 
-			int nNonZero = 0;
-			bins = new int[0];
-			intensities = new int[0];
+			int nonZeroCount = 0;
 
-			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
-            {
-            	//Get the number of points that are non-zero in this frame and scan
-				int expectedCount = GetCountPerSpectrum(frameNumber, scanNumber);
+			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
+			mzArray = new double[m_globalParameters.Bins];
+			intensityArray = new int[m_globalParameters.Bins];
 
-				if (expectedCount > 0)
+			using (SQLiteDataReader reader = m_sumScansCommand.ExecuteReader())
+			{
+				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
+				int binIndex = 0;
+				while (reader.Read())
 				{
-					//this should not be longer than expected count, 
-					byte[] decompSpectraRecord = new byte[expectedCount * DATASIZE * 5];
-
-					int binIndex = 0;
-					if (reader.Read())
+					byte[] spectraRecord = (byte[])(reader["Intensities"]);
+					if (spectraRecord.Length > 0)
 					{
-                    	byte[] spectraRecord = (byte[])(reader["Intensities"]);
-                    	if (spectraRecord.Length > 0)
+						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
+						FrameParameters frameParameters = GetFrameParameters(frameNumber);
+
+						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int numBins = outputLength / DATASIZE;
+
+						for (int i = 0; i < numBins; i++)
 						{
-							int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
-
-							int numBins = outputLength / DATASIZE;
-
-                        	// Allocate the maximum possible for these arrays. Later on we will re-size them.
-							bins = new int[numBins];
-							intensities = new int[numBins];
-
-							for (int i = 0; i < numBins; i++)
+							int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+							if (decodedSpectraRecord < 0)
 							{
-                            	int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-                            	if (decodedSpectraRecord < 0)
-								{
-									binIndex += -decodedSpectraRecord;
-								}
-								else
-								{
-									bins[nNonZero] = binIndex;
-                                	intensities[nNonZero] = decodedSpectraRecord;
-									binIndex++;
-									nNonZero++;
-								}
+								binIndex += -decodedSpectraRecord;
 							}
+							else
+							{
+								// Only need to set the m/z array or update the nonZeroCount if we have not previously seen this m/z value
+								if(intensityArray[binIndex] == 0)
+								{
+									double mz = ConvertBinToMZ(frameParameters.CalibrationSlope, frameParameters.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binIndex);
+									mzArray[binIndex] = mz;
+									nonZeroCount++;
+								}
 
-                        	// Resize the arrays to cut-off all the extra 0 values at the end
-							Array.Resize(ref bins, nNonZero);
-							Array.Resize(ref intensities, nNonZero);
+								intensityArray[binIndex] += decodedSpectraRecord;
+								binIndex++;
+							}
 						}
 					}
 				}
+
+				StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
 			}
 
-            m_getSpectrumCommand.Parameters.Clear();
+			m_sumScansCommand.Parameters.Clear();
 
-        	return nNonZero;
-        }
+			return nonZeroCount;
+		}
+
+		/// <summary>
+		/// Extracts bins and intensities from given frame number and scan number.
+		/// Each entry into binArray will be the bin number that contained a non-zero intensity value.
+		/// The index of the bin number in binArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="frameNumber">The frame number of the desired spectrum.</param>
+		/// <param name="scanNumber">The scan number of the desired spectrum.</param>
+		/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
+		/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
+		public int GetSpectrumAsBins(int frameNumber, int scanNumber, out int[] binArray, out int[] intensityArray)
+		{
+			return GetSpectrumAsBins(frameNumber, frameNumber, scanNumber, scanNumber, out binArray, out intensityArray);
+		}
+
+    	/// <summary>
+    	/// Extracts bins and intensities from given frame range and scan range.
+    	/// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
+    	/// Each entry into binArray will be the bin number that contained a non-zero intensity value.
+    	/// The index of the bin number in binArray will match the index of the corresponding intensity value in intensityArray.
+    	/// </summary>
+    	/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+    	/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+    	/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
+    	/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
+    	/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
+    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
+		{
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+
+			int nonZeroCount = 0;
+
+			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
+			binArray = new int[m_globalParameters.Bins];
+			intensityArray = new int[m_globalParameters.Bins];
+
+			using (SQLiteDataReader reader = m_sumScansCommand.ExecuteReader())
+			{
+				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+				
+				while (reader.Read())
+				{
+					int binIndex = 0;
+					byte[] spectraRecord = (byte[])(reader["Intensities"]);
+
+					if (spectraRecord.Length > 0)
+					{
+						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int numBins = outputLength / DATASIZE;
+
+						for (int i = 0; i < numBins; i++)
+						{
+							int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+							if (decodedSpectraRecord < 0)
+							{
+								binIndex += -decodedSpectraRecord;
+							}
+							else
+							{
+								// Only need to set the bin array or update the nonZeroCount if we have not previously seen this bin index
+								if (intensityArray[binIndex] == 0)
+								{
+									binArray[binIndex] = binIndex;
+									nonZeroCount++;
+								}
+
+								intensityArray[binIndex] += decodedSpectraRecord;
+								binIndex++;
+							}
+						}
+					}
+				}
+
+				StripZerosFromArrays(nonZeroCount, ref binArray, ref intensityArray);
+			}
+
+			m_sumScansCommand.Parameters.Clear();
+
+			return nonZeroCount;
+		}
 
         /// <summary>
         /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns an array
@@ -1433,75 +1532,6 @@ namespace UIMFLibrary
 			this.m_frameParametersCache.Clear();
 		}
       
-        public int SumScansNonCached(double[] mzs, int[] intensities, iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
-        {
-            m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
-            m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-            m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
-            m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
-            m_sqliteDataReader = m_sumScansCommand.ExecuteReader();
-            byte[] spectra;
-            byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
-            int nonZeroCount = 0;
-            int frameNumber = startFrameNumber;
-            while (m_sqliteDataReader.Read())
-            {
-                try
-                {
-                    int ibin = 0;
-                    int max_bin_iscan = 0;
-                    int out_len;
-                    spectra = (byte[])(m_sqliteDataReader["Intensities"]);
-
-                    //get frame number so that we can get the frame calibration parameters
-                    if (spectra.Length > 0)
-                    {
-
-                        frameNumber = Convert.ToInt32(m_sqliteDataReader["FrameNum"]);
-
-                        FrameParameters fp = GetFrameParameters(frameNumber);
-
-                        out_len = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decomp_SpectraRecord, m_globalParameters.Bins * DATASIZE);
-                        int numBins = out_len / DATASIZE;
-                        int decoded_SpectraRecord;
-                        for (int i = 0; i < numBins; i++)
-                        {
-                            decoded_SpectraRecord = BitConverter.ToInt32(decomp_SpectraRecord, i * DATASIZE);
-                            if (decoded_SpectraRecord < 0)
-                            {
-                                ibin += -decoded_SpectraRecord;
-                            }
-                            else
-                            {
-
-                                intensities[ibin] += decoded_SpectraRecord;
-                                if (mzs[ibin] == 0.0D)
-                                {
-                                    mzs[ibin] = ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, ibin);
-                                }
-                                if (max_bin_iscan < ibin) max_bin_iscan = ibin;
-                                ibin++;
-                            }
-                        }
-                        if (nonZeroCount < max_bin_iscan) nonZeroCount = max_bin_iscan;
-                    }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    //Console.WriteLine("Error thrown when summing scans.  Error details: " + outOfRange.Message);
-
-                    //do nothing, the bin numbers were outside the range 
-                }
-
-            }
-            m_sumScansCommand.Parameters.Clear();
-            m_sqliteDataReader.Close();
-
-            if (nonZeroCount > 0) nonZeroCount++;
-            return nonZeroCount;
-        }
-        
         public bool TableExists(string tableName)
         {
             return TableExists(m_uimfDatabaseConnection, tableName);
@@ -1657,13 +1687,6 @@ namespace UIMFLibrary
 			}
 
 			return bMilliTorr;
-		}
-
-		private static double ConvertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
-		{
-			double t = bin * binWidth / 1000;
-			double term1 = (double)(slope * ((t - correctionTimeForTOF / 1000 - intercept)));
-			return term1 * term1;
 		}
 
 		/// <summary>
@@ -2188,6 +2211,26 @@ namespace UIMFLibrary
 				throw new Exception("Failed to access frame parameters table " + ex.ToString());
 			}
 
+		}
+
+		private static void StripZerosFromArrays<T>(int nonZeroCount, ref T[] xDataArray, ref int[] yDataArray)
+		{
+			List<T> xArrayList = new List<T>(nonZeroCount);
+			List<int> yArrayList = new List<int>(nonZeroCount);
+
+			for (int i = 0; i < xDataArray.Length; i++)
+			{
+				int yDataPoint = yDataArray[i];
+
+				if (yDataPoint > 0)
+				{
+					xArrayList.Add(xDataArray[i]);
+					yArrayList.Add(yDataPoint);
+				}
+			}
+
+			xDataArray = xArrayList.ToArray();
+			yDataArray = yArrayList.ToArray();
 		}
 
 		private static double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue)

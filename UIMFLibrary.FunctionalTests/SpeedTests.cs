@@ -26,7 +26,7 @@ namespace UIMFLibrary.UnitTests
             int startScan = 250;
             int stopScan = 256;
 
-            int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
+            //int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
 
             //TestUtilities.displayRawMassSpectrum(mzValues, intensities);
         }
@@ -54,7 +54,7 @@ namespace UIMFLibrary.UnitTests
             sw.Start();
             for (int frame = frameStart; frame < frameStop; frame++)
             {
-                int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame, frame + numFramesToSum - 1, scanStart, scanStop);
+                //int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame, frame + numFramesToSum - 1, scanStart, scanStop);
             }
             sw.Stop();
 
