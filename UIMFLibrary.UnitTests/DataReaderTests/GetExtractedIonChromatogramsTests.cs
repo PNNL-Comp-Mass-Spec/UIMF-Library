@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				//m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame, endFrame, DataReader.iFrameType.MS, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+				m_reader.GetLCProfile(startFrame, endFrame, DataReader.iFrameType.MS, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < frameVals.Length; i++)
@@ -96,7 +96,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.iFrameType.MS, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.iFrameType.MS, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 
 				Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
@@ -127,7 +127,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
 			{
-				m_reader.Get3DElutionProfile(startFrame - 20, startFrame + 20, 0, startScan - 20, startScan + 20, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+				m_reader.Get3DElutionProfile(startFrame - 20, startFrame + 20, 0, startScan - 20, startScan + 20, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
 			}
 
 			sw.Stop();
@@ -203,7 +203,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 			using (m_reader = new DataReader(new FileInfo(filePath)))
 			{
-				m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+				m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
 			}
             
             sw.Stop();
