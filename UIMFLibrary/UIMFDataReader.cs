@@ -53,21 +53,21 @@ namespace UIMFLibrary
 
         #region "Class-wide variables"
 
-            public SQLiteConnection m_uimfDatabaseConnection;
-            public SQLiteDataReader m_sqliteDataReader;
+            private SQLiteConnection m_uimfDatabaseConnection;
+			private SQLiteDataReader m_sqliteDataReader;
 
             // v1.2 prepared statements
-            public SQLiteCommand m_getCountPerSpectrumCommand;
-            public SQLiteCommand m_getCountPerFrameCommand;
-            public SQLiteCommand m_getFileBytesCommand;
-            public SQLiteCommand m_getFrameNumbers;
-            public SQLiteCommand m_getFrameParametersCommand;
-            public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
-            public SQLiteCommand m_getSpectrumCommand;
-            public SQLiteCommand m_sumVariableScansPerFrameCommand;
-            public SQLiteCommand m_preparedStatement;
+			private SQLiteCommand m_getCountPerSpectrumCommand;
+			private SQLiteCommand m_getCountPerFrameCommand;
+			private SQLiteCommand m_getFileBytesCommand;
+			private SQLiteCommand m_getFrameNumbers;
+			private SQLiteCommand m_getFrameParametersCommand;
+			private SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
+			private SQLiteCommand m_getSpectrumCommand;
+			private SQLiteCommand m_sumVariableScansPerFrameCommand;
+			private SQLiteCommand m_preparedStatement;
 
-			public MZ_Calibrator m_mzCalibration;
+			private MZ_Calibrator m_mzCalibration;
 			
 			private Dictionary<int, FrameParameters> m_frameParametersCache;
             private GlobalParameters m_globalParameters;
