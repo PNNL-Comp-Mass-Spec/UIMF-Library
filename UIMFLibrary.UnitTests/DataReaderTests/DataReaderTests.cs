@@ -28,7 +28,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				double[] mzArray;
 				int[] intensityArray;
 
-				int nonZeroCount = reader.GetSpectrum(frameNumber, scanNumber, out mzArray, out intensityArray);
+				int nonZeroCount = reader.GetSpectrum(frameNumber, DataReader.iFrameType.MS, scanNumber, out mzArray, out intensityArray);
 
 				Assert.AreEqual(nonZeroCount, intensityArray.Length);
 				Assert.AreEqual(692, nonZeroCount);
@@ -52,7 +52,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int[] bins;
 				int[] intensities;
 
-				int nonZeroCount = reader.GetSpectrumAsBins(frameNumber, scanNumber, out bins, out intensities);
+				int nonZeroCount = reader.GetSpectrumAsBins(frameNumber, DataReader.iFrameType.MS, scanNumber, out bins, out intensities);
 
 				Assert.AreEqual(nonZeroCount, intensities.Length);
 				Assert.AreEqual(692, nonZeroCount);
@@ -81,8 +81,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				double[] mzArray;
 				int[] intensityArray2;
 
-				int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, scanNumber, out binArray, out intensityArray1);
-				int nonZeroCount2 = reader.GetSpectrum(frameNumber, scanNumber, out mzArray, out intensityArray2);
+				int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, DataReader.iFrameType.MS, scanNumber, out binArray, out intensityArray1);
+				int nonZeroCount2 = reader.GetSpectrum(frameNumber, DataReader.iFrameType.MS, scanNumber, out mzArray, out intensityArray2);
 
 				GlobalParameters globalParameters = reader.GetGlobalParameters();
 				FrameParameters frameParameters = reader.GetFrameParameters(frameNumber);

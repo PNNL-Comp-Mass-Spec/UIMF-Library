@@ -64,8 +64,6 @@ namespace UIMFLibrary
             public SQLiteCommand m_getFrameParametersCommand;
             public SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
             public SQLiteCommand m_getSpectrumCommand;
-            public SQLiteCommand m_sumScansCommand;
-            public SQLiteCommand m_sumScansCachedCommand;
             public SQLiteCommand m_sumVariableScansPerFrameCommand;
             public SQLiteCommand m_preparedStatement;
 
@@ -958,14 +956,15 @@ namespace UIMFLibrary
 			}
 
 			// Now setup queries to retrieve data
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameParameters.FrameNum));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameParameters.FrameNum));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameParameters.FrameNum));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameParameters.FrameNum));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int) frameType));
 
 			byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 
-			using (m_sqliteDataReader = m_sumScansCommand.ExecuteReader())
+			using (m_sqliteDataReader = m_getSpectrumCommand.ExecuteReader())
 			{
 				while (m_sqliteDataReader.Read())
 				{
@@ -995,6 +994,8 @@ namespace UIMFLibrary
 					}
 				}
 			}
+
+			m_getSpectrumCommand.Parameters.Clear();
 
 			return intensities;
 		}
@@ -1189,19 +1190,20 @@ namespace UIMFLibrary
 				return -1;
 		}
 
-		/// <summary>
-		/// Extracts m/z values and intensities from given frame number and scan number.
-		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
-		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
-		/// </summary>
-		/// <param name="frameNumber">The frame number of the desired spectrum.</param>
-		/// <param name="scanNumber">The scan number of the desired spectrum.</param>
-		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
-		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
-		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
-		public int GetSpectrum(int frameNumber, int scanNumber, out double[] mzArray, out int[] intensityArray)
+    	/// <summary>
+    	/// Extracts m/z values and intensities from given frame number and scan number.
+    	/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+    	/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+    	/// </summary>
+    	/// <param name="frameNumber">The frame number of the desired spectrum.</param>
+    	/// <param name="frameType">The frame type to consider.</param>
+    	/// <param name="scanNumber">The scan number of the desired spectrum.</param>
+    	/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+    	/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+    	/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+    	public int GetSpectrum(int frameNumber, iFrameType frameType, int scanNumber, out double[] mzArray, out int[] intensityArray)
 		{
-			return GetSpectrum(frameNumber, frameNumber, scanNumber, scanNumber, out mzArray, out intensityArray);
+			return GetSpectrum(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out mzArray, out intensityArray);
 		}
 
 		/// <summary>
@@ -1212,17 +1214,19 @@ namespace UIMFLibrary
 		/// </summary>
 		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
 		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
 		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
 		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
 		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
 		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
 		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
-		public int GetSpectrum(int startFrameNumber, int endFrameNumber, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
+		public int GetSpectrum(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
 		{
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
 
 			int nonZeroCount = 0;
 
@@ -1230,7 +1234,7 @@ namespace UIMFLibrary
 			mzArray = new double[m_globalParameters.Bins];
 			intensityArray = new int[m_globalParameters.Bins];
 
-			using (SQLiteDataReader reader = m_sumScansCommand.ExecuteReader())
+			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
 				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 
@@ -1273,7 +1277,7 @@ namespace UIMFLibrary
 				StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
 			}
 
-			m_sumScansCommand.Parameters.Clear();
+			m_getSpectrumCommand.Parameters.Clear();
 
 			return nonZeroCount;
 		}
@@ -1284,13 +1288,14 @@ namespace UIMFLibrary
 		/// The index of the bin number in binArray will match the index of the corresponding intensity value in intensityArray.
 		/// </summary>
 		/// <param name="frameNumber">The frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
 		/// <param name="scanNumber">The scan number of the desired spectrum.</param>
 		/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
 		/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
 		/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-		public int GetSpectrumAsBins(int frameNumber, int scanNumber, out int[] binArray, out int[] intensityArray)
+		public int GetSpectrumAsBins(int frameNumber, iFrameType frameType, int scanNumber, out int[] binArray, out int[] intensityArray)
 		{
-			return GetSpectrumAsBins(frameNumber, frameNumber, scanNumber, scanNumber, out binArray, out intensityArray);
+			return GetSpectrumAsBins(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out binArray, out intensityArray);
 		}
 
     	/// <summary>
@@ -1301,17 +1306,19 @@ namespace UIMFLibrary
     	/// </summary>
     	/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
 		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
     	/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
 		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
     	/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
     	/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
     	/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
+    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
 		{
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
 
 			int nonZeroCount = 0;
 
@@ -1319,7 +1326,7 @@ namespace UIMFLibrary
 			binArray = new int[m_globalParameters.Bins];
 			intensityArray = new int[m_globalParameters.Bins];
 
-			using (SQLiteDataReader reader = m_sumScansCommand.ExecuteReader())
+			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
 				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 				
@@ -1359,7 +1366,7 @@ namespace UIMFLibrary
 				StripZerosFromArrays(nonZeroCount, ref binArray, ref intensityArray);
 			}
 
-			m_sumScansCommand.Parameters.Clear();
+			m_getSpectrumCommand.Parameters.Clear();
 
 			return nonZeroCount;
 		}
@@ -1818,11 +1825,12 @@ namespace UIMFLibrary
 			}
 
 			//now setup queries to retrieve data (April 2011 Note: there is probably a better query method for this)
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
-			m_sumScansCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
-			SQLiteDataReader reader = m_sumScansCommand.ExecuteReader();
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
+			SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader();
 
 			byte[] spectra;
 			byte[] decomp_SpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
@@ -1962,16 +1970,8 @@ namespace UIMFLibrary
 			m_getFramesAndScanByDescendingIntensityCommand.CommandText = "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
 			m_getFramesAndScanByDescendingIntensityCommand.Prepare();
 
-			m_sumScansCommand = m_uimfDatabaseConnection.CreateCommand();
-			m_sumScansCommand.CommandText = "SELECT ScanNum, FrameNum,Intensities FROM Frame_Scans WHERE FrameNum >= :FrameNum1 AND FrameNum <= :FrameNum2 AND ScanNum >= :ScanNum1 AND ScanNum <= :ScanNum2";
-			m_sumScansCommand.Prepare();
-
-			m_sumScansCachedCommand = m_uimfDatabaseConnection.CreateCommand();
-			m_sumScansCachedCommand.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = :FrameNumORDER BY ScanNum ASC";
-			m_sumScansCachedCommand.Prepare();
-
 			m_getSpectrumCommand = m_uimfDatabaseConnection.CreateCommand();
-			m_getSpectrumCommand.CommandText = "SELECT Intensities FROM Frame_Scans WHERE FrameNum = :FrameNum AND ScanNum = :ScanNum";
+			m_getSpectrumCommand.CommandText = "SELECT FS.ScanNum, FS.FrameNum, FS.Intensities FROM Frame_Scans FS JOIN Frame_Parameters FP ON (FS.FrameNum = FP.FrameNum) WHERE FS.FrameNum >= :FrameNum1 AND FS.FrameNum <= :FrameNum2 AND FS.ScanNum >= :ScanNum1 AND FS.ScanNum <= :ScanNum2 AND FP.FrameType = :FrameType";
 			m_getSpectrumCommand.Prepare();
 
 			m_getCountPerSpectrumCommand = m_uimfDatabaseConnection.CreateCommand();
@@ -2219,12 +2219,6 @@ namespace UIMFLibrary
 
 			if (m_getSpectrumCommand != null)
 				m_getSpectrumCommand.Dispose();
-
-			if (m_sumScansCommand != null)
-				m_sumScansCommand.Dispose();
-
-			if (m_sumScansCachedCommand != null)
-				m_sumScansCachedCommand.Dispose();
 
 			if (m_sumVariableScansPerFrameCommand != null)
 				m_sumVariableScansPerFrameCommand.Dispose();
