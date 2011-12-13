@@ -83,7 +83,7 @@ namespace UIMFLibrary
 
 			public double TenthsOfNanoSecondsPerBin
 			{
-				get { return (double)(this.m_globalParameters.BinWidth * 10.0); }
+				get { return m_globalParameters.BinWidth * 10.0; }
 			}
 
         #endregion
@@ -104,7 +104,7 @@ namespace UIMFLibrary
 					m_uimfFilePath = uimfFileInfo.FullName;
 
 					// Populate the global parameters object
-					m_globalParameters = DataReader.GetGlobalParametersFromTable(m_uimfDatabaseConnection);
+					m_globalParameters = GetGlobalParametersFromTable(m_uimfDatabaseConnection);
 
 					// Initialize the frame parameters cache
 					m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
@@ -116,7 +116,7 @@ namespace UIMFLibrary
 				}
 				catch (Exception ex)
 				{
-					throw new Exception("Failed to open UIMF file: " + ex.ToString());
+					throw new Exception("Failed to open UIMF file: " + ex);
 				}
 			}
 			else
@@ -125,149 +125,148 @@ namespace UIMFLibrary
 			}
 		}
 
-		public int[][] AccumulateFrameData(int frameNumber, bool flag_TOF, int start_scan, int start_bin, int min_mzbin, int max_mzbin, int[][] frame_data, int y_compression)
+		public int[][] AccumulateFrameData(int frameNumber, bool flagTOF, int startScan, int startBin, int minMZBin, int maxMZBin, int[][] frameData, int yCompression)
 		{
-			int i;
+			int dataWidth = frameData.Length;
+			int dataHeight = frameData[0].Length;
 
-			int data_width = frame_data.Length;
-			int data_height = frame_data[0].Length;
+			byte[] compressedBinIntensity;
+			byte[] streamBinIntensity = new byte[m_globalParameters.Bins * 4];
+			int endBin;
 
-			byte[] compressed_BinIntensity;
-			byte[] stream_BinIntensity = new byte[this.m_globalParameters.Bins * 4];
-			int scans_data;
-			int index_current_bin;
-			int bin_data;
-			int int_BinIntensity;
-			int decompress_length;
-			int pixel_y = 0;
-			int current_scan;
-			int bin_value;
-			int end_bin;
-
-			if (y_compression > 0)
-				end_bin = start_bin + (data_height * y_compression);
-			else if (y_compression < 0)
-				end_bin = start_bin + data_height - 1;
+			if (yCompression > 0)
+			{
+				endBin = startBin + (dataHeight*yCompression);
+			}
+			else if (yCompression < 0)
+			{
+				endBin = startBin + dataHeight - 1;
+			}
 			else
 			{
 				throw new Exception("UIMFLibrary accumulate_PlotData: Compression == 0");
 			}
 
 			// Create a calibration lookup table -- for speed
-			this.m_calibrationTable = new double[data_height];
-			if (flag_TOF)
+			m_calibrationTable = new double[dataHeight];
+			if (flagTOF)
 			{
-				for (i = 0; i < data_height; i++)
-					this.m_calibrationTable[i] = start_bin + ((double)i * (double)(end_bin - start_bin) / (double)data_height);
+				for (int i = 0; i < dataHeight; i++)
+				{
+					m_calibrationTable[i] = startBin + (i * (double) (endBin - startBin) / dataHeight);
+				}
 			}
 			else
 			{
-				double mz_min = (double)this.m_mzCalibration.TOFtoMZ((float)((start_bin / this.m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
-				double mz_max = (double)this.m_mzCalibration.TOFtoMZ((float)((end_bin / this.m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+				double mzMin = m_mzCalibration.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+				double mzMax = m_mzCalibration.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
 
-				for (i = 0; i < data_height; i++)
-					this.m_calibrationTable[i] = (double)this.m_mzCalibration.MZtoTOF(mz_min + ((double)i * (mz_max - mz_min) / (double)data_height)) * this.m_globalParameters.BinWidth / (double)TenthsOfNanoSecondsPerBin;
+				for (int i = 0; i < dataHeight; i++)
+				{
+					m_calibrationTable[i] = m_mzCalibration.MZtoTOF(mzMin + (i*(mzMax - mzMin)/dataHeight))*m_globalParameters.BinWidth/TenthsOfNanoSecondsPerBin;
+				}
 			}
 
 			// This function extracts intensities from selected scans and bins in a single frame 
 			// and returns a two-dimetional array intensities[scan][bin]
 			// frameNum is mandatory and all other arguments are optional
-			this.m_preparedStatement = this.m_uimfDatabaseConnection.CreateCommand();
-			this.m_preparedStatement.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = " + frameNumber.ToString() + " AND ScanNum >= " + start_scan.ToString() + " AND ScanNum <= " + (start_scan + data_width - 1).ToString();
+			m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
+			m_preparedStatement.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = " + frameNumber + " AND ScanNum >= " + startScan + " AND ScanNum <= " + (startScan + dataWidth - 1);
 
-			this.m_sqliteDataReader = this.m_preparedStatement.ExecuteReader();
-			this.m_preparedStatement.Dispose();
+			m_sqliteDataReader = m_preparedStatement.ExecuteReader();
+			m_preparedStatement.Dispose();
 
 			// accumulate the data into the plot_data
-			if (y_compression < 0)
+			if (yCompression < 0)
 			{
-				pixel_y = 1;
-
 				//MessageBox.Show(start_bin.ToString() + " " + end_bin.ToString());
 
-				for (scans_data = 0; ((scans_data < data_width) && this.m_sqliteDataReader.Read()); scans_data++)
+				for (int scansData = 0; ((scansData < dataWidth) && m_sqliteDataReader.Read()); scansData++)
 				{
-					current_scan = Convert.ToInt32(this.m_sqliteDataReader["ScanNum"]) - start_scan;
-					compressed_BinIntensity = (byte[])(this.m_sqliteDataReader["Intensities"]);
+					int currentScan = Convert.ToInt32(m_sqliteDataReader["ScanNum"]) - startScan;
+					compressedBinIntensity = (byte[])(m_sqliteDataReader["Intensities"]);
 
-					if (compressed_BinIntensity.Length == 0)
+					if (compressedBinIntensity.Length == 0)
 						continue;
 
-					index_current_bin = 0;
-					decompress_length = UIMFLibrary.IMSCOMP_wrapper.decompress_lzf(ref compressed_BinIntensity, compressed_BinIntensity.Length, ref stream_BinIntensity, this.m_globalParameters.Bins * 4);
+					int indexCurrentBin = 0;
+					int decompressLength = IMSCOMP_wrapper.decompress_lzf(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
 
-					for (bin_data = 0; (bin_data < decompress_length) && (index_current_bin <= end_bin); bin_data += 4)
+					for (int binData = 0; (binData < decompressLength) && (indexCurrentBin <= endBin); binData += 4)
 					{
-						int_BinIntensity = BitConverter.ToInt32(stream_BinIntensity, bin_data);
+						int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binData);
 
-						if (int_BinIntensity < 0)
+						if (intBinIntensity < 0)
 						{
-							index_current_bin += -int_BinIntensity;   // concurrent zeros
+							indexCurrentBin += -intBinIntensity;   // concurrent zeros
 						}
-						else if ((index_current_bin < min_mzbin) || (index_current_bin < start_bin))
-							index_current_bin++;
-						else if (index_current_bin > max_mzbin)
+						else if ((indexCurrentBin < minMZBin) || (indexCurrentBin < startBin))
+							indexCurrentBin++;
+						else if (indexCurrentBin > maxMZBin)
 							break;
 						else
 						{
-							frame_data[current_scan][index_current_bin - start_bin] += int_BinIntensity;
-							index_current_bin++;
+							frameData[currentScan][indexCurrentBin - startBin] += intBinIntensity;
+							indexCurrentBin++;
 						}
 					}
 				}
 			}
 			else    // each pixel accumulates more than 1 bin of data
 			{
-				for (scans_data = 0; ((scans_data < data_width) && this.m_sqliteDataReader.Read()); scans_data++)
+				for (int scansData = 0; ((scansData < dataWidth) && m_sqliteDataReader.Read()); scansData++)
 				{
-					current_scan = Convert.ToInt32(this.m_sqliteDataReader["ScanNum"]) - start_scan;
+					int currentScan = Convert.ToInt32(m_sqliteDataReader["ScanNum"]) - startScan;
 					// if (current_scan >= data_width)
 					//     break;
 
-					compressed_BinIntensity = (byte[])(this.m_sqliteDataReader["Intensities"]);
+					compressedBinIntensity = (byte[])(m_sqliteDataReader["Intensities"]);
 
-					if (compressed_BinIntensity.Length == 0)
+					if (compressedBinIntensity.Length == 0)
 						continue;
 
-					index_current_bin = 0;
-					decompress_length = UIMFLibrary.IMSCOMP_wrapper.decompress_lzf(ref compressed_BinIntensity, compressed_BinIntensity.Length, ref stream_BinIntensity, this.m_globalParameters.Bins * 4);
+					int indexCurrentBin = 0;
+					int decompressLength = IMSCOMP_wrapper.decompress_lzf(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
 
-					pixel_y = 1;
+					int pixelY = 1;
 
-					double calibrated_bin = 0;
-					for (bin_value = 0; (bin_value < decompress_length) && (index_current_bin < end_bin); bin_value += 4)
+					for (int binValue = 0; (binValue < decompressLength) && (indexCurrentBin < endBin); binValue += 4)
 					{
-						int_BinIntensity = BitConverter.ToInt32(stream_BinIntensity, bin_value);
+						int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
 
-						if (int_BinIntensity < 0)
+						if (intBinIntensity < 0)
 						{
-							index_current_bin += -int_BinIntensity; // concurrent zeros
+							indexCurrentBin += -intBinIntensity; // concurrent zeros
 						}
-						else if ((index_current_bin < min_mzbin) || (index_current_bin < start_bin))
-							index_current_bin++;
-						else if (index_current_bin > max_mzbin)
+						else if ((indexCurrentBin < minMZBin) || (indexCurrentBin < startBin))
+						{
+							indexCurrentBin++;
+						}
+						else if (indexCurrentBin > maxMZBin)
+						{
 							break;
+						}
 						else
 						{
-							calibrated_bin = (double)index_current_bin;
+							double calibratedBin = indexCurrentBin;
 
-							for (i = pixel_y; i < data_height; i++)
+							for (int i = pixelY; i < dataHeight; i++)
 							{
-								if (m_calibrationTable[i] > calibrated_bin)
+								if (m_calibrationTable[i] > calibratedBin)
 								{
-									pixel_y = i;
-									frame_data[current_scan][pixel_y] += int_BinIntensity;
+									pixelY = i;
+									frameData[currentScan][pixelY] += intBinIntensity;
 									break;
 								}
 							}
-							index_current_bin++;
+							indexCurrentBin++;
 						}
 					}
 				}
 			}
 
-			this.m_sqliteDataReader.Close();
-			return frame_data;
+			m_sqliteDataReader.Close();
+			return frameData;
 		}
 
         /// <summary>
@@ -289,7 +288,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public bool CloneUIMF(string sTargetDBPath, List<string> sTablesToSkipCopyingData)
         {
-            List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy = new List<DataReader.iFrameType> {iFrameType.Calibration, iFrameType.Prescan};
+            List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy = new List<iFrameType> {iFrameType.Calibration, iFrameType.Prescan};
         	return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData, eFrameScanFrameTypeDataToAlwaysCopy);
         }
 
