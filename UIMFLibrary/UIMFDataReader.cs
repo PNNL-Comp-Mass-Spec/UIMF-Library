@@ -698,20 +698,21 @@ namespace UIMFLibrary
         /// <returns></returns>
         public int[] GetFrameNumbers(iFrameType frameType)
         {
-			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
-			dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
-			dbCmd.Prepare();
-			SQLiteDataReader reader = dbCmd.ExecuteReader();
-
 			List<int> frameNumberList = new List<int>();
 
-			while (reader.Read())
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				frameNumberList.Add(Convert.ToInt32(reader["FrameNum"]));
+				dbCmd.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) frameType));
+				dbCmd.Prepare();
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						frameNumberList.Add(Convert.ToInt32(reader["FrameNum"]));
+					}
+				}
 			}
-
-			Dispose(dbCmd, reader);
 
         	return frameNumberList.ToArray();
         }
@@ -1004,71 +1005,73 @@ namespace UIMFLibrary
 			}
 		}
 
-        public SortedList<int, udtLogEntryType> GetLogEntries(string EntryType, string PostedBy)
+        public SortedList<int, udtLogEntryType> GetLogEntries(string entryType, string postedBy)
         {
             SortedList<int, udtLogEntryType> lstLogEntries = new SortedList<int, udtLogEntryType>();
 
             if (TableExists("Log_Entries"))
             {
-                
-                SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-                
-                string sSql = "SELECT Entry_ID, Posted_By, Posting_Time, Type, Message FROM Log_Entries";
-                string sWhere = String.Empty;
-
-                if (!String.IsNullOrEmpty(EntryType))
-                    sWhere = "WHERE Type = '" + EntryType + "'";
-
-                if (!String.IsNullOrEmpty(PostedBy))
-                {
-					if (sWhere.Length == 0)
-					{
-						sWhere = "WHERE";
-					}
-					else
-					{
-						sWhere += " AND";
-					}
-
-                	sWhere += " Posted_By = '" + PostedBy + "'";
-                }
-
-				if (sWhere.Length > 0)
+				using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 				{
-					sSql += " " + sWhere;
+
+					string sSql = "SELECT Entry_ID, Posted_By, Posting_Time, Type, Message FROM Log_Entries";
+					string sWhere = String.Empty;
+
+					if (!String.IsNullOrEmpty(entryType))
+					{
+						sWhere = "WHERE Type = '" + entryType + "'";
+					}
+
+					if (!String.IsNullOrEmpty(postedBy))
+					{
+						if (sWhere.Length == 0)
+						{
+							sWhere = "WHERE";
+						}
+						else
+						{
+							sWhere += " AND";
+						}
+
+						sWhere += " Posted_By = '" + postedBy + "'";
+					}
+
+					if (sWhere.Length > 0)
+					{
+						sSql += " " + sWhere;
+					}
+
+					sSql += " ORDER BY Entry_ID;";
+
+					dbCmd.CommandText = sSql;
+
+					using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+					{
+						while (reader.Read())
+						{
+							try
+							{
+								udtLogEntryType udtLogEntry = new udtLogEntryType();
+
+								int iEntryID = Convert.ToInt32(reader["Entry_ID"]);
+								udtLogEntry.Posted_By = Convert.ToString(reader["Posted_By"]);
+
+								string sPostingTime = Convert.ToString(reader["Posting_Time"]);
+								DateTime.TryParse(sPostingTime, out udtLogEntry.Posting_Time);
+
+								udtLogEntry.Type = Convert.ToString(reader["Type"]);
+								udtLogEntry.Message = Convert.ToString(reader["Message"]);
+
+								lstLogEntries.Add(iEntryID, udtLogEntry);
+
+							}
+							catch (Exception ex)
+							{
+								throw new Exception("Failed to get global parameters " + ex.ToString());
+							}
+						}
+					}
 				}
-
-            	sSql += " ORDER BY Entry_ID;";
-
-                dbCmd.CommandText = sSql;
-
-                SQLiteDataReader reader = dbCmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    try
-                    {
-                        udtLogEntryType udtLogEntry = new udtLogEntryType();
-                        
-                        int iEntryID = Convert.ToInt32(reader["Entry_ID"]);
-                        udtLogEntry.Posted_By = Convert.ToString(reader["Posted_By"]);
-                        
-                        string sPostingTime = Convert.ToString(reader["Posting_Time"]);
-                        DateTime.TryParse(sPostingTime, out udtLogEntry.Posting_Time);                    
-
-                        udtLogEntry.Type = Convert.ToString(reader["Type"]);
-                        udtLogEntry.Message = Convert.ToString(reader["Message"]);
-
-                        lstLogEntries.Add(iEntryID, udtLogEntry);
-                     
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Failed to get global parameters " + ex.ToString());
-                    }
-                }
-
-                dbCmd.Dispose();
-                reader.Close();
             }
 
             return lstLogEntries;
@@ -1080,22 +1083,23 @@ namespace UIMFLibrary
         /// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
 		public Dictionary<int, iFrameType> GetMasterFrameList()
         {
-			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
-			dbCmd.Prepare();
-			SQLiteDataReader reader = dbCmd.ExecuteReader();
-
 			Dictionary<int, iFrameType> masterFrameDictionary = new Dictionary<int, iFrameType>();
 
-        	while (reader.Read())
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				int frameNumber = Convert.ToInt32(reader["FrameNum"]);
-				int frameType = Convert.ToInt32(reader["FrameType"]);
+				dbCmd.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
+				dbCmd.Prepare();
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
+						int frameType = Convert.ToInt32(reader["FrameType"]);
 
-				masterFrameDictionary.Add(frameNumber, (iFrameType)frameType);
+						masterFrameDictionary.Add(frameNumber, (iFrameType) frameType);
+					}
+				}
 			}
-
-			Dispose(dbCmd, reader);
 
         	return masterFrameDictionary;
         }
@@ -1107,19 +1111,20 @@ namespace UIMFLibrary
         /// <returns></returns>
         public short GetMSLevelForFrame(int frameNumber)
         {
-			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT FrameType FROM Frame_Parameters WHERE FrameNum = :FrameNumber";
-			dbCmd.Parameters.Add(new SQLiteParameter("FrameNumber", frameNumber));
-			SQLiteDataReader reader = dbCmd.ExecuteReader();
+			int frameType = -1;
 
-			int frameType = 0;
-
-			if (reader.Read())
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				frameType = Convert.ToInt32(reader["FrameType"]);
+				dbCmd.CommandText = "SELECT FrameType FROM Frame_Parameters WHERE FrameNum = :FrameNumber";
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameNumber", frameNumber));
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					if (reader.Read())
+					{
+						frameType = Convert.ToInt32(reader["FrameType"]);
+					}
+				}
 			}
-
-			Dispose(dbCmd, reader);
 
 			switch(frameType)
 			{
@@ -1139,20 +1144,21 @@ namespace UIMFLibrary
 		/// <returns></returns>
 		public int GetNumberOfFrames(iFrameType frameType)
 		{
-			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
-			dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameType));
-			dbCmd.Prepare();
-			SQLiteDataReader reader = dbCmd.ExecuteReader();
-
 			int count = 0;
 
-			if (reader.Read())
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				count = Convert.ToInt32(reader["FrameCount"]);
+				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameType));
+				dbCmd.Prepare();
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					if (reader.Read())
+					{
+						count = Convert.ToInt32(reader["FrameCount"]);
+					}
+				}
 			}
-
-			Dispose(dbCmd, reader);
 
 			return count;
 		}
@@ -1398,16 +1404,18 @@ namespace UIMFLibrary
         {
             double tic = 0;
 
-            SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT TIC FROM Frame_Scans WHERE FrameNum = " + frameNumber + " AND ScanNum = " + scanNum;
-            SQLiteDataReader reader = dbCmd.ExecuteReader();
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
+			{
+				dbCmd.CommandText = "SELECT TIC FROM Frame_Scans WHERE FrameNum = " + frameNumber + " AND ScanNum = " + scanNum;
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					if (reader.Read())
+					{
+						tic = Convert.ToDouble(reader["TIC"]);
+					}
+				}
+			}
 
-            if (reader.Read())
-            {
-                tic = Convert.ToDouble(reader["TIC"]);
-            }
-
-            Dispose(dbCmd, reader);
             return tic;
         }
 
@@ -1417,20 +1425,21 @@ namespace UIMFLibrary
         /// <returns>True if MSMS frames are present</returns>
         public bool HasMSMSData()
         {
-			SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-			dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
-			dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int)iFrameType.Fragmentation));
-			dbCmd.Prepare();
-			SQLiteDataReader reader = dbCmd.ExecuteReader();
-
 			int count = 0;
 
-			if (reader.Read())
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				count = Convert.ToInt32(reader["FrameCount"]);
+				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) iFrameType.Fragmentation));
+				dbCmd.Prepare();
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					if (reader.Read())
+					{
+						count = Convert.ToInt32(reader["FrameCount"]);
+					}
+				}
 			}
-
-			Dispose(dbCmd, reader);
 
         	return count > 0;
         }
@@ -1453,56 +1462,59 @@ namespace UIMFLibrary
         {
             bool bIsCalibrated = false;
 
-      
-            SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand();
-            dbCmd.CommandText = "SELECT FrameType, COUNT(*)  AS FrameCount, SUM(IFNULL(CalibrationDone, 0)) AS FramesCalibrated " +
-                                "FROM frame_parameters " +
-                                "GROUP BY FrameType;";
-            SQLiteDataReader reader = dbCmd.ExecuteReader();
+			int iFrameTypeCount = -1;
+			int iFrameTypeCountCalibrated = -2;
 
-        	int iFrameTypeCount = 0;
-            int iFrameTypeCountCalibrated = 0;
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
+			{
+				dbCmd.CommandText = "SELECT FrameType, COUNT(*)  AS FrameCount, SUM(IFNULL(CalibrationDone, 0)) AS FramesCalibrated " +
+				                    "FROM frame_parameters " +
+				                    "GROUP BY FrameType;";
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						int iFrameType = -1;
+						try
+						{
+							iFrameType = Convert.ToInt32(reader[0]);
+							int iFrameCount = Convert.ToInt32(reader[1]);
+							int iCalibratedFrameCount = Convert.ToInt32(reader[2]);
 
-            while (reader.Read())
-            {
-            	int iFrameType = -1;
-            	try
-                {
-                    iFrameType = Convert.ToInt32(reader[0]);
-                    int iFrameCount = Convert.ToInt32(reader[1]);
-                    int iCalibratedFrameCount = Convert.ToInt32(reader[2]);
+							if (iMaxFrameTypeToExamine < 0 || iFrameType <= (int) iMaxFrameTypeToExamine)
+							{
+								iFrameTypeCount += 1;
+								if (iFrameCount == iCalibratedFrameCount)
+									iFrameTypeCountCalibrated += 1;
+							}
 
-                    if (iMaxFrameTypeToExamine < 0 || iFrameType <= (int)iMaxFrameTypeToExamine)
-                    {
-                        iFrameTypeCount += 1;
-                        if (iFrameCount == iCalibratedFrameCount)
-                            iFrameTypeCountCalibrated += 1;
-                    }
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine("Exception determing if all frames are calibrated; error occurred with FrameType " + iFrameType + ": " + ex.Message);
+						}
+					}
+				}
+			}
 
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception determing if all frames are calibrated; error occurred with FrameType " + iFrameType + ": " + ex.Message);
-                }
-            }
-        	Dispose(dbCmd, reader);
+			if (iFrameTypeCount == iFrameTypeCountCalibrated)
+			{
+				bIsCalibrated = true;
+			}
 
-            if (iFrameTypeCount == iFrameTypeCountCalibrated)
-                bIsCalibrated = true;
-
-            return bIsCalibrated;
+        	return bIsCalibrated;
         }
 
 		/// <summary>
 		/// Post a new log entry to table Log_Entries
 		/// </summary>
-		/// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
-		/// <param name="Message">Log message</param>
-		/// <param name="PostedBy">Process or application posting the log message</param>
+		/// <param name="entryType">Log entry type (typically Normal, Error, or Warning)</param>
+		/// <param name="message">Log message</param>
+		/// <param name="postedBy">Process or application posting the log message</param>
 		/// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
-		public void PostLogEntry(string EntryType, string Message, string PostedBy)
+		public void PostLogEntry(string entryType, string message, string postedBy)
 		{
-			DataWriter.PostLogEntry(m_uimfDatabaseConnection, EntryType, Message, PostedBy);
+			DataWriter.PostLogEntry(m_uimfDatabaseConnection, entryType, message, postedBy);
 		}
 
 		public void ResetFrameParameters()
@@ -1517,13 +1529,14 @@ namespace UIMFLibrary
 
         public static bool TableExists(SQLiteConnection oConnection, string tableName)
         {
-        	SQLiteCommand cmd = new SQLiteCommand(oConnection) {CommandText = "SELECT name FROM sqlite_master WHERE type='table' And name = '" + tableName + "'"};
+			bool hasRows;
 
-        	bool hasRows;
-
-			using (SQLiteDataReader rdr = cmd.ExecuteReader())
+			using (SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "SELECT name FROM sqlite_master WHERE type='table' And name = '" + tableName + "'" })
 			{
-				hasRows = rdr.HasRows;
+				using (SQLiteDataReader rdr = cmd.ExecuteReader())
+				{
+					hasRows = rdr.HasRows;
+				}
 			}
 
         	return hasRows;
@@ -1536,13 +1549,14 @@ namespace UIMFLibrary
 
         public static bool TableHasColumn(SQLiteConnection oConnection, string tableName, string columnName)
         {
-        	SQLiteCommand cmd = new SQLiteCommand(oConnection) {CommandText = "Select * From '" + tableName + "' Limit 1;"};
+			bool hasColumn;
 
-        	bool hasColumn;
-
-			using (SQLiteDataReader rdr = cmd.ExecuteReader())
+			using (SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "Select * From '" + tableName + "' Limit 1;" })
 			{
-				hasColumn = rdr.GetOrdinal(columnName) >= 0;
+				using (SQLiteDataReader rdr = cmd.ExecuteReader())
+				{
+					hasColumn = rdr.GetOrdinal(columnName) >= 0;
+				}
 			}
 
         	return hasColumn;
@@ -1693,13 +1707,6 @@ namespace UIMFLibrary
 			{
 				Console.WriteLine("Exception determining whether pressure columns are in milliTorr: " + ex.Message);
 			}
-		}
-
-		private static void Dispose(SQLiteCommand cmd, SQLiteDataReader reader)
-		{
-			cmd.Dispose();
-			reader.Dispose();
-			reader.Close();
 		}
 
 		/// <summary>
@@ -1861,18 +1868,19 @@ namespace UIMFLibrary
 
 			sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
-			SQLiteCommand dbcmdUIMF = m_uimfDatabaseConnection.CreateCommand();
-			dbcmdUIMF.CommandText = sql;
-			SQLiteDataReader reader = dbcmdUIMF.ExecuteReader();
-
-			int ncount = 0;
-			while (reader.Read())
+			using (SQLiteCommand dbcmdUIMF = m_uimfDatabaseConnection.CreateCommand())
 			{
-				data[ncount] = Convert.ToDouble(reader["Value"]);
-				ncount++;
+				dbcmdUIMF.CommandText = sql;
+				using (SQLiteDataReader reader = dbcmdUIMF.ExecuteReader())
+				{
+					int ncount = 0;
+					while (reader.Read())
+					{
+						data[ncount] = Convert.ToDouble(reader["Value"]);
+						ncount++;
+					}
+				}
 			}
-
-			Dispose(dbcmdUIMF, reader);
 		}
 
 		private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)
