@@ -537,15 +537,14 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts BPI from startFrame to endFrame and startScan to endScan and returns an array
         /// </summary>
-        /// <param name="bpi"></param>
         /// <param name="frameType"></param>
         /// <param name="startFrameNumber"></param>
         /// <param name="endFrameNumber"></param>
         /// <param name="startScan"></param>
         /// <param name="endScan"></param>
-        public void GetBPI(double[] bpi, iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+        public double[] GetBPI(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
-            GetTICorBPI(bpi, frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
+            return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
         }
 
         public List<string> GetCalibrationTableNames()
@@ -1354,42 +1353,17 @@ namespace UIMFLibrary
 			return nonZeroCount;
 		}
 
-        /// <summary>
-        /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns an array
-        /// </summary>
-        /// <param name="tic"></param>
-        /// <param name="frameType"></param>
-        /// <param name="startFrameNumber"></param>
-        /// <param name="endFrameNumber"></param>
-        /// <param name="startScan"></param>
-        /// <param name="endScan"></param>
-        public void GetTIC(double[] tic, iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+    	/// <summary>
+    	/// Extracts TIC from startFrame to endFrame and startScan to endScan and returns an array
+    	/// </summary>
+    	/// <param name="frameType"></param>
+    	/// <param name="startFrameNumber"></param>
+    	/// <param name="endFrameNumber"></param>
+    	/// <param name="startScan"></param>
+    	/// <param name="endScan"></param>
+    	public double[] GetTIC(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
-            GetTICorBPI(tic, frameType, startFrameNumber, endFrameNumber, startScan, endScan, TIC);
-        }
-
-        /// <summary>
-        /// Extracts a TIC for all frames of the specified frame type
-        /// </summary>
-        /// <param name="TIC"></param>
-        /// <param name="frameType"></param>
-		public void GetTIC(double[] TIC, iFrameType frameType)
-        {
-			int endFrameNumber = GetNumberOfFrames(frameType);
-			GetTIC(TIC, frameType, 0, endFrameNumber);
-        }
-
-        /// <summary>
-        /// Extracts TIC from startFrame to endFrame and returns an array
-        /// </summary>
-        /// <param name="TIC"></param>
-        /// <param name="frameType"></param>
-        /// <param name="startFrameNumber"></param>
-        /// <param name="endFrameNumber"></param>
-		public void GetTIC(double[] TIC, iFrameType frameType, int startFrameNumber, int endFrameNumber)
-        {
-            // Sending startScan = 0 and endScan = 0 to GetTIC will disable filtering by scan
-            GetTIC(TIC, frameType, startFrameNumber, endFrameNumber, 0, 0);
+            return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, TIC);
         }
 
         /// <summary>
@@ -1829,32 +1803,29 @@ namespace UIMFLibrary
 		/// Get TIC or BPI for scans of given frame type in given frame range
 		/// Optionally filter on scan range
 		/// </summary>
-		/// <param name="data"></param>
 		/// <param name="frameType"></param>
 		/// <param name="startFrameNumber"></param>
 		/// <param name="endFrameNumber"></param>
 		/// <param name="startScan"></param>
 		/// <param name="endScan"></param>
 		/// <param name="fieldName"></param>
-		private void GetTICorBPI(double[] data, iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName)
+		private double[] GetTicOrBpi(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName)
 		{
 			// Make sure endFrame is valid
 			if (endFrameNumber < startFrameNumber)
+			{
 				endFrameNumber = startFrameNumber;
+			}
 
 			// Compute the number of frames to be returned
 			int nframes = endFrameNumber - startFrameNumber + 1;
 
-			// Make sure TIC is initialized
-			if (data == null || data.Length < nframes)
-			{
-				data = new double[nframes];
-			}
+			double[] data = new double[nframes];
 
 			// Construct the SQL
 			string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value " +
 						 " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum " +
-						 " WHERE Frame_Parameters.FrameType = " + frameType + " AND " +
+						 " WHERE Frame_Parameters.FrameType = " + (int)frameType + " AND " +
 							   " Frame_Parameters.FrameNum >= " + startFrameNumber + " AND " +
 							   " Frame_Parameters.FrameNum <= " + endFrameNumber;
 
@@ -1879,6 +1850,8 @@ namespace UIMFLibrary
 					}
 				}
 			}
+
+			return data;
 		}
 
 		private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)
