@@ -1627,32 +1627,6 @@ namespace UIMFLibrary
 			return bin + binCorrection;
 		}
 
-		private int GetCountPerSpectrum(int frameNumber, int scanNumber)
-		{
-			int countPerSpectrum = 0;
-			m_getCountPerSpectrumCommand.Parameters.Add(new SQLiteParameter(":FrameNum", frameNumber));
-			m_getCountPerSpectrumCommand.Parameters.Add(new SQLiteParameter(":ScanNum", scanNumber));
-
-			try
-			{
-
-				SQLiteDataReader reader = m_getCountPerSpectrumCommand.ExecuteReader();
-				while (reader.Read())
-				{
-					countPerSpectrum = Convert.ToInt32(reader[0]);
-				}
-				m_getCountPerSpectrumCommand.Parameters.Clear();
-				reader.Dispose();
-				reader.Close();
-			}
-			catch
-			{
-				countPerSpectrum = 1;
-			}
-
-			return countPerSpectrum;
-		}
-
 		private int[][][] GetIntensityBlock(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, int startBin, int endBin)
 		{
 			if (startBin < 0)
