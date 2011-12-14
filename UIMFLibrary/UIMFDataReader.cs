@@ -308,9 +308,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="sTargetDBPath"></param>
         /// <returns>True if success, false if a problem</returns>
-        public bool CloneUIMF(string sTargetDBPath, 
-                              List<string> sTablesToSkipCopyingData, 
-                              List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
+        public bool CloneUIMF(string sTargetDBPath, List<string> sTablesToSkipCopyingData, List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
         {
             string sCurrentTable = string.Empty;
 
@@ -342,31 +340,25 @@ namespace UIMFLibrary
                     SQLiteCommand cmdTargetDB = cnTargetDB.CreateCommand();
                         
                     // Create each table
-                    Dictionary<string, string>.Enumerator dctEnum;
+					foreach (KeyValuePair<string, string> kvp in dctTableInfo)
+                	{
+						if (!String.IsNullOrEmpty(kvp.Value))
+						{
+							sCurrentTable = string.Copy(kvp.Key);
+							cmdTargetDB.CommandText = kvp.Value;
+							cmdTargetDB.ExecuteNonQuery();
+						}
+                	}
 
-                    dctEnum = dctTableInfo.GetEnumerator();
-                    while (dctEnum.MoveNext())
-                    {
-                        if (!String.IsNullOrEmpty(dctEnum.Current.Value))
-                        {
-                            sCurrentTable = string.Copy(dctEnum.Current.Key);
-                            cmdTargetDB.CommandText = dctEnum.Current.Value;
-                            cmdTargetDB.ExecuteNonQuery();
-                        }
-                    }
-                    
-                    // Create each index
-                    dctEnum = dctIndexInfo.GetEnumerator();
-                    while (dctEnum.MoveNext())
-                    {
-                        if (!String.IsNullOrEmpty(dctEnum.Current.Value))
-                        {
-                            sCurrentTable = dctEnum.Current.Key + " (create index)";
-                            cmdTargetDB.CommandText = dctEnum.Current.Value;
-                            cmdTargetDB.ExecuteNonQuery();
-                        }
-                    }
-
+					foreach (KeyValuePair<string, string> kvp in dctIndexInfo)
+					{
+						if (!String.IsNullOrEmpty(kvp.Value))
+						{
+							sCurrentTable = kvp.Key + " (create index)";
+							cmdTargetDB.CommandText = kvp.Value;
+							cmdTargetDB.ExecuteNonQuery();
+						}
+					}
 
                     try
                     {
@@ -379,11 +371,9 @@ namespace UIMFLibrary
                         cmdTargetDB.ExecuteNonQuery();
 
                         // Populate each table
-                        dctEnum = dctTableInfo.GetEnumerator();
-
-                        while (dctEnum.MoveNext())
-                        {
-                            sCurrentTable = string.Copy(dctEnum.Current.Key);
+						foreach (KeyValuePair<string, string> kvp in dctTableInfo)
+						{
+							sCurrentTable = string.Copy(kvp.Key);
 
                             if (!sTablesToSkipCopyingData.Contains(sCurrentTable))
                             {
