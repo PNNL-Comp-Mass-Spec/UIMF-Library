@@ -503,7 +503,7 @@ namespace UIMFLibrary
             }
             catch (Exception ex)
             {
-                throw new Exception("Exception finding calibration table names: " + ex.ToString());
+                throw new Exception("Exception finding calibration table names: " + ex);
             }
 
             return calibrationTableNames;
@@ -691,13 +691,12 @@ namespace UIMFLibrary
 			return fp;
 		}
 
-        //TODO:  verify that we are getting the pressure from the correct column
         /// <summary>
         /// Returns the key frame pressure value that is used in the calculation of drift time 
         /// </summary>
-        /// <param name="frame_index"></param>
+        /// <param name="frameIndex"></param>
         /// <returns>Frame pressure used in drift time calc</returns>
-        public double GetFramePressureForCalculationOfDriftTime(int frame_index)
+        public double GetFramePressureForCalculationOfDriftTime(int frameIndex)
         {
 
             /*
@@ -710,7 +709,7 @@ namespace UIMFLibrary
              * look for newer columns and use these values. 
              */
 
-            FrameParameters fp = GetFrameParameters(frame_index);
+            FrameParameters fp = GetFrameParameters(frameIndex);
             double pressure = fp.PressureBack;
 
             if (Math.Abs(pressure - 0) < float.Epsilon) pressure = fp.RearIonFunnelPressure;
@@ -1104,10 +1103,8 @@ namespace UIMFLibrary
 			{
 				return m_calibrationTable[bin];
 			}
-			else
-			{
-				return -1;
-			}
+
+			return -1;
 		}
 
     	/// <summary>
@@ -1978,7 +1975,7 @@ namespace UIMFLibrary
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Failed to access frame parameters table " + ex.ToString());
+				throw new Exception("Failed to access frame parameters table " + ex);
 			}
 		}
 
@@ -2002,20 +1999,20 @@ namespace UIMFLibrary
 			yDataArray = yArrayList.ToArray();
 		}
 
-		private static double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue)
+		private static double TryGetFrameParam(SQLiteDataReader reader, string columnName, double defaultValue)
 		{
 			bool columnMissing;
-			return TryGetFrameParam(reader, ColumnName, DefaultValue, out columnMissing);
+			return TryGetFrameParam(reader, columnName, defaultValue, out columnMissing);
 		}
 
-		private static double TryGetFrameParam(SQLiteDataReader reader, string ColumnName, double DefaultValue, out bool columnMissing)
+		private static double TryGetFrameParam(SQLiteDataReader reader, string columnName, double defaultValue, out bool columnMissing)
 		{
-			double result = DefaultValue;
+			double result = defaultValue;
 			columnMissing = false;
 
 			try
 			{
-				result = !DBNull.Value.Equals(reader[ColumnName]) ? Convert.ToDouble(reader[ColumnName]) : DefaultValue;
+				result = !DBNull.Value.Equals(reader[columnName]) ? Convert.ToDouble(reader[columnName]) : defaultValue;
 			}
 			catch (IndexOutOfRangeException)
 			{
@@ -2025,20 +2022,20 @@ namespace UIMFLibrary
 			return result;
 		}
 
-		private static int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue)
+		private static int TryGetFrameParamInt32(SQLiteDataReader reader, string columnName, int defaultValue)
 		{
 			bool columnMissing;
-			return TryGetFrameParamInt32(reader, ColumnName, DefaultValue, out columnMissing);
+			return TryGetFrameParamInt32(reader, columnName, defaultValue, out columnMissing);
 		}
 
-		private static int TryGetFrameParamInt32(SQLiteDataReader reader, string ColumnName, int DefaultValue, out bool columnMissing)
+		private static int TryGetFrameParamInt32(SQLiteDataReader reader, string columnName, int defaultValue, out bool columnMissing)
 		{
-			int result = DefaultValue;
+			int result = defaultValue;
 			columnMissing = false;
 
 			try
 			{
-				result = !DBNull.Value.Equals(reader[ColumnName]) ? Convert.ToInt32(reader[ColumnName]) : DefaultValue;
+				result = !DBNull.Value.Equals(reader[columnName]) ? Convert.ToInt32(reader[columnName]) : defaultValue;
 			}
 			catch (IndexOutOfRangeException)
 			{
