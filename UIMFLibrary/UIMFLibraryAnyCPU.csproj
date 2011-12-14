@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ClassDefinitions.cs" />
+    <Compile Include="LogEntry.cs" />
     <Compile Include="UIMFDataReader.cs" />
     <Compile Include="UIMFDataWriter.cs" />
   </ItemGroup>

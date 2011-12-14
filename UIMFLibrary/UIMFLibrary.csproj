@@ -71,6 +71,7 @@
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LogEntry.cs" />
     <Compile Include="UIMFDataReader.cs">
       <SubType>Code</SubType>
     </Compile>

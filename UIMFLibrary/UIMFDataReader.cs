@@ -39,16 +39,6 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region "Structures"
-            public struct udtLogEntryType
-            {
-                public string Posted_By;
-                public DateTime Posting_Time;
-                public string Type;
-                public string Message;
-            }        
-        #endregion
-
         #region "Class-wide variables"
 
             private SQLiteConnection m_uimfDatabaseConnection;
@@ -948,9 +938,9 @@ namespace UIMFLibrary
 			}
 		}
 
-        public SortedList<int, udtLogEntryType> GetLogEntries(string entryType, string postedBy)
+        public SortedList<int, LogEntry> GetLogEntries(string entryType, string postedBy)
         {
-            SortedList<int, udtLogEntryType> lstLogEntries = new SortedList<int, udtLogEntryType>();
+			SortedList<int, LogEntry> lstLogEntries = new SortedList<int, LogEntry>();
 
             if (TableExists("Log_Entries"))
             {
@@ -994,23 +984,25 @@ namespace UIMFLibrary
 						{
 							try
 							{
-								udtLogEntryType udtLogEntry = new udtLogEntryType();
+								LogEntry logEntry = new LogEntry();
 
 								int iEntryID = Convert.ToInt32(reader["Entry_ID"]);
-								udtLogEntry.Posted_By = Convert.ToString(reader["Posted_By"]);
+								logEntry.PostedBy = Convert.ToString(reader["Posted_By"]);
 
 								string sPostingTime = Convert.ToString(reader["Posting_Time"]);
-								DateTime.TryParse(sPostingTime, out udtLogEntry.Posting_Time);
+								DateTime postingTime;
+								DateTime.TryParse(sPostingTime, out postingTime);
+								logEntry.PostingTime = postingTime;
 
-								udtLogEntry.Type = Convert.ToString(reader["Type"]);
-								udtLogEntry.Message = Convert.ToString(reader["Message"]);
+								logEntry.Type = Convert.ToString(reader["Type"]);
+								logEntry.Message = Convert.ToString(reader["Message"]);
 
-								lstLogEntries.Add(iEntryID, udtLogEntry);
+								lstLogEntries.Add(iEntryID, logEntry);
 
 							}
 							catch (Exception ex)
 							{
-								throw new Exception("Failed to get global parameters " + ex.ToString());
+								throw new Exception("Failed to get global parameters " + ex);
 							}
 						}
 					}
