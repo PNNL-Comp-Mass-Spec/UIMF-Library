@@ -267,51 +267,21 @@ namespace UIMFLibrary
 			return frameData;
 		}
 
-        /// <summary>
-        /// Clones this database, but doesn't copy data in the Frame_Scans table for frame types MS and MS1
-        /// </summary>
-        /// <param name="sTargetDBPath"></param>
-        /// <returns>True if success, false if a problem</returns>
-        public bool CloneUIMF(string sTargetDBPath)
-        {
-            List<string> sTablesToSkipCopyingData = new List<string> {"Frame_Scans"};
-        	return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData);
-        }
-
-        /// <summary>
-        /// Clones this database, but doesn't copy data in tables sTablesToSkipCopyingData
-        /// If the Frame_Scans table is skipped, will still copy data for frame types Calibration and Prescan
-        /// </summary>
-        /// <param name="sTargetDBPath"></param>
-        /// <returns></returns>
-        public bool CloneUIMF(string sTargetDBPath, List<string> sTablesToSkipCopyingData)
-        {
-            List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy = new List<iFrameType> {iFrameType.Calibration, iFrameType.Prescan};
-        	return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData, eFrameScanFrameTypeDataToAlwaysCopy);
-        }
-
-        /// <summary>
-        /// Clones this database, but doesn't copy data in table Frame_Scans
-        /// However, will still copy data for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy
-        /// </summary>
-        /// <param name="sTargetDBPath"></param>
-        /// <returns>True if success, false if a problem</returns>
-        public bool CloneUIMF(string sTargetDBPath, List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
-        {
-            List<string> sTablesToSkipCopyingData = new List<string> {"Frame_Scans"};
-        	return CloneUIMF(sTargetDBPath, sTablesToSkipCopyingData, eFrameScanFrameTypeDataToAlwaysCopy);
-        }
-
-        /// <summary>
-        /// Clones this database, but doesn't copy data in tables sTablesToSkipCopyingData
-        /// If the Frame_Scans table is skipped, will still copy data for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy
-        /// </summary>
-        /// <param name="sTargetDBPath"></param>
-        /// <returns>True if success, false if a problem</returns>
-        public bool CloneUIMF(string sTargetDBPath, List<string> sTablesToSkipCopyingData, List<iFrameType> eFrameScanFrameTypeDataToAlwaysCopy)
+    	/// <summary>
+    	/// Clones this database, but doesn't copy data in tables sTablesToSkipCopyingData.
+    	/// If a table is skipped, data will still copy for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy.
+    	/// </summary>
+    	/// <param name="targetDBPath">The desired path of the newly cloned UIMF file.</param>
+    	/// <param name="tablesToSkip">A list of table names (e.g. Frame_Scans) that should not be copied.</param>
+		/// <param name="frameTypesToAlwaysCopy">
+		/// A list of FrameTypes that should ALWAYS be copied. 
+		///		e.g. If "Frame_Scans" is passed into tablesToSkip, data will still be inserted into "Frame_Scans" for these Frame Types.
+		/// </param>
+    	/// <returns>True if success, false if a problem</returns>
+    	public bool CloneUIMF(string targetDBPath, List<string> tablesToSkip, List<iFrameType> frameTypesToAlwaysCopy)
         {
             string sCurrentTable = string.Empty;
-
+			
             try
             {
                 // Get list of tables in source DB
@@ -326,14 +296,14 @@ namespace UIMFLibrary
             	// Get list of indices in source DB
                 Dictionary<string, string> dctIndexInfo = CloneUIMFGetObjects("index");
 
-				if (File.Exists(sTargetDBPath))
+				if (File.Exists(targetDBPath))
 				{
-					File.Delete(sTargetDBPath);
+					File.Delete(targetDBPath);
 				}
 
             	try
                 {
-                    string sTargetConnectionString = "Data Source = " + sTargetDBPath + "; Version=3; DateTimeFormat=Ticks;";
+                    string sTargetConnectionString = "Data Source = " + targetDBPath + "; Version=3; DateTimeFormat=Ticks;";
                     SQLiteConnection cnTargetDB = new SQLiteConnection(sTargetConnectionString);
 	           
 		            cnTargetDB.Open();
@@ -362,11 +332,6 @@ namespace UIMFLibrary
 
                     try
                     {
-                        // Attach this DB to the target database
-                        //SQLiteCommand cmdSourceDB = new SQLiteCommand(m_uimfDatabaseConnection);
-                        //cmdSourceDB.CommandText = "ATTACH DATABASE '" + sTargetDBPath + "' AS TargetDB;";
-                        //cmdSourceDB.ExecuteNonQuery();
-
                         cmdTargetDB.CommandText = "ATTACH DATABASE '" + m_uimfFilePath + "' AS SourceDB;";
                         cmdTargetDB.ExecuteNonQuery();
 
@@ -375,12 +340,8 @@ namespace UIMFLibrary
 						{
 							sCurrentTable = string.Copy(kvp.Key);
 
-                            if (!sTablesToSkipCopyingData.Contains(sCurrentTable))
+                            if (!tablesToSkip.Contains(sCurrentTable))
                             {
-                                //string sSql = "INSERT INTO TargetDB." + sCurrentTable + " SELECT * FROM main." + sCurrentTable + ";";
-                                //cmdSourceDB.CommandText = sSql;
-                                //cmdSourceDB.ExecuteNonQuery();
-
                                 string sSql = "INSERT INTO main." + sCurrentTable + " SELECT * FROM SourceDB." + sCurrentTable + ";";
 
                                 cmdTargetDB.CommandText = sSql;
@@ -389,16 +350,16 @@ namespace UIMFLibrary
                             else
                             {
                                 if (sCurrentTable.ToLower() == "Frame_Scans".ToLower() && 
-                                    eFrameScanFrameTypeDataToAlwaysCopy != null && 
-                                    eFrameScanFrameTypeDataToAlwaysCopy.Count > 0)
+                                    frameTypesToAlwaysCopy != null && 
+                                    frameTypesToAlwaysCopy.Count > 0)
                                 {
                                     // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
-                                    for (int i = 0; i < eFrameScanFrameTypeDataToAlwaysCopy.Count; i++)
+                                    for (int i = 0; i < frameTypesToAlwaysCopy.Count; i++)
                                     {
                                         string sSql = "INSERT INTO main." + sCurrentTable + 
                                                       " SELECT * FROM SourceDB." + sCurrentTable +
                                                       " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " + 
-                                                                          "WHERE FrameType = " + ((int)eFrameScanFrameTypeDataToAlwaysCopy[i]) + ");";
+                                                                          "WHERE FrameType = " + ((int)frameTypesToAlwaysCopy[i]) + ");";
 
                                         cmdTargetDB.CommandText = sSql;
                                         cmdTargetDB.ExecuteNonQuery();
@@ -408,11 +369,6 @@ namespace UIMFLibrary
                         }
 
                         sCurrentTable = "(DETACH DATABASE)";
-
-                        // Detach the target DB
-                        //cmdSourceDB.CommandText = "DETACH DATABASE 'TargetDB';";
-                        //cmdSourceDB.ExecuteNonQuery();
-                        //cmdSourceDB.Dispose();
 
                         // Detach the source DB
                         cmdTargetDB.CommandText = "DETACH DATABASE 'SourceDB';";
