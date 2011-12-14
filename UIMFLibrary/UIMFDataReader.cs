@@ -1534,23 +1534,19 @@ namespace UIMFLibrary
         	return hasColumn;
         }
 
-		public void UpdateAllCalibrationCoefficients(float slope, float intercept)
-		{
-			UpdateAllCalibrationCoefficients(slope, intercept, false);
-		}
-
     	/// <summary>
-		/// /// Update the calibration coefficients for all frames
-		/// </summary>
-		/// <param name="slope"></param>
-		/// <param name="intercept"></param>
-		public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool bAutoCalibrating)
+    	/// /// Update the calibration coefficients for all frames
+    	/// </summary>
+    	/// <param name="slope">The slope value for the calibration.</param>
+    	/// <param name="intercept">The intercept for the calibration.</param>
+		/// <param name="isAutoCalibrating">Optional argument that should be set to true if calibration is automatic. Defaults to false.</param>
+    	public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool isAutoCalibrating = false)
 		{
 			m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
 			m_preparedStatement.CommandText = "UPDATE Frame_Parameters " +
 											 "SET CalibrationSlope = " + slope + ", " +
 												 "CalibrationIntercept = " + intercept;
-			if (bAutoCalibrating)
+			if (isAutoCalibrating)
 			{
 				m_preparedStatement.CommandText += ", CalibrationDone = 1";
 			}
@@ -1561,24 +1557,20 @@ namespace UIMFLibrary
 			ResetFrameParameters();
 		}
 
-		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
-		{
-			UpdateCalibrationCoefficients(frameNumber, slope, intercept, false);
-		}
-
 		/// <summary>
 		/// Update the calibration coefficients for a single frame
 		/// </summary>
-		/// <param name="frameNumber"></param>
-		/// <param name="slope"></param>
-		/// <param name="intercept"></param>
-		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept, bool bAutoCalibrating)
+		/// <param name="frameNumber">The frame number to update.</param>
+		/// <param name="slope">The slope value for the calibration.</param>
+		/// <param name="intercept">The intercept for the calibration.</param>
+		/// <param name="isAutoCalibrating">Optional argument that should be set to true if calibration is automatic. Defaults to false.</param>
+		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept, bool isAutoCalibrating = false)
 		{
 			m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
 			m_preparedStatement.CommandText = "UPDATE Frame_Parameters " +
 											 "SET CalibrationSlope = " + slope + ", " +
 												 "CalibrationIntercept = " + intercept;
-			if (bAutoCalibrating)
+			if (isAutoCalibrating)
 			{
 				m_preparedStatement.CommandText += ", CalibrationDone = 1";
 			}
