@@ -21,7 +21,7 @@ namespace UIMFLibrary
     public class DataReader : IDisposable
     {
         #region "Constants and Enums"
-            public enum iFrameType
+            public enum FrameType
             {
                 MS = 0,
                 MS1 = 1,
@@ -268,7 +268,7 @@ namespace UIMFLibrary
 		///		e.g. If "Frame_Scans" is passed into tablesToSkip, data will still be inserted into "Frame_Scans" for these Frame Types.
 		/// </param>
     	/// <returns>True if success, false if a problem</returns>
-    	public bool CloneUIMF(string targetDBPath, List<string> tablesToSkip, List<iFrameType> frameTypesToAlwaysCopy)
+    	public bool CloneUIMF(string targetDBPath, List<string> tablesToSkip, List<FrameType> frameTypesToAlwaysCopy)
         {
             string sCurrentTable = string.Empty;
 			
@@ -394,19 +394,19 @@ namespace UIMFLibrary
 			return term1 * term1;
 		}
 
-        public string FrameTypeDescription(iFrameType frameType)
+        public string FrameTypeDescription(FrameType frameType)
         {
             switch (frameType)
             {
-				case iFrameType.MS:
+				case FrameType.MS:
                     return "MS";
-				case iFrameType.MS1:
+				case FrameType.MS1:
                     return "MS";
-				case iFrameType.Fragmentation:
+				case FrameType.Fragmentation:
                     return "MS/MS";
-				case iFrameType.Calibration:
+				case FrameType.Calibration:
                     return "Calibration";
-				case iFrameType.Prescan:
+				case FrameType.Prescan:
                     return "Prescan";
                 default:
                     throw new InvalidCastException("Invalid frame type: " + frameType);
@@ -426,7 +426,7 @@ namespace UIMFLibrary
 		/// <param name="frameValues"></param>
 		/// <param name="scanValues"></param>
 		/// <param name="intensities"></param>
-		public void Get3DElutionProfile(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, out int[] frameValues, out int[] scanValues, out int[] intensities)
+		public void Get3DElutionProfile(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, out int[] frameValues, out int[] scanValues, out int[] intensities)
 		{
 
 			if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
@@ -478,7 +478,7 @@ namespace UIMFLibrary
         /// <param name="endFrameNumber"></param>
         /// <param name="startScan"></param>
         /// <param name="endScan"></param>
-        public double[] GetBPI(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+        public double[] GetBPI(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
         }
@@ -534,7 +534,7 @@ namespace UIMFLibrary
             return countPerFrame;
         }
 
-		public void GetDriftTimeProfile(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] imsScanValues, ref int[] intensities)
+		public void GetDriftTimeProfile(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, ref int[] imsScanValues, ref int[] intensities)
 		{
 			if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
 			{
@@ -629,7 +629,7 @@ namespace UIMFLibrary
         /// Returns the frame numbers for the specified frame_type
         /// </summary>
         /// <returns></returns>
-        public int[] GetFrameNumbers(iFrameType frameType)
+        public int[] GetFrameNumbers(FrameType frameType)
         {
 			List<int> frameNumberList = new List<int>();
 
@@ -719,7 +719,7 @@ namespace UIMFLibrary
 
         }
 
-		public int[][] GetFramesAndScanIntensitiesForAGivenMz(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ)
+		public int[][] GetFramesAndScanIntensitiesForAGivenMz(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ)
 		{
 			if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
 			{
@@ -841,7 +841,7 @@ namespace UIMFLibrary
             return oGlobalParameters;
         }
 
-		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, iFrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap)
+		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, FrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap)
 		{
 			FrameParameters frameParameters = GetFrameParameters(frameNumber);
 
@@ -906,7 +906,7 @@ namespace UIMFLibrary
 			return intensities;
 		}
 
-		public void GetLCProfile(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, out int[] frameValues, out int[] intensities)
+		public void GetLCProfile(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, double targetMZ, double toleranceInMZ, out int[] frameValues, out int[] intensities)
 		{
 			if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
 			{
@@ -1015,9 +1015,9 @@ namespace UIMFLibrary
         /// Constructs a dictionary that has the frame numbers as the key and the frame type as the value.
         /// </summary>
         /// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
-		public Dictionary<int, iFrameType> GetMasterFrameList()
+		public Dictionary<int, FrameType> GetMasterFrameList()
         {
-			Dictionary<int, iFrameType> masterFrameDictionary = new Dictionary<int, iFrameType>();
+			Dictionary<int, FrameType> masterFrameDictionary = new Dictionary<int, FrameType>();
 
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
@@ -1030,7 +1030,7 @@ namespace UIMFLibrary
 						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
 						int frameType = Convert.ToInt32(reader["FrameType"]);
 
-						masterFrameDictionary.Add(frameNumber, (iFrameType) frameType);
+						masterFrameDictionary.Add(frameNumber, (FrameType) frameType);
 					}
 				}
 			}
@@ -1062,10 +1062,10 @@ namespace UIMFLibrary
 
 			switch(frameType)
 			{
-				case (int)iFrameType.MS:
-				case (int)iFrameType.MS1:
+				case (int)FrameType.MS:
+				case (int)FrameType.MS1:
 					return 1;
-				case (int)iFrameType.Fragmentation:
+				case (int)FrameType.Fragmentation:
 					return 2;
 				default:
 					return -1;
@@ -1076,7 +1076,7 @@ namespace UIMFLibrary
 		/// </summary>
 		/// <param name="frameType"></param>
 		/// <returns></returns>
-		public int GetNumberOfFrames(iFrameType frameType)
+		public int GetNumberOfFrames(FrameType frameType)
 		{
 			int count = 0;
 
@@ -1118,7 +1118,7 @@ namespace UIMFLibrary
     	/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
     	/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
     	/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
-    	public int GetSpectrum(int frameNumber, iFrameType frameType, int scanNumber, out double[] mzArray, out int[] intensityArray)
+    	public int GetSpectrum(int frameNumber, FrameType frameType, int scanNumber, out double[] mzArray, out int[] intensityArray)
 		{
 			return GetSpectrum(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out mzArray, out intensityArray);
 		}
@@ -1137,7 +1137,7 @@ namespace UIMFLibrary
 		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
 		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
 		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
-		public int GetSpectrum(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
+		public int GetSpectrum(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
 		{
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
@@ -1210,7 +1210,7 @@ namespace UIMFLibrary
 		/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
 		/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
 		/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-		public int GetSpectrumAsBins(int frameNumber, iFrameType frameType, int scanNumber, out int[] binArray, out int[] intensityArray)
+		public int GetSpectrumAsBins(int frameNumber, FrameType frameType, int scanNumber, out int[] binArray, out int[] intensityArray)
 		{
 			return GetSpectrumAsBins(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out binArray, out intensityArray);
 		}
@@ -1229,7 +1229,7 @@ namespace UIMFLibrary
     	/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
     	/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
     	/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
+    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
 		{
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
@@ -1296,7 +1296,7 @@ namespace UIMFLibrary
     	/// <param name="endFrameNumber"></param>
     	/// <param name="startScan"></param>
     	/// <param name="endScan"></param>
-    	public double[] GetTIC(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+    	public double[] GetTIC(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, TIC);
         }
@@ -1337,7 +1337,7 @@ namespace UIMFLibrary
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
 				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
-				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) iFrameType.Fragmentation));
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) FrameType.Fragmentation));
 				dbCmd.Prepare();
 				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
 				{
@@ -1357,7 +1357,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public bool IsCalibrated()
         {
-            return IsCalibrated(iFrameType.Calibration);
+            return IsCalibrated(FrameType.Calibration);
         }
 
         /// <summary>
@@ -1365,7 +1365,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="iMaxFrameTypeToExamine">Maximum frame type to examine when checking for calibrated frames</param>
         /// <returns></returns>
-		public bool IsCalibrated(iFrameType iMaxFrameTypeToExamine)
+		public bool IsCalibrated(FrameType iMaxFrameTypeToExamine)
         {
             bool bIsCalibrated = false;
 
@@ -1627,7 +1627,7 @@ namespace UIMFLibrary
 			return bin + binCorrection;
 		}
 
-		private int[][][] GetIntensityBlock(int startFrameNumber, int endFrameNumber, iFrameType frameType, int startScan, int endScan, int startBin, int endBin)
+		private int[][][] GetIntensityBlock(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, int startBin, int endBin)
 		{
 			if (startBin < 0)
 			{
@@ -1710,7 +1710,7 @@ namespace UIMFLibrary
 		/// <param name="startScan"></param>
 		/// <param name="endScan"></param>
 		/// <param name="fieldName"></param>
-		private double[] GetTicOrBpi(iFrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName)
+		private double[] GetTicOrBpi(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName)
 		{
 			// Make sure endFrame is valid
 			if (endFrameNumber < startFrameNumber)
