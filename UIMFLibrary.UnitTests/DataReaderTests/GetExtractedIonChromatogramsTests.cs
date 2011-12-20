@@ -27,11 +27,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int[] scanVals = null;
             int[] intensityVals = null;
 
-			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
-				m_reader.GetDriftTimeProfile(startFrame - 2, startFrame + 2, DataReader.FrameType.MS, startScan - 100, startScan + 100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+				m_reader.GetDriftTimeProfile(startFrame - 2, startFrame + 2, DataReader.FrameType.MSOld, startScan - 100, startScan + 100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
 
-				//TestUtilities.display2DChromatogram(scanVals, intensityVals);
+				TestUtilities.display2DChromatogram(scanVals, intensityVals);
 
 				//TODO:   assert some values
 			}
@@ -48,7 +48,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int startScan = 100;
             int stopScan = 350;
 
-			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				double targetMZ = 636.8466;    // see frame 1000, scan 170
 				double toleranceInPPM = 20;
@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				//m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame, endFrame, DataReader.FrameType.MS, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
+				m_reader.GetLCProfile(startFrame, endFrame, DataReader.FrameType.MSOld, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < frameVals.Length; i++)
@@ -88,7 +88,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double toleranceInPPM = 25;
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int[] frameVals = null;
 				int[] scanVals = null;
@@ -96,7 +96,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.FrameType.MS, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
+				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.FrameType.MSOld, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 
 				Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
@@ -125,7 +125,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
 
-			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				m_reader.Get3DElutionProfile(startFrame - 20, startFrame + 20, 0, startScan - 20, startScan + 20, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
 			}
@@ -153,7 +153,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double toleranceInPPM = 25;
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-			using (m_reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int[][] values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 60, startScan + 60, targetMZ, toleranceInMZ);
 
@@ -201,7 +201,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
 
-			using (m_reader = new DataReader(new FileInfo(filePath)))
+			using (m_reader = new DataReader(filePath))
 			{
 				m_reader.Get3DElutionProfile(startFrame, stopFrame, 0, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
 			}

@@ -27,7 +27,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void getSingleSummedMassSpectrumTest1()
         {
-			using (DataReader dr = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (DataReader dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				GlobalParameters gp = dr.GetGlobalParameters();
 
@@ -48,7 +48,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void getFrame0_MS_Test1()
         {
-			using (DataReader dr = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (DataReader dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				GlobalParameters gp = dr.GetGlobalParameters();
 				int[] intensities = new int[gp.Bins];
@@ -61,14 +61,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int stopScan = 260;
 
 				//int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
-				//TestUtilities.displayRawMassSpectrum(mzValues, intensities);
+				TestUtilities.displayRawMassSpectrum(mzValues, intensities);
 			}
         }
 
         [Test]
         public void getFrame0_MS_demultiplexedData_Test1()
         {
-			using (DataReader dr = new DataReader(new FileInfo(FileRefs.uimfStandardDemultiplexedFile1)))
+			using (DataReader dr = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				GlobalParameters gp = dr.GetGlobalParameters();
 				int[] intensities = new int[gp.Bins];
@@ -88,7 +88,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void getMultipleSummedMassSpectrumsTest1()
         {
-			using (DataReader dr = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (DataReader dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int startFrame = 500;
 				int stopFrame = 550;

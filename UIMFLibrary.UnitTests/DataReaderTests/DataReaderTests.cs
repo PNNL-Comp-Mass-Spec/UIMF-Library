@@ -23,12 +23,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
-			using (DataReader reader = new DataReader(new FileInfo(filePath)))
+			using (DataReader reader = new DataReader(filePath))
 			{
 				double[] mzArray;
 				int[] intensityArray;
 
-				int nonZeroCount = reader.GetSpectrum(frameNumber, DataReader.FrameType.MS, scanNumber, out mzArray, out intensityArray);
+				int nonZeroCount = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray);
 
 				Assert.AreEqual(nonZeroCount, intensityArray.Length);
 				Assert.AreEqual(692, nonZeroCount);
@@ -47,12 +47,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
-			using (DataReader reader = new DataReader(new FileInfo(filePath)))
+			using (DataReader reader = new DataReader(filePath))
 			{
 				int[] bins;
 				int[] intensities;
 
-				int nonZeroCount = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS, scanNumber, out bins, out intensities);
+				int nonZeroCount = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out bins, out intensities);
 
 				Assert.AreEqual(nonZeroCount, intensities.Length);
 				Assert.AreEqual(692, nonZeroCount);
@@ -73,7 +73,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 			
-			using (DataReader reader = new DataReader(new FileInfo(filePath)))
+			using (DataReader reader = new DataReader(filePath))
 			{
 				int[] binArray;
 				int[] intensityArray1;
@@ -81,8 +81,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				double[] mzArray;
 				int[] intensityArray2;
 
-				int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS, scanNumber, out binArray, out intensityArray1);
-				int nonZeroCount2 = reader.GetSpectrum(frameNumber, DataReader.FrameType.MS, scanNumber, out mzArray, out intensityArray2);
+				int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out binArray, out intensityArray1);
+				int nonZeroCount2 = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray2);
 
 				GlobalParameters globalParameters = reader.GetGlobalParameters();
 				FrameParameters frameParameters = reader.GetFrameParameters(frameNumber);
@@ -107,7 +107,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void getFrameParametersTest()
         {
-			using (DataReader reader = new DataReader(new FileInfo(FileRefs.uimfStandardFile1)))
+			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				GlobalParameters gp = reader.GetGlobalParameters();
 				FrameParameters fp = reader.GetFrameParameters(1);
@@ -122,7 +122,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int testFrame = 1000;
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
-			using (m_reader = new DataReader(new FileInfo(filePath)))
+			using (m_reader = new DataReader(filePath))
 			{
 				GlobalParameters gp = m_reader.GetGlobalParameters();
 				FrameParameters fp = m_reader.GetFrameParameters(testFrame);
@@ -162,7 +162,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double bpimz = 173.289545940302;
             double toleranceInMZ = 25 / 1e6 * bpimz;
             Console.WriteLine("Tolerance in mz  is " + toleranceInMZ);
-			using (m_reader = new DataReader(new FileInfo(filePath)))
+			using (m_reader = new DataReader(filePath))
 			{
 				int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
 

@@ -12,9 +12,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 
 namespace UIMFLibrary
 {
@@ -23,9 +23,9 @@ namespace UIMFLibrary
         #region "Constants and Enums"
             public enum FrameType
             {
-                MS = 0,
+                MSOld = 0,
                 MS1 = 1,
-                Fragmentation = 2,
+                MS2 = 2,
                 Calibration = 3,
                 Prescan = 4
             }
@@ -76,10 +76,12 @@ namespace UIMFLibrary
 
         #endregion
 
-		public DataReader(FileSystemInfo uimfFileInfo)
+		public DataReader(string fileName)
 		{
 			m_errMessageCounter = 0;
 			m_calibrationTable = new double[0];
+
+            FileSystemInfo uimfFileInfo = new FileInfo(fileName);
 
 			if (uimfFileInfo.Exists)
 			{
@@ -109,7 +111,7 @@ namespace UIMFLibrary
 			}
 			else
 			{
-				throw new Exception("UIMF file not found: " + uimfFileInfo.FullName);
+				throw new FileNotFoundException("UIMF file not found: " + uimfFileInfo.FullName);
 			}
 		}
 
@@ -398,11 +400,11 @@ namespace UIMFLibrary
         {
             switch (frameType)
             {
-				case FrameType.MS:
+				case FrameType.MSOld:
                     return "MS";
 				case FrameType.MS1:
                     return "MS";
-				case FrameType.Fragmentation:
+				case FrameType.MS2:
                     return "MS/MS";
 				case FrameType.Calibration:
                     return "Calibration";
@@ -1062,10 +1064,10 @@ namespace UIMFLibrary
 
 			switch(frameType)
 			{
-				case (int)FrameType.MS:
+				case (int)FrameType.MSOld:
 				case (int)FrameType.MS1:
 					return 1;
-				case (int)FrameType.Fragmentation:
+				case (int)FrameType.MS2:
 					return 2;
 				default:
 					return -1;
@@ -1337,7 +1339,7 @@ namespace UIMFLibrary
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
 				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
-				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) FrameType.Fragmentation));
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) FrameType.MS2));
 				dbCmd.Prepare();
 				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
 				{
