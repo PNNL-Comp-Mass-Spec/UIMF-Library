@@ -1158,9 +1158,9 @@ namespace UIMFLibrary
 			{
 				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 
-				int binIndex = 0;
 				while (reader.Read())
 				{
+					int binIndex = 0;
 					byte[] spectraRecord = (byte[])(reader["Intensities"]);
 					if (spectraRecord.Length > 0)
 					{
