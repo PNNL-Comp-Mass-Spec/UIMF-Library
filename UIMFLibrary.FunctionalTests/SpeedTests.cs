@@ -15,7 +15,7 @@ namespace UIMFLibrary.UnitTests
         [Test]
         public void getSingleSummedMassSpectrumTest1()
         {
-			DataReader dr = new DataReader(new FileInfo(uimfStandardFile1));
+			DataReader dr = new DataReader(uimfStandardFile1);
             GlobalParameters gp = dr.GetGlobalParameters();
 
             int[] intensities = new int[gp.Bins];
@@ -39,27 +39,33 @@ namespace UIMFLibrary.UnitTests
             int numIMSScansToSum = 7;
 
 
-			DataReader dr = new DataReader(new FileInfo("uimfStandardFile1"));
-            GlobalParameters gp = dr.GetGlobalParameters();
-
-            int frameStart = 500;
-            int frameStop = frameStart + numIterations;
-            int scanStart = 250;
-            int scanStop = scanStart + numIMSScansToSum - 1;
-
-            int[] intensities = new int[gp.Bins];
-            double[] mzValues = new double[gp.Bins];
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            for (int frame = frameStart; frame < frameStop; frame++)
+            using (DataReader dr = new DataReader(uimfStandardFile1))
             {
-                //int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, frame, frame + numFramesToSum - 1, scanStart, scanStop);
-            }
-            sw.Stop();
+                GlobalParameters gp = dr.GetGlobalParameters();
 
-            Console.WriteLine("Total time to read "+ numIterations + " scans = " + sw.ElapsedMilliseconds);
-            Console.WriteLine("Average time (milliseconds) = "+ (double)sw.ElapsedMilliseconds/(double)numIterations);
+                int frameStart = 500;
+                int frameStop = frameStart + numIterations;
+                int scanStart = 250;
+                int scanStop = scanStart + numIMSScansToSum - 1;
+
+              
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                for (int frame = frameStart; frame < frameStop; frame++)
+                {
+                    int[] intensities = null;
+                    double[] mzValues = null;
+
+                    int nonZeros = dr.GetSpectrum(frame, frame, DataReader.FrameType.MS1, scanStart, scanStop,
+                                                  out mzValues, out intensities);
+                }
+                sw.Stop();
+
+                Console.WriteLine("Total time to read " + numIterations + " scans = " + sw.ElapsedMilliseconds);
+                Console.WriteLine("Average time (milliseconds) = " +
+                                  (double) sw.ElapsedMilliseconds/(double) numIterations);
+            }
         }
     }
 }
