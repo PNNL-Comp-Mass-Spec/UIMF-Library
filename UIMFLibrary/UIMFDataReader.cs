@@ -1065,6 +1065,7 @@ namespace UIMFLibrary
 			switch(frameType)
 			{
 				case (int)FrameType.MSOld:
+			        return 0;
 				case (int)FrameType.MS1:
 					return 1;
 				case (int)FrameType.MS2:

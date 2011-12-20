@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using NUnit.Framework;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
@@ -36,6 +34,33 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				Assert.AreEqual(708377.857627842, mzArray.Sum());
 			}
 		}
+
+        [Test]
+        public void TestGetSpectrumSummed1()
+        {
+            const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            const int frameStart = 6;
+            const int frameStop = 8;
+            const int scanStart = 285;
+            const int scanStop = 287;
+
+            using (DataReader reader = new DataReader(filePath))
+            {
+                double[] mzArray;
+                int[] intensityArray;
+
+                int nonZeroCount = reader.GetSpectrum(frameStart,frameStop, DataReader.FrameType.MSOld, scanStart,scanStop, out mzArray, out intensityArray);
+
+                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+
+                //TODO: need to update these values
+                //Assert.AreEqual(692, nonZeroCount);
+                //Assert.AreEqual(80822, intensityArray.Sum());
+                //Assert.AreEqual(708377.857627842, mzArray.Sum());
+            }
+        }
+
+
 
 		/// <summary>
 		/// Tests the GetSpectrumAsBins method. Makes sure that output of the method is as expected.
