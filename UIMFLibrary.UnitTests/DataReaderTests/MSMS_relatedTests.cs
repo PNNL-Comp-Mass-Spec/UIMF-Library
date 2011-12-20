@@ -55,7 +55,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 {
                     checkSum += frame * reader.GetMSLevelForFrame(frame);
                     
-                    Console.WriteLine(frame  + "\t" + reader.GetMSLevelForFrame(frame));
+                   // Console.WriteLine(frame  + "\t" + reader.GetMSLevelForFrame(frame));
                 }
 
                 Assert.AreEqual(222, checkSum);
