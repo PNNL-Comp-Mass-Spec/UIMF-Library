@@ -13,6 +13,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
@@ -23,7 +24,6 @@ namespace UIMFLibrary
         #region "Constants and Enums"
             public enum FrameType
             {
-                MSOld = 0,
                 MS1 = 1,
                 MS2 = 2,
                 Calibration = 3,
@@ -62,6 +62,8 @@ namespace UIMFLibrary
             private double[] m_calibrationTable;
 			private string m_uimfFilePath;
             private bool m_pressureInMTorr;
+
+    		private int m_frameTypeMs;
 
 			private static int m_errMessageCounter;
 
@@ -103,6 +105,9 @@ namespace UIMFLibrary
 
 					// Lookup whether the pressure columns are in torr or mTorr
 					DeterminePressureUnits();
+
+					// Find out if the MS1 Frames are labeled as 0 or 1
+					DetermineFrameTypes();
 				}
 				catch (Exception ex)
 				{
@@ -350,8 +355,8 @@ namespace UIMFLibrary
                                     {
                                         string sSql = "INSERT INTO main." + sCurrentTable + 
                                                       " SELECT * FROM SourceDB." + sCurrentTable +
-                                                      " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " + 
-                                                                          "WHERE FrameType = " + ((int)frameTypesToAlwaysCopy[i]) + ");";
+                                                      " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " +
+													  "WHERE FrameType = " + (frameTypesToAlwaysCopy[i].Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameTypesToAlwaysCopy[i]) + ");";
 
                                         cmdTargetDB.CommandText = sSql;
                                         cmdTargetDB.ExecuteNonQuery();
@@ -400,8 +405,6 @@ namespace UIMFLibrary
         {
             switch (frameType)
             {
-				case FrameType.MSOld:
-                    return "MS";
 				case FrameType.MS1:
                     return "MS";
 				case FrameType.MS2:
@@ -638,7 +641,7 @@ namespace UIMFLibrary
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
 				dbCmd.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
-				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int) frameType));
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 				dbCmd.Prepare();
 				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
 				{
@@ -868,7 +871,7 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameParameters.FrameNum));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int) frameType));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
 			byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 
@@ -1032,6 +1035,9 @@ namespace UIMFLibrary
 						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
 						int frameType = Convert.ToInt32(reader["FrameType"]);
 
+						// If the frame type is 0, then we are dealing with an old UIMF file where the MS1 frames were labeled as 0
+						if (frameType == 0) frameType = 1;
+
 						masterFrameDictionary.Add(frameNumber, (FrameType) frameType);
 					}
 				}
@@ -1041,13 +1047,13 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Utility method to return the MS Level for a particular frame number
+        /// Utility method to return the Frame Type for a particular frame number
         /// </summary>
         /// <param name="frameNumber"></param>
         /// <returns></returns>
-        public short GetMSLevelForFrame(int frameNumber)
+        public FrameType GetFrameTypeForFrame(int frameNumber)
         {
-			int frameType = -1;
+        	int frameTypeInt = -1;
 
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
@@ -1057,22 +1063,18 @@ namespace UIMFLibrary
 				{
 					if (reader.Read())
 					{
-						frameType = Convert.ToInt32(reader["FrameType"]);
+						frameTypeInt = Convert.ToInt32(reader["FrameType"]);
 					}
 				}
 			}
 
-			switch(frameType)
+			// If the frame type is 0, then this is an older UIMF file where the MS1 frames were labeled as 0
+			if(frameTypeInt == 0)
 			{
-				case (int)FrameType.MSOld:
-			        return 0;
-				case (int)FrameType.MS1:
-					return 1;
-				case (int)FrameType.MS2:
-					return 2;
-				default:
-					return -1;
+				return FrameType.MS1;
 			}
+			
+			return (FrameType) frameTypeInt;
         }
 
 		/// <summary>
@@ -1085,8 +1087,8 @@ namespace UIMFLibrary
 
 			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
 			{
-				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
-				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameType));
+				dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType IN (:FrameType)";
+				dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? "0,1" : ((int)frameType).ToString())));
 				dbCmd.Prepare();
 				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
 				{
@@ -1146,7 +1148,7 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
 			int nonZeroCount = 0;
 
@@ -1238,7 +1240,7 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
 			int nonZeroCount = 0;
 
@@ -1612,6 +1614,43 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Determines if the MS1 Frames of this file are labeled as 0 or 1.
+		/// The determined value is stored in a class-wide variable for later use.
+		/// Exception is thrown if both 0 and 1 are found.
+		/// </summary>
+		private void DetermineFrameTypes()
+		{
+			List<int> frameTypeList = new List<int>();
+
+			using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
+			{
+				dbCmd.CommandText = "SELECT DISTINCT(FrameType) FROM Frame_Parameters";
+				dbCmd.Prepare();
+				using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						frameTypeList.Add(Convert.ToInt32(reader["FrameType"]));
+					}
+				}
+			}
+
+			if(frameTypeList.Contains(0))
+			{
+				if(frameTypeList.Contains(1))
+				{
+					throw new Exception("FrameTypes of 0 and 1 found. Not a valid UIMF file.");
+				}
+
+				m_frameTypeMs = 0;
+			}
+			else
+			{
+				m_frameTypeMs = 1;
+			}
+		}
+
+		/// <summary>
 		/// Returns the bin value that corresponds to an m/z value.  
 		/// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
 		/// </summary>
@@ -1659,7 +1698,7 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)frameType));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 			
 			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
@@ -1729,7 +1768,7 @@ namespace UIMFLibrary
 			// Construct the SQL
 			string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value " +
 						 " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum " +
-						 " WHERE Frame_Parameters.FrameType = " + (int)frameType + " AND " +
+						 " WHERE Frame_Parameters.FrameType = " + (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType) + " AND " +
 							   " Frame_Parameters.FrameNum >= " + startFrameNumber + " AND " +
 							   " Frame_Parameters.FrameNum <= " + endFrameNumber;
 
@@ -1843,7 +1882,19 @@ namespace UIMFLibrary
 
 				fp.Duration = Convert.ToDouble(reader["Duration"]);
 				fp.Accumulations = Convert.ToInt32(reader["Accumulations"]);
-				fp.FrameType = Convert.ToInt16(reader["FrameType"]);
+				
+				int frameTypeInt = Convert.ToInt16(reader["FrameType"]);
+
+				// If the frametype is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
+				if(frameTypeInt == 0)
+				{
+					fp.FrameType = FrameType.MS1;
+				}
+				else
+				{
+					fp.FrameType = (FrameType) frameTypeInt;
+				}
+
 				fp.Scans = Convert.ToInt32(reader["Scans"]);
 				fp.IMFProfile = Convert.ToString(reader["IMFProfile"]);
 				fp.TOFLosses = Convert.ToDouble(reader["TOFLosses"]);

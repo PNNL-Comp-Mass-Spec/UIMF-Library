@@ -40,7 +40,7 @@ namespace UIMFLibrary
         public double StartTime;                       // 1, Start time of frame, in minutes
         public double Duration;                        // 2, Duration of frame, in seconds 
         public int Accumulations;                      // 3, Number of collected and summed acquisitions in a frame 
-        public short FrameType;                        // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+        public DataReader.FrameType FrameType;         // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
         public int Scans;                              // 5, Number of TOF scans  
         public string IMFProfile;			           // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
         public double TOFLosses;			           // 7, Number of TOF Losses
@@ -99,7 +99,6 @@ namespace UIMFLibrary
 		public FrameParameters(System.DateTime dtRunStartTime) {
 			StartTime = System.DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
 		}
-
 
         /// <summary>
         /// Included for backwards compatibility

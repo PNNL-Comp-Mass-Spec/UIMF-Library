@@ -466,7 +466,7 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));                       // 2, Duration of frame, in seconds 
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Accumulations", frameParameters.Accumulations));             // 3, Number of collected and summed acquisitions in a frame 
 
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", frameParameters.FrameType));                     // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));                     // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));                             // 5, Number of TOF scans  
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));                   // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));                     // 7, Number of TOF Losses

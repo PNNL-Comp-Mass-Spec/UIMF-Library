@@ -29,7 +29,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
-				m_reader.GetDriftTimeProfile(startFrame - 2, startFrame + 2, DataReader.FrameType.MSOld, startScan - 100, startScan + 100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+				m_reader.GetDriftTimeProfile(startFrame - 2, startFrame + 2, DataReader.FrameType.MS1, startScan - 100, startScan + 100, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
 
 				TestUtilities.display2DChromatogram(scanVals, intensityVals);
 
@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				//m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame, endFrame, DataReader.FrameType.MSOld, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
+				m_reader.GetLCProfile(startFrame, endFrame, DataReader.FrameType.MS1, startScan, stopScan, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < frameVals.Length; i++)
@@ -96,7 +96,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
-				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.FrameType.MSOld, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
+				m_reader.GetLCProfile(startFrame - 200, startFrame + 200, DataReader.FrameType.MS1, startScan - 2, startScan + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
 				sw.Stop();
 
 				Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);

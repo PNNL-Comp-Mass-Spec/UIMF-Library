@@ -42,31 +42,22 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
-        public void GetMSLevelTest1()
+        public void GetFrameTypeTest1()
         {
             using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
             {
                 GlobalParameters gp = reader.GetGlobalParameters();
 
-
                 int checkSum = 0;
 
                 for (int frame = 1; frame <= gp.NumFrames; frame++)
                 {
-                    checkSum += frame * reader.GetMSLevelForFrame(frame);
-                    
-                   // Console.WriteLine(frame  + "\t" + reader.GetMSLevelForFrame(frame));
+                    checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
                 }
 
-                Assert.AreEqual(204, checkSum);
-
+                Assert.AreEqual(222, checkSum);
             }
-
-            //TODO: finish and assert something
-
-
         }
-
 
     }
 }
