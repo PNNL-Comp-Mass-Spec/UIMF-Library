@@ -1283,7 +1283,7 @@ namespace UIMFLibrary
 					}
 				}
 
-				StripZerosFromArrays(nonZeroCount, ref binArray, ref intensityArray);
+				//StripZerosFromArrays(nonZeroCount, ref binArray, ref intensityArray);
 			}
 
 			m_getSpectrumCommand.Parameters.Clear();

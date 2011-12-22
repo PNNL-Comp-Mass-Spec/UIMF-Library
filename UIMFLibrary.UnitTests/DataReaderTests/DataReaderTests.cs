@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,29 +12,29 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     {
         DataReader m_reader;
 
-		/// <summary>
-		/// Tests the GetSpectrum method. Makes sure that output of the method is as expected.
-		/// </summary>
-		[Test]
-		public void TestGetSpectrum()
-		{
-			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
-			const int frameNumber = 6;
-			const int scanNumber = 285;
+        /// <summary>
+        /// Tests the GetSpectrum method. Makes sure that output of the method is as expected.
+        /// </summary>
+        [Test]
+        public void TestGetSpectrum()
+        {
+            const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            const int frameNumber = 6;
+            const int scanNumber = 285;
 
-			using (DataReader reader = new DataReader(filePath))
-			{
-				double[] mzArray;
-				int[] intensityArray;
+            using (DataReader reader = new DataReader(filePath))
+            {
+                double[] mzArray;
+                int[] intensityArray;
 
-				int nonZeroCount = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray);
+                int nonZeroCount = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray);
 
-				Assert.AreEqual(nonZeroCount, intensityArray.Length);
-				Assert.AreEqual(692, nonZeroCount);
-				Assert.AreEqual(80822, intensityArray.Sum());
-				Assert.AreEqual(708377.857627842, mzArray.Sum());
-			}
-		}
+                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+                Assert.AreEqual(692, nonZeroCount);
+                Assert.AreEqual(80822, intensityArray.Sum());
+                Assert.AreEqual(708377.857627842, mzArray.Sum());
+            }
+        }
 
         [Test]
         public void TestGetSpectrumSummed1()
@@ -49,7 +50,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzArray;
                 int[] intensityArray;
 
-                int nonZeroCount = reader.GetSpectrum(frameStart,frameStop, DataReader.FrameType.MSOld, scanStart,scanStop, out mzArray, out intensityArray);
+                int nonZeroCount = reader.GetSpectrum(frameStart, frameStop, DataReader.FrameType.MSOld, scanStart, scanStop, out mzArray, out intensityArray);
 
                 Assert.AreEqual(nonZeroCount, intensityArray.Length);
 
@@ -62,83 +63,183 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
 
-		/// <summary>
-		/// Tests the GetSpectrumAsBins method. Makes sure that output of the method is as expected.
-		/// </summary>
-		[Test]
-		public void TestGetSpectrumAsBins()
-		{
-			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
-			const int frameNumber = 6;
-			const int scanNumber = 285;
+        /// <summary>
+        /// Tests the GetSpectrumAsBins method. Makes sure that output of the method is as expected.
+        /// </summary>
+        [Test]
+        public void TestGetSpectrumAsBins()
+        {
+            const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            const int frameNumber = 6;
+            const int scanNumber = 285;
 
-			using (DataReader reader = new DataReader(filePath))
-			{
-				int[] bins;
-				int[] intensities;
+            using (DataReader reader = new DataReader(filePath))
+            {
+                int[] bins;
+                int[] intensities;
 
-				int nonZeroCount = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out bins, out intensities);
+                int nonZeros = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out bins, out intensities);
 
-				Assert.AreEqual(nonZeroCount, intensities.Length);
-				Assert.AreEqual(692, nonZeroCount);
-				Assert.AreEqual(80822, intensities.Sum());
-			}
-		}
+                Assert.AreEqual(148000, intensities.Length);
+                Assert.AreEqual(692, nonZeros);
+                Assert.AreEqual(80822, intensities.Sum());
+            }
+        }
 
-		/// <summary>
-		/// Makes sure that the GetSpectrum and GetSpectrumAsBins methods are returning the same data, except in a slightly different format.
-		/// To test this, in this unit test, we manually convert the bins to m/z and make sure that the calculated m/z matches the m'/z resulting from GetSpectrum.
-		/// We did this because the methods have some code duplicated and we wanted to mkake sure that if it was updated in 1 place and changed the functionality, that
-		///		this unit test would fail if the code change was not made in both methods.
-		/// </summary>
-		[Test]
-		public void TestGetSpectrumEquality()
-		{
-			const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
-			const int frameNumber = 6;
-			const int scanNumber = 285;
-			
-			using (DataReader reader = new DataReader(filePath))
-			{
-				int[] binArray;
-				int[] intensityArray1;
 
-				double[] mzArray;
-				int[] intensityArray2;
+        [Test]
+        public void TestGetSpectrumAsBins2()
+        {
 
-				int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out binArray, out intensityArray1);
-				int nonZeroCount2 = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray2);
+            const string filePath =
+                @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+            const int startFrame = 162;
+            const int stopFrame = 164;
+            const int scan = 121;
 
-				GlobalParameters globalParameters = reader.GetGlobalParameters();
-				FrameParameters frameParameters = reader.GetFrameParameters(frameNumber);
 
-				Assert.AreEqual(nonZeroCount1, nonZeroCount2);
+            List<int[]> sequentialFrameIntensityVals = new List<int[]>();
 
-				// Make sure intensity values are the same
-				for (int i = 0; i < intensityArray1.Length; i++)
-				{
-					Assert.AreEqual(intensityArray1[i], intensityArray2[i]);
-				}
+            int numBins;
+            using (DataReader reader = new DataReader(filePath))
+            {
+                int[] bins;
+                double[] mzVals;
+                int[] intensities;
+                numBins = reader.GetGlobalParameters().Bins;
 
-				// Make sure we can calculate the m/z value that is returned by GetSpectrum
-				for (int i = 0; i < intensityArray1.Length; i++)
-				{
-					double mz = convertBinToMZ(frameParameters.CalibrationSlope, frameParameters.CalibrationIntercept, globalParameters.BinWidth, globalParameters.TOFCorrectionTime, binArray[i]);
-					Assert.AreEqual(mz, mzArray[i]);
-				}
-			}
-		}
+                double testMZ = 627.2655682;
+                for (int frame = startFrame; frame <= stopFrame; frame++)
+                {
+                    int binCount = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MSOld, scan, scan, out bins, out intensities);
+                    sequentialFrameIntensityVals.Add(intensities);
+                }
+
+                int testBin = 72072;
+                Assert.AreEqual(35845, sequentialFrameIntensityVals[0][testBin]);
+                Assert.AreEqual(44965, sequentialFrameIntensityVals[1][testBin]);
+                Assert.AreEqual(45758, sequentialFrameIntensityVals[2][testBin]);
+
+                var numZeros = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MSOld, scan, scan, out bins, out intensities);
+
+                Assert.AreEqual(126568, intensities[testBin]);
+
+
+                numZeros = reader.GetSpectrum(startFrame, stopFrame, DataReader.FrameType.MSOld, scan, scan, out mzVals, out intensities);
+                int maxIntensityForTestMZ = 0;
+                for (int i = 0; i < intensities.Length; i++)
+                {
+
+                    if (mzVals[i]>(testMZ-0.1) && mzVals[i]<(testMZ+0.1))
+                    {
+                        if (intensities[i] > maxIntensityForTestMZ) maxIntensityForTestMZ = intensities[i];
+                    }
+                }
+                
+
+                Assert.AreEqual(126568,maxIntensityForTestMZ);
+
+
+                //string outFile = "..\\..\\..\\TestFiles\\outputtedMSData.txt";
+                //using (StreamWriter writer = new StreamWriter(outFile))
+                //{
+
+                //    FrameParameters fp = reader.GetFrameParameters(startFrame);
+                //    GlobalParameters gp = reader.GetGlobalParameters();
+
+                //    StringBuilder sb = new StringBuilder();
+
+
+                //    for (int i = 0; i < numBins; i++)
+                //    {
+                //        sb.Append(i);
+                //        sb.Append("\t");
+                //        sb.Append(DataReader.ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth,
+                //                                            gp.TOFCorrectionTime, i));
+
+                //        sb.Append("\t");
+
+                //        foreach (var intensityArr in sequentialFrameIntensityVals)
+                //        {
+                //            sb.Append(intensityArr[i]);
+                //            sb.Append("\t");
+                //        }
+
+                //        writer.WriteLine(sb.ToString().TrimEnd('\t'));
+                //        sb.Clear();
+                //    }
+
+                //    writer.Close();
+
+                //}
+
+            }
+
+
+
+
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// [Gord] GetSpectrumAsBins should return full array with all zeros. So the two methods are not directly comparable... suggest
+        /// removing some of the assertions of this test
+        /// 
+        /// Makes sure that the GetSpectrum and GetSpectrumAsBins methods are returning the same data, except in a slightly different format.
+        /// To test this, in this unit test, we manually convert the bins to m/z and make sure that the calculated m/z matches the m'/z resulting from GetSpectrum.
+        /// We did this because the methods have some code duplicated and we wanted to mkake sure that if it was updated in 1 place and changed the functionality, that
+        ///		this unit test would fail if the code change was not made in both methods.
+        /// </summary>
+        [Test]
+        public void TestGetSpectrumEquality()
+        {
+            const string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            const int frameNumber = 6;
+            const int scanNumber = 285;
+
+            using (DataReader reader = new DataReader(filePath))
+            {
+                int[] binArray;
+                int[] intensityArray1;
+
+                double[] mzArray;
+                int[] intensityArray2;
+
+                int nonZeroCount1 = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MSOld, scanNumber, out binArray, out intensityArray1);
+                int nonZeroCount2 = reader.GetSpectrum(frameNumber, DataReader.FrameType.MSOld, scanNumber, out mzArray, out intensityArray2);
+
+                GlobalParameters globalParameters = reader.GetGlobalParameters();
+                FrameParameters frameParameters = reader.GetFrameParameters(frameNumber);
+
+                Assert.AreEqual(nonZeroCount1, nonZeroCount2);
+
+                //// Make sure intensity values are the same
+                //for (int i = 0; i < intensityArray1.Length; i++)
+                //{
+                //    Assert.AreEqual(intensityArray1[i], intensityArray2[i]);
+                //}
+
+                //// Make sure we can calculate the m/z value that is returned by GetSpectrum
+                //for (int i = 0; i < intensityArray1.Length; i++)
+                //{
+                //    double mz = convertBinToMZ(frameParameters.CalibrationSlope, frameParameters.CalibrationIntercept, globalParameters.BinWidth, globalParameters.TOFCorrectionTime, binArray[i]);
+                //    Assert.AreEqual(mz, mzArray[i]);
+                //}
+            }
+        }
 
         [Test]
         public void getFrameParametersTest()
         {
-			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
-			{
-				GlobalParameters gp = reader.GetGlobalParameters();
-				FrameParameters fp = reader.GetFrameParameters(1);
+            using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
+            {
+                GlobalParameters gp = reader.GetGlobalParameters();
+                FrameParameters fp = reader.GetFrameParameters(1);
 
-				//Console.WriteLine(fp.AverageTOFLength);
-			}
+                //Console.WriteLine(fp.AverageTOFLength);
+            }
         }
 
         [Test]
@@ -147,35 +248,35 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int testFrame = 1000;
             string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
-			using (m_reader = new DataReader(filePath))
-			{
-				GlobalParameters gp = m_reader.GetGlobalParameters();
-				FrameParameters fp = m_reader.GetFrameParameters(testFrame);
+            using (m_reader = new DataReader(filePath))
+            {
+                GlobalParameters gp = m_reader.GetGlobalParameters();
+                FrameParameters fp = m_reader.GetFrameParameters(testFrame);
 
-				StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
 
-				double prevMz = 0;
-				for (int i = 0; i < 400000; i++)
-				{
-					sb.Append(i);
-					sb.Append('\t');
-					double mz = (double)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
+                double prevMz = 0;
+                for (int i = 0; i < 400000; i++)
+                {
+                    sb.Append(i);
+                    sb.Append('\t');
+                    double mz = (double)convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
 
-					sb.Append(mz);
+                    sb.Append(mz);
 
-					sb.Append('\t');
+                    sb.Append('\t');
 
-					double ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
-					prevMz = mz;
-					sb.Append(ppmDifference);
-					sb.Append(Environment.NewLine);
+                    double ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
+                    prevMz = mz;
+                    sb.Append(ppmDifference);
+                    sb.Append(Environment.NewLine);
 
-				}
+                }
 
-				// Console.Write(sb.ToString());
-			}
+                // Console.Write(sb.ToString());
+            }
         }
-  
+
         //TODO:  need to test something  (assert)
         [Test]
         public void GetFramesAndScanIntensitiesForAGivenMzTest()
@@ -187,20 +288,20 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             double bpimz = 173.289545940302;
             double toleranceInMZ = 25 / 1e6 * bpimz;
             Console.WriteLine("Tolerance in mz  is " + toleranceInMZ);
-			using (m_reader = new DataReader(filePath))
-			{
-				int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
+            using (m_reader = new DataReader(filePath))
+            {
+                int[][] intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(startFrame - 40, startFrame + 40, 0, startScan - 20, startScan + 20, bpimz, toleranceInMZ);
 
-				//for (int i = 0; i < intensityMap.Length; i++)
-				//{
-				//    for (int j = 0; j < intensityMap[i].Length; j++)
-				//    {
-				//        Console.Write(intensityMap[i][j] + ",");
+                //for (int i = 0; i < intensityMap.Length; i++)
+                //{
+                //    for (int j = 0; j < intensityMap[i].Length; j++)
+                //    {
+                //        Console.Write(intensityMap[i][j] + ",");
 
-				//    }
-				//    Console.WriteLine(";");
-				//}
-			}
+                //    }
+                //    Console.WriteLine(";");
+                //}
+            }
         }
 
 
@@ -245,7 +346,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         //TODO:   test seems to write out mostly zeros....  we should test a region richer in intensity data
         //TODO:  is this method the same as another??  Check against Get3DProfile
-       
+
         //TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this 
         //[Test]
         //public void variableSummingTest()
@@ -309,7 +410,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 
 
-    
+
         //TODO:  fix paths;  move this test somewhere else
         //[Test]
         //public void IMSConverterTest_WriteFileTest1()
@@ -388,7 +489,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
 
-   
+
 
         private void writeFile(byte[] data, String fileName)
         {
