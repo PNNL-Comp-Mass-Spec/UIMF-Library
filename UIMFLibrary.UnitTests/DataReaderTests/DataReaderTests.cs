@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,6 +36,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(708377.857627842, mzArray.Sum());
             }
         }
+
+
+
+
 
         [Test]
         public void TestGetSpectrumSummed1()
@@ -304,6 +309,55 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
         }
 
+
+        [Test]
+        public void TestPressureDetermination1()
+        {
+            string uimfFilePressureInTorr1 =
+                @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+
+            string uimfFilePressureInTorr2 =
+                @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+
+            string uimfFileWithPressureInMillitorr =
+                @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_ctrl_1ugul_Run2_4bit_23Sep11_Frodo.uimf";
+
+            string uimfFileWithExtraPressureColumnsInTorr =
+                @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_P28_A10_2602_187_19Dec11_Cheetah_11-09-03.uimf";
+
+            
+            Stopwatch sw=new Stopwatch();
+            sw.Start();
+            
+            using (DataReader reader= new DataReader(uimfFilePressureInTorr1))
+            {
+                Assert.IsFalse(reader.PressureIsMilliTorr);
+                reader.Dispose();
+            }
+
+            using (DataReader reader = new DataReader(uimfFilePressureInTorr2))
+            {
+                Assert.IsFalse(reader.PressureIsMilliTorr);
+                reader.Dispose();
+            }
+
+            using (DataReader reader = new DataReader(uimfFileWithExtraPressureColumnsInTorr))
+            {
+                Assert.IsFalse(reader.PressureIsMilliTorr);
+                reader.Dispose();
+            }
+
+            using (DataReader reader = new DataReader(uimfFileWithPressureInMillitorr))
+            {
+                Assert.IsTrue(reader.PressureIsMilliTorr);
+                reader.Dispose();
+            }
+
+            sw.Stop();
+
+           // Console.WriteLine(sw.ElapsedMilliseconds);
+
+        }
 
         ////TODO: this test fails... not sure we need it.
         //[Test]

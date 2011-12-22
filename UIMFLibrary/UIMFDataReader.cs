@@ -13,7 +13,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
@@ -61,17 +60,21 @@ namespace UIMFLibrary
             private GlobalParameters m_globalParameters;
             private double[] m_calibrationTable;
 			private string m_uimfFilePath;
-            private bool m_pressureInMTorr;
-
+        
+        
     		private int m_frameTypeMs;
 
 			private static int m_errMessageCounter;
+
 
         #endregion
 
         #region "Properties"
 
-			public double TenthsOfNanoSecondsPerBin
+        public bool PressureIsMilliTorr { get; set; }
+
+
+		public double TenthsOfNanoSecondsPerBin
 			{
 				get { return m_globalParameters.BinWidth * 10.0; }
 			}
@@ -106,7 +109,7 @@ namespace UIMFLibrary
 					// Lookup whether the pressure columns are in torr or mTorr
 					DeterminePressureUnits();
 
-					// Find out if the MS1 Frames are labeled as 0 or 1
+					// Find out if the MS1 Frames are labeled as 0 or 1.
 					DetermineFrameTypes();
 				}
 				catch (Exception ex)
@@ -1562,19 +1565,20 @@ namespace UIMFLibrary
 			return sObjects;
 		}
 
-		private static bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
+    	private static bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
 		{
-			bool bMilliTorr = false;
+			bool isMillitorr = false;
 			try
 			{
-				cmd.CommandText = "SELECT Avg(" + columnName + ") AS AvgPressure FROM " + tableName + " WHERE IFNULL(" + columnName + ", 0) > 0;";
+                cmd.CommandText = "SELECT Avg(Pressure) AS AvgPressure FROM (SELECT " + columnName + " AS Pressure FROM " +
+                                  tableName + " WHERE IFNULL(" + columnName + ", 0) > 0 ORDER BY FrameNum LIMIT 25) SubQ";
 
 				object objResult = cmd.ExecuteScalar();
 				if (objResult != null && objResult != DBNull.Value)
 				{
 					if (Convert.ToSingle(objResult) > 100)
 					{
-						bMilliTorr = true;
+						isMillitorr = true;
 					}
 				}
 
@@ -1584,28 +1588,44 @@ namespace UIMFLibrary
 				Console.WriteLine("Exception examining pressure column " + columnName + " in table " + tableName + ": " + ex.Message);
 			}
 
-			return bMilliTorr;
+			return isMillitorr;
 		}
 
 		/// <summary>
 		/// Examines the pressure columns to determine whether they are in torr or mTorr
 		/// </summary>
-		private void DeterminePressureUnits()
+		internal void DeterminePressureUnits()
 		{
 			try
 			{
-				m_pressureInMTorr = false;
+				PressureIsMilliTorr = false;
 
 				SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection);
 
-				bool bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
-				if (bMilliTorr) m_pressureInMTorr = true;
+				bool isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
+				if (isMilliTorr)
+				{
+				    PressureIsMilliTorr = true;
+				    return;
+				}
 
-				bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "IonFunnelTrapPressure");
-				if (bMilliTorr) m_pressureInMTorr = true;
+                isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "PressureBack");
+                if (isMilliTorr)
+                {
+                    PressureIsMilliTorr = true;
+                    return;
+                }
 
-				bMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "RearIonFunnelPressure");
-				if (bMilliTorr) m_pressureInMTorr = true;
+              
+				isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "IonFunnelTrapPressure");
+				if (isMilliTorr)
+				{
+				    PressureIsMilliTorr = true;
+				    return;
+				}
+
+				isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "RearIonFunnelPressure");
+				if (isMilliTorr) PressureIsMilliTorr = true;
 			}
 			catch (Exception ex)
 			{
@@ -1614,7 +1634,9 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Determines if the MS1 Frames of this file are labeled as 0 or 1.
+		/// Determines if the MS1 Frames of this file are labeled as 0 or 1. 
+		/// Note that MS1 frames should recorded as '1'. But we need to
+		/// support legacy UIMF files which have values of '0' for MS1. 
 		/// The determined value is stored in a class-wide variable for later use.
 		/// Exception is thrown if both 0 and 1 are found.
 		/// </summary>
@@ -1967,7 +1989,7 @@ namespace UIMFLibrary
 					fp.CalibrationDone = TryGetFrameParamInt32(reader, "CalibrationDone", 0);
 					fp.Decoded = TryGetFrameParamInt32(reader, "Decoded", 0);
 
-					if (m_pressureInMTorr)
+					if (PressureIsMilliTorr)
 					{
 						// Divide each of the pressures by 1000 to convert from milliTorr to Torr
 						fp.HighPressureFunnelPressure /= 1000.0;
