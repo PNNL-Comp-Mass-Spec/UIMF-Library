@@ -1208,36 +1208,29 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Extracts bins and intensities from given frame number and scan number.
-		/// Each entry into binArray will be the bin number that contained a non-zero intensity value.
-		/// The index of the bin number in binArray will match the index of the corresponding intensity value in intensityArray.
+		/// Extracts intensities from given frame range and scan range.
+		/// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
 		/// </summary>
 		/// <param name="frameNumber">The frame number of the desired spectrum.</param>
 		/// <param name="frameType">The frame type to consider.</param>
 		/// <param name="scanNumber">The scan number of the desired spectrum.</param>
-		/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
-		/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
 		/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-		public int GetSpectrumAsBins(int frameNumber, FrameType frameType, int scanNumber, out int[] binArray, out int[] intensityArray)
+		public int[] GetSpectrumAsBins(int frameNumber, FrameType frameType, int scanNumber)
 		{
-			return GetSpectrumAsBins(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out binArray, out intensityArray);
+			return GetSpectrumAsBins(frameNumber, frameNumber, frameType, scanNumber, scanNumber);
 		}
 
     	/// <summary>
-    	/// Extracts bins and intensities from given frame range and scan range.
+    	/// Extracts intensities from given frame range and scan range.
     	/// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
-    	/// Each entry into binArray will be the bin number that contained a non-zero intensity value.
-    	/// The index of the bin number in binArray will match the index of the corresponding intensity value in intensityArray.
     	/// </summary>
     	/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
 		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
 		/// <param name="frameType">The frame type to consider.</param>
     	/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
 		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
-    	/// <param name="binArray">The bin numbers that contained non-zero intensity values.</param>
-    	/// <param name="intensityArray">The corresponding intensity values of the non-zero bin numbers.</param>
-    	/// <returns>The number of non-zero bins found in the resulting spectrum.</returns>
-    	public int GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, out int[] binArray, out int[] intensityArray)
+    	/// <returns>An array containing an intensity value for each bin location, even if the intensity value is 0.</returns>
+    	public int[] GetSpectrumAsBins(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber)
 		{
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
@@ -1245,11 +1238,7 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
-			int nonZeroCount = 0;
-
-			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
-			binArray = new int[m_globalParameters.Bins];
-			intensityArray = new int[m_globalParameters.Bins];
+			int[] intensityArray = new int[m_globalParameters.Bins];
 
 			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
@@ -1274,26 +1263,17 @@ namespace UIMFLibrary
 							}
 							else
 							{
-								// Only need to set the bin array or update the nonZeroCount if we have not previously seen this bin index
-								if (intensityArray[binIndex] == 0)
-								{
-									binArray[binIndex] = binIndex;
-									nonZeroCount++;
-								}
-
 								intensityArray[binIndex] += decodedSpectraRecord;
 								binIndex++;
 							}
 						}
 					}
 				}
-
-				//StripZerosFromArrays(nonZeroCount, ref binArray, ref intensityArray);
 			}
 
 			m_getSpectrumCommand.Parameters.Clear();
 
-			return nonZeroCount;
+			return intensityArray;
 		}
 
     	/// <summary>
