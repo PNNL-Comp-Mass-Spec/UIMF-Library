@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Linq;
-using NUnit.Framework;
 using System.Diagnostics;
+using System.Text;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
@@ -218,6 +215,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             //Console.WriteLine(sb.ToString());
         }
+        
 
     }
 }

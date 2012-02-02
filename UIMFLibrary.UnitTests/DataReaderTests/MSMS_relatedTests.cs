@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
@@ -56,6 +52,33 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 }
 
                 Assert.AreEqual(222, checkSum);
+            }
+        }
+
+
+        [Test]
+        public void GetMSMSTest1()
+        {
+            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            {
+                int testFrame = 2;
+                int startScan = 1;
+                int stopScan = 300;
+
+                int[] intensityArray;
+                double[] mzArray;
+                reader.GetSpectrum(testFrame, testFrame, DataReader.FrameType.MS2, startScan, stopScan, out mzArray,
+                                   out intensityArray);
+
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < mzArray.Length; i++)
+                {
+                    sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
+
+                }
+                Assert.IsNotNull(mzArray);
+                Assert.IsTrue(mzArray.Length > 0);
+
             }
         }
 
