@@ -82,7 +82,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 int[] intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
 
-                Assert.AreEqual(148000, intensities.Length);
+                Assert.AreEqual(148001, intensities.Length);
                 Assert.AreEqual(80822, intensities.Sum());
             }
         }
@@ -259,6 +259,29 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
            // Console.WriteLine(sw.ElapsedMilliseconds);
 
         }
+
+		/// <summary>
+		/// We found a bug in some UIMF Files generated on IMS2 where the bin value exceeded the maximum bin value.
+		/// We added a check in the UIMF Reader to make sure that this case is taken care of.
+		/// This unit test is being left in to make sure the bug never surfaces again.
+		/// </summary>
+		[Test]
+		public void TestBinValueGreaterThanMax()
+		{
+			string uimfFile = @"\\protoapps\UserData\Slysz\For_Kevin\LSDF2_10-0457-03_A_26May11_Roc_11-02-26.uimf";
+			using (UIMFLibrary.DataReader reader = new DataReader(uimfFile))
+			{
+				int frameStart = 164;
+				int frameStop = 164;
+				int scanStart = 5;
+				int scanStop = 5;
+
+				double[] mzArray;
+				int[] intensityArray;
+
+				reader.GetSpectrum(frameStart, frameStop, DataReader.FrameType.MS1, scanStart, scanStop, out mzArray, out intensityArray);
+			}
+		}
 
         ////TODO: this test fails... not sure we need it.
         //[Test]

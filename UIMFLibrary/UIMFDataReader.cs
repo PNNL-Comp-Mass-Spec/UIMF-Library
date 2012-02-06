@@ -1156,8 +1156,9 @@ namespace UIMFLibrary
 			int nonZeroCount = 0;
 
 			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
-			mzArray = new double[m_globalParameters.Bins];
-			intensityArray = new int[m_globalParameters.Bins];
+			// Adding 1 to the size to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
+			mzArray = new double[m_globalParameters.Bins + 1];
+			intensityArray = new int[m_globalParameters.Bins + 1];
 
 			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
@@ -1238,7 +1239,8 @@ namespace UIMFLibrary
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
-			int[] intensityArray = new int[m_globalParameters.Bins];
+			// Adding 1 to the number of bins to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
+			int[] intensityArray = new int[m_globalParameters.Bins + 1];
 
 			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
 			{
