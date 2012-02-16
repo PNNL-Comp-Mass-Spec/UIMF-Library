@@ -72,6 +72,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LogEntry.cs" />
+    <Compile Include="LZFCompressionUtil.cs" />
     <Compile Include="UIMFDataReader.cs">
       <SubType>Code</SubType>
     </Compile>

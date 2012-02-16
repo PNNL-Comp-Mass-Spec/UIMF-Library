@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Text;
+using Lzf;
 
 namespace UIMFLibrary
 {
@@ -569,7 +570,7 @@ namespace UIMFLibrary
             {
                 byte[] byteBuffer = new byte[nrlze * datatypeSize];
                 Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-                nlzf = IMSCOMP_wrapper.compress_lzf(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
             }
 
             if (nlzf != 0)
@@ -633,7 +634,7 @@ namespace UIMFLibrary
             {
                 byte[] byte_array = new byte[nrlze * datatypeSize];
                 Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
-                nlzf = IMSCOMP_wrapper.compress_lzf(ref byte_array, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(ref byte_array, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
             }
 
             if (nlzf != 0)
@@ -705,7 +706,7 @@ namespace UIMFLibrary
 						byte[] compresedRecord = new byte[index*datatypeSize*5];
 						byte[] byteBuffer = new byte[index*datatypeSize];
 						Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index*datatypeSize);
-						int nlzf = IMSCOMP_wrapper.compress_lzf(ref byteBuffer, index*datatypeSize, ref compresedRecord, compresedRecord.Length);
+						int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, index * datatypeSize, ref compresedRecord, compresedRecord.Length);
 						byte[] spectra = new byte[nlzf];
 
 						Array.Copy(compresedRecord, spectra, nlzf);
@@ -782,7 +783,7 @@ namespace UIMFLibrary
                     byte[] compresedRecord = new byte[index * datatypeSize * 5];
                     byte[] byteBuffer = new byte[index * datatypeSize];
                     Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
-                    int nlzf = IMSCOMP_wrapper.compress_lzf(ref byteBuffer, index * datatypeSize, ref compresedRecord, compresedRecord.Length); 
+					int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, index * datatypeSize, ref compresedRecord, compresedRecord.Length); 
                     byte[] spectra = new byte[nlzf];
 
                     Array.Copy(compresedRecord, spectra, nlzf);
@@ -847,7 +848,7 @@ namespace UIMFLibrary
             {   
                 byte[] byteBuffer = new byte[nrlze * datatypeSize];
                 Buffer.BlockCopy(rlze_data, 0, byteBuffer, 0, nrlze * datatypeSize);
-                nlzf = IMSCOMP_wrapper.compress_lzf(ref byteBuffer, nrlze * datatypeSize, ref compresedRecord, compresedRecord.Length);
+				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compresedRecord, compresedRecord.Length);
             }
 
             if (nlzf != 0)
@@ -912,7 +913,7 @@ namespace UIMFLibrary
             {
                 byte[] byteBuffer = new byte[nrlze * datatypeSize];
                 Buffer.BlockCopy(runLengthEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-                nlzf = IMSCOMP_wrapper.compress_lzf(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
             }
 
             if (nlzf != 0)

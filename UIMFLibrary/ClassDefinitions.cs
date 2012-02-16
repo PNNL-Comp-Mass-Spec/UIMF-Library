@@ -199,55 +199,6 @@ namespace UIMFLibrary
         }
     }
 
-    public class IMSCOMP
-    {
-        public const string dll = "IMSCOMP.dll";
-
-        [DllImport(dll, CharSet = CharSet.Ansi)]
-        public static unsafe extern int compress_buffer(
-            double* in_data,
-            int blocksize,
-            byte* out_data);
-		[DllImport(dll, CharSet = CharSet.Ansi)]
-		public static unsafe extern int lzf_compress(byte* in_data, int in_len, byte* out_data, int out_len);
-		[DllImport(dll, CharSet = CharSet.Ansi)]
-		public static unsafe extern int lzf_decompress(byte* in_data, int in_len, byte* out_data, int out_len);
-	}
-    public class IMSCOMP_wrapper
-    {
-        public static unsafe int compress_buffer(
-            ref double[] in_data, int blocksize, ref byte[] out_data)
-        {
-            fixed (double* i = in_data)
-            {
-                fixed (byte* o = out_data)
-                {
-                    return IMSCOMP.compress_buffer(i, blocksize, o);
-                }
-            }
-        }
-		public static unsafe int compress_lzf(ref byte[] in_data, int in_len, ref byte[] out_data, int out_len)
-		{
-			fixed (byte* i = in_data)
-			{
-				fixed (byte* o = out_data)
-				{
-					return IMSCOMP.lzf_compress(i, in_len, o, out_len);
-				}
-			}
-		}
-		public static unsafe int decompress_lzf(ref byte[] in_data, int in_len, ref byte[] out_data, int out_len)
-		{
-			fixed (byte* i = in_data)
-			{
-				fixed (byte* o = out_data)
-				{
-					return IMSCOMP.lzf_decompress(i, in_len, o, out_len);
-				}
-			}
-		}
-	}
-
 
     // /////////////////////////////////////////////////////////////////////
     // Calibrate TOF to m/z according to formula mass = (k * (t-t0))^2

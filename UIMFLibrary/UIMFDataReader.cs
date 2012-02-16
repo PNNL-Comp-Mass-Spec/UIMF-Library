@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using Lzf;
 
 namespace UIMFLibrary
 {
@@ -188,7 +189,7 @@ namespace UIMFLibrary
 						continue;
 
 					int indexCurrentBin = 0;
-					int decompressLength = IMSCOMP_wrapper.decompress_lzf(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
+					int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
 
 					for (int binData = 0; (binData < decompressLength) && (indexCurrentBin <= endBin); binData += 4)
 					{
@@ -224,7 +225,7 @@ namespace UIMFLibrary
 						continue;
 
 					int indexCurrentBin = 0;
-					int decompressLength = IMSCOMP_wrapper.decompress_lzf(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
+					int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
 
 					int pixelY = 1;
 
@@ -889,7 +890,7 @@ namespace UIMFLibrary
 
 					if (spectra.Length > 0)
 					{
-						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int outputLength = LZFCompressionUtil.Decompress(ref spectra, spectra.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
 						int numReturnedBins = outputLength / DATASIZE;
 						for (int i = 0; i < numReturnedBins; i++)
 						{
@@ -1173,7 +1174,7 @@ namespace UIMFLibrary
 						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
 						FrameParameters frameParameters = GetFrameParameters(frameNumber);
 
-						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
 						int numBins = outputLength / DATASIZE;
 
 						for (int i = 0; i < numBins; i++)
@@ -1253,7 +1254,7 @@ namespace UIMFLibrary
 
 					if (spectraRecord.Length > 0)
 					{
-						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
 						int numBins = outputLength / DATASIZE;
 
 						for (int i = 0; i < numBins; i++)
@@ -1719,7 +1720,7 @@ namespace UIMFLibrary
 					//get frame number so that we can get the frame calibration parameters
 					if (spectra.Length > 0)
 					{
-						int outputLength = IMSCOMP_wrapper.decompress_lzf(ref spectra, spectra.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int outputLength = LZFCompressionUtil.Decompress(ref spectra, spectra.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
 						int numBins = outputLength / DATASIZE;
 						for (int i = 0; i < numBins; i++)
 						{
