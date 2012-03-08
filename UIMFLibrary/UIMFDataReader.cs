@@ -167,7 +167,7 @@ namespace UIMFLibrary
 			}
 
 			// This function extracts intensities from selected scans and bins in a single frame 
-			// and returns a two-dimetional array intensities[scan][bin]
+			// and returns a two-dimensional array intensities[scan][bin]
 			// frameNum is mandatory and all other arguments are optional
 			m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
 			m_preparedStatement.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = " + frameNumber + " AND ScanNum >= " + startScan + " AND ScanNum <= " + (startScan + dataWidth - 1);
@@ -857,7 +857,7 @@ namespace UIMFLibrary
 			int numBins = m_globalParameters.Bins;
 			int numScans = frameParameters.Scans;
 
-			// The number of scans has to be divisble by the given segment length
+			// The number of scans has to be divisible by the given segment length
 			if (numScans % segmentLength != 0)
 			{
 				throw new Exception("Number of scans of " + numScans + " is not divisible by the given segment length of " + segmentLength);
@@ -1911,7 +1911,7 @@ namespace UIMFLibrary
 				fp.voltHVRack2 = Convert.ToDouble(reader["voltHVRack2"]);
 				fp.voltHVRack3 = Convert.ToDouble(reader["voltHVRack3"]);
 				fp.voltHVRack4 = Convert.ToDouble(reader["voltHVRack4"]);
-				fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"]);                // 14, Capilary Inlet Voltage
+				fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"]);                // 14, Capillary Inlet Voltage
 
 				fp.voltEntranceHPFIn = TryGetFrameParam(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
 				if (columnMissing)

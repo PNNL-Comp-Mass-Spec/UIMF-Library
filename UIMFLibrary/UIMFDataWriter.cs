@@ -162,7 +162,7 @@ namespace UIMFLibrary
                     "voltHVRack2 DOUBLE, " +                         // 19, Voltage setting in the IMS system
                     "voltHVRack3 DOUBLE, " +                         // 20, Voltage setting in the IMS system
                     "voltHVRack4 DOUBLE, " +                         // 21, Voltage setting in the IMS system
-                    "voltCapInlet DOUBLE, " +                        // 22, Capilary Inlet Voltage
+                    "voltCapInlet DOUBLE, " +                        // 22, Capillary Inlet Voltage
                     "voltEntranceHPFIn DOUBLE, " +                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
                     "voltEntranceHPFOut DOUBLE, " +                  // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
                     "voltEntranceCondLmt DOUBLE, " +                 // 25, Cond Limit Voltage
@@ -488,7 +488,7 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));                 // 19, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));                 // 20, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));                 // 21, Voltage setting in the IMS system
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));               // 22, Capilary Inlet Voltage
+            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));               // 22, Capillary Inlet Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));     // 23, HPF In Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));   // 24, HPF Out Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage

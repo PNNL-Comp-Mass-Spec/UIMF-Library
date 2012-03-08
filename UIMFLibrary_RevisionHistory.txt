@@ -1,8 +1,27 @@
 UIMFLibrary Revision History
 
+Version 2.0.4434; February 21, 2012
+	- Added xml file for 64-bit System.Data.SQLite
+
+Version 2.0.4429; February 16, 2012
+	- Replaced IMSCOMP.dll with LZFCompressionUtil
+
+Version 2.0.4419; February 6, 2012
+	- Fixed bug that causes an error if a bin value was seen that exceeded the maximum bin value of the file
+
+Version 2.0.4373; December 22, 2011
+	- Updated UIMFLibrary to automatically handle FrameType of 0 or 1 
+
+Version 2.0.4365; December 14, 2011
+	- More code cleanup, including renaming enum iFrameType to FrameTye
+
+Version 2.0.4358; December 7, 2011
+	- Removed all references of FrameIndex
+
 Version 1.3.4212; July 14, 2011
 	- Added support for the pressure columns in the Frame_Parameters having values with units of milliTorr instead of Torr
 		- Auto-converting values to Torr when reading data with PopulateFrameParameters	
+		- Example dataset is Sarc_ctrl_1ugul_Run2_4bit_23Sep11_Frodo from IMS_TOF_6
 	- Renamed the voltEntrance and voltExit fields:
 		voltEntranceIFTOut -> voltEntranceHPFOut
 		voltEntranceIFTIn -> voltEntranceHPFIn

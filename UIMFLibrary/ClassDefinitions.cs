@@ -58,7 +58,7 @@ namespace UIMFLibrary
         public double voltHVRack2;                     // 19, Voltage setting in the IMS system
         public double voltHVRack3;                     // 20, Voltage setting in the IMS system
         public double voltHVRack4;                     // 21, Voltage setting in the IMS system
-        public double voltCapInlet;                    // 22, Capilary Inlet Voltage
+        public double voltCapInlet;                    // 22, Capillary Inlet Voltage
         public double voltEntranceHPFIn;               // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
         public double voltEntranceHPFOut;              // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
         public double voltEntranceCondLmt;             // 25, Cond Limit Voltage
