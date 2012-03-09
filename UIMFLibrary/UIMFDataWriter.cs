@@ -586,11 +586,89 @@ namespace UIMFLibrary
 			return nlzf;
 		}
 
-		//This should be the correct signature for the insert scan function
-		//public int InsertScan(FrameParameters fp, int scanNum, int[] intensities, double bin_width)
-		//{
-		//}
+		/// <summary>
+		/// Insert a new scan using an array of intensities along with bin_width
+		/// </summary>
+		/// <param name="frameParameters">Frame parameters</param>
+		/// <param name="scanNum">Scan number</param>
+		/// <param name="intensities">Array of intensities, including all zeros</param>
+		/// <param name="bin_width">Bin width (used to compute m/z value of the BPI data point)</param>
+		/// <returns>Number of non-zero data points</returns>
+		public int InsertScan(FrameParameters frameParameters, int scanNum, int[] intensities, double bin_width)
+		{
+			int nonZeroCount = 0;
 
+			if (frameParameters != null)
+			{
+
+				int nrlze = 0;
+				int zeroCount = 0;
+				int[] runLengthEncodedData = new int[intensities.Length];
+				int tic = 0;
+				int bpi = 0;
+				double bpiMz = 0;
+				int datatypeSize = 4;
+
+				if (m_globalParameters == null)
+					m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+
+				for (int i = 0; i < intensities.Length; i++)
+				{
+					int x = intensities[i];
+					if (x > 0)
+					{
+
+						//TIC is just the sum of all intensities
+						tic += intensities[i];
+						if (intensities[i] > bpi)
+						{
+							bpi = intensities[i];
+							bpiMz = convertBinToMz(i, bin_width, frameParameters);
+						}
+						if (zeroCount < 0)
+						{
+							runLengthEncodedData[nrlze++] = zeroCount;
+							zeroCount = 0;
+						}
+						runLengthEncodedData[nrlze++] = x;
+					}
+					else zeroCount--;
+				}
+
+
+				byte[] compressedData = new byte[nrlze * datatypeSize * 5];
+				if (nrlze > 0)
+				{
+					byte[] byte_array = new byte[nrlze * datatypeSize];
+					Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
+					nonZeroCount = LZFCompressionUtil.Compress(ref byte_array, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				}
+
+				if (nonZeroCount != 0)
+				{
+					byte[] spectra = new byte[nonZeroCount];
+					Array.Copy(compressedData, spectra, nonZeroCount);
+
+					//Insert records
+					insertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
+					m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+					m_dbCommandPrepareInsertScan.Parameters.Clear();
+				}
+
+			}
+
+			return nonZeroCount;
+		}
+
+		/// <summary>
+		/// Insert a new scan using an array of intensities (as floats), bin_width, and "counter" which should be equivalent to the count of non-zero data in intensities
+		/// </summary>
+		/// <param name="frameParameters"></param>
+		/// <param name="scanNum"></param>
+		/// <param name="counter"></param>
+		/// <param name="intensities"></param>
+		/// <param name="bin_width"></param>
+		/// <returns></returns>
 		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, float[] intensities, double bin_width)
 		{			
 			int nrlze = 0; 
@@ -604,7 +682,7 @@ namespace UIMFLibrary
             if (m_globalParameters == null)
                 m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
-			for ( int i = 0; i < intensities.Length; i++)
+			for (int i = 0; i < intensities.Length; i++)
 			{
 				float x = intensities[i];
 				if (x > 0)
@@ -614,10 +692,10 @@ namespace UIMFLibrary
 					tic += intensities[i];
 					if (intensities[i] > bpi)
 					{
-						bpi = intensities[i] ; 
+						bpi = intensities[i]; 
 						bpiMz = convertBinToMz(i, bin_width, frameParameters);
 					}
-					if(zeroCount < 0)
+					if (zeroCount < 0)
 					{
 						runLengthEncodedData[nrlze++] = (float)zeroCount;
 						zeroCount = 0;
@@ -651,7 +729,18 @@ namespace UIMFLibrary
 		}
 
 
-        public int InsertScan(FrameParameters fp, int scanNum, System.Collections.Generic.List<int> bins, System.Collections.Generic.List<int> intensities, double binWidth, int timeOffset)
+		/// <summary>
+		/// Insert a scan using a list of bins and a list of intensities
+		/// </summary>
+		/// <param name="fp"></param>
+		/// <param name="scanNum"></param>
+		/// <param name="bins"></param>
+		/// <param name="intensities"></param>
+		/// <param name="binWidth"></param>
+		/// <param name="timeOffset"></param>
+		/// <returns></returns>
+		//TODO:: Deprecate this function since superseded by InsertScan with: int[] intensities, double bin_width
+		public int InsertScan(FrameParameters fp, int scanNum, System.Collections.Generic.List<int> bins, System.Collections.Generic.List<int> intensities, double binWidth, int timeOffset)
         {
 			try
 			{

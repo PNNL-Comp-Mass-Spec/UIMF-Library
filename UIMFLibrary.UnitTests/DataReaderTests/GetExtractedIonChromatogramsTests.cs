@@ -88,7 +88,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			using (m_reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int[] frameVals = null;
-				int[] scanVals = null;
+				// int[] scanVals = null;
 				int[] intensityVals = null;
 
 				Stopwatch sw = new Stopwatch();

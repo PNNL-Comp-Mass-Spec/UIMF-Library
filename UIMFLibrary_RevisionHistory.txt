@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 2.0.4450; March 8, 2012
+	- Added overloaded version of InsertScan that takes an integer array of intensities
+
 Version 2.0.4434; February 21, 2012
 	- Added xml file for 64-bit System.Data.SQLite
 
