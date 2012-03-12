@@ -1506,7 +1506,7 @@ namespace UIMFLibrary
 			m_preparedStatement.ExecuteNonQuery();
 			m_preparedStatement.Dispose();
 
-			// Make sure the mz_Calibration object is up-to-date
+			// Make sure the m_mzCalibration object is up-to-date
 			// These values will likely also get updated via the call to reset_FrameParameters (which then calls GetFrameParameters)
 			m_mzCalibration.k = slope / 10000.0;
 			m_mzCalibration.t0 = intercept * 10000.0;
