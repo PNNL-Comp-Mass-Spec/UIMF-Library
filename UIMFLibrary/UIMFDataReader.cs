@@ -492,6 +492,33 @@ namespace UIMFLibrary
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
         }
 
+		/// <summary>
+		/// Extracts BPI from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
+		/// </summary>
+		/// <param name="startFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="endFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="startScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="endScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <returns>Dictionary where keys are frame number and values are the BPI value</returns>
+		public Dictionary<int, double> GetBPIByFrame(int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+		{
+			return GetTicOrBpiByFrame(startFrameNumber, endFrameNumber, startScan, endScan, BPI, filterByFrameType: false, frameType: FrameType.MS1);
+		}
+
+		/// <summary>
+		/// Extracts BPI from startFrame to endFrame and startScan to endScan and returns a dictionary of the specified frame type
+		/// </summary>
+		/// <param name="startFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="endFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="startScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="endScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="frameType">FrameType to return</param>
+		/// <returns>Dictionary where keys are frame number and values are the BPI value</returns>
+		public Dictionary<int, double> GetBPIByFrame(int startFrameNumber, int endFrameNumber, int startScan, int endScan, FrameType frameType)
+		{
+			return GetTicOrBpiByFrame(startFrameNumber, endFrameNumber, startScan, endScan, BPI, filterByFrameType: true, frameType: frameType);
+		}
+
         public List<string> GetCalibrationTableNames()
         {
         	SQLiteCommand cmd = new SQLiteCommand(m_uimfDatabaseConnection) {CommandText = "SELECT NAME FROM Sqlite_master WHERE type='table' ORDER BY NAME"};
@@ -1316,6 +1343,33 @@ namespace UIMFLibrary
 
             return tic;
         }
+		
+		/// <summary>
+		/// Extracts TIC from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
+		/// </summary>
+		/// <param name="startFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="endFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="startScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="endScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <returns>Dictionary where keys are frame number and values are the TIC value</returns>
+		public Dictionary<int, double> GetTICByFrame(int startFrameNumber, int endFrameNumber, int startScan, int endScan)
+		{
+			return GetTicOrBpiByFrame(startFrameNumber, endFrameNumber, startScan, endScan, TIC, filterByFrameType:false, frameType:FrameType.MS1);
+		}
+
+		/// <summary>
+		/// Extracts TIC from startFrame to endFrame and startScan to endScan and returns a dictionary of the specified frame type
+		/// </summary>
+		/// <param name="startFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="endFrameNumber">If startFrameNumber and endFrameNumber are 0, then returns all frames</param>
+		/// <param name="startScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="endScan">If startScan and endScan are 0, then uses all scans</param>
+		/// <param name="frameType">FrameType to return</param>
+		/// <returns>Dictionary where keys are frame number and values are the TIC value</returns>
+		public Dictionary<int, double> GetTICByFrame(int startFrameNumber, int endFrameNumber, int startScan, int endScan, FrameType frameType)
+		{
+			return GetTicOrBpiByFrame(startFrameNumber, endFrameNumber, startScan, endScan, TIC, filterByFrameType:true, frameType:frameType);
+		}
 
         /// <summary>
         /// Method to check if this dataset has any MSMS data
@@ -1759,28 +1813,70 @@ namespace UIMFLibrary
 		/// <param name="fieldName"></param>
 		private double[] GetTicOrBpi(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName)
 		{
+			Dictionary<int, double> dctTicOrBPI = GetTicOrBpiByFrame(startFrameNumber, endFrameNumber, startScan, endScan, fieldName, filterByFrameType: true, frameType:frameType);
+
+			double[] data = new double[dctTicOrBPI.Count];
+			
+			int index = 0;
+			foreach (double Value in dctTicOrBPI.Values)
+			{
+				data[index] = Value;
+				index++;
+			}
+
+			return data;
+		}
+
+		/// <summary>
+		/// Get TIC or BPI for scans of given frame type in given frame range
+		/// Optionally filter on scan range
+		/// </summary>
+		/// <param name="frameType"></param>
+		/// <param name="startFrameNumber"></param>
+		/// <param name="endFrameNumber"></param>
+		/// <param name="startScan"></param>
+		/// <param name="endScan"></param>
+		/// <param name="fieldName"></param>
+		/// <returns>Dictionary where keys are frame number and values are the TIC or BPI value</returns>
+		private Dictionary<int, double> GetTicOrBpiByFrame(int startFrameNumber, int endFrameNumber, int startScan, int endScan, string fieldName, bool filterByFrameType, FrameType frameType)
+		{
 			// Make sure endFrame is valid
 			if (endFrameNumber < startFrameNumber)
 			{
 				endFrameNumber = startFrameNumber;
 			}
 
-			// Compute the number of frames to be returned
-			int nframes = endFrameNumber - startFrameNumber + 1;
-
-			double[] data = new double[nframes];
+			Dictionary<int, double> dctTicOrBPI = new Dictionary<int, double>();
 
 			// Construct the SQL
 			string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value " +
-						 " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum " +
-						 " WHERE Frame_Parameters.FrameType = " + (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType) + " AND " +
-							   " Frame_Parameters.FrameNum >= " + startFrameNumber + " AND " +
-							   " Frame_Parameters.FrameNum <= " + endFrameNumber;
+						 " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum ";
+
+			string whereClause = string.Empty;
+
+			if (!(startFrameNumber == 0 && endFrameNumber == 0))
+			{
+				// Filter by frame number
+				whereClause = "Frame_Parameters.FrameNum >= " + startFrameNumber + " AND " + "Frame_Parameters.FrameNum <= " + endFrameNumber;
+			}
+
+			if (filterByFrameType)
+			{
+				// Filter by frame type
+				if (!string.IsNullOrEmpty(whereClause)) whereClause += " AND ";
+				whereClause += "Frame_Parameters.FrameType = " + (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType);
+			}
 
 			if (!(startScan == 0 && endScan == 0))
 			{
 				// Filter by scan number
-				sql += " AND Frame_Scans.ScanNum >= " + startScan + " AND Frame_Scans.ScanNum <= " + endScan;
+				if (!string.IsNullOrEmpty(whereClause)) whereClause += " AND ";
+				whereClause += "Frame_Scans.ScanNum >= " + startScan + " AND Frame_Scans.ScanNum <= " + endScan;
+			}
+
+			if (!string.IsNullOrEmpty(whereClause))
+			{
+				sql += " WHERE " + whereClause;
 			}
 
 			sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
@@ -1789,17 +1885,15 @@ namespace UIMFLibrary
 			{
 				dbcmdUIMF.CommandText = sql;
 				using (SQLiteDataReader reader = dbcmdUIMF.ExecuteReader())
-				{
-					int ncount = 0;
+				{					
 					while (reader.Read())
 					{
-						data[ncount] = Convert.ToDouble(reader["Value"]);
-						ncount++;
+						dctTicOrBPI.Add(Convert.ToInt32(reader["FrameNum"]), Convert.ToDouble(reader["Value"]));
 					}
 				}
 			}
 
-			return data;
+			return dctTicOrBPI;
 		}
 
 		private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)

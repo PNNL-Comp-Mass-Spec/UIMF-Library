@@ -21,10 +21,10 @@ namespace UIMFLibrary.UnitTests
             int[] intensities = new int[gp.Bins];
             double[] mzValues = new double[gp.Bins];
 
-            int startFrame = 500;
-            int stopFrame = 502;
-            int startScan = 250;
-            int stopScan = 256;
+			//int startFrame = 500;
+			//int stopFrame = 502;
+			//int startScan = 250;
+			//int stopScan = 256;
 
             //int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
 
@@ -35,7 +35,7 @@ namespace UIMFLibrary.UnitTests
         public void getSummedMassspectrumSpeedTests()
         {
             int numIterations = 100;
-            int numFramesToSum = 1;
+            //int numFramesToSum = 1;
             int numIMSScansToSum = 7;
 
 
