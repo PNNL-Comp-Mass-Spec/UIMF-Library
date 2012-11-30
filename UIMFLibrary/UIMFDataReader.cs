@@ -67,6 +67,8 @@ namespace UIMFLibrary
 
 			private static int m_errMessageCounter;
 
+			private SpectrumCache m_currentSummedSpectrumCache;
+			private SpectrumCache m_currentUnsummedSpectrumCache;
 
         #endregion
 
@@ -1175,63 +1177,126 @@ namespace UIMFLibrary
 		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
 		public int GetSpectrum(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, out double[] mzArray, out int[] intensityArray)
 		{
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
-
 			int nonZeroCount = 0;
+
+			SpectrumCache spectrumCache = null;
+			spectrumCache = (startFrameNumber == endFrameNumber) ? m_currentUnsummedSpectrumCache : m_currentSummedSpectrumCache;
+
+			// Create the cache if it does not exist for the current frame numbers
+			if (spectrumCache == null || spectrumCache.StartFrameNumber != startFrameNumber || spectrumCache.EndFrameNumber != endFrameNumber)
+			{
+				if(spectrumCache != null)
+				{
+					spectrumCache.ListOfIntensityDictionries.Clear();
+				}
+
+				// Initialize List of arrays that will be used for the cache
+				int numScansInFrame = GetFrameParameters(startFrameNumber).Scans;
+				IList<IDictionary<int, int>> listOfIntensityDictionaries = new List<IDictionary<int, int>>(numScansInFrame);
+
+				// Initialize each array that will be used for the cache
+				for (int i = 0; i < numScansInFrame; i++)
+				{
+					listOfIntensityDictionaries.Add(new Dictionary<int, int>());
+				}
+
+				m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+				m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+				m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+				m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
+				m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
+
+				using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
+				{
+					byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
+					while (reader.Read())
+					{
+						int binIndex = 0;
+						byte[] spectraRecord = (byte[])(reader["Intensities"]);
+						if (spectraRecord.Length > 0)
+						{
+							int scanNum = Convert.ToInt32(reader["ScanNum"]);
+
+							int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+							int numBins = outputLength / DATASIZE;
+
+							IDictionary<int, int> currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
+
+							for (int i = 0; i < numBins; i++)
+							{
+								int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+								if (decodedSpectraRecord < 0)
+								{
+									binIndex += -decodedSpectraRecord;
+								}
+								else
+								{
+									int currentValue;
+									if(currentIntensityDictionary.TryGetValue(binIndex, out currentValue))
+									{
+										currentIntensityDictionary[binIndex] += decodedSpectraRecord;
+									}
+									else
+									{
+										currentIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+									}
+
+									binIndex++;
+								}
+							}
+						}
+					}
+				}
+
+				// Create the new spectrum cache
+				spectrumCache = new SpectrumCache(startFrameNumber, endFrameNumber, listOfIntensityDictionaries);
+
+				// Set the summed or unsummed spectrum cache as appropriate
+				if (startFrameNumber == endFrameNumber)
+				{
+					//Console.WriteLine("Storing unsummed cache.");
+					m_currentUnsummedSpectrumCache = spectrumCache;
+				}
+				else
+				{
+					//Console.WriteLine("Storing summed cache.");
+					m_currentSummedSpectrumCache = spectrumCache;
+				}
+
+				m_getSpectrumCommand.Parameters.Clear();
+			}
+
+			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
 
 			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
 			// Adding 1 to the size to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
 			mzArray = new double[m_globalParameters.Bins + 1];
 			intensityArray = new int[m_globalParameters.Bins + 1];
 
-			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
+			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionries;
+
+			// Get the data out of the cache, making sure to sum across scans if necessary
+			for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
 			{
-				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+				IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
 
-				while (reader.Read())
+				foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
 				{
-					int binIndex = 0;
-					byte[] spectraRecord = (byte[])(reader["Intensities"]);
-					if (spectraRecord.Length > 0)
+					int binIndex = kvp.Key;
+					int intensity = kvp.Value;
+
+					if (intensityArray[binIndex] == 0)
 					{
-						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
-						FrameParameters frameParameters = GetFrameParameters(frameNumber);
-
-						int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
-						int numBins = outputLength / DATASIZE;
-
-						for (int i = 0; i < numBins; i++)
-						{
-							int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-							if (decodedSpectraRecord < 0)
-							{
-								binIndex += -decodedSpectraRecord;
-							}
-							else
-							{
-								// Only need to set the m/z array or update the nonZeroCount if we have not previously seen this m/z value
-								if(intensityArray[binIndex] == 0)
-								{
-									double mz = ConvertBinToMZ(frameParameters.CalibrationSlope, frameParameters.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binIndex);
-									mzArray[binIndex] = mz;
-									nonZeroCount++;
-								}
-
-								intensityArray[binIndex] += decodedSpectraRecord;
-								binIndex++;
-							}
-						}
+						mzArray[binIndex] = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binIndex);
+						nonZeroCount++;
 					}
-				}
 
-				StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
+					intensityArray[binIndex] += intensity;
+				}
 			}
 
-			m_getSpectrumCommand.Parameters.Clear();
+			StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
 
 			return nonZeroCount;
 		}
