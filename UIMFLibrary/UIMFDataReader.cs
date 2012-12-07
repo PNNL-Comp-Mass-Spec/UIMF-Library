@@ -1302,6 +1302,140 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Extracts m/z values and intensities from given frame range and scan range and m/z range.
+		/// The intensity values of each m/z value are summed across the frame range. The result is a spectrum for a single frame.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
+		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+		/// <param name="startMz">The start m/z value of the desired spectrum.</param>
+		/// <param name="endMz">The end m/z value of the desired spectrum.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrum(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, double startMz, double endMz, out double[] mzArray, out int[] intensityArray)
+		{
+			FrameParameters frameParameters = GetFrameParameters(startFrameNumber);
+
+			double slope = frameParameters.CalibrationSlope;
+			double intercept = frameParameters.CalibrationIntercept;
+			double binWidth = m_globalParameters.BinWidth;
+			float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
+
+			int startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, startMz)) - 1;
+			int endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, endMz)) + 1;
+
+			Console.WriteLine(startMz + " - " + endMz + " = " + startBin + " - " + endBin);
+
+			if (startBin < 0 || endBin > m_globalParameters.Bins)
+			{
+				// If the start or end bin is outside a normal range, then just grab everything
+				return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, out mzArray, out intensityArray);
+			}
+
+			return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
+		}
+
+		/// <summary>
+		/// Extracts m/z values and intensities from given frame range and scan range and bin range.
+		/// The intensity values of each m/z value are summed across the frame range. The result is a spectrum for a single frame.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
+		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+		/// <param name="startBin">The start bin index of the desired spectrum.</param>
+		/// <param name="endBin">The end bin index of the desired spectrum.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrum(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, int startBin, int endBin, out double[] mzArray, out int[] intensityArray)
+		{
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
+
+			int nonZeroCount = 0;
+			int numBinsToConsider = endBin - startBin + 1;
+
+			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
+			// Adding 1 to the size to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
+			mzArray = new double[numBinsToConsider];
+			intensityArray = new int[numBinsToConsider];
+
+			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
+			{
+				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
+				while (reader.Read())
+				{
+					int binIndex = 0;
+					byte[] spectraRecord = (byte[])(reader["Intensities"]);
+					if (spectraRecord.Length > 0)
+					{
+						int frameNumber = Convert.ToInt32(reader["FrameNum"]);
+						FrameParameters frameParameters = GetFrameParameters(frameNumber);
+
+						int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int numBins = outputLength / DATASIZE;
+
+						for (int i = 0; i < numBins; i++)
+						{
+							int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+							if (decodedSpectraRecord < 0)
+							{
+								binIndex += -decodedSpectraRecord;
+							}
+							else
+							{
+								if (binIndex >= startBin)
+								{
+									if (binIndex <= endBin)
+									{
+										int arrayPosition = binIndex - startBin;
+
+										// Only need to set the m/z array or update the nonZeroCount if we have not previously seen this m/z value
+										if (intensityArray[arrayPosition] == 0)
+										{
+											double mz = ConvertBinToMZ(frameParameters.CalibrationSlope, frameParameters.CalibrationIntercept,
+																	   m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binIndex);
+											mzArray[arrayPosition] = mz;
+											nonZeroCount++;
+										}
+
+										intensityArray[arrayPosition] += decodedSpectraRecord;
+									}
+									else
+									{
+										// Once we get past the last bin we are considering, we can get out
+										break;
+									}
+								}
+
+								binIndex++;
+							}
+						}
+					}
+				}
+
+				StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
+			}
+
+			m_getSpectrumCommand.Parameters.Clear();
+
+			return nonZeroCount;
+		}
+
+		/// <summary>
 		/// Extracts intensities from given frame range and scan range.
 		/// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
 		/// </summary>
