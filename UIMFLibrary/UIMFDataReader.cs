@@ -1145,7 +1145,7 @@ namespace UIMFLibrary
 			return -1;
 		}
 
-		private SpectrumCache GetOrCreateSpectrumCache(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber)
+		private SpectrumCache GetOrCreateSpectrumCache(int startFrameNumber, int endFrameNumber, FrameType frameType)
 		{
 			foreach (SpectrumCache possibleSpectrumCache in m_spectrumCacheList)
 			{
@@ -1158,6 +1158,7 @@ namespace UIMFLibrary
 			// Initialize List of arrays that will be used for the cache
 			int numScansInFrame = GetFrameParameters(startFrameNumber).Scans;
 			IList<IDictionary<int, int>> listOfIntensityDictionaries = new List<IDictionary<int, int>>(numScansInFrame);
+			Dictionary<int, int> summedIntensityDictionary = new Dictionary<int, int>();
 
 			// Initialize each array that will be used for the cache
 			for (int i = 0; i < numScansInFrame; i++)
@@ -1167,7 +1168,7 @@ namespace UIMFLibrary
 
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 0));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
@@ -1202,10 +1203,21 @@ namespace UIMFLibrary
 								if (currentIntensityDictionary.TryGetValue(binIndex, out currentValue))
 								{
 									currentIntensityDictionary[binIndex] += decodedSpectraRecord;
+									summedIntensityDictionary[binIndex] += decodedSpectraRecord;
 								}
 								else
 								{
 									currentIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+
+									// Check the summed dictionary
+									if(summedIntensityDictionary.TryGetValue(binIndex, out currentValue))
+									{
+										summedIntensityDictionary[binIndex] += decodedSpectraRecord;
+									}
+									else
+									{
+										summedIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+									}
 								}
 
 								binIndex++;
@@ -1216,7 +1228,7 @@ namespace UIMFLibrary
 			}
 
 			// Create the new spectrum cache
-			SpectrumCache spectrumCache = new SpectrumCache(startFrameNumber, endFrameNumber, listOfIntensityDictionaries);
+			SpectrumCache spectrumCache = new SpectrumCache(startFrameNumber, endFrameNumber, listOfIntensityDictionaries, summedIntensityDictionary);
 
 			if(m_spectrumCacheList.Count >= 10)
 			{
@@ -1264,7 +1276,7 @@ namespace UIMFLibrary
 		{
 			int nonZeroCount = 0;
 
-			SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber);
+			SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
 
 			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
 
@@ -1273,12 +1285,12 @@ namespace UIMFLibrary
 			mzArray = new double[m_globalParameters.Bins + 1];
 			intensityArray = new int[m_globalParameters.Bins + 1];
 
-			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionries;
+			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
-			// Get the data out of the cache, making sure to sum across scans if necessary
-			for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
+			// If we are summing all scans together, then we can use the summed version of the spectrum cache
+			if (endScanNumber - startScanNumber + 1 == frameParams.Scans)
 			{
-				IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+				IDictionary<int, int> currentIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
 				foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
 				{
@@ -1294,6 +1306,29 @@ namespace UIMFLibrary
 					intensityArray[binIndex] += intensity;
 				}
 			}
+			else
+			{
+				// Get the data out of the cache, making sure to sum across scans if necessary
+				for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
+				{
+					IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+
+					foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
+					{
+						int binIndex = kvp.Key;
+						int intensity = kvp.Value;
+
+						if (intensityArray[binIndex] == 0)
+						{
+							mzArray[binIndex] = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binIndex);
+							nonZeroCount++;
+						}
+
+						intensityArray[binIndex] += intensity;
+					}
+				}
+			}
+			
 
 			StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
 
@@ -1363,19 +1398,19 @@ namespace UIMFLibrary
 			mzArray = new double[numBinsToConsider];
 			intensityArray = new int[numBinsToConsider];
 
-			SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber);
+			SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
 			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
-			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionries;
+			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
-			// Get the data out of the cache, making sure to sum across scans if necessary
-			for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
+			// If we are summing all scans together, then we can use the summed version of the spectrum cache
+			if(endScanNumber - startScanNumber + 1 == frameParams.Scans)
 			{
-				IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+				IDictionary<int, int> summedIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
 				for (int binIndex = 0; binIndex < numBinsToConsider; binIndex++)
 				{
 					int binNumber = binIndex + startBin;
-					if (!currentIntensityDictionary.TryGetValue(binNumber, out intensity)) continue;
+					if (!summedIntensityDictionary.TryGetValue(binNumber, out intensity)) continue;
 
 					if (intensityArray[binIndex] == 0)
 					{
@@ -1384,6 +1419,31 @@ namespace UIMFLibrary
 					}
 
 					intensityArray[binIndex] += intensity;
+				}
+			}
+			else
+			{
+				// Get the data out of the cache, making sure to sum across scans if necessary
+				for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
+				{
+					IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+
+					// No need to move on if the dictionary is empty
+					if (currentIntensityDictionary.Count == 0) continue;
+
+					for (int binIndex = 0; binIndex < numBinsToConsider; binIndex++)
+					{
+						int binNumber = binIndex + startBin;
+						if (!currentIntensityDictionary.TryGetValue(binNumber, out intensity)) continue;
+
+						if (intensityArray[binIndex] == 0)
+						{
+							mzArray[binIndex] = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
+							nonZeroCount++;
+						}
+
+						intensityArray[binIndex] += intensity;
+					}
 				}
 			}
 
