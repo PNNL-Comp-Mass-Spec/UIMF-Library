@@ -1168,7 +1168,7 @@ namespace UIMFLibrary
 
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 0));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 1));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
 
