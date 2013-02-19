@@ -542,23 +542,23 @@ namespace UIMFLibrary
 
 			for ( int i = 0; i < intensities.Length; i++)
 			{
-				double x = intensities[i];
-				if (x > 0)
+				double intensity = intensities[i];
+				if (intensity > 0)
 				{
 					
 					//TIC is just the sum of all intensities
-					tic += intensities[i];
-					if (intensities[i] > bpi)
+					tic += intensity;
+					if (intensity > bpi)
 					{
-						   bpi = intensities[i] ; 
-						   bpiMz = convertBinToMz(i, binWidth, frameParameters);
+						bpi = intensity; 
+						bpiMz = convertBinToMz(i, binWidth, frameParameters);
 					}
 					if(zeroCount < 0)
 					{
 						runLengthZeroEncodedData[nrlze++] = (double)zeroCount;
 						zeroCount = 0;
 					}
-					runLengthZeroEncodedData[nrlze++] = x;
+					runLengthZeroEncodedData[nrlze++] = intensity;
 				}
 				else zeroCount--;
 			}
@@ -614,15 +614,14 @@ namespace UIMFLibrary
 
 				for (int i = 0; i < intensities.Length; i++)
 				{
-					int x = intensities[i];
-					if (x > 0)
+					int intensity = intensities[i];
+					if (intensity > 0)
 					{
-
 						//TIC is just the sum of all intensities
-						tic += intensities[i];
-						if (intensities[i] > bpi)
+						tic += intensity;
+						if (intensity > bpi)
 						{
-							bpi = intensities[i];
+							bpi = intensity;
 							bpiMz = convertBinToMz(i, bin_width, frameParameters);
 						}
 						if (zeroCount < 0)
@@ -630,11 +629,10 @@ namespace UIMFLibrary
 							runLengthEncodedData[nrlze++] = zeroCount;
 							zeroCount = 0;
 						}
-						runLengthEncodedData[nrlze++] = x;
+						runLengthEncodedData[nrlze++] = intensity;
 					}
 					else zeroCount--;
 				}
-
 
 				byte[] compressedData = new byte[nrlze * datatypeSize * 5];
 				if (nrlze > 0)
@@ -684,15 +682,15 @@ namespace UIMFLibrary
 
 			for (int i = 0; i < intensities.Length; i++)
 			{
-				float x = intensities[i];
-				if (x > 0)
+				float intensity = intensities[i];
+				if (intensity > 0)
 				{
 					
 					//TIC is just the sum of all intensities
-					tic += intensities[i];
-					if (intensities[i] > bpi)
+					tic += intensity;
+					if (intensity > bpi)
 					{
-						bpi = intensities[i]; 
+						bpi = intensity; 
 						bpiMz = convertBinToMz(i, bin_width, frameParameters);
 					}
 					if (zeroCount < 0)
@@ -700,7 +698,7 @@ namespace UIMFLibrary
 						runLengthEncodedData[nrlze++] = (float)zeroCount;
 						zeroCount = 0;
 					}
-					runLengthEncodedData[nrlze++] = x;
+					runLengthEncodedData[nrlze++] = intensity;
 				}
 				else zeroCount--;
 			}
@@ -769,26 +767,33 @@ namespace UIMFLibrary
 						double bpiMz = 0;
 						int datatypeSize = 4;
 
+						int previousBin = int.MinValue;
+
 						rlze[index++] = -(timeOffset + bins[0]);
 						for (int i = 0; i < bins.Count; i++)
 						{
+							int intensity = intensities[i];
+							int currentBin = bins[i];
+
 							//the intensities will always be positive integers
-							tic += intensities[i];
-							if (bpi < intensities[i])
+							tic += intensity;
+							if (bpi < intensity)
 							{
-								bpi = intensities[i];
-								bpiMz = convertBinToMz(bins[i], binWidth, fp);
+								bpi = intensity;
+								bpiMz = convertBinToMz(currentBin, binWidth, fp);
 							}
 
-							if (i != 0 && bins[i] != bins[i - 1] + 1)
+							if (i != 0 && currentBin != previousBin + 1)
 							{
 								//since the bin numbers are not continuous, add a negative index to the array
 								//and in some cases we have to add the offset from the previous index
-								rlze[index++] = bins[i - 1] - bins[i] + 1;
+								rlze[index++] = previousBin - currentBin + 1;
 							}
 
 							//copy the intensity value and increment the index.
-							rlze[index++] = intensities[i];
+							rlze[index++] = intensity;
+
+							previousBin = currentBin;
 						}
 
 						//so now we have a run length zero encoded array
@@ -844,28 +849,33 @@ namespace UIMFLibrary
                     double bpiMz = 0;
                     int datatypeSize = 4;
 
+                	int previousBin = int.MinValue;
+
                     rlze[index++] = -(timeOffset + bins[0]);
                     for (int i = 0; i < bins.Length; i++)
                     {
+                    	int intensity = intensities[i];
+                    	int currentBin = bins[i];
+
                         //the intensities will always be positive integers
-                        tic += intensities[i];
-                        if (bpi < intensities[i])
+						tic += intensity;
+						if (bpi < intensity)
                         {
-                            bpi = intensities[i];
-                            bpiMz = convertBinToMz(bins[i], binWidth, frameParameters);
+							bpi = intensity;
+							bpiMz = convertBinToMz(currentBin, binWidth, frameParameters);
                         }
 
-
-                        if (i != 0 && bins[i] != bins[i - 1] + 1)
+						if (i != 0 && currentBin != previousBin + 1)
                         {
                             //since the bin numbers are not continuous, add a negative index to the array
                             //and in some cases we have to add the offset from the previous index
-                            rlze[index++] = bins[i - 1] - bins[i] + 1;
+							rlze[index++] = previousBin - currentBin + 1;
                         }
                        
-
                         //copy the intensity value and increment the index.
-                        rlze[index++] = intensities[i]; 
+						rlze[index++] = intensity;
+
+                    	previousBin = currentBin;
                     }
 
                     //so now we have a run length zero encoded array
@@ -909,14 +919,14 @@ namespace UIMFLibrary
 			//Calculate TIC and BPI
 			for ( int i = 0; i < intensities.Length; i++)
 			{
-				int x = intensities[i];
-				if (x > 0)
+				int intensity = intensities[i];
+				if (intensity > 0)
 				{
 					//TIC is just the sum of all intensities
-					tic_scan += intensities[i];
-					if (intensities[i] > bpi)
+					tic_scan += intensity;
+					if (intensity > bpi)
 					{
-						bpi = intensities[i] ; 
+						bpi = intensity; 
 						bpi_mz = convertBinToMz(i, binWidth, frameParameters);
 					}
 					if(zero_count < 0)
@@ -924,7 +934,7 @@ namespace UIMFLibrary
 						rlze_data[nrlze++] = zero_count;
 						zero_count = 0;
 					}
-					rlze_data[nrlze++] = x;
+					rlze_data[nrlze++] = intensity;
 				}
 				else zero_count--;
 			}
@@ -974,15 +984,15 @@ namespace UIMFLibrary
 			//Calculate TIC and BPI
 			for ( int i = 0; i < intensities.Length; i++)
 			{
-				short x = intensities[i];
-				if (x > 0)
+				short intensity = intensities[i];
+				if (intensity > 0)
 				{
 					
 					//TIC is just the sum of all intensities
-					tic_scan += intensities[i];
-					if (intensities[i] > bpi)
+					tic_scan += intensity;
+					if (intensity > bpi)
 					{
-						bpi = intensities[i] ; 
+						bpi = intensity; 
 						bpi_mz = convertBinToMz(i, bin_width, frameParameters);
 					}
 					if(zeroCount < 0)
@@ -990,7 +1000,7 @@ namespace UIMFLibrary
 						runLengthEncodedData[nrlze++] = (short)zeroCount;
 						zeroCount = 0;
 					}
-					runLengthEncodedData[nrlze++] = x;
+					runLengthEncodedData[nrlze++] = intensity;
 					nonZeroIntensities++;
 				}
 				else zeroCount--;
