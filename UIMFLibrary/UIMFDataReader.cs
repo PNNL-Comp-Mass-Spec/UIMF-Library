@@ -1946,6 +1946,64 @@ namespace UIMFLibrary
 			return bin + binCorrection;
 		}
 
+		public Dictionary<int, int>[] GetIntensityBlockOfFrame(int frameNumber)
+		{
+			FrameParameters frameParameters = GetFrameParameters(frameNumber);
+			int numScans = frameParameters.Scans;
+			FrameType frameType = frameParameters.FrameType;
+
+			Dictionary<int, int>[] dictionaryArray = new Dictionary<int, int>[numScans];
+			for (int i = 0; i < numScans; i++)
+			{
+				dictionaryArray[i] = new Dictionary<int, int>();
+			}
+
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameNumber));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans - 1));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
+
+			using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
+			{
+				byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
+				while (reader.Read())
+				{
+					int binIndex = 0;
+
+					byte[] spectra = (byte[])(reader["Intensities"]);
+					int scanNum = Convert.ToInt32(reader["ScanNum"]);
+
+					Dictionary<int, int> currentBinDictionary = dictionaryArray[scanNum];
+
+					//get frame number so that we can get the frame calibration parameters
+					if (spectra.Length > 0)
+					{
+						int outputLength = LZFCompressionUtil.Decompress(ref spectra, spectra.Length, ref decompSpectraRecord, m_globalParameters.Bins * DATASIZE);
+						int numBins = outputLength / DATASIZE;
+						for (int i = 0; i < numBins; i++)
+						{
+							int decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+							if (decodedIntensityValue < 0)
+							{
+								binIndex += -decodedIntensityValue;
+							}
+							else
+							{
+								currentBinDictionary.Add(binIndex, decodedIntensityValue);
+								binIndex++;
+							}
+						}
+					}
+				}
+			}
+
+			m_getSpectrumCommand.Parameters.Clear();
+
+			return dictionaryArray;
+		}
+
 		public int[][][] GetIntensityBlock(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScan, int endScan, int startBin, int endBin)
 		{
 			if (startBin < 0)
