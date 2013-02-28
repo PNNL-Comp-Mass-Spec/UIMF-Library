@@ -54,6 +54,8 @@ namespace UIMFLibrary
 			private SQLiteCommand m_getSpectrumCommand;
 			private SQLiteCommand m_sumVariableScansPerFrameCommand;
 			private SQLiteCommand m_preparedStatement;
+			private SQLiteCommand m_checkForBinCentricTableCommand;
+			private SQLiteCommand m_getBinDataCommand;
 
 			private MZ_Calibrator m_mzCalibration;
 			
@@ -61,8 +63,8 @@ namespace UIMFLibrary
             private GlobalParameters m_globalParameters;
             private double[] m_calibrationTable;
 			private string m_uimfFilePath;
-        
-        
+    		private bool m_doesContainBinCentricData;
+
     		private int m_frameTypeMs;
 
 			private static int m_errMessageCounter;
@@ -80,6 +82,8 @@ namespace UIMFLibrary
 			{
 				get { return m_globalParameters.BinWidth * 10.0; }
 			}
+
+		public string UimfFilePath { get { return m_uimfFilePath; } }
 
         #endregion
 
@@ -114,6 +118,8 @@ namespace UIMFLibrary
 
 					// Find out if the MS1 Frames are labeled as 0 or 1.
 					DetermineFrameTypes();
+
+					m_doesContainBinCentricData = DoesContainBinCentricData();
 				}
 				catch (Exception ex)
 				{
@@ -1369,7 +1375,115 @@ namespace UIMFLibrary
 				return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, out mzArray, out intensityArray);
 			}
 
-			return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
+			int numFrames = endFrameNumber - startFrameNumber + 1;
+			int numScans = endScanNumber - startScanNumber + 1;
+			int numBins = endBin - startBin + 1;
+
+			if((numFrames * numScans) < numBins || !m_doesContainBinCentricData)
+			{
+			    return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
+			}
+			else
+			{
+				return GetSpectrumBinCentric(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
+			}
+		}
+
+		/// <summary>
+		/// Extracts m/z values and intensities from given frame range and scan range and bin range.
+		/// The intensity values of each m/z value are summed across the frame range. The result is a spectrum for a single frame.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
+		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+		/// <param name="startBin">The start bin index of the desired spectrum.</param>
+		/// <param name="endBin">The end bin index of the desired spectrum.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrumBinCentric(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, int startBin, int endBin, out double[] mzArray, out int[] intensityArray)
+		{
+			//Console.WriteLine("LC " + startFrameNumber + " - " + endFrameNumber + "\t IMS " + startScanNumber + " - " + endScanNumber + "\t Bin " + startBin + " - " + endBin);
+
+			List<double> mzList = new List<double>();
+			List<int> intensityList = new List<int>();
+
+			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
+			int numImsScans = frameParams.Scans;
+
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
+
+			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
+			{
+				//int maxDecompressedSPectraSize = m_globalParameters.NumFrames * frameParams.Scans * DATASIZE;
+				//byte[] decompSpectraRecord = new byte[maxDecompressedSPectraSize];
+
+				while (reader.Read())
+				{
+					int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
+					int intensity = 0;
+					int entryIndex = 0;
+					//int numEntries = 0;
+					int scanLc = 0;
+					int scanIms = 0;
+
+					byte[] decompSpectraRecord = (byte[])(reader["INTENSITIES"]);
+					//if (spectraRecord.Length > 0)
+					//{
+					//    int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
+					//    numEntries = outputLength / DATASIZE;
+					//}
+
+					for (int i = 0; i < decompSpectraRecord.Length; i++)
+					{
+						int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+						if (decodedSpectraRecord < 0)
+						{
+							entryIndex += -decodedSpectraRecord;
+						}
+						else
+						{
+							// Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
+							entryIndex++;
+
+							// Calculate LC Scan and IMS Scan of this entry
+							CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+
+							// If we pass the LC Scan number we are interested in, then go ahead and quit
+							if (scanLc > endFrameNumber) break;
+
+							// Only add to the intensity if it is within the specified range
+							if (scanLc >= startFrameNumber && scanIms >= startScanNumber && scanIms <= endScanNumber)
+							{
+								// Only consider the FrameType that was given
+								if (GetFrameParameters(scanLc).FrameType == frameType)
+								{
+									intensity += decodedSpectraRecord;
+								}
+							}
+						}
+					}
+
+					if (intensity > 0)
+					{
+						double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
+						mzList.Add(mz);
+						intensityList.Add(intensity);
+					}
+				}
+			}
+
+			mzArray = mzList.ToArray();
+			intensityArray = intensityList.ToArray();
+
+			m_getBinDataCommand.Parameters.Clear();
+
+			return mzList.Count;
 		}
 
 		/// <summary>
@@ -1403,7 +1517,7 @@ namespace UIMFLibrary
 			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
 			// If we are summing all scans together, then we can use the summed version of the spectrum cache
-			if(endScanNumber - startScanNumber + 1 == frameParams.Scans)
+			if (endScanNumber - startScanNumber + 1 == frameParams.Scans)
 			{
 				IDictionary<int, int> summedIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
@@ -1802,6 +1916,31 @@ namespace UIMFLibrary
 
 			return frag;
         }
+
+		/// <summary>
+		/// Calculates the LC and IMS scans of an encoded index.
+		/// </summary>
+		/// <param name="encodedIndex">The encoded index.</param>
+		/// <param name="numImsScansInFrame">The number of IMS scans.</param>
+		/// <param name="scanLc">The resulting LC Scan number.</param>
+		/// <param name="scanIms">The resulting IMS Scan number.</param>
+		private void CalculateFrameAndScanForEncodedIndex(int encodedIndex, int numImsScansInFrame, out int scanLc, out int scanIms)
+		{
+			scanLc = encodedIndex / numImsScansInFrame;
+			scanIms = encodedIndex % numImsScansInFrame;
+		}
+
+		/// <summary>
+		/// Runs a query to see if the bin centric data exists in this UIMF file
+		/// </summary>
+		/// <returns>true if the binc entric data exists, false otherwise</returns>
+		private bool DoesContainBinCentricData()
+		{
+			using (SQLiteDataReader reader = m_checkForBinCentricTableCommand.ExecuteReader())
+			{
+				return reader.HasRows;
+			}
+		}
 
 		private Dictionary<string, string> CloneUIMFGetObjects(string sObjectType)
 		{
@@ -2229,6 +2368,14 @@ namespace UIMFLibrary
 			m_getCountPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
 			m_getCountPerFrameCommand.CommandText = "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum AND NOT NonZeroCount IS NULL";
 			m_getCountPerFrameCommand.Prepare();
+
+			m_checkForBinCentricTableCommand = m_uimfDatabaseConnection.CreateCommand();
+			m_checkForBinCentricTableCommand.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Bin_Intensities';";
+			m_checkForBinCentricTableCommand.Prepare();
+
+			m_getBinDataCommand = m_uimfDatabaseConnection.CreateCommand();
+			m_getBinDataCommand.CommandText = "SELECT MZ_BIN, INTENSITIES FROM Bin_Intensities WHERE MZ_BIN >= :BinMin AND MZ_BIN <= :BinMax;";
+			m_getBinDataCommand.Prepare();
 		}
 
 		private void PopulateFrameParameters(FrameParameters fp, SQLiteDataReader reader)

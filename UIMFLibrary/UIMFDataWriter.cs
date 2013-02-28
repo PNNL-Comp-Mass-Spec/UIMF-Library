@@ -27,13 +27,15 @@ namespace UIMFLibrary
 		private GlobalParameters m_globalParameters;
         
         private bool m_FrameParameterColumnsVerified = false;
+		private string m_fileName;
 
         /// <summary>
         /// Open a UIMF file for writing
         /// </summary>
         /// <param name="fileName"></param>
 		public void OpenUIMF(string fileName)
-		{
+        {
+        	m_fileName = fileName;
             string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
 			m_dbConnection = new SQLiteConnection(connectionString);
 			try
@@ -106,6 +108,16 @@ namespace UIMFLibrary
         {
             return CloseUIMF();
         }
+
+		/// <summary>
+		/// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
+		/// Bin centric data is important for data access speed in informed workflows.
+		/// </summary>
+		public void CreateBinCentricTables()
+		{
+			DataReader uimfReader = new DataReader(m_fileName);
+			BinCentricTableCreation.CreateBinCentricTable(m_dbConnection, uimfReader);
+		}
 
         /// <summary>
         /// Method to create the table struture within a UIMF file. THis must be called
