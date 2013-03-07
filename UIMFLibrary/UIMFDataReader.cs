@@ -31,6 +31,12 @@ namespace UIMFLibrary
                 Prescan = 4
             }
 
+			public enum ToleranceType
+			{
+				PPM = 1,
+				Thomson = 2
+			}
+
             private const int DATASIZE = 4; //All intensities are stored as 4 byte quantities
 
             // No longer used: private const int MAXMZ = 5000;
@@ -2247,7 +2253,7 @@ namespace UIMFLibrary
 			return intensities;
 		}
 
-		public double[,] GetXic(double targetMz, double ppmTolerance, FrameType frameType)
+		public double[,] GetXic(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
 		{
 			FrameParameters frameParameters = GetFrameParameters(1);
 			double slope = frameParameters.CalibrationSlope;
@@ -2262,7 +2268,7 @@ namespace UIMFLibrary
 
 			double[,] result = new double[numFrames, numScans];
 
-			double mzTolerance = targetMz / 1000000 * ppmTolerance;
+			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
 			double lowMz = targetMz - mzTolerance;
 			double highMz = targetMz + mzTolerance;
 
@@ -2312,7 +2318,7 @@ namespace UIMFLibrary
 			return result;
 		}
 
-		public double[,] GetXic(double targetMz, double ppmTolerance, int frameIndexMin, int frameIndexMax, int scanMin, int scanMax, FrameType frameType)
+		public double[,] GetXic(double targetMz, double tolerance, int frameIndexMin, int frameIndexMax, int scanMin, int scanMax, FrameType frameType, ToleranceType toleranceType)
 		{
 			FrameParameters frameParameters = GetFrameParameters(frameIndexMin);
 			double slope = frameParameters.CalibrationSlope;
@@ -2328,7 +2334,7 @@ namespace UIMFLibrary
 
 			double[,] result = new double[numFrames, numScans];
 
-			double mzTolerance = targetMz / 1000000 * ppmTolerance;
+			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
 			double lowMz = targetMz - mzTolerance;
 			double highMz = targetMz + mzTolerance;
 
