@@ -82,6 +82,7 @@
     <ErrorReport>prompt</ErrorReport>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -104,6 +105,7 @@
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FrameTypeInfo.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="LZFCompressionUtil.cs" />
     <Compile Include="SpectrumCache.cs" />
