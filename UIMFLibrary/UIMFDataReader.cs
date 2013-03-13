@@ -2113,7 +2113,7 @@ namespace UIMFLibrary
 		/// <param name="correctionTimeForTOF"></param>
 		/// <param name="targetMZ"></param>
 		/// <returns></returns>
-		private static double GetBinClosestToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, double targetMZ)
+		public static double GetBinClosestToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, double targetMZ)
 		{
 			//NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
 			double binCorrection = (correctionTimeForTOF / 1000) / binWidth;
