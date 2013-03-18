@@ -2392,16 +2392,15 @@ namespace UIMFLibrary
 			return result;
 		}
 
-		public double[,] GetXic(int targetBin, FrameType frameType)
+		public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
 		{
 			FrameParameters frameParameters = GetFrameParameters(1);
 			int numScans = frameParameters.Scans;
 
 			FrameTypeInfo frameTypeInfo = m_frameTypeInfo[frameType];
-			int numFrames = frameTypeInfo.NumFrames;
 			int[] frameIndexes = frameTypeInfo.FrameIndexes;
 
-			double[,] result = new double[numFrames, numScans];
+			List<IntensityPoint> intensityList = new List<IntensityPoint>();
 
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", targetBin));
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", targetBin));
@@ -2437,13 +2436,13 @@ namespace UIMFLibrary
 
 							// Add intensity to the result
 							int frameIndex = frameIndexes[scanLc];
-							result[frameIndex, scanIms] += decodedSpectraRecord;
+							intensityList.Add(new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord));
 						}
 					}
 				}
 			}
 
-			return result;
+			return intensityList;
 		}
 
 		/// <summary>

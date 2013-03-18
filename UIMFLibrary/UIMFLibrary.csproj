@@ -106,6 +106,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FrameTypeInfo.cs" />
+    <Compile Include="IntensityPoint.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="LZFCompressionUtil.cs" />
     <Compile Include="SpectrumCache.cs" />
