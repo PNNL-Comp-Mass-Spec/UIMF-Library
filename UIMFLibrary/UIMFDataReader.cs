@@ -2253,7 +2253,7 @@ namespace UIMFLibrary
 			return intensities;
 		}
 
-		public double[,] GetXic(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
+		public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
 		{
 			FrameParameters frameParameters = GetFrameParameters(1);
 			double slope = frameParameters.CalibrationSlope;
@@ -2318,7 +2318,7 @@ namespace UIMFLibrary
 			return result;
 		}
 
-		public double[,] GetXic(double targetMz, double tolerance, int frameIndexMin, int frameIndexMax, int scanMin, int scanMax, FrameType frameType, ToleranceType toleranceType)
+		public double[,] GetXicAsArray(double targetMz, double tolerance, int frameIndexMin, int frameIndexMax, int scanMin, int scanMax, FrameType frameType, ToleranceType toleranceType)
 		{
 			FrameParameters frameParameters = GetFrameParameters(frameIndexMin);
 			double slope = frameParameters.CalibrationSlope;
@@ -2384,6 +2384,60 @@ namespace UIMFLibrary
 
 							// Add intensity to the result
 							result[frameIndex - frameIndexMin, scanIms - scanMin] += decodedSpectraRecord;
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+		public double[,] GetXicAsArray(int targetBin, FrameType frameType)
+		{
+			FrameParameters frameParameters = GetFrameParameters(1);
+			int numScans = frameParameters.Scans;
+
+			FrameTypeInfo frameTypeInfo = m_frameTypeInfo[frameType];
+			int numFrames = frameTypeInfo.NumFrames;
+			int[] frameIndexes = frameTypeInfo.FrameIndexes;
+
+			double[,] result = new double[numFrames, numScans];
+
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", targetBin));
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", targetBin));
+
+			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					int entryIndex = 0;
+					int scanLc = 0;
+					int scanIms = 0;
+
+					byte[] decompSpectraRecord = (byte[])(reader["INTENSITIES"]);
+					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+
+					for (int i = 0; i < numPossibleRecords; i++)
+					{
+						int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+						if (decodedSpectraRecord < 0)
+						{
+							entryIndex += -decodedSpectraRecord;
+						}
+						else
+						{
+							// Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
+							entryIndex++;
+
+							// Calculate LC Scan and IMS Scan of this entry
+							CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+
+							// Skip FrameTypes that do not match the given FrameType
+							if (GetFrameParameters(scanLc).FrameType != frameType) continue;
+
+							// Add intensity to the result
+							int frameIndex = frameIndexes[scanLc];
+							result[frameIndex, scanIms] += decodedSpectraRecord;
 						}
 					}
 				}
