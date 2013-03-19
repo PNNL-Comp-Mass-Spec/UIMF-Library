@@ -6,7 +6,7 @@ namespace UIMFLibrary
 	{
 		public int ScanLc { get; private set; }
 		public int ScanIms { get; private set; }
-		public double Intensity { get; private set; }
+		public double Intensity { get; set; }
 
 		public IntensityPoint(int scanLc, int scanIms, double intensity)
 		{
@@ -17,7 +17,7 @@ namespace UIMFLibrary
 
 		public int CompareTo(IntensityPoint other)
 		{
-			return this.ScanLc != other.ScanLc ? this.ScanLc.CompareTo(other.ScanLc) : this.ScanIms.CompareTo(other.ScanLc);
+			return this.ScanLc != other.ScanLc ? this.ScanLc.CompareTo(other.ScanLc) : this.ScanIms.CompareTo(other.ScanIms);
 		}
 
 		public bool Equals(IntensityPoint other)

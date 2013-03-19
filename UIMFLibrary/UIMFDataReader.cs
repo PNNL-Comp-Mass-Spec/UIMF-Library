@@ -2496,6 +2496,80 @@ namespace UIMFLibrary
 			return intensityList;
 		}
 
+		public List<IntensityPoint> GetXic(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
+		{
+			FrameParameters frameParameters = GetFrameParameters(1);
+			double slope = frameParameters.CalibrationSlope;
+			double intercept = frameParameters.CalibrationIntercept;
+			double binWidth = m_globalParameters.BinWidth;
+			float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
+			int numScans = frameParameters.Scans;
+
+			FrameTypeInfo frameTypeInfo = m_frameTypeInfo[frameType];
+			int[] frameIndexes = frameTypeInfo.FrameIndexes;
+
+			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+			double lowMz = targetMz - mzTolerance;
+			double highMz = targetMz + mzTolerance;
+
+			int startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, lowMz)) - 1;
+			int endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, highMz)) + 1;
+
+			Dictionary<IntensityPoint, IntensityPoint> pointDictionary = new Dictionary<IntensityPoint, IntensityPoint>();
+			IntensityPoint dictionaryValue;
+
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
+
+			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					int entryIndex = 0;
+					int scanLc = 0;
+					int scanIms = 0;
+
+					byte[] decompSpectraRecord = (byte[])(reader["INTENSITIES"]);
+					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+
+					for (int i = 0; i < numPossibleRecords; i++)
+					{
+						int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+						if (decodedSpectraRecord < 0)
+						{
+							entryIndex += -decodedSpectraRecord;
+						}
+						else
+						{
+							// Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
+							entryIndex++;
+
+							// Calculate LC Scan and IMS Scan of this entry
+							CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+
+							// Skip FrameTypes that do not match the given FrameType
+							if (GetFrameParameters(scanLc).FrameType != frameType) continue;
+
+							// Add intensity to the result
+							int frameIndex = frameIndexes[scanLc];
+							IntensityPoint newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
+
+							if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
+							{
+								dictionaryValue.Intensity += decodedSpectraRecord;
+							}
+							else
+							{
+								pointDictionary.Add(newPoint, newPoint);
+							}
+						}
+					}
+				}
+			}
+
+			return pointDictionary.Values.OrderBy(x => x.ScanLc).ThenBy(x => x.ScanIms).ToList();
+		}
+
 		/// <summary>
 		/// Get TIC or BPI for scans of given frame type in given frame range
 		/// Optionally filter on scan range
