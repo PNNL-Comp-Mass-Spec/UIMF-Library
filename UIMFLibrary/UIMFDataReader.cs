@@ -66,7 +66,7 @@ namespace UIMFLibrary
 
 			private MZ_Calibrator m_mzCalibration;
 			
-			private Dictionary<int, FrameParameters> m_frameParametersCache;
+			private FrameParameters[] m_frameParametersCache;
             private GlobalParameters m_globalParameters;
             private double[] m_calibrationTable;
 			private string m_uimfFilePath;
@@ -118,7 +118,7 @@ namespace UIMFLibrary
 					m_globalParameters = GetGlobalParametersFromTable(m_uimfDatabaseConnection);
 
 					// Initialize the frame parameters cache
-					m_frameParametersCache = new Dictionary<int, FrameParameters>(m_globalParameters.NumFrames);
+					m_frameParametersCache = new FrameParameters[m_globalParameters.NumFrames + 1];
 
 					LoadPrepStmts();
 
@@ -713,16 +713,13 @@ namespace UIMFLibrary
 				throw new ArgumentOutOfRangeException("FrameNumber should be greater than or equal to zero.");
 			}
 
-			FrameParameters fp = new FrameParameters();
+			FrameParameters frameParameters = m_frameParametersCache[frameNumber];
 
 			// Check in cache first
-			if (m_frameParametersCache.ContainsKey(frameNumber))
+			if (frameParameters == null)
 			{
-				// Frame parameters object is cached, retrieve it and return
-				fp = m_frameParametersCache[frameNumber];
-			}
-			else
-			{
+				frameParameters = new FrameParameters();
+
 				// Parameters are not yet cached; retrieve and cache them
 				if (m_uimfDatabaseConnection != null)
 				{
@@ -731,20 +728,20 @@ namespace UIMFLibrary
 					SQLiteDataReader reader = m_getFrameParametersCommand.ExecuteReader();
 					if (reader.Read())
 					{
-						PopulateFrameParameters(fp, reader);
+						PopulateFrameParameters(frameParameters, reader);
 					}
 
 					// Store the frame parameters in the cache
-					m_frameParametersCache.Add(frameNumber, fp);
+					m_frameParametersCache[frameNumber] = frameParameters;
 					m_getFrameParametersCommand.Parameters.Clear();
 
 					reader.Close();
 				}
 			}
 
-			m_mzCalibration = new MZ_Calibrator(fp.CalibrationSlope / 10000.0, fp.CalibrationIntercept * 10000.0);
+			m_mzCalibration = new MZ_Calibrator(frameParameters.CalibrationSlope / 10000.0, frameParameters.CalibrationIntercept * 10000.0);
 
-			return fp;
+			return frameParameters;
 		}
 
         /// <summary>
@@ -1815,7 +1812,7 @@ namespace UIMFLibrary
 
 		public void ResetFrameParameters()
 		{
-			m_frameParametersCache.Clear();
+			m_frameParametersCache = new FrameParameters[m_globalParameters.NumFrames + 1];
 		}
       
         public bool TableExists(string tableName)
