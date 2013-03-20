@@ -836,6 +836,19 @@ namespace UIMFLibrary
             return m_globalParameters;
         }
 
+        /// <summary>
+        /// Returns the saturation level (maximum intensity value) for a single unit of measurement
+        /// </summary>
+        /// <returns>saturation level</returns>
+        public int GetSaturationLevel()
+        {
+            int prescanAccumulations;
+            if (m_globalParameters == null) prescanAccumulations = GetGlobalParameters().Prescan_Accumulations;
+            else prescanAccumulations = m_globalParameters.Prescan_Accumulations;
+
+            return prescanAccumulations*255;
+        }
+
         public static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
         {
             GlobalParameters oGlobalParameters = new GlobalParameters();
