@@ -64,8 +64,6 @@ namespace UIMFLibrary
 			private SQLiteCommand m_checkForBinCentricTableCommand;
 			private SQLiteCommand m_getBinDataCommand;
 
-			private MZ_Calibrator m_mzCalibration;
-			
 			private FrameParameters[] m_frameParametersCache;
             private GlobalParameters m_globalParameters;
             private double[] m_calibrationTable;
@@ -177,12 +175,15 @@ namespace UIMFLibrary
 			}
 			else
 			{
-				double mzMin = m_mzCalibration.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
-				double mzMax = m_mzCalibration.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+				FrameParameters frameparameters = GetFrameParameters(frameNumber);
+				MZ_Calibrator mzCalibrator = GetMzCalibrator(frameparameters);
+
+				double mzMin = mzCalibrator.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+				double mzMax = mzCalibrator.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
 
 				for (int i = 0; i < dataHeight; i++)
 				{
-					m_calibrationTable[i] = m_mzCalibration.MZtoTOF(mzMin + (i*(mzMax - mzMin)/dataHeight))*m_globalParameters.BinWidth/TenthsOfNanoSecondsPerBin;
+					m_calibrationTable[i] = mzCalibrator.MZtoTOF(mzMin + (i * (mzMax - mzMin) / dataHeight)) * m_globalParameters.BinWidth / TenthsOfNanoSecondsPerBin;
 				}
 			}
 
@@ -739,9 +740,12 @@ namespace UIMFLibrary
 				}
 			}
 
-			m_mzCalibration = new MZ_Calibrator(frameParameters.CalibrationSlope / 10000.0, frameParameters.CalibrationIntercept * 10000.0);
-
 			return frameParameters;
+		}
+
+		public MZ_Calibrator GetMzCalibrator(FrameParameters frameParameters)
+		{
+			return new MZ_Calibrator(frameParameters.CalibrationSlope / 10000.0, frameParameters.CalibrationIntercept * 10000.0);
 		}
 
         /// <summary>
@@ -1823,11 +1827,6 @@ namespace UIMFLibrary
 			DataWriter.PostLogEntry(m_uimfDatabaseConnection, entryType, message, postedBy);
 		}
 
-		public void ResetFrameParameters()
-		{
-			m_frameParametersCache = new FrameParameters[m_globalParameters.NumFrames + 1];
-		}
-      
         public bool TableExists(string tableName)
         {
             return TableExists(m_uimfDatabaseConnection, tableName);
@@ -1888,7 +1887,11 @@ namespace UIMFLibrary
     		m_preparedStatement.ExecuteNonQuery();
 			m_preparedStatement.Dispose();
 
-			ResetFrameParameters();
+			foreach (FrameParameters frameParameters in m_frameParametersCache)
+			{
+				frameParameters.CalibrationSlope = slope;
+				frameParameters.CalibrationIntercept = intercept;
+			}
 		}
 
 		/// <summary>
@@ -1914,12 +1917,9 @@ namespace UIMFLibrary
 			m_preparedStatement.ExecuteNonQuery();
 			m_preparedStatement.Dispose();
 
-			// Make sure the m_mzCalibration object is up-to-date
-			// These values will likely also get updated via the call to reset_FrameParameters (which then calls GetFrameParameters)
-			m_mzCalibration.k = slope / 10000.0;
-			m_mzCalibration.t0 = intercept * 10000.0;
-
-			ResetFrameParameters();
+			FrameParameters frameParameters = GetFrameParameters(frameNumber);
+			frameParameters.CalibrationSlope = slope;
+			frameParameters.CalibrationIntercept = intercept;
 		}
 
 		/// <summary>
