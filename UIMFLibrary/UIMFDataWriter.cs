@@ -115,8 +115,10 @@ namespace UIMFLibrary
 		/// </summary>
 		public void CreateBinCentricTables()
 		{
-			DataReader uimfReader = new DataReader(m_fileName);
-			BinCentricTableCreation.CreateBinCentricTable(m_dbConnection, uimfReader);
+			using(DataReader uimfReader = new DataReader(m_fileName))
+			{
+                BinCentricTableCreation.CreateBinCentricTable(m_dbConnection, uimfReader);
+			}
 		}
 
         /// <summary>
