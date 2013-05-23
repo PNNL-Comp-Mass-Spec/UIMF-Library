@@ -48,8 +48,8 @@ namespace UIMFLibrary
 
         #region "Class-wide variables"
 
-            private SQLiteConnection m_uimfDatabaseConnection;
-			private SQLiteDataReader m_sqliteDataReader;
+            protected SQLiteConnection m_uimfDatabaseConnection;
+			protected SQLiteDataReader m_sqliteDataReader;
 
             // v1.2 prepared statements
 			private SQLiteCommand m_getCountPerSpectrumCommand;
@@ -60,12 +60,12 @@ namespace UIMFLibrary
 			private SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
 			private SQLiteCommand m_getSpectrumCommand;
 			private SQLiteCommand m_sumVariableScansPerFrameCommand;
-			private SQLiteCommand m_preparedStatement;
+			protected SQLiteCommand m_preparedStatement;
 			private SQLiteCommand m_checkForBinCentricTableCommand;
 			private SQLiteCommand m_getBinDataCommand;
 
-			private FrameParameters[] m_frameParametersCache;
-            private GlobalParameters m_globalParameters;
+			protected FrameParameters[] m_frameParametersCache;
+            protected GlobalParameters m_globalParameters;
             private double[] m_calibrationTable;
 			private string m_uimfFilePath;
     		private bool m_doesContainBinCentricData;

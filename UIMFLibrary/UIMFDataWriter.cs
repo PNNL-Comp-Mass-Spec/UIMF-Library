@@ -24,10 +24,13 @@ namespace UIMFLibrary
 		private SQLiteCommand m_dbCommandUimf;
 		private SQLiteCommand m_dbCommandPrepareInsertScan;
 		private SQLiteCommand m_dbCommandPrepareInsertFrame;
+        private SQLiteCommand m_dbCommandPrepareInsertScanParameters;
 		private GlobalParameters m_globalParameters;
         
         private bool m_FrameParameterColumnsVerified = false;
 		private string m_fileName;
+
+        private bool is_ScanParameterTable = false;
 
         /// <summary>
         /// Open a UIMF file for writing
@@ -57,6 +60,13 @@ namespace UIMFLibrary
 				Console.WriteLine("Failed to open UIMF file " + ex.ToString());
 			}
 		}
+
+        public void OpenUIMF(string fileName, bool flag_CreateScanParameters)
+        {
+            this.is_ScanParameterTable = flag_CreateScanParameters;
+
+            OpenUIMF(fileName);
+        }
 
         /// <summary>
         /// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
@@ -248,15 +258,29 @@ namespace UIMFLibrary
 					"TIC INT(4) NOT NULL, " + //  Total Ion Chromatogram
 					"Intensities BLOB);"; //  Intensities  
 			}
-			
-			//ARS made this change to facilitate faster retrieval of scans/spectrums.
-			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
-            // m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
-			//ARS change ends
 
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
+            //ARS made this change to facilitate faster retrieval of scans/spectrums.
+            m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
+            // m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
+            //ARS change ends
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            if (this.is_ScanParameterTable)
+            {
+                m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
+                    "ScanNum INT(2) NOT NULL, " + //Scan number
+                    "MS_Level INT(2) NOT NULL);"; //  MS_Level  
+                m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
+                m_dbCommandUimf.ExecuteNonQuery();
+            }
+
+            m_dbCommandUimf.Dispose();
 		}
+
+        public GlobalParameters get_GlobalParameters()
+        {
+            return DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+        }
 
         /// <summary>
         /// Deletes the frame from the Frame_Parameters table and from the Frame_Scans table
@@ -1043,7 +1067,21 @@ namespace UIMFLibrary
 			return nlzf;
 		}
 
+        public int InsertScanParameters(int scanNum, int ms_level)
+        {
+            insertScanAddScanParameters(scanNum, ms_level);
 
+            m_dbCommandPrepareInsertScanParameters.ExecuteNonQuery();
+            m_dbCommandPrepareInsertScanParameters.Parameters.Clear();
+
+            return 0;
+        }
+
+        private void insertScanAddScanParameters(int scan_number, int MS_Level)
+        {
+            m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("ScanNum", scan_number.ToString()));
+            m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("MS_Level", MS_Level.ToString()));
+        }
 
         public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
         {
@@ -1310,7 +1348,14 @@ namespace UIMFLibrary
 			m_dbCommandPrepareInsertScan.CommandText = "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) " +
 				"VALUES(?,?,?,?,?,?,?);";
 			m_dbCommandPrepareInsertScan.Prepare();
-			
+
+            if (this.is_ScanParameterTable)
+            {
+                this.m_dbCommandPrepareInsertScanParameters = m_dbConnection.CreateCommand();
+                this.m_dbCommandPrepareInsertScanParameters.CommandText = "INSERT INTO Scan_Parameters (ScanNum, MS_Level) VALUES (:ScanNum, :MS_Level);";
+
+                this.m_dbCommandPrepareInsertScanParameters.Prepare();
+            }			
 		}
 
         /// <summary>
