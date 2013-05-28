@@ -17,7 +17,6 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Lzf;
-using System.Windows.Forms;
 
 namespace UIMFLibrary
 {
@@ -714,9 +713,6 @@ namespace UIMFLibrary
 			{
 				throw new ArgumentOutOfRangeException("FrameNumber should be greater than or equal to zero.");
 			}
-
-            if (m_frameParametersCache == null)
-                MessageBox.Show("null");
 
 			FrameParameters frameParameters = m_frameParametersCache[frameNumber];
 
