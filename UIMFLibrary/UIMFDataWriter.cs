@@ -30,7 +30,7 @@ namespace UIMFLibrary
         private bool m_FrameParameterColumnsVerified = false;
 		private string m_fileName;
 
-        private bool is_ScanParameterTable = false;
+        private bool m_isScanParameterTable = false;
 
         /// <summary>
         /// Open a UIMF file for writing
@@ -63,7 +63,7 @@ namespace UIMFLibrary
 
         public void OpenUIMF(string fileName, bool flag_CreateScanParameters)
         {
-            this.is_ScanParameterTable = flag_CreateScanParameters;
+            this.m_isScanParameterTable = flag_CreateScanParameters;
 
             OpenUIMF(fileName);
         }
@@ -265,7 +265,7 @@ namespace UIMFLibrary
             //ARS change ends
             m_dbCommandUimf.ExecuteNonQuery();
 
-            if (this.is_ScanParameterTable)
+            if (this.m_isScanParameterTable)
             {
                 m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
                     "ScanNum INT(2) NOT NULL, " + //Scan number
@@ -277,7 +277,7 @@ namespace UIMFLibrary
             m_dbCommandUimf.Dispose();
 		}
 
-        public GlobalParameters get_GlobalParameters()
+        public GlobalParameters GetGlobalParameters()
         {
             return DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
         }
@@ -1349,7 +1349,7 @@ namespace UIMFLibrary
 				"VALUES(?,?,?,?,?,?,?);";
 			m_dbCommandPrepareInsertScan.Prepare();
 
-            if (this.is_ScanParameterTable)
+            if (this.m_isScanParameterTable)
             {
                 this.m_dbCommandPrepareInsertScanParameters = m_dbConnection.CreateCommand();
                 this.m_dbCommandPrepareInsertScanParameters.CommandText = "INSERT INTO Scan_Parameters (ScanNum, MS_Level) VALUES (:ScanNum, :MS_Level);";
