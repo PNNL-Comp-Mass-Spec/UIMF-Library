@@ -125,9 +125,20 @@ namespace UIMFLibrary
 		/// </summary>
 		public void CreateBinCentricTables()
 		{
+			CreateBinCentricTables(string.Empty);
+		}
+
+		/// <summary>
+		/// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
+		/// Bin centric data is important for data access speed in informed workflows.
+		/// <param name="workingDirectory">Path to the working directory in which a temporary SqLite database file should be created</param>
+		/// </summary>
+		public void CreateBinCentricTables(string workingDirectory)
+		{
 			using(DataReader uimfReader = new DataReader(m_fileName))
 			{
-                BinCentricTableCreation.CreateBinCentricTable(m_dbConnection, uimfReader);
+				var binCentricTableCreator = new BinCentricTableCreation();
+				binCentricTableCreator.CreateBinCentricTable(m_dbConnection, uimfReader, workingDirectory);
 			}
 		}
 

@@ -105,6 +105,7 @@
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="EventArgs.cs" />
     <Compile Include="FrameTypeInfo.cs" />
     <Compile Include="IntensityPoint.cs" />
     <Compile Include="LogEntry.cs" />
