@@ -1956,7 +1956,7 @@ namespace UIMFLibrary
 		/// Runs a query to see if the bin centric data exists in this UIMF file
 		/// </summary>
 		/// <returns>true if the binc entric data exists, false otherwise</returns>
-		private bool DoesContainBinCentricData()
+		public bool DoesContainBinCentricData()
 		{
 			using (SQLiteDataReader reader = m_checkForBinCentricTableCommand.ExecuteReader())
 			{
