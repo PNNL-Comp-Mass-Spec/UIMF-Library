@@ -1319,8 +1319,15 @@ namespace UIMFLibrary
 
 			IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
+			// Validate the scan number range
+			if (startScanNumber < 0)
+				startScanNumber = 0;
+
+			if (endScanNumber >= frameParams.Scans)
+				endScanNumber = frameParams.Scans - 1;
+
 			// If we are summing all scans together, then we can use the summed version of the spectrum cache
-			if (endScanNumber - startScanNumber + 1 == frameParams.Scans)
+			if (endScanNumber - startScanNumber + 1 >= frameParams.Scans)
 			{
 				IDictionary<int, int> currentIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
