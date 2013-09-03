@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Lzf;
 
 namespace UIMFLibrary
@@ -1839,11 +1840,18 @@ namespace UIMFLibrary
             return TableExists(m_uimfDatabaseConnection, tableName);
         }
 
+		/// <summary>
+		/// Looks for the given table in the SqLite database
+		/// Note that table names are case sensitive
+		/// </summary>
+		/// <param name="oConnection"></param>
+		/// <param name="tableName"></param>
+		/// <returns></returns>
         public static bool TableExists(SQLiteConnection oConnection, string tableName)
         {
 			bool hasRows;
 
-			using (SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "SELECT name FROM sqlite_master WHERE type='table' And name = '" + tableName + "'" })
+			using (SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "SELECT name FROM sqlite_master WHERE type='table' And tbl_name = '" + tableName + "'" })
 			{
 				using (SQLiteDataReader rdr = cmd.ExecuteReader())
 				{
@@ -1853,6 +1861,50 @@ namespace UIMFLibrary
 
         	return hasRows;
         }
+
+		/// <summary>
+		/// Looks for the given column on the given table in the SqLite database
+		/// Note that table names are case sensitive
+		/// </summary>
+		/// <param name="oConnection"></param>
+		/// <param name="tableName"></param>
+		/// <returns></returns>
+		public static bool ColumnExists(SQLiteConnection oConnection, string tableName, string columnName)
+		{
+			bool columnExists = false;
+
+			using (SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '" + tableName + "'" })
+			{
+				using (SQLiteDataReader rdr = cmd.ExecuteReader())
+				{
+					if (rdr.Read())
+					{
+						string sql = rdr.GetString(0);
+						
+						// Replace the first open parenthese with a comma
+						int charIndex = sql.IndexOf("(");
+						if (charIndex > 0)
+							sql = sql.Substring(0, charIndex - 1) + ',' + sql.Substring(charIndex + 1);
+
+						// Extract the column names using a RegEx
+						var reColumns = new Regex(@", *([\w()0-9]+)", RegexOptions.Compiled);
+						var reMatches = reColumns.Matches(sql);
+
+						var lstColumns = new List<string>();
+						foreach (Match reMatch in reMatches)
+						{
+							lstColumns.Add(reMatch.Groups[1].Value);
+						}
+
+
+						if (lstColumns.Contains(columnName))
+							columnExists = true;
+					}
+				}
+			}
+
+			return columnExists;
+		}
 
         public bool TableHasColumn(string tableName, string columnName)
         {
@@ -1896,8 +1948,11 @@ namespace UIMFLibrary
 
 			foreach (FrameParameters frameParameters in m_frameParametersCache)
 			{
-				frameParameters.CalibrationSlope = slope;
-				frameParameters.CalibrationIntercept = intercept;
+				if (frameParameters != null)
+				{
+					frameParameters.CalibrationSlope = slope;
+					frameParameters.CalibrationIntercept = intercept;
+				}
 			}
 		}
 

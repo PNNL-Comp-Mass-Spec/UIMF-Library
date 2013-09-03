@@ -449,6 +449,21 @@ namespace UIMFLibrary
             m_dbCommandUimf.ExecuteNonQuery();
         }
 
+		/// <summary>
+		/// Assures that NumFrames in the Global_Parameters table match the number of rows in the Frame_Parameters table
+		/// </summary>
+		public void UpdateGlobalFrameCount()
+		{			
+			m_dbCommandUimf = m_dbConnection.CreateCommand();
+            
+            m_dbCommandUimf.CommandText = "SELECT Count(*) FROM Frame_Parameters";
+            object frameCount = this.m_dbCommandUimf.ExecuteScalar();         
+            m_dbCommandUimf.Dispose();
+
+			if (frameCount != null)
+				UpdateGlobalParameter("NumFrames", frameCount.ToString());
+		}
+
         /// <summary>
         /// Updates the scan count for the given frame
         /// </summary>
@@ -538,9 +553,19 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));                 // 20, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));                 // 21, Voltage setting in the IMS system
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));               // 22, Capillary Inlet Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));     // 23, HPF In Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));   // 24, HPF Out Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
+
+			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
+			{
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));     // 23, HPF In Voltage
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));   // 24, HPF Out Voltage
+			}
+			else
+			{
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn));     // 23, IFT In Voltage
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut));   // 24, IFT Out Voltage
+			}
+
+			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));                 // 26, Trap Out Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));                   // 27, Trap In Voltage
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));                 // 28, Jet Disruptor Voltage
@@ -550,8 +575,18 @@ namespace UIMFLibrary
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));                     // 32, Fragmentation Conductance Voltage
 
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));                   // 33, IMS Out Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));             // 34, HPF In Voltage
-            m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));           // 35, HPF Out Voltage
+
+			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
+			{
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));             // 34, HPF In Voltage
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));           // 35, HPF Out Voltage
+			}
+			else
+			{
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn));             // 34, IFT In Voltage
+				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut));           // 35, IFT Out Voltage
+			}
+
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));         // 36, Cond Limit Voltage
 
             m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront));             // 37, Pressure at front of Drift Tube 
@@ -1335,20 +1370,51 @@ namespace UIMFLibrary
 		{
 			m_dbCommandPrepareInsertFrame = m_dbConnection.CreateCommand();
 
-            m_dbCommandPrepareInsertFrame.CommandText = "INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses," +
-                "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " +
-                "voltCapInlet, voltEntranceHPFIn, voltEntranceHPFOut, voltEntranceCondLmt, " +
+			string voltEntranceHPFInColName;
+			string voltEntranceHPFOutColName;
+
+			string voltExitHPFInColName;
+			string voltExitHPFOutColName;
+
+			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
+			{
+				voltEntranceHPFInColName = "voltEntranceHPFIn";
+				voltEntranceHPFOutColName = "voltEntranceHPFOut";
+			}
+			else
+			{
+				voltEntranceHPFInColName = "voltEntranceIFTIn";
+				voltEntranceHPFOutColName = "voltEntranceIFTOut";
+			}
+
+			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
+			{
+				voltExitHPFInColName = "voltExitHPFIn";
+				voltExitHPFOutColName = "voltExitHPFOut";
+			}
+			else
+			{
+				voltExitHPFInColName = "voltExitIFTIn";
+				voltExitHPFOutColName = "voltExitIFTOut";
+			}
+
+			string cmd = "INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses," +
+				"AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " +
+				"voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", ";
+
+			cmd += "voltEntranceCondLmt, " +
                 "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
-                "voltIMSOut, voltExitHPFIn, voltExitHPFOut, voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
+                "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName + ", voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
                 "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)" +
                 "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses," +
                 ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, " +
-                ":voltCapInlet, :voltEntranceHPFIn, :voltEntranceHPFOut,:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
-                ":voltIMSOut,:voltExitHPFIn,:voltExitHPFOut,:voltExitCondLmt, " +
+                ":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName + ",:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
+				":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName +",:voltExitCondLmt, " +
                 ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " +
                 ":HPPressure, :IPTrapPressure, " +
                 ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
 
+			m_dbCommandPrepareInsertFrame.CommandText = cmd;
 			m_dbCommandPrepareInsertFrame.Prepare();
 		}
 
