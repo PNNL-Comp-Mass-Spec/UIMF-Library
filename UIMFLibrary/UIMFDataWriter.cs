@@ -171,62 +171,66 @@ namespace UIMFLibrary
                 "Prescan_Continuous BOOL, " +
                 "Prescan_Profile STRING, " +
                 "Instrument_Name STRING)";
-				m_dbCommandUimf.ExecuteNonQuery();
 
-			   // Create Frame_parameters Table
-                m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
-                    "FrameNum INT(4) PRIMARY KEY, " +                // 0, Frame number (primary key)
-                    "StartTime DOUBLE, " +                           // 1, Start time of frame, in minutes
-                    "Duration DOUBLE, " +                            // 2, Duration of frame, in seconds 
-                    "Accumulations INT(2), " +                       // 3, Number of collected and summed acquisitions in a frame 
-                    "FrameType SHORT, " +                            // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-                    "Scans INT(4), " +                               // 5, Number of TOF scans  
-                    "IMFProfile STRING, " +                          // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-                    "TOFLosses DOUBLE, " +                           // 7, Number of TOF Losses
-                    "AverageTOFLength DOUBLE NOT NULL, " +           // 8, Average time between TOF trigger pulses
-                    "CalibrationSlope DOUBLE, " +                    // 9, Value of k0  
-                    "CalibrationIntercept DOUBLE, " +                // 10, Value of t0  
-                    "a2 DOUBLE, " +                                  // 11, These six parameters below are coefficients for residual mass error correction
-                    "b2 DOUBLE, " +                                  // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-                    "c2 DOUBLE, " +                                  // 13
-                    "d2 DOUBLE, " +                                  // 14
-                    "e2 DOUBLE, " +                                  // 15
-                    "f2 DOUBLE, " +                                  // 16
-                    "Temperature DOUBLE, " +                         // 17, Ambient temperature
-                    "voltHVRack1 DOUBLE, " +                         // 18, Voltage setting in the IMS system
-                    "voltHVRack2 DOUBLE, " +                         // 19, Voltage setting in the IMS system
-                    "voltHVRack3 DOUBLE, " +                         // 20, Voltage setting in the IMS system
-                    "voltHVRack4 DOUBLE, " +                         // 21, Voltage setting in the IMS system
-                    "voltCapInlet DOUBLE, " +                        // 22, Capillary Inlet Voltage
-                    "voltEntranceHPFIn DOUBLE, " +                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
-                    "voltEntranceHPFOut DOUBLE, " +                  // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
-                    "voltEntranceCondLmt DOUBLE, " +                 // 25, Cond Limit Voltage
-                    "voltTrapOut DOUBLE, " +                         // 26, Trap Out Voltage
-                    "voltTrapIn DOUBLE, " +                          // 27, Trap In Voltage
-                    "voltJetDist DOUBLE, " +                         // 28, Jet Disruptor Voltage
-                    "voltQuad1 DOUBLE, " +                           // 29, Fragmentation Quadrupole Voltage
-                    "voltCond1 DOUBLE, " +                           // 30, Fragmentation Conductance Voltage
-                    "voltQuad2 DOUBLE, " +                           // 31, Fragmentation Quadrupole Voltage
-                    "voltCond2 DOUBLE, " +                           // 32, Fragmentation Conductance Voltage
-                    "voltIMSOut DOUBLE, " +                          // 33, IMS Out Voltage
-                    "voltExitHPFIn DOUBLE, " +                       // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
-                    "voltExitHPFOut DOUBLE, " +                      // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
-                    "voltExitCondLmt DOUBLE, " +                     // 36, Cond Limit Voltage
-                    "PressureFront DOUBLE, " +                       // 37, Pressure at front of Drift Tube 
-                    "PressureBack DOUBLE, " +                        // 38, Pressure at back of Drift Tube 
-                    "MPBitOrder INT(1), " +                          // 39, Determines original size of bit sequence 
-                    "FragmentationProfile BLOB," +                   // 40, Voltage profile used in fragmentation
-                    "HighPressureFunnelPressure DOUBLE, " +          // 41
-                    "IonFunnelTrapPressure DOUBLE , " +              // 42
-                    "RearIonFunnelPressure DOUBLE, " +               // 43
-                    "QuadrupolePressure DOUBLE, " +                  // 44
-                    "ESIVoltage DOUBLE, " +                          // 45
-                    "FloatVoltage DOUBLE, " +                        // 46
-                    "CalibrationDone INT, " +                        // 47, Set to 1 after a frame has been calibrated
-                    "Decoded INT);";                                 // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+			m_dbCommandUimf.ExecuteNonQuery();
 
-                //Voltage profile used in fragmentation, Length number of Scans 
-                m_dbCommandUimf.ExecuteNonQuery();			    
+			// Create Frame_parameters Table
+            m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
+                "FrameNum INT(4) PRIMARY KEY, " +                // 0, Frame number (primary key)
+                "StartTime DOUBLE, " +                           // 1, Start time of frame, in minutes
+                "Duration DOUBLE, " +                            // 2, Duration of frame, in seconds 
+                "Accumulations INT(2), " +                       // 3, Number of collected and summed acquisitions in a frame 
+                "FrameType SHORT, " +                            // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+                "Scans INT(4), " +                               // 5, Number of TOF scans  
+                "IMFProfile STRING, " +                          // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+                "TOFLosses DOUBLE, " +                           // 7, Number of TOF Losses
+                "AverageTOFLength DOUBLE NOT NULL, " +           // 8, Average time between TOF trigger pulses
+                "CalibrationSlope DOUBLE, " +                    // 9, Value of k0  
+                "CalibrationIntercept DOUBLE, " +                // 10, Value of t0  
+                "a2 DOUBLE, " +                                  // 11, These six parameters below are coefficients for residual mass error correction
+                "b2 DOUBLE, " +                                  // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
+                "c2 DOUBLE, " +                                  // 13
+                "d2 DOUBLE, " +                                  // 14
+                "e2 DOUBLE, " +                                  // 15
+                "f2 DOUBLE, " +                                  // 16
+                "Temperature DOUBLE, " +                         // 17, Ambient temperature
+                "voltHVRack1 DOUBLE, " +                         // 18, Voltage setting in the IMS system
+                "voltHVRack2 DOUBLE, " +                         // 19, Voltage setting in the IMS system
+                "voltHVRack3 DOUBLE, " +                         // 20, Voltage setting in the IMS system
+                "voltHVRack4 DOUBLE, " +                         // 21, Voltage setting in the IMS system
+                "voltCapInlet DOUBLE, " +                        // 22, Capillary Inlet Voltage
+                "voltEntranceHPFIn DOUBLE, " +                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
+                "voltEntranceHPFOut DOUBLE, " +                  // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
+                "voltEntranceCondLmt DOUBLE, " +                 // 25, Cond Limit Voltage
+                "voltTrapOut DOUBLE, " +                         // 26, Trap Out Voltage
+                "voltTrapIn DOUBLE, " +                          // 27, Trap In Voltage
+                "voltJetDist DOUBLE, " +                         // 28, Jet Disruptor Voltage
+                "voltQuad1 DOUBLE, " +                           // 29, Fragmentation Quadrupole Voltage
+                "voltCond1 DOUBLE, " +                           // 30, Fragmentation Conductance Voltage
+                "voltQuad2 DOUBLE, " +                           // 31, Fragmentation Quadrupole Voltage
+                "voltCond2 DOUBLE, " +                           // 32, Fragmentation Conductance Voltage
+                "voltIMSOut DOUBLE, " +                          // 33, IMS Out Voltage
+                "voltExitHPFIn DOUBLE, " +                       // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
+                "voltExitHPFOut DOUBLE, " +                      // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
+                "voltExitCondLmt DOUBLE, " +                     // 36, Cond Limit Voltage
+                "PressureFront DOUBLE, " +                       // 37, Pressure at front of Drift Tube 
+                "PressureBack DOUBLE, " +                        // 38, Pressure at back of Drift Tube 
+                "MPBitOrder INT(1), " +                          // 39, Determines original size of bit sequence 
+                "FragmentationProfile BLOB," +                   // 40, Voltage profile used in fragmentation
+                "HighPressureFunnelPressure DOUBLE, " +          // 41
+                "IonFunnelTrapPressure DOUBLE , " +              // 42
+                "RearIonFunnelPressure DOUBLE, " +               // 43
+                "QuadrupolePressure DOUBLE, " +                  // 44
+                "ESIVoltage DOUBLE, " +                          // 45
+                "FloatVoltage DOUBLE, " +                        // 46
+                "CalibrationDone INT, " +                        // 47, Set to 1 after a frame has been calibrated
+                "Decoded INT);";                                 // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+
+            //Voltage profile used in fragmentation, Length number of Scans 
+            m_dbCommandUimf.ExecuteNonQuery();
+
+			// Re-initialize m_dbCommandPrepareInsertFrame so that it uses voltEntranceHPFIn and voltEntranceHPFOut
+			PrepareInsertFrame();
 
 			// Create Frame_Scans Table
 			if (System.String.Equals(dataType, "double"))
