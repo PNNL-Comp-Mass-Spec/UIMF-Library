@@ -74,8 +74,8 @@ namespace UIMFLibrary
 						Console.WriteLine(DateTime.Now + " - " + progressMessage);
 						dtLastProgress = DateTime.UtcNow;
 
-						// Note: We are assuming that 80% of the time was taken up by CreateTemporaryDatabase, 5% by CreateIndexes, and 15% by InsertBinCentricData
-						double percentComplete = 85 + (i / (double)numBins) * 15;
+						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
+						double percentComplete = (37+30) + (i / (double)numBins) * 33;
 						UpdateProgress(percentComplete, progressMessage);
 
 					}
@@ -161,8 +161,8 @@ namespace UIMFLibrary
 							}
 						}
 
-						// Note: We are assuming that 80% of the time was taken up by CreateTemporaryDatabase, 5% by CreateIndexes, and 15% by InsertBinCentricData
-						double percentComplete = 0 + (frameNumber / (double)numFrames) * 80;
+						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
+						double percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
 						UpdateProgress(percentComplete, progressMessage);
 					}
 
@@ -223,9 +223,9 @@ namespace UIMFLibrary
 
 					if (numBins > 0)
 					{
-						// Note: We are assuming that 80% of the time was taken up by CreateTemporaryDatabase, 5% by CreateIndexes, and 15% by InsertBinCentricData
+						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
 						string progressMessage = "Creating indices, Bin: " + i + " / " + numBins; 
-						double percentComplete = 80 + (i / (double)numBins) * 5;
+						double percentComplete = 37 + (i / (double)numBins) * 30;
 						UpdateProgress(percentComplete, progressMessage);
 					}
 				}
