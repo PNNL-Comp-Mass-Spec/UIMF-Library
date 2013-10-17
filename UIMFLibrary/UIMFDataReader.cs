@@ -912,7 +912,7 @@ namespace UIMFLibrary
             return oGlobalParameters;
         }
 
-		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, FrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap)
+		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, FrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap, bool doReorder)
 		{
 			FrameParameters frameParameters = GetFrameParameters(frameNumber);
 
@@ -964,7 +964,15 @@ namespace UIMFLibrary
 							}
 							else
 							{
-								intensities[binIndex][scanToIndexMap[scanNumber]] = decodedIntensityValue;
+								if (doReorder)
+								{
+									intensities[binIndex][scanToIndexMap[scanNumber]] = decodedIntensityValue;
+								}
+								else
+								{
+									intensities[binIndex][scanNumber] = decodedIntensityValue;
+								}
+								
 								binIndex++;
 							}
 						}
