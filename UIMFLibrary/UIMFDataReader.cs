@@ -1465,8 +1465,6 @@ namespace UIMFLibrary
 		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
 		public int GetSpectrumBinCentric(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, int startBin, int endBin, out double[] mzArray, out int[] intensityArray)
 		{
-			//Console.WriteLine("LC " + startFrameNumber + " - " + endFrameNumber + "\t IMS " + startScanNumber + " - " + endScanNumber + "\t Bin " + startBin + " - " + endBin);
-
 			List<double> mzList = new List<double>();
 			List<int> intensityList = new List<int>();
 
@@ -1478,9 +1476,6 @@ namespace UIMFLibrary
 
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
-
-
-
 
 			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
 			{
@@ -1527,79 +1522,14 @@ namespace UIMFLibrary
 						}
 					}
 
-					if (intensityForBin > 0)
-					{
-						double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
-						mzList.Add(mz);
-						intensityList.Add(intensityForBin);
-					}
+					// No need to do anything if we did not get any intensity
+					if (intensityForBin <= 0) continue;
+
+					double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
+					mzList.Add(mz);
+					intensityList.Add(intensityForBin);
 				}
 			}
-
-
-
-
-
-			//using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
-			//{
-			//    //int maxDecompressedSPectraSize = m_globalParameters.NumFrames * frameParams.Scans * DATASIZE;
-			//    //byte[] decompSpectraRecord = new byte[maxDecompressedSPectraSize];
-
-			//    while (reader.Read())
-			//    {
-			//        int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
-			//        int intensity = 0;
-			//        int entryIndex = 0;
-			//        //int numEntries = 0;
-			//        int scanLc = 0;
-			//        int scanIms = 0;
-
-			//        byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-			//        byte[] spectraRecord = (byte[])(reader["Intensities"]);
-			//        //if (spectraRecord.Length > 0)
-			//        //{
-			//        //    int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
-			//        //    numEntries = outputLength / DATASIZE;
-			//        //}
-
-			//        for (int i = 0; i < decompSpectraRecord.Length; i++)
-			//        {
-			//            int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-			//            if (decodedSpectraRecord < 0)
-			//            {
-			//                entryIndex += -decodedSpectraRecord;
-			//            }
-			//            else
-			//            {
-			//                // Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
-			//                entryIndex++;
-
-			//                // Calculate LC Scan and IMS Scan of this entry
-			//                CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
-
-			//                // If we pass the LC Scan number we are interested in, then go ahead and quit
-			//                if (scanLc > endFrameNumber) break;
-
-			//                // Only add to the intensity if it is within the specified range
-			//                if (scanLc >= startFrameNumber && scanIms >= startScanNumber && scanIms <= endScanNumber)
-			//                {
-			//                    // Only consider the FrameType that was given
-			//                    if (GetFrameParameters(scanLc).FrameType == frameType)
-			//                    {
-			//                        intensity += decodedSpectraRecord;
-			//                    }
-			//                }
-			//            }
-			//        }
-
-			//        if (intensity > 0)
-			//        {
-			//            double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
-			//            mzList.Add(mz);
-			//            intensityList.Add(intensity);
-			//        }
-			//    }
-			//}
 
 			mzArray = mzList.ToArray();
 			intensityArray = intensityList.ToArray();
