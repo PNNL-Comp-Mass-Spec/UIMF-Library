@@ -7,12 +7,14 @@ namespace UIMFLibrary
 		public int ScanLc { get; private set; }
 		public int ScanIms { get; private set; }
 		public double Intensity { get; set; }
+		public bool IsSaturated { get; set; }
 
 		public IntensityPoint(int scanLc, int scanIms, double intensity)
 		{
 			ScanLc = scanLc;
 			ScanIms = scanIms;
 			Intensity = intensity;
+			IsSaturated = false;
 		}
 
 		public int CompareTo(IntensityPoint other)

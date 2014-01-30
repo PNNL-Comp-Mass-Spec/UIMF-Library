@@ -72,6 +72,7 @@ namespace UIMFLibrary
     		private bool m_doesContainBinCentricData;
 
     		private int m_frameTypeMs;
+    		private int m_saturationLevel;
 
 			private static int m_errMessageCounter;
 
@@ -91,6 +92,8 @@ namespace UIMFLibrary
 			}
 
 		public string UimfFilePath { get { return m_uimfFilePath; } }
+
+		public bool ContainsBinCentricData { get { return m_doesContainBinCentricData; } }
 
         #endregion
 
@@ -131,6 +134,8 @@ namespace UIMFLibrary
 					FillOutFrameInfo();
 
 					m_doesContainBinCentricData = DoesContainBinCentricData();
+
+					m_saturationLevel = GetSaturationLevel();
 				}
 				catch (Exception ex)
 				{
@@ -425,6 +430,27 @@ namespace UIMFLibrary
 			double t = bin * binWidth / 1000;
 			double term1 = slope * ((t - correctionTimeForTOF / 1000 - intercept));
 			return term1 * term1;
+		}
+
+		public double ConvertScanNumberToDriftTime(int frameNum, int scanNum)
+		{
+			FrameParameters fp = GetFrameParameters(frameNum);
+			double averageTofLength = fp.AverageTOFLength;
+			double driftTime = averageTofLength * (scanNum + 1) / 1e6;
+
+			var framePressure = GetFramePressureForCalculationOfDriftTime(frameNum);
+
+			if (framePressure > 0)
+			{
+				driftTime = driftTime * (4.0 / framePressure);
+			}
+
+			return driftTime;
+		}
+
+		public double ConvertFrameNumberToNormalizedElutionTime(int frameNumber)
+		{
+			return frameNumber / (double) m_globalParameters.NumFrames;
 		}
 
         public string FrameTypeDescription(FrameType frameType)
@@ -847,11 +873,12 @@ namespace UIMFLibrary
         /// <returns>saturation level</returns>
         public int GetSaturationLevel()
         {
-            int prescanAccumulations;
-            if (m_globalParameters == null) prescanAccumulations = GetGlobalParameters().Prescan_Accumulations;
-            else prescanAccumulations = m_globalParameters.Prescan_Accumulations;
+        	FrameParameters firstFrameParameters = GetFrameParameters(1);
 
-            return prescanAccumulations*255;
+        	int accumulations = firstFrameParameters.Accumulations;
+			int numberOfPlumes = (int)Math.Pow(2, firstFrameParameters.MPBitOrder) / 2;
+
+			return (int)(accumulations * 255 * numberOfPlumes * 0.95);
         }
 
         public static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
@@ -1417,18 +1444,7 @@ namespace UIMFLibrary
 				return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, out mzArray, out intensityArray);
 			}
 
-			int numFrames = endFrameNumber - startFrameNumber + 1;
-			int numScans = endScanNumber - startScanNumber + 1;
-			int numBins = endBin - startBin + 1;
-
-			if((numFrames * numScans) < numBins || !m_doesContainBinCentricData)
-			{
-			    return GetSpectrum(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
-			}
-			else
-			{
-				return GetSpectrumBinCentric(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
-			}
+			return GetSpectrumBinCentric(startFrameNumber, endFrameNumber, frameType, startScanNumber, endScanNumber, startBin, endBin, out mzArray, out intensityArray);
 		}
 
 		/// <summary>
@@ -1457,31 +1473,30 @@ namespace UIMFLibrary
 			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
 			int numImsScans = frameParams.Scans;
 
+			FrameTypeInfo frameTypeInfo = m_frameTypeInfo[frameType];
+			int[] frameIndexes = frameTypeInfo.FrameIndexes;
+
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
 			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
 
+
+
+
 			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
 			{
-				//int maxDecompressedSPectraSize = m_globalParameters.NumFrames * frameParams.Scans * DATASIZE;
-				//byte[] decompSpectraRecord = new byte[maxDecompressedSPectraSize];
-
 				while (reader.Read())
 				{
 					int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
-					int intensity = 0;
 					int entryIndex = 0;
-					//int numEntries = 0;
 					int scanLc = 0;
 					int scanIms = 0;
 
 					byte[] decompSpectraRecord = (byte[])(reader["INTENSITIES"]);
-					//if (spectraRecord.Length > 0)
-					//{
-					//    int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
-					//    numEntries = outputLength / DATASIZE;
-					//}
+					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
-					for (int i = 0; i < decompSpectraRecord.Length; i++)
+					int intensityForBin = 0;
+
+					for (int i = 0; i < numPossibleRecords; i++)
 					{
 						int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
 						if (decodedSpectraRecord < 0)
@@ -1496,29 +1511,95 @@ namespace UIMFLibrary
 							// Calculate LC Scan and IMS Scan of this entry
 							CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
-							// If we pass the LC Scan number we are interested in, then go ahead and quit
-							if (scanLc > endFrameNumber) break;
+							// Skip FrameTypes that do not match the given FrameType
+							if (GetFrameParameters(scanLc).FrameType != frameType) continue;
 
-							// Only add to the intensity if it is within the specified range
-							if (scanLc >= startFrameNumber && scanIms >= startScanNumber && scanIms <= endScanNumber)
-							{
-								// Only consider the FrameType that was given
-								if (GetFrameParameters(scanLc).FrameType == frameType)
-								{
-									intensity += decodedSpectraRecord;
-								}
-							}
+							// Get the frame index
+							int frameIndex = frameIndexes[scanLc];
+
+							// We can stop after we get past the max frame number given
+							if (frameIndex > endFrameNumber) break;
+
+							// Skip all frames and scans that we do not care about
+							if (frameIndex < startFrameNumber || scanIms < startScanNumber || scanIms > endScanNumber) continue;
+
+							intensityForBin += decodedSpectraRecord;
 						}
 					}
 
-					if (intensity > 0)
+					if (intensityForBin > 0)
 					{
 						double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
 						mzList.Add(mz);
-						intensityList.Add(intensity);
+						intensityList.Add(intensityForBin);
 					}
 				}
 			}
+
+
+
+
+
+			//using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
+			//{
+			//    //int maxDecompressedSPectraSize = m_globalParameters.NumFrames * frameParams.Scans * DATASIZE;
+			//    //byte[] decompSpectraRecord = new byte[maxDecompressedSPectraSize];
+
+			//    while (reader.Read())
+			//    {
+			//        int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
+			//        int intensity = 0;
+			//        int entryIndex = 0;
+			//        //int numEntries = 0;
+			//        int scanLc = 0;
+			//        int scanIms = 0;
+
+			//        byte[] decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+			//        byte[] spectraRecord = (byte[])(reader["Intensities"]);
+			//        //if (spectraRecord.Length > 0)
+			//        //{
+			//        //    int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
+			//        //    numEntries = outputLength / DATASIZE;
+			//        //}
+
+			//        for (int i = 0; i < decompSpectraRecord.Length; i++)
+			//        {
+			//            int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+			//            if (decodedSpectraRecord < 0)
+			//            {
+			//                entryIndex += -decodedSpectraRecord;
+			//            }
+			//            else
+			//            {
+			//                // Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
+			//                entryIndex++;
+
+			//                // Calculate LC Scan and IMS Scan of this entry
+			//                CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+
+			//                // If we pass the LC Scan number we are interested in, then go ahead and quit
+			//                if (scanLc > endFrameNumber) break;
+
+			//                // Only add to the intensity if it is within the specified range
+			//                if (scanLc >= startFrameNumber && scanIms >= startScanNumber && scanIms <= endScanNumber)
+			//                {
+			//                    // Only consider the FrameType that was given
+			//                    if (GetFrameParameters(scanLc).FrameType == frameType)
+			//                    {
+			//                        intensity += decodedSpectraRecord;
+			//                    }
+			//                }
+			//            }
+			//        }
+
+			//        if (intensity > 0)
+			//        {
+			//            double mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, m_globalParameters.BinWidth, m_globalParameters.TOFCorrectionTime, binNumber);
+			//            mzList.Add(mz);
+			//            intensityList.Add(intensity);
+			//        }
+			//    }
+			//}
 
 			mzArray = mzList.ToArray();
 			intensityArray = intensityList.ToArray();
@@ -2570,7 +2651,8 @@ namespace UIMFLibrary
 
 							// Add intensity to the result
 							int frameIndex = frameIndexes[scanLc];
-							intensityList.Add(new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord));
+							var newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord) {IsSaturated = decodedSpectraRecord >= m_saturationLevel};
+							intensityList.Add(newPoint);
 						}
 					}
 				}
@@ -2637,13 +2719,17 @@ namespace UIMFLibrary
 							int frameIndex = frameIndexes[scanLc];
 							IntensityPoint newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
+							bool isSaturated = decodedSpectraRecord >= m_saturationLevel;
+
 							if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
 							{
 								dictionaryValue.Intensity += decodedSpectraRecord;
+								if(isSaturated) dictionaryValue.IsSaturated = true;
 							}
 							else
 							{
 								pointDictionary.Add(newPoint, newPoint);
+								if (isSaturated) newPoint.IsSaturated = true;
 							}
 						}
 					}
@@ -2718,13 +2804,17 @@ namespace UIMFLibrary
 
 							IntensityPoint newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
+							bool isSaturated = decodedSpectraRecord >= m_saturationLevel;
+
 							if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
 							{
 								dictionaryValue.Intensity += decodedSpectraRecord;
+								if (isSaturated) dictionaryValue.IsSaturated = true;
 							}
 							else
 							{
 								pointDictionary.Add(newPoint, newPoint);
+								if (isSaturated) newPoint.IsSaturated = true;
 							}
 						}
 					}
