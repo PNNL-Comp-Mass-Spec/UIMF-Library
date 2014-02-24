@@ -1550,6 +1550,111 @@ namespace UIMFLibrary
 		/// <param name="frameType">The frame type to consider.</param>
 		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
 		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
+		/// <param name="targetMz">The target m/z of the desired spectrum.</param>
+		/// <param name="tolerance">The m/z tolerance.</param>
+		/// <param name="toleranceType">The type of m/z tolerance.</param>
+		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
+		/// <param name="intensityArray">The corresponding intensity values of the non-zero m/z value.</param>
+		/// <returns>The number of non-zero m/z values found in the resulting spectrum.</returns>
+		public int GetSpectrumBinCentric(int startFrameNumber, int endFrameNumber, FrameType frameType, int startScanNumber, int endScanNumber, double targetMz, double tolerance, ToleranceType toleranceType, out double[] mzArray, out int[] intensityArray)
+		{
+			List<double> mzList = new List<double>();
+			List<int> intensityList = new List<int>();
+
+			FrameParameters frameParams = GetFrameParameters(startFrameNumber);
+			int numImsScans = frameParams.Scans;
+
+			FrameTypeInfo frameTypeInfo = m_frameTypeInfo[frameType];
+			int[] frameIndexes = frameTypeInfo.FrameIndexes;
+
+			double slope = frameParams.CalibrationSlope;
+			double intercept = frameParams.CalibrationIntercept;
+			double binWidth = m_globalParameters.BinWidth;
+			double tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
+
+			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+			double lowMz = targetMz - mzTolerance;
+			double highMz = targetMz + mzTolerance;
+
+			int startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, lowMz)) - 1;
+			int endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, highMz)) + 1;
+
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
+			m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
+
+			using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
+					int entryIndex = 0;
+					int scanLc = 0;
+					int scanIms = 0;
+
+					byte[] decompSpectraRecord = (byte[])(reader["INTENSITIES"]);
+					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+
+					int intensityForBin = 0;
+
+					for (int i = 0; i < numPossibleRecords; i++)
+					{
+						int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+						if (decodedSpectraRecord < 0)
+						{
+							entryIndex += -decodedSpectraRecord;
+						}
+						else
+						{
+							// Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
+							entryIndex++;
+
+							// Calculate LC Scan and IMS Scan of this entry
+							CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+
+							// Skip FrameTypes that do not match the given FrameType
+							if (GetFrameParameters(scanLc).FrameType != frameType) continue;
+
+							// Get the frame index
+							int frameIndex = frameIndexes[scanLc];
+
+							// We can stop after we get past the max frame number given
+							if (frameIndex > endFrameNumber) break;
+
+							// Skip all frames and scans that we do not care about
+							if (frameIndex < startFrameNumber || scanIms < startScanNumber || scanIms > endScanNumber) continue;
+
+							intensityForBin += decodedSpectraRecord;
+						}
+					}
+
+					// No need to do anything if we did not get any intensity
+					if (intensityForBin <= 0) continue;
+
+					double mz = ConvertBinToMZ(slope, intercept, binWidth, tofCorrectionTime, binNumber);
+					mzList.Add(mz);
+					intensityList.Add(intensityForBin);
+				}
+			}
+
+			mzArray = mzList.ToArray();
+			intensityArray = intensityList.ToArray();
+
+			m_getBinDataCommand.Parameters.Clear();
+
+			return mzList.Count;
+		}
+
+		/// <summary>
+		/// Extracts m/z values and intensities from given frame range and scan range and bin range.
+		/// The intensity values of each m/z value are summed across the frame range. The result is a spectrum for a single frame.
+		/// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+		/// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+		/// </summary>
+		/// <param name="startFrameNumber">The start frame number of the desired spectrum.</param>
+		/// <param name="endFrameNumber">The end frame number of the desired spectrum.</param>
+		/// <param name="frameType">The frame type to consider.</param>
+		/// <param name="startScanNumber">The start scan number of the desired spectrum.</param>
+		/// <param name="endScanNumber">The end scan number of the desired spectrum.</param>
 		/// <param name="startBin">The start bin index of the desired spectrum.</param>
 		/// <param name="endBin">The end bin index of the desired spectrum.</param>
 		/// <param name="mzArray">The m/z values that contained non-zero intensity values.</param>
