@@ -939,9 +939,59 @@ namespace UIMFLibrary
             return oGlobalParameters;
         }
 
-		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, FrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap, bool doReorder)
+		/// <summary>
+		/// Gets a set of intensity values that will be used for demultiplexing.
+		/// </summary>
+		/// <param name="frameNumber">The frame where the intensity data should come from.</param>
+		/// <param name="frameType">The type of frame the intensity data should come from.</param>
+		/// <param name="segmentLength">The length of the demultiplexing segment.</param>
+		/// <param name="scanToIndexMap">The map that defines the re-ordering process of demultiplexing. Can be empty or null if doReorder is false.</param>
+		/// <param name="doReorder">Whether to re-order the data or not. This can be used to speed up the demultiplexing process.</param>
+		/// <param name="numFramesToSum">Number of frames to sum. Must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.</param>
+		/// <returns></returns>
+		public double[][] GetIntensityBlockForDemultiplexing(int frameNumber, FrameType frameType, int segmentLength, Dictionary<int, int> scanToIndexMap, bool doReorder, int numFramesToSum = 1)
 		{
+			if(numFramesToSum < 1 || numFramesToSum % 2 != 1) throw new SystemException("Number of frames to sum must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.");
+			
+			// This will be the +- number of frames
+			int numFramesAroundCenter = numFramesToSum / 2;
+
 			FrameParameters frameParameters = GetFrameParameters(frameNumber);
+
+			int minFrame = frameNumber - numFramesAroundCenter;
+			int maxFrame = frameNumber + numFramesAroundCenter;
+
+			// Keep track of the total number of frames so we can alter intensity values
+			double totalFrames = 1;
+
+			// Make sure we are grabbing frames only with the given frame type
+			for(int i = frameNumber + 1; i <= maxFrame; i++)
+			{
+				if (maxFrame > m_globalParameters.NumFrames)
+				{
+					maxFrame = i - 1;
+					break;
+				}
+
+				FrameParameters testFrameParameters = GetFrameParameters(i);
+
+				if (testFrameParameters.FrameType == frameType) totalFrames++;
+				else maxFrame++;
+			}
+			for (int i = frameNumber - 1; i >= minFrame; i--)
+			{
+				if (minFrame < 1)
+				{
+					minFrame = i + 1;
+					break;
+				}
+
+				FrameParameters testFrameParameters = GetFrameParameters(i);
+				if (testFrameParameters.FrameType == frameType) totalFrames++;
+				else minFrame--;
+			}
+
+			double divisionFactor = 1/totalFrames;
 
 			int numBins = m_globalParameters.Bins;
 			int numScans = frameParameters.Scans;
@@ -960,8 +1010,8 @@ namespace UIMFLibrary
 			}
 
 			// Now setup queries to retrieve data
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameParameters.FrameNum));
-			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameParameters.FrameNum));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", minFrame));
+			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", maxFrame));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
 			m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType)));
@@ -993,13 +1043,13 @@ namespace UIMFLibrary
 							{
 								if (doReorder)
 								{
-									intensities[binIndex][scanToIndexMap[scanNumber]] = decodedIntensityValue;
+									intensities[binIndex][scanToIndexMap[scanNumber]] += (decodedIntensityValue * divisionFactor);
 								}
 								else
 								{
-									intensities[binIndex][scanNumber] = decodedIntensityValue;
+									intensities[binIndex][scanNumber] += (decodedIntensityValue * divisionFactor);
 								}
-								
+
 								binIndex++;
 							}
 						}
