@@ -993,19 +993,24 @@ namespace UIMFLibrary
 			{
 				return -1;
 			}
+
+        	int arraySize = intensities.Length;
+
 			int nrlze = 0; 
 			int zero_count = 0;
-			int[] rlze_data = new int[intensities.Length];
+			List<int> rlzeDataList = new List<int>();
+			//int[] rlze_data = new int[arraySize];
 			int tic_scan = 0;
 			int bpi = 0;
 			double bpi_mz = 0;
             int datatypeSize = 4;
+        	int indexOfMaxIntensity = 0;
 
             if (m_globalParameters == null)
                 m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
 
 			//Calculate TIC and BPI
-			for ( int i = 0; i < intensities.Length; i++)
+			for (int i = 0; i < arraySize; i++)
 			{
 				int intensity = intensities[i];
 				if (intensity > 0)
@@ -1014,21 +1019,26 @@ namespace UIMFLibrary
 					tic_scan += intensity;
 					if (intensity > bpi)
 					{
-						bpi = intensity; 
-						bpi_mz = convertBinToMz(i, binWidth, frameParameters);
+						bpi = intensity;
+						indexOfMaxIntensity = i;
 					}
 					if(zero_count < 0)
 					{
-						rlze_data[nrlze++] = zero_count;
+						rlzeDataList.Add(zero_count);
 						zero_count = 0;
 					}
-					rlze_data[nrlze++] = intensity;
+					rlzeDataList.Add(intensity);
 				}
 				else zero_count--;
 			}
 
+			bpi_mz = convertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
 			//Compress intensities
             int nlzf = 0;
+
+        	nrlze = rlzeDataList.Count;
+        	int[] rlze_data = rlzeDataList.ToArray();
 
             byte[] compresedRecord = new byte[nrlze * datatypeSize * 5];
             if (nrlze > 0)
