@@ -105,11 +105,12 @@ namespace UIMFLibrary
 			m_frameTypeInfo = new Dictionary<FrameType, FrameTypeInfo>();
 
             FileSystemInfo uimfFileInfo = new FileInfo(fileName);
+			DirectoryInfo uimfDirectory = new DirectoryInfo(fileName);
 
 			if (uimfFileInfo.Exists)
 			{
 				string connectionString = "Data Source = " + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
-				m_uimfDatabaseConnection = new SQLiteConnection(connectionString);
+				m_uimfDatabaseConnection = new SQLiteConnection(connectionString, true);
 
 				try
 				{
