@@ -105,7 +105,6 @@ namespace UIMFLibrary
 			m_frameTypeInfo = new Dictionary<FrameType, FrameTypeInfo>();
 
             FileSystemInfo uimfFileInfo = new FileInfo(fileName);
-			DirectoryInfo uimfDirectory = new DirectoryInfo(fileName);
 
 			if (uimfFileInfo.Exists)
 			{
