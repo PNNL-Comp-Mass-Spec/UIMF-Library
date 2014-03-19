@@ -288,7 +288,33 @@ namespace UIMFLibrary
 				}
 			}
 
+
+			frameData = ReverseData(frameData);
 			return frameData;
+		}
+
+		/// <summary>
+		/// Reverses the 2D multidimensional array if it is upsidedown or just needs to be reversed. 
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns>Reversed multidimensional array</returns>
+		private int[,] ReverseData(int[,] data)
+		{
+			// Reverses the data (for some reason it is extracted upside down!) SAP 3/19/2014
+			var length = data.GetLength(0);
+			var length1 = data.GetLength(1);
+			int temp;
+			for (int i = 0; i < length; i++)
+			{
+
+				for (int j = 0, k = length1 - 1; j < length1 / 2; j++, k--)
+				{
+					temp = data[i, j];
+					data[i, j] = data[i, k];
+					data[i, k] = temp;
+				}
+
+			}
 		}
 
 		/// <summary>
