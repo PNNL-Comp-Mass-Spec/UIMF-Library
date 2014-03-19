@@ -143,13 +143,10 @@ namespace UIMFLibrary
 			}
 		}
 
-		public int[][] AccumulateFrameData(int frameNumber, bool flagTOF, int startScan, int startBin, int minMZBin, int maxMZBin, int width, int height, int yCompression)
+		public int[,] AccumulateFrameData(int frameNumber, bool flagTOF, int startScan, int startBin, int minMZBin, int maxMZBin, int width, int height, int yCompression)
 		{
-			int[][] frameData = new int[width][];
-			for(int i = 0; i < frameData.Length; i++)
-			{
-				frameData[i] = new int[height];
-			}
+			int[,] frameData = new int[width, height];
+
 
 			byte[] compressedBinIntensity;
 			byte[] streamBinIntensity = new byte[m_globalParameters.Bins * 4];
@@ -231,7 +228,7 @@ namespace UIMFLibrary
 								break;
 							else
 							{
-								frameData[currentScan][indexCurrentBin - startBin] += intBinIntensity;
+								frameData[currentScan, indexCurrentBin - startBin] += intBinIntensity;
 								indexCurrentBin++;
 							}
 						}
@@ -280,7 +277,7 @@ namespace UIMFLibrary
 									if (m_calibrationTable[i] > calibratedBin)
 									{
 										pixelY = i;
-										frameData[currentScan][pixelY] += intBinIntensity;
+										frameData[currentScan, pixelY] += intBinIntensity;
 										break;
 									}
 								}
