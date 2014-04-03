@@ -17,6 +17,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Lzf;
 
 namespace UIMFLibrary
@@ -143,153 +144,162 @@ namespace UIMFLibrary
 			}
 		}
 
-		public int[,] AccumulateFrameData(int frameNumber, bool flagTOF, int startScan, int startBin, int minMZBin, int maxMZBin, int width, int height, int yCompression)
+		/// <summary>
+		/// Retrieves a given frame (or frames) and sums them in order to be viewed on a heatmap view or other 2D representation visually. 
+		/// </summary>
+		/// <param name="startFrameNumber"></param>
+		/// <param name="endFrameNumber"></param>
+		/// <param name="flagTOF"></param>
+		/// <param name="startScan"></param>
+		/// <param name="endScan"></param>
+		/// <param name="startBin"></param>
+		/// <param name="endBin"></param>
+		/// <param name="yCompression"></param>
+		/// <returns>Frame data to be utilized in visualization as a multidimensional array</returns>
+		public double[,] AccumulateFrameData(int startFrameNumber, int endFrameNumber, bool flagTOF, int startScan, int endScan, int startBin, int endBin, double yCompression)
 		{
-			int[,] frameData = new int[width, height];
-
-
-			byte[] compressedBinIntensity;
-			byte[] streamBinIntensity = new byte[m_globalParameters.Bins * 4];
-			int endBin;
-
-			if (yCompression > 0)
+			if (endFrameNumber - startFrameNumber < 0)
 			{
-				endBin = startBin + (height*yCompression);
-			}
-			else if (yCompression < 0)
-			{
-				endBin = startBin + height - 1;
-			}
-			else
-			{
-				throw new Exception("UIMFLibrary accumulate_PlotData: Compression == 0");
+				throw new ArgumentException("Start frame cannot be greater than end frame", "endFrameNumber");
 			}
 
-			// Create a calibration lookup table -- for speed
-			m_calibrationTable = new double[height];
-			if (flagTOF)
+			int width = endScan - startScan + 1;
+			int height = (int)Math.Round((endBin - startBin + 1) / yCompression);
+			double[,] frameData = new double[width, height];
+
+			for (int currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
 			{
-				for (int i = 0; i < height; i++)
+				byte[] streamBinIntensity = new byte[m_globalParameters.Bins*4];
+
+				// Create a calibration lookup table -- for speed
+				m_calibrationTable = new double[height];
+				if (flagTOF)
 				{
-					m_calibrationTable[i] = startBin + (i * (double)(endBin - startBin) / height);
-				}
-			}
-			else
-			{
-				FrameParameters frameparameters = GetFrameParameters(frameNumber);
-				MZ_Calibrator mzCalibrator = GetMzCalibrator(frameparameters);
-
-				double mzMin = mzCalibrator.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
-				double mzMax = mzCalibrator.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
-
-				for (int i = 0; i < height; i++)
-				{
-					m_calibrationTable[i] = mzCalibrator.MZtoTOF(mzMin + (i * (mzMax - mzMin) / height)) * m_globalParameters.BinWidth / TenthsOfNanoSecondsPerBin;
-				}
-			}
-
-			// This function extracts intensities from selected scans and bins in a single frame 
-			// and returns a two-dimensional array intensities[scan][bin]
-			// frameNum is mandatory and all other arguments are optional
-			m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
-			m_preparedStatement.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = " + frameNumber + " AND ScanNum >= " + startScan + " AND ScanNum <= " + (startScan + width - 1);
-
-			using (SQLiteDataReader reader = m_preparedStatement.ExecuteReader())
-			{
-				m_preparedStatement.Dispose();
-
-				// accumulate the data into the plot_data
-				if (yCompression < 0)
-				{
-					//MessageBox.Show(start_bin.ToString() + " " + end_bin.ToString());
-
-					for (int scansData = 0; ((scansData < width) && reader.Read()); scansData++)
+					for(int i = 0; i < height; i++)
 					{
-						int currentScan = Convert.ToInt32(reader["ScanNum"]) - startScan;
-						compressedBinIntensity = (byte[])(reader["Intensities"]);
-
-						if (compressedBinIntensity.Length == 0)
-							continue;
-
-						int indexCurrentBin = 0;
-						int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
-
-						for (int binData = 0; (binData < decompressLength) && (indexCurrentBin <= endBin); binData += 4)
-						{
-							int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binData);
-
-							if (intBinIntensity < 0)
-							{
-								indexCurrentBin += -intBinIntensity;   // concurrent zeros
-							}
-							else if ((indexCurrentBin < minMZBin) || (indexCurrentBin < startBin))
-								indexCurrentBin++;
-							else if (indexCurrentBin > maxMZBin)
-								break;
-							else
-							{
-								frameData[currentScan, indexCurrentBin - startBin] += intBinIntensity;
-								indexCurrentBin++;
-							}
-						}
+						m_calibrationTable[i] = startBin + (i*(double) (endBin - startBin)/height);
 					}
 				}
-				else    // each pixel accumulates more than 1 bin of data
+				else
 				{
-					for (int scansData = 0; ((scansData < width) && reader.Read()); scansData++)
+					FrameParameters frameparameters = GetFrameParameters(currentFrameNumber);
+					MZ_Calibrator mzCalibrator = GetMzCalibrator(frameparameters);
+
+					double mzMin = mzCalibrator.TOFtoMZ((float) ((startBin/m_globalParameters.BinWidth)*TenthsOfNanoSecondsPerBin));
+					double mzMax = mzCalibrator.TOFtoMZ((float) ((endBin/m_globalParameters.BinWidth)*TenthsOfNanoSecondsPerBin));
+
+					for(int i = 0; i < height; i++)
 					{
-						int currentScan = Convert.ToInt32(reader["ScanNum"]) - startScan;
-						// if (current_scan >= data_width)
-						//     break;
+						m_calibrationTable[i] = mzCalibrator.MZtoTOF(mzMin + (i*(mzMax - mzMin)/height))*m_globalParameters.BinWidth/
+						                        TenthsOfNanoSecondsPerBin;
+					}
+				}
 
-						compressedBinIntensity = (byte[])(reader["Intensities"]);
+				// This function extracts intensities from selected scans and bins in a single frame 
+				// and returns a two-dimensional array intensities[scan][bin]
+				// frameNum is mandatory and all other arguments are optional
+				m_preparedStatement = m_uimfDatabaseConnection.CreateCommand();
+				m_preparedStatement.CommandText = "SELECT ScanNum, Intensities FROM Frame_Scans WHERE FrameNum = " +
+				                                  currentFrameNumber + " AND ScanNum >= " + startScan + " AND ScanNum <= " +
+				                                  (startScan + width - 1);
 
-						if (compressedBinIntensity.Length == 0)
-							continue;
+				using (SQLiteDataReader reader = m_preparedStatement.ExecuteReader())
+				{
+					m_preparedStatement.Dispose();
 
-						int indexCurrentBin = 0;
-						int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length, ref streamBinIntensity, m_globalParameters.Bins * 4);
+					// accumulate the data into the plot_data
+					byte[] compressedBinIntensity;
+					if (yCompression < 0)
+					{
+						//MessageBox.Show(start_bin.ToString() + " " + end_bin.ToString());
 
-						int pixelY = 1;
-
-						for (int binValue = 0; (binValue < decompressLength) && (indexCurrentBin < endBin); binValue += 4)
+						for (int scansData = 0; ((scansData < width) && reader.Read()); scansData++)
 						{
-							int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
+							int currentScan = Convert.ToInt32(reader["ScanNum"]) - startScan;
+							compressedBinIntensity = (byte[]) (reader["Intensities"]);
 
-							if (intBinIntensity < 0)
-							{
-								indexCurrentBin += -intBinIntensity; // concurrent zeros
-							}
-							else if ((indexCurrentBin < minMZBin) || (indexCurrentBin < startBin))
-							{
-								indexCurrentBin++;
-							}
-							else if (indexCurrentBin > maxMZBin)
-							{
-								break;
-							}
-							else
-							{
-								double calibratedBin = indexCurrentBin;
+							if (compressedBinIntensity.Length == 0)
+								continue;
 
-								for (int i = pixelY; i < height; i++)
+							int indexCurrentBin = 0;
+							int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length,
+								ref streamBinIntensity, m_globalParameters.Bins*4);
+
+							for (int binData = 0; (binData < decompressLength) && (indexCurrentBin <= endBin); binData += 4)
+							{
+								int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binData);
+
+								if (intBinIntensity < 0)
 								{
-									if (m_calibrationTable[i] > calibratedBin)
-									{
-										pixelY = i;
-										frameData[currentScan, pixelY] += intBinIntensity;
-										break;
-									}
+									indexCurrentBin += -intBinIntensity; // concurrent zeros
 								}
-								indexCurrentBin++;
+								else if (indexCurrentBin < startBin)
+									indexCurrentBin++;
+								else if (indexCurrentBin > endBin)
+									break;
+								else
+								{
+									frameData[currentScan, indexCurrentBin - startBin] += intBinIntensity;
+									indexCurrentBin++;
+								}
+							}
+						}
+					}
+					else // each pixel accumulates more than 1 bin of data
+					{
+						for (int scansData = 0; ((scansData < width) && reader.Read()); scansData++)
+						{
+							int currentScan = Convert.ToInt32(reader["ScanNum"]) - startScan;
+							// if (current_scan >= data_width)
+							//     break;
+
+							compressedBinIntensity = (byte[]) (reader["Intensities"]);
+
+							if (compressedBinIntensity.Length == 0)
+								continue;
+
+							int indexCurrentBin = 0;
+							int decompressLength = LZFCompressionUtil.Decompress(ref compressedBinIntensity, compressedBinIntensity.Length,
+								ref streamBinIntensity, m_globalParameters.Bins*4);
+
+							int pixelY = 1;
+
+							for (int binValue = 0; (binValue < decompressLength) && (indexCurrentBin < endBin); binValue += 4)
+							{
+								int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
+
+								if (intBinIntensity < 0)
+								{
+									indexCurrentBin += -intBinIntensity; // concurrent zeros
+								}
+								else if (indexCurrentBin < startBin)
+								{
+									indexCurrentBin++;
+								}
+								else if (indexCurrentBin > endBin)
+								{
+									break;
+								}
+								else
+								{
+									double calibratedBin = indexCurrentBin;
+
+									for (int i = pixelY; i < height; i++)
+									{
+										if (m_calibrationTable[i] > calibratedBin)
+										{
+											pixelY = i;
+											frameData[currentScan, pixelY] += intBinIntensity;
+											break;
+										}
+									}
+									indexCurrentBin++;
+								}
 							}
 						}
 					}
 				}
 			}
-
-
-			frameData = ReverseData(frameData);
 			return frameData;
 		}
 
@@ -298,12 +308,12 @@ namespace UIMFLibrary
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns>Reversed multidimensional array</returns>
-		private int[,] ReverseData(int[,] data)
+		private double[,] ReverseData(double[,] data)
 		{
 			// Reverses the data (for some reason it is extracted upside down!) SAP 3/19/2014
 			var length = data.GetLength(0);
 			var length1 = data.GetLength(1);
-			int temp;
+			double temp;
 			for (int i = 0; i < length; i++)
 			{
 
