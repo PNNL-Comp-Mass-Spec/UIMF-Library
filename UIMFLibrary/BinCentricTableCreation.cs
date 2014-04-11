@@ -1,26 +1,129 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.IO;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="BinCentricTableCreation.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   TODO The bin centric table creation.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
 namespace UIMFLibrary
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Data.SQLite;
+	using System.IO;
+
+	/// <summary>
+	/// TODO The bin centric table creation.
+	/// </summary>
 	public class BinCentricTableCreation
 	{
-		private const int BIN_SIZE = 200;
-		public const string INSERT_BIN_INTENSITIES = "INSERT INTO Bin_Intensities (MZ_BIN, INTENSITIES) VALUES(:MZ_BIN, :INTENSITIES)";
-		public const string CREATE_BINS_TABLE = "CREATE TABLE Bin_Intensities (MZ_BIN int(11), INTENSITIES BLOB);";
+		#region Constants
+
+		/// <summary>
+		/// TODO The creat e_ bin s_ index.
+		/// </summary>
 		public const string CREATE_BINS_INDEX = "CREATE INDEX Bin_Intensities_MZ_BIN_IDX ON Bin_Intensities(MZ_BIN);";
 
+		/// <summary>
+		/// TODO The creat e_ bin s_ table.
+		/// </summary>
+		public const string CREATE_BINS_TABLE = "CREATE TABLE Bin_Intensities (MZ_BIN int(11), INTENSITIES BLOB);";
+
+		/// <summary>
+		/// TODO The inser t_ bi n_ intensities.
+		/// </summary>
+		public const string INSERT_BIN_INTENSITIES =
+			"INSERT INTO Bin_Intensities (MZ_BIN, INTENSITIES) VALUES(:MZ_BIN, :INTENSITIES)";
+
+		/// <summary>
+		/// TODO The bi n_ size.
+		/// </summary>
+		private const int BIN_SIZE = 200;
+
+		#endregion
+
+		#region Delegates
+
+		/// <summary>
+		/// TODO The message event handler.
+		/// </summary>
+		/// <param name="sender">
+		/// TODO The sender.
+		/// </param>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		public delegate void MessageEventHandler(object sender, MessageEventArgs e);
+
+		/// <summary>
+		/// TODO The progress event handler.
+		/// </summary>
+		/// <param name="sender">
+		/// TODO The sender.
+		/// </param>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
+
+		#endregion
+
+		#region Public Events
+
+		/// <summary>
+		/// TODO The error event.
+		/// </summary>
+		public event MessageEventHandler ErrorEvent;
+
+		/// <summary>
+		/// TODO The message event.
+		/// </summary>
+		public event MessageEventHandler MessageEvent;
+
+		/// <summary>
+		/// TODO The progress event.
+		/// </summary>
+		public event ProgressEventHandler ProgressEvent;
+
+		#endregion
+
+		#region Public Methods and Operators
+
+		/// <summary>
+		/// TODO The create bin centric table.
+		/// </summary>
+		/// <param name="uimfWriterConnection">
+		/// TODO The uimf writer connection.
+		/// </param>
+		/// <param name="uimfReader">
+		/// TODO The uimf reader.
+		/// </param>
 		public void CreateBinCentricTable(SQLiteConnection uimfWriterConnection, DataReader uimfReader)
 		{
-			CreateBinCentricTable(uimfWriterConnection, uimfReader, string.Empty);
+			this.CreateBinCentricTable(uimfWriterConnection, uimfReader, string.Empty);
 		}
 
-		public void CreateBinCentricTable(SQLiteConnection uimfWriterConnection, DataReader uimfReader, string workingDirectory)
+		/// <summary>
+		/// TODO The create bin centric table.
+		/// </summary>
+		/// <param name="uimfWriterConnection">
+		/// TODO The uimf writer connection.
+		/// </param>
+		/// <param name="uimfReader">
+		/// TODO The uimf reader.
+		/// </param>
+		/// <param name="workingDirectory">
+		/// TODO The working directory.
+		/// </param>
+		public void CreateBinCentricTable(
+			SQLiteConnection uimfWriterConnection, 
+			DataReader uimfReader, 
+			string workingDirectory)
 		{
 			// Create the temporary database
-			string temporaryDatabaseLocation = CreateTemporaryDatabase(uimfReader, workingDirectory);
+			string temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
 
 			string connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
 			using (SQLiteConnection temporaryDatabaseConnection = new SQLiteConnection(connectionString))
@@ -28,7 +131,7 @@ namespace UIMFLibrary
 				temporaryDatabaseConnection.Open();
 
 				// Write the bin centric tables to UIMF file
-				InsertBinCentricData(uimfWriterConnection, temporaryDatabaseConnection, uimfReader);
+				this.InsertBinCentricData(uimfWriterConnection, temporaryDatabaseConnection, uimfReader);
 			}
 
 			// Delete the temporary database
@@ -40,53 +143,175 @@ namespace UIMFLibrary
 			{
 				// Ignore deletion errors
 			}
-
 		}
 
-		private void InsertBinCentricData(SQLiteConnection uimfWriterConnection, SQLiteConnection temporaryDatabaseConnection, DataReader uimfReader)
+		/// <summary>
+		/// TODO The on error message.
+		/// </summary>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		public void OnErrorMessage(MessageEventArgs e)
 		{
-			int numBins = uimfReader.GetGlobalParameters().Bins;
-			int numImsScans = uimfReader.GetFrameParameters(1).Scans;
-
-			string targetFile = uimfWriterConnection.ConnectionString;
-			int charIndex = targetFile.IndexOf(";");
-			if (charIndex > 0)
-				targetFile = targetFile.Substring(0, charIndex - 1).Trim();
-
-			Console.WriteLine(DateTime.Now + " - Adding bin-centric data to " + targetFile);
-			DateTime dtLastProgress = DateTime.UtcNow;
-
-			// Create new table in the UIMF file that will be used to store bin-centric data
-			CreateBinIntensitiesTable(uimfWriterConnection);
-
-			using (SQLiteCommand insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
+			if (this.ErrorEvent != null)
 			{
-				insertCommand.Prepare();
+				this.ErrorEvent(this, e);
+			}
+		}
 
-				for (int i = 0; i <= numBins; i++)
+		/// <summary>
+		/// TODO The on message.
+		/// </summary>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		public void OnMessage(MessageEventArgs e)
+		{
+			if (this.MessageEvent != null)
+			{
+				this.MessageEvent(this, e);
+			}
+		}
+
+		/// <summary>
+		/// TODO The on progress update.
+		/// </summary>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		public void OnProgressUpdate(ProgressEventArgs e)
+		{
+			if (this.ProgressEvent != null)
+			{
+				this.ProgressEvent(this, e);
+			}
+		}
+
+		#endregion
+
+		#region Methods
+
+		/// <summary>
+		/// TODO The create bin intensities index.
+		/// </summary>
+		/// <param name="uimfWriterConnection">
+		/// TODO The uimf writer connection.
+		/// </param>
+		private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
+		{
+			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
+			{
+				command.ExecuteNonQuery();
+			}
+		}
+
+		/// <summary>
+		/// TODO The create bin intensities table.
+		/// </summary>
+		/// <param name="uimfWriterConnection">
+		/// TODO The uimf writer connection.
+		/// </param>
+		private void CreateBinIntensitiesTable(SQLiteConnection uimfWriterConnection)
+		{
+			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_TABLE, uimfWriterConnection))
+			{
+				command.ExecuteNonQuery();
+			}
+		}
+
+		/// <summary>
+		/// TODO The create blank database.
+		/// </summary>
+		/// <param name="locationForNewDatabase">
+		/// TODO The location for new database.
+		/// </param>
+		/// <param name="numBins">
+		/// TODO The num bins.
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
+		private int CreateBlankDatabase(string locationForNewDatabase, int numBins)
+		{
+			// Create new SQLite file
+			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
+			if (sqliteFile.Exists)
+			{
+				sqliteFile.Delete();
+			}
+
+			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+
+			int tablesCreated = 0;
+
+			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			{
+				connection.Open();
+
+				for (int i = 0; i <= numBins; i += BIN_SIZE)
 				{
-					SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
-
-					if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
+					using (SQLiteCommand sqlCommand = new SQLiteCommand(this.GetCreateIntensitiesTableQuery(i), connection))
 					{
-						string progressMessage = "Processing Bin: " + i + " / " + numBins;
-						Console.WriteLine(DateTime.Now + " - " + progressMessage);
-						dtLastProgress = DateTime.UtcNow;
-
-						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-						double percentComplete = (37+30) + (i / (double)numBins) * 33;
-						UpdateProgress(percentComplete, progressMessage);
-
+						sqlCommand.ExecuteNonQuery();
 					}
-					
+
+					tablesCreated++;
 				}
 			}
 
-			CreateBinIntensitiesIndex(uimfWriterConnection);
-
-			Console.WriteLine(DateTime.Now + " - Done");
+			return tablesCreated;
 		}
 
+		/// <summary>
+		/// TODO The create indexes.
+		/// </summary>
+		/// <param name="locationForNewDatabase">
+		/// TODO The location for new database.
+		/// </param>
+		/// <param name="numBins">
+		/// TODO The num bins.
+		/// </param>
+		private void CreateIndexes(string locationForNewDatabase, int numBins)
+		{
+			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
+			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+
+			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			{
+				connection.Open();
+
+				for (int i = 0; i <= numBins; i += BIN_SIZE)
+				{
+					using (SQLiteCommand sqlCommand = new SQLiteCommand(this.GetCreateIndexesQuery(i), connection))
+					{
+						sqlCommand.ExecuteNonQuery();
+					}
+
+					if (numBins > 0)
+					{
+						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
+						string progressMessage = "Creating indices, Bin: " + i + " / " + numBins;
+						double percentComplete = 37 + (i / (double)numBins) * 30;
+						this.UpdateProgress(percentComplete, progressMessage);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// TODO The create temporary database.
+		/// </summary>
+		/// <param name="uimfReader">
+		/// TODO The uimf reader.
+		/// </param>
+		/// <param name="workingDirectory">
+		/// TODO The working directory.
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		/// <exception cref="IOException">
+		/// </exception>
 		private string CreateTemporaryDatabase(DataReader uimfReader, string workingDirectory)
 		{
 			FileInfo uimfFileInfo = new FileInfo(uimfReader.UimfFilePath);
@@ -96,12 +321,20 @@ namespace UIMFLibrary
 			FileInfo sqliteFile = new FileInfo(Path.Combine(workingDirectory, sqliteFileName));
 
 			if (uimfFileInfo.FullName.ToLower() == sqliteFile.FullName.ToLower())
-				throw new IOException("Cannot add bin-centric tables, temporary SqLite file has the same name as the source SqLite file: " + uimfFileInfo.FullName);
+			{
+				throw new IOException(
+					"Cannot add bin-centric tables, temporary SqLite file has the same name as the source SqLite file: "
+					+ uimfFileInfo.FullName);
+			}
 
 			Console.WriteLine(DateTime.Now + " - Writing " + sqliteFile.FullName);
 
 			// Create new SQLite file
-			if (File.Exists(sqliteFile.FullName)) File.Delete(sqliteFile.FullName);
+			if (File.Exists(sqliteFile.FullName))
+			{
+				File.Delete(sqliteFile.FullName);
+			}
+
 			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
 			// Get global UIMF information
@@ -109,7 +342,7 @@ namespace UIMFLibrary
 			int numFrames = globalParameters.NumFrames;
 			int numBins = globalParameters.Bins;
 
-			int tablesCreated = CreateBlankDatabase(sqliteFile.FullName, numBins);
+			int tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
 
 			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
 			{
@@ -119,7 +352,7 @@ namespace UIMFLibrary
 
 				for (int i = 0; i <= numBins; i += BIN_SIZE)
 				{
-					string query = GetInsertIntensityQuery(i);
+					string query = this.GetInsertIntensityQuery(i);
 					SQLiteCommand sqlCommand = new SQLiteCommand(query, connection);
 					sqlCommand.Prepare();
 					commandDictionary.Add(i, sqlCommand);
@@ -162,7 +395,7 @@ namespace UIMFLibrary
 
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
 						double percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
-						UpdateProgress(percentComplete, progressMessage);
+						this.UpdateProgress(percentComplete, progressMessage);
 					}
 
 					transaction.Commit();
@@ -171,72 +404,188 @@ namespace UIMFLibrary
 
 			Console.WriteLine(DateTime.Now + " - Indexing " + tablesCreated + " tables");
 
-			CreateIndexes(sqliteFile.FullName, numBins);
+			this.CreateIndexes(sqliteFile.FullName, numBins);
 
 			Console.WriteLine(DateTime.Now + " - Done populating temporary DB");
 
 			return sqliteFile.FullName;
 		}
 
-		private int CreateBlankDatabase(string locationForNewDatabase, int numBins)
+		/// <summary>
+		/// TODO The get create indexes query.
+		/// </summary>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		private string GetCreateIndexesQuery(int binNumber)
 		{
-			// Create new SQLite file
-			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
-			if (sqliteFile.Exists) sqliteFile.Delete();
-			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+			int minBin, maxBin;
+			this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
 
-			int tablesCreated = 0;
-
-			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-			{
-				connection.Open();
-
-				for (int i = 0; i <= numBins; i += BIN_SIZE)
-				{
-					using (SQLiteCommand sqlCommand = new SQLiteCommand(GetCreateIntensitiesTableQuery(i), connection))
-					{
-						sqlCommand.ExecuteNonQuery();
-					}
-					tablesCreated++;
-				}
-			}
-
-			return tablesCreated;
+			return "CREATE INDEX Bin_Intensities_" + minBin + "_" + maxBin + "_MZ_BIN_SCAN_LC_SCAN_IMS_IDX ON Bin_Intensities_"
+			       + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS);";
 		}
 
-		private void CreateIndexes(string locationForNewDatabase, int numBins)
+		/// <summary>
+		/// TODO The get create intensities table query.
+		/// </summary>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		private string GetCreateIntensitiesTableQuery(int binNumber)
 		{
-			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
-			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+			int minBin, maxBin;
+			this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
 
-			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			return "CREATE TABLE Bin_Intensities_" + minBin + "_" + maxBin + " (" + "MZ_BIN    int(11)," + "SCAN_LC    int(11),"
+			       + "SCAN_IMS   int(11)," + "INTENSITY  int(11));";
+		}
+
+		/// <summary>
+		/// TODO The get insert intensity query.
+		/// </summary>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		private string GetInsertIntensityQuery(int binNumber)
+		{
+			int minBin, maxBin;
+			this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+
+			return "INSERT INTO Bin_Intensities_" + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS, INTENSITY)"
+			       + "VALUES (:MZ_BIN, :SCAN_LC, :SCAN_IMS, :INTENSITY);";
+		}
+
+		/// <summary>
+		/// TODO The get min and max bin.
+		/// </summary>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <param name="minBin">
+		/// TODO The min bin.
+		/// </param>
+		/// <param name="maxBin">
+		/// TODO The max bin.
+		/// </param>
+		private void GetMinAndMaxBin(int binNumber, out int minBin, out int maxBin)
+		{
+			int modValue = binNumber % BIN_SIZE;
+			minBin = binNumber - modValue;
+			maxBin = binNumber + (BIN_SIZE - modValue - 1);
+		}
+
+		/// <summary>
+		/// TODO The get read single bin query.
+		/// </summary>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		private string GetReadSingleBinQuery(int binNumber)
+		{
+			int minBin, maxBin;
+			this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+
+			return "SELECT * FROM Bin_Intensities_" + minBin + "_" + maxBin + " WHERE MZ_BIN = " + binNumber
+			       + " ORDER BY SCAN_LC, SCAN_IMS;";
+		}
+
+		/// <summary>
+		/// TODO The insert bin centric data.
+		/// </summary>
+		/// <param name="uimfWriterConnection">
+		/// TODO The uimf writer connection.
+		/// </param>
+		/// <param name="temporaryDatabaseConnection">
+		/// TODO The temporary database connection.
+		/// </param>
+		/// <param name="uimfReader">
+		/// TODO The uimf reader.
+		/// </param>
+		private void InsertBinCentricData(
+			SQLiteConnection uimfWriterConnection, 
+			SQLiteConnection temporaryDatabaseConnection, 
+			DataReader uimfReader)
+		{
+			int numBins = uimfReader.GetGlobalParameters().Bins;
+			int numImsScans = uimfReader.GetFrameParameters(1).Scans;
+
+			string targetFile = uimfWriterConnection.ConnectionString;
+			int charIndex = targetFile.IndexOf(";");
+			if (charIndex > 0)
 			{
-				connection.Open();
+				targetFile = targetFile.Substring(0, charIndex - 1).Trim();
+			}
 
-				for (int i = 0; i <= numBins; i += BIN_SIZE)
+			Console.WriteLine(DateTime.Now + " - Adding bin-centric data to " + targetFile);
+			DateTime dtLastProgress = DateTime.UtcNow;
+
+			// Create new table in the UIMF file that will be used to store bin-centric data
+			this.CreateBinIntensitiesTable(uimfWriterConnection);
+
+			using (SQLiteCommand insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
+			{
+				insertCommand.Prepare();
+
+				for (int i = 0; i <= numBins; i++)
 				{
-					using (SQLiteCommand sqlCommand = new SQLiteCommand(GetCreateIndexesQuery(i), connection))
-					{
-						sqlCommand.ExecuteNonQuery();
-					}
+					this.SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
 
-					if (numBins > 0)
+					if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
 					{
+						string progressMessage = "Processing Bin: " + i + " / " + numBins;
+						Console.WriteLine(DateTime.Now + " - " + progressMessage);
+						dtLastProgress = DateTime.UtcNow;
+
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-						string progressMessage = "Creating indices, Bin: " + i + " / " + numBins; 
-						double percentComplete = 37 + (i / (double)numBins) * 30;
-						UpdateProgress(percentComplete, progressMessage);
+						double percentComplete = (37 + 30) + (i / (double)numBins) * 33;
+						this.UpdateProgress(percentComplete, progressMessage);
 					}
 				}
 			}
+
+			this.CreateBinIntensitiesIndex(uimfWriterConnection);
+
+			Console.WriteLine(DateTime.Now + " - Done");
 		}
 
-		private void SortDataForBin(SQLiteConnection inConnection, SQLiteCommand insertCommand, int binNumber, int numImsScans)
+		/// <summary>
+		/// TODO The sort data for bin.
+		/// </summary>
+		/// <param name="inConnection">
+		/// TODO The in connection.
+		/// </param>
+		/// <param name="insertCommand">
+		/// TODO The insert command.
+		/// </param>
+		/// <param name="binNumber">
+		/// TODO The bin number.
+		/// </param>
+		/// <param name="numImsScans">
+		/// TODO The num ims scans.
+		/// </param>
+		private void SortDataForBin(
+			SQLiteConnection inConnection, 
+			SQLiteCommand insertCommand, 
+			int binNumber, 
+			int numImsScans)
 		{
 			List<int> runLengthZeroEncodedData = new List<int>();
 			insertCommand.Parameters.Clear();
 
-			string query = GetReadSingleBinQuery(binNumber);
+			string query = this.GetReadSingleBinQuery(binNumber);
 
 			using (SQLiteCommand readCommand = new SQLiteCommand(query, inConnection))
 			{
@@ -271,13 +620,13 @@ namespace UIMFLibrary
 
 			if (dataCount > 0)
 			{
-				//byte[] compressedRecord = new byte[dataCount * 4 * 5];
+				// byte[] compressedRecord = new byte[dataCount * 4 * 5];
 				byte[] byteBuffer = new byte[dataCount * 4];
 				Buffer.BlockCopy(runLengthZeroEncodedData.ToArray(), 0, byteBuffer, 0, dataCount * 4);
-				//int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, dataCount * 4, ref compressedRecord, compressedRecord.Length);
-				//byte[] spectra = new byte[nlzf];
-				//Array.Copy(compressedRecord, spectra, nlzf);
 
+				// int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, dataCount * 4, ref compressedRecord, compressedRecord.Length);
+				// byte[] spectra = new byte[nlzf];
+				// Array.Copy(compressedRecord, spectra, nlzf);
 				insertCommand.Parameters.Add(new SQLiteParameter(":MZ_BIN", binNumber));
 				insertCommand.Parameters.Add(new SQLiteParameter(":INTENSITIES", byteBuffer));
 
@@ -285,110 +634,36 @@ namespace UIMFLibrary
 			}
 		}
 
-		private string GetInsertIntensityQuery(int binNumber)
-		{
-			int minBin, maxBin;
-			GetMinAndMaxBin(binNumber, out minBin, out maxBin);
-
-			return "INSERT INTO Bin_Intensities_" + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS, INTENSITY)" +
-				"VALUES (:MZ_BIN, :SCAN_LC, :SCAN_IMS, :INTENSITY);";
-		}
-
-		private string GetCreateIntensitiesTableQuery(int binNumber)
-		{
-			int minBin, maxBin;
-			GetMinAndMaxBin(binNumber, out minBin, out maxBin);
-
-			return "CREATE TABLE Bin_Intensities_" + minBin + "_" + maxBin + " (" +
-				"MZ_BIN    int(11)," +
-				"SCAN_LC    int(11)," +
-				"SCAN_IMS   int(11)," +
-				"INTENSITY  int(11));";
-		}
-
-		private string GetCreateIndexesQuery(int binNumber)
-		{
-			int minBin, maxBin;
-			GetMinAndMaxBin(binNumber, out minBin, out maxBin);
-
-			return "CREATE INDEX Bin_Intensities_" + minBin + "_" + maxBin + "_MZ_BIN_SCAN_LC_SCAN_IMS_IDX ON Bin_Intensities_" + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS);";
-		}
-
-		private string GetReadSingleBinQuery(int binNumber)
-		{
-			int minBin, maxBin;
-			GetMinAndMaxBin(binNumber, out minBin, out maxBin);
-
-			return "SELECT * FROM Bin_Intensities_" + minBin + "_" + maxBin + " WHERE MZ_BIN = " + binNumber + " ORDER BY SCAN_LC, SCAN_IMS;";
-		}
-
-		private void GetMinAndMaxBin(int binNumber, out int minBin, out int maxBin)
-		{
-			int modValue = binNumber % BIN_SIZE;
-			minBin = binNumber - modValue;
-			maxBin = binNumber + (BIN_SIZE - modValue - 1);
-		}
-
-		private void CreateBinIntensitiesTable(SQLiteConnection uimfWriterConnection)
-		{
-			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_TABLE, uimfWriterConnection))
-			{
-				command.ExecuteNonQuery();
-			}
-		}
-
-		private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
-		{
-			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
-			{
-				command.ExecuteNonQuery();
-			}
-		}
-		
+		/// <summary>
+		/// TODO The update progress.
+		/// </summary>
+		/// <param name="percentComplete">
+		/// TODO The percent complete.
+		/// </param>
 		private void UpdateProgress(double percentComplete)
 		{
-			OnProgressUpdate(new ProgressEventArgs(percentComplete));
+			this.OnProgressUpdate(new ProgressEventArgs(percentComplete));
 		}
 
+		/// <summary>
+		/// TODO The update progress.
+		/// </summary>
+		/// <param name="percentComplete">
+		/// TODO The percent complete.
+		/// </param>
+		/// <param name="currentTask">
+		/// TODO The current task.
+		/// </param>
 		private void UpdateProgress(double percentComplete, string currentTask)
 		{
-			OnProgressUpdate(new ProgressEventArgs(percentComplete));
+			this.OnProgressUpdate(new ProgressEventArgs(percentComplete));
 
 			if (!string.IsNullOrEmpty(currentTask))
-				OnMessage(new MessageEventArgs(currentTask));
+			{
+				this.OnMessage(new MessageEventArgs(currentTask));
+			}
 		}
 
-
-		#region "Event Delegates and Classes"
-
-		public event MessageEventHandler ErrorEvent;
-		public event MessageEventHandler MessageEvent;
-		public event ProgressEventHandler ProgressEvent;
-
-		public delegate void MessageEventHandler(object sender, MessageEventArgs e);
-		public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
-
-		#endregion
-
-		#region "Event Functions"
-
-		public void OnErrorMessage(MessageEventArgs e)
-		{
-			if (ErrorEvent != null)
-				ErrorEvent(this, e);
-		}
-
-		public void OnMessage(MessageEventArgs e)
-		{
-			if (MessageEvent != null)
-				MessageEvent(this, e);
-		}
-
-		public void OnProgressUpdate(ProgressEventArgs e)
-		{
-			if (ProgressEvent != null)
-				ProgressEvent(this, e);
-		}
 		#endregion
 	}
 }

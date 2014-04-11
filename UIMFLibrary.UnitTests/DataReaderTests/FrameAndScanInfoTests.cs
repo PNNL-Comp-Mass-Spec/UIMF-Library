@@ -1,66 +1,81 @@
-﻿using System;
-
-using NUnit.Framework;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="FrameAndScanInfoTests.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   TODO The frame and scan info tests.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    [TestFixture]
-    public class FrameAndScanInfoTests
-    {
-        [Test]
-        public void getNumberOfFramesTest()
-        {
-			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
-			{
-				int numFrames = reader.GetGlobalParameters().NumFrames;
+	using System;
 
-				//Console.WriteLine("Number of frames = " + numFrames);
-				Assert.AreEqual(3220, numFrames);
-			}
-        }
+	using NUnit.Framework;
 
-        [Test]
-        public void getAvgTOFLengthTest1()
-        {
+	/// <summary>
+	/// TODO The frame and scan info tests.
+	/// </summary>
+	[TestFixture]
+	public class FrameAndScanInfoTests
+	{
+		#region Public Methods and Operators
+
+		/// <summary>
+		/// TODO The get avg tof length test 1.
+		/// </summary>
+		[Test]
+		public void getAvgTOFLengthTest1()
+		{
 			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				double avgTOFLength = reader.GetFrameParameters(1).AverageTOFLength;
 
 				Assert.AreEqual(162555.56m, (decimal)avgTOFLength);
 			}
-        }
+		}
 
-        //TODO:  assert some values
-        [Test]
-        public void getFrameInfo_demultiplexedFrame0_Test1()
-        {
+		// TODO:  assert some values
+		/// <summary>
+		/// TODO The get frame info_demultiplexed frame 0_ test 1.
+		/// </summary>
+		[Test]
+		public void getFrameInfo_demultiplexedFrame0_Test1()
+		{
 			using (DataReader reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				int testFrame = 0;
 
 				FrameParameters fp = reader.GetFrameParameters(testFrame);
-				//TestUtilities.displayFrameParameters(fp);
+
+				// TestUtilities.displayFrameParameters(fp);
 			}
-        }
+		}
 
-
-        //TODO:  assert some values
-        [Test]
-        public void getFrameInfo_demultiplexed_firstFrame_Test1()
-        {
+		// TODO:  assert some values
+		/// <summary>
+		/// TODO The get frame info_demultiplexed_first frame_ test 1.
+		/// </summary>
+		[Test]
+		public void getFrameInfo_demultiplexed_firstFrame_Test1()
+		{
 			using (DataReader reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				int firstFrame = 0;
 
 				FrameParameters fp = reader.GetFrameParameters(firstFrame);
-				//TestUtilities.displayFrameParameters(fp);
-			}
-        }
 
-        //TODO:  assert some values
-        [Test]
-        public void getFrameInfo_demultiplexed_lastFrame_Test1()
-        {
+				// TestUtilities.displayFrameParameters(fp);
+			}
+		}
+
+		// TODO:  assert some values
+		/// <summary>
+		/// TODO The get frame info_demultiplexed_last frame_ test 1.
+		/// </summary>
+		[Test]
+		public void getFrameInfo_demultiplexed_lastFrame_Test1()
+		{
 			using (DataReader reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				int numFrames = reader.GetGlobalParameters().NumFrames;
@@ -69,25 +84,17 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				Console.WriteLine("Last frame = " + lastFrame);
 
 				FrameParameters fp = reader.GetFrameParameters(lastFrame);
-				//TestUtilities.displayFrameParameters(fp);
+
+				// TestUtilities.displayFrameParameters(fp);
 			}
-        }
+		}
 
-        [Test]
-        public void getGlobalParams_test1()
-        {
-			using (DataReader reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
-			{
-				GlobalParameters gp = reader.GetGlobalParameters();
-				DateTime dt = DateTime.Parse(gp.DateStarted);
-
-				Assert.AreEqual("4/7/2011 6:40:30 AM", dt.ToString());
-			}
-        }
-
-        [Test]
-        public void getFramePressure_lastFrame()
-        {
+		/// <summary>
+		/// TODO The get frame pressure_last frame.
+		/// </summary>
+		[Test]
+		public void getFramePressure_lastFrame()
+		{
 			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int lastFrame = 3219;
@@ -96,13 +103,43 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				double pressureBackLastFrame = reader.GetFrameParameters(lastFrame).PressureBack;
 				double pressureBackSecondToLastFrame = reader.GetFrameParameters(secondToLastFrame).PressureBack;
 
-				//Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
+				// Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
 
-				//Console.WriteLine("Pressure for frame "+lastFrame + " = " + pressureBackLastFrame);
-
+				// Console.WriteLine("Pressure for frame "+lastFrame + " = " + pressureBackLastFrame);
 				Assert.AreEqual(4.127, (decimal)pressureBackLastFrame);
 			}
-        }
+		}
 
-    }
+		/// <summary>
+		/// TODO The get global params_test 1.
+		/// </summary>
+		[Test]
+		public void getGlobalParams_test1()
+		{
+			using (DataReader reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+			{
+				GlobalParameters gp = reader.GetGlobalParameters();
+				DateTime dt = DateTime.Parse(gp.DateStarted);
+
+				Assert.AreEqual("4/7/2011 6:40:30 AM", dt.ToString());
+			}
+		}
+
+		/// <summary>
+		/// TODO The get number of frames test.
+		/// </summary>
+		[Test]
+		public void getNumberOfFramesTest()
+		{
+			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
+			{
+				int numFrames = reader.GetGlobalParameters().NumFrames;
+
+				// Console.WriteLine("Number of frames = " + numFrames);
+				Assert.AreEqual(3220, numFrames);
+			}
+		}
+
+		#endregion
+	}
 }

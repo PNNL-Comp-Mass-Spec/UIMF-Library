@@ -6,7 +6,6 @@
 //   Defines the SpectrumCache type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace UIMFLibrary
 {
 	using System.Collections.Generic;
@@ -16,10 +15,7 @@ namespace UIMFLibrary
 	/// </summary>
 	public class SpectrumCache
 	{
-		public int StartFrameNumber { get; private set; }
-		public int EndFrameNumber { get; private set; }
-		public IList<IDictionary<int, int>> ListOfIntensityDictionaries { get; private set; }
-		public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
+		#region Constructors and Destructors
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SpectrumCache"/> class.
@@ -36,12 +32,42 @@ namespace UIMFLibrary
 		/// <param name="summedIntensityDictionary">
 		/// The summed intensity dictionary.
 		/// </param>
-		public SpectrumCache(int startFrameNumber, int endFrameNumber, IList<IDictionary<int, int>> listOfIntensityDictionaries, IDictionary<int, int> summedIntensityDictionary)
+		public SpectrumCache(
+			int startFrameNumber, 
+			int endFrameNumber, 
+			IList<IDictionary<int, int>> listOfIntensityDictionaries, 
+			IDictionary<int, int> summedIntensityDictionary)
 		{
 			this.StartFrameNumber = startFrameNumber;
 			this.EndFrameNumber = endFrameNumber;
 			this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
 			this.SummedIntensityDictionary = summedIntensityDictionary;
 		}
+
+		#endregion
+
+		#region Public Properties
+
+		/// <summary>
+		/// Gets the end frame number.
+		/// </summary>
+		public int EndFrameNumber { get; private set; }
+
+		/// <summary>
+		/// Gets the list of intensity dictionaries.
+		/// </summary>
+		public IList<IDictionary<int, int>> ListOfIntensityDictionaries { get; private set; }
+
+		/// <summary>
+		/// Gets the start frame number.
+		/// </summary>
+		public int StartFrameNumber { get; private set; }
+
+		/// <summary>
+		/// Gets the summed intensity dictionary.
+		/// </summary>
+		public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
+
+		#endregion
 	}
 }

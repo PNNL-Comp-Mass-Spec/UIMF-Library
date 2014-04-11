@@ -1,83 +1,281 @@
-﻿/////////////////////////////////////////////////////////////////////////
-// This file includes a library of functions to create a UIMF format file
-// Author: Yan Shi, PNNL, December 2008
-// Updates by:
-//			William F. Danielson				
-//			Anuj R. Shah
-//          Matthew Monroe
-//			Kevin Crowell
-//			Spencer Prost
-/////////////////////////////////////////////////////////////////////////
-
-using System;
-using System.Data.SQLite;
-using System.Collections.Generic;
-using System.Text;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright company="" file="UIMFDataWriter.cs">
+//   
+// </copyright>
+// <summary>
+//   TODO The data writer.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 namespace UIMFLibrary
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Data.SQLite;
+	using System.Text;
+
+	/// <summary>
+	/// TODO The data writer.
+	/// </summary>
 	public class DataWriter : IDisposable
 	{
-		private SQLiteConnection m_dbConnection;
-		private SQLiteCommand m_dbCommandUimf;
-		private SQLiteCommand m_dbCommandPrepareInsertScan;
-		private SQLiteCommand m_dbCommandPrepareInsertFrame;
-		private SQLiteCommand m_dbCommandPrepareInsertScanParameters;
-		private GlobalParameters m_globalParameters;
-
-		private bool m_FrameParameterColumnsVerified;
-		private string m_fileName;
-
-		private bool m_isScanParameterTable;
+		#region Fields
 
 		/// <summary>
+		/// TODO The m_ frame parameter columns verified.
+		/// </summary>
+		private bool m_FrameParameterColumnsVerified;
+
+		/// <summary>
+		/// TODO The m_db command prepare insert frame.
+		/// </summary>
+		private SQLiteCommand m_dbCommandPrepareInsertFrame;
+
+		/// <summary>
+		/// TODO The m_db command prepare insert scan.
+		/// </summary>
+		private SQLiteCommand m_dbCommandPrepareInsertScan;
+
+		/// <summary>
+		/// TODO The m_db command prepare insert scan parameters.
+		/// </summary>
+		private SQLiteCommand m_dbCommandPrepareInsertScanParameters;
+
+		/// <summary>
+		/// TODO The m_db command uimf.
+		/// </summary>
+		private SQLiteCommand m_dbCommandUimf;
+
+		/// <summary>
+		/// TODO The m_db connection.
+		/// </summary>
+		private SQLiteConnection m_dbConnection;
+
+		/// <summary>
+		/// TODO The m_file name.
+		/// </summary>
+		private string m_fileName;
+
+		/// <summary>
+		/// TODO The m_global parameters.
+		/// </summary>
+		private GlobalParameters m_globalParameters;
+
+		/// <summary>
+		/// TODO The m_is scan parameter table.
+		/// </summary>
+		private bool m_isScanParameterTable;
+
+		#endregion
+
+		#region Constructors and Destructors
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DataWriter"/> class. 
 		/// Constructor for UIMF datawriter that takes the filename and begins the transaction. 
 		/// </summary>
-		/// <param name="fileName"></param>
-		/// <param name="createScanParameters"></param>
+		/// <param name="fileName">
+		/// </param>
+		/// <param name="createScanParameters">
+		/// </param>
 		public DataWriter(string fileName, bool createScanParameters = false)
 		{
-			m_fileName = fileName;
+			this.m_fileName = fileName;
 			this.m_isScanParameterTable = createScanParameters;
 			string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
-			m_dbConnection = new SQLiteConnection(connectionString);
+			this.m_dbConnection = new SQLiteConnection(connectionString);
 			try
 			{
-				m_dbConnection.Open();
+				this.m_dbConnection.Open();
 
 				// Note that the following call will instantiate m_dbCommandUimf
-				TransactionBegin();
+				this.TransactionBegin();
 
-				PrepareInsertFrame();
-				PrepareInsertScan();
+				this.PrepareInsertFrame();
+				this.PrepareInsertScan();
 
-				m_FrameParameterColumnsVerified = false;
-
-
+				this.m_FrameParameterColumnsVerified = false;
 			}
 			catch (Exception ex)
 			{
-				
+			}
+		}
+
+		#endregion
+
+		#region Public Methods and Operators
+
+		/// <summary>
+		/// Post a new log entry to table Log_Entries
+		/// </summary>
+		/// <param name="oConnection">
+		/// Database connection object
+		/// </param>
+		/// <param name="EntryType">
+		/// Log entry type (typically Normal, Error, or Warning)
+		/// </param>
+		/// <param name="Message">
+		/// Log message
+		/// </param>
+		/// <param name="PostedBy">
+		/// Process or application posting the log message
+		/// </param>
+		/// <remarks>
+		/// The Log_Entries table will be created if it doesn't exist
+		/// </remarks>
+		public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
+		{
+			// Check whether the Log_Entries table needs to be created
+			SQLiteCommand cmdPostLogEntry;
+			cmdPostLogEntry = oConnection.CreateCommand();
+
+			if (!DataReader.TableExists(oConnection, "Log_Entries"))
+			{
+				// Log_Entries not found; need to create it
+				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " + "Entry_ID INTEGER PRIMARY KEY, "
+				                              + "Posted_By STRING, " + "Posting_Time STRING, " + "Type STRING, " + "Message STRING)";
+
+				cmdPostLogEntry.ExecuteNonQuery();
+			}
+
+			if (string.IsNullOrEmpty(EntryType))
+			{
+				EntryType = "Normal";
+			}
+
+			if (string.IsNullOrEmpty(PostedBy))
+			{
+				PostedBy = string.Empty;
+			}
+
+			if (string.IsNullOrEmpty(Message))
+			{
+				Message = string.Empty;
+			}
+
+			// Now add a log entry
+			cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + "VALUES ("
+			                              + "datetime('now'), " + "'" + PostedBy + "', " + "'" + EntryType + "', " + "'"
+			                              + Message + "')";
+
+			cmdPostLogEntry.ExecuteNonQuery();
+			cmdPostLogEntry.Dispose();
+		}
+
+		/// <summary>
+		/// Add a column to the Frame_Parameters table
+		/// </summary>
+		/// <param name="parameterName">
+		/// </param>
+		/// <param name="parameterType">
+		/// </param>
+		/// <remarks>
+		/// The new column will have Null values for all existing rows
+		/// </remarks>
+		public void AddFrameParameter(string parameterName, string parameterType)
+		{
+			try
+			{
+				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandUimf.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " + parameterType;
+				this.m_dbCommandUimf.ExecuteNonQuery();
+				this.m_dbCommandUimf.Dispose();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error adding parameter " + parameterName + " to the Frame_Parameters table:" + ex.Message);
 			}
 		}
 
 		/// <summary>
-		/// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
-		/// It is used in the nunit tests
+		/// Add a column to the Frame_Parameters table
 		/// </summary>
-		public void UpdateFrameType(int startFrameNum, int endFrameNum)
+		/// <param name="parameterName">
+		/// Parameter name (aka column name in the database)
+		/// </param>
+		/// <param name="parameterType">
+		/// Parameter type
+		/// </param>
+		/// <param name="defaultValue">
+		/// Value to assign to all rows
+		/// </param>
+		public void AddFrameParameter(string parameterName, string parameterType, int defaultValue)
 		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
-			m_dbCommandUimf.Prepare();
+			this.AddFrameParameter(parameterName, parameterType);
 
-			for (int i = startFrameNum; i <= endFrameNum; i++)
+			try
 			{
-				int frameType = i % 4 == 0 ? 1 : 2;
-				m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
-				m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
-				m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Parameters.Clear();
+				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + defaultValue.ToString()
+				                                   + " WHERE " + parameterName + " IS NULL";
+				this.m_dbCommandUimf.ExecuteNonQuery();
+
+				this.m_dbCommandUimf.Dispose();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
+			}
+		}
+
+		/// <summary>
+		/// Add a column to the Frame_Parameters table
+		/// </summary>
+		/// <param name="parameterName">
+		/// Parameter name (aka column name in the database)
+		/// </param>
+		/// <param name="parameterType">
+		/// Parameter type
+		/// </param>
+		/// <param name="defaultValue">
+		/// Value to assign to all rows
+		/// </param>
+		public void AddFrameParameter(string parameterName, string parameterType, string defaultValue)
+		{
+			this.AddFrameParameter(parameterName, parameterType);
+
+			try
+			{
+				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = '" + defaultValue
+				                                   + "' WHERE " + parameterName + " IS NULL";
+				this.m_dbCommandUimf.ExecuteNonQuery();
+
+				this.m_dbCommandUimf.Dispose();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
+			}
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="parameterName">
+		/// </param>
+		/// <param name="parameterType">
+		/// </param>
+		/// <param name="parameterValue">
+		/// </param>
+		public void AddGlobalParameter(string parameterName, string parameterType, string parameterValue)
+		{
+			try
+			{
+				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandUimf.CommandText = "Alter TABLE Global_Parameters Add " + parameterName.ToString() + " "
+				                                   + parameterType.ToString();
+				this.m_dbCommandUimf.CommandText += " UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
+				                                    + parameterValue;
+				this.m_dbCommandUimf.ExecuteNonQuery();
+				this.m_dbCommandUimf.Dispose();
+			}
+			catch
+			{
+				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
+				                                   + parameterValue;
+				this.m_dbCommandUimf.ExecuteNonQuery();
+				this.m_dbCommandUimf.Dispose();
+				Console.WriteLine("Parameter " + parameterName + " already exists, its value will be updated to " + parameterValue);
 			}
 		}
 
@@ -87,20 +285,22 @@ namespace UIMFLibrary
 		/// </summary>
 		public void CreateBinCentricTables()
 		{
-			CreateBinCentricTables(string.Empty);
+			this.CreateBinCentricTables(string.Empty);
 		}
 
 		/// <summary>
 		/// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
 		/// Bin centric data is important for data access speed in informed workflows.
-		/// <param name="workingDirectory">Path to the working directory in which a temporary SqLite database file should be created</param>
 		/// </summary>
+		/// <param name="workingDirectory">
+		/// Path to the working directory in which a temporary SqLite database file should be created
+		/// </param>
 		public void CreateBinCentricTables(string workingDirectory)
 		{
-			using(DataReader uimfReader = new DataReader(m_fileName))
+			using (DataReader uimfReader = new DataReader(this.m_fileName))
 			{
 				var binCentricTableCreator = new BinCentricTableCreation();
-				binCentricTableCreator.CreateBinCentricTable(m_dbConnection, uimfReader, workingDirectory);
+				binCentricTableCreator.CreateBinCentricTable(this.m_dbConnection, uimfReader, workingDirectory);
 			}
 		}
 
@@ -108,183 +308,271 @@ namespace UIMFLibrary
 		/// Method to create the table struture within a UIMF file. THis must be called
 		/// after open to create the default tables that are required for IMS data.
 		/// </summary>
-		/// <param name="dataType"></param>
+		/// <param name="dataType">
+		/// </param>
 		public void CreateTables(string dataType)
 		{
-
 			// https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
 
 			// Create Global_Parameters Table  
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " +
-				"DateStarted STRING, " + // date experiment was started
-				"NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
-				"TimeOffset INT(4) NOT NULL, " + //  Offset from 0. All bin numbers must be offset by this amount  
-				"BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
-				"Bins INT(4) NOT NULL, " + // Total TOF bins in a frame
-				"TOFCorrectionTime FLOAT NOT NULL, " + //Instrument delay time
-				"FrameDataBlobVersion FLOAT NOT NULL, " +// Version of FrameDataBlob in T_Frame  
-				"ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
-				"TOFIntensityType TEXT NOT NULL, " + // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
-				"DatasetType TEXT, " +
-				"Prescan_TOFPulses INT(4), " +
-				"Prescan_Accumulations INT(4), " +
-				"Prescan_TICThreshold INT(4), " +
-				"Prescan_Continuous BOOL, " +
-				"Prescan_Profile STRING, " +
-				"Instrument_Name STRING)";
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " + "DateStarted STRING, "
+			                                   + // date experiment was started
+			                                   "NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
+			                                   "TimeOffset INT(4) NOT NULL, "
+			                                   + // Offset from 0. All bin numbers must be offset by this amount  
+			                                   "BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
+			                                   "Bins INT(4) NOT NULL, " + // Total TOF bins in a frame
+			                                   "TOFCorrectionTime FLOAT NOT NULL, " + // Instrument delay time
+			                                   "FrameDataBlobVersion FLOAT NOT NULL, " + // Version of FrameDataBlob in T_Frame  
+			                                   "ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
+			                                   "TOFIntensityType TEXT NOT NULL, "
+			                                   +
+			                                   // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
+			                                   "DatasetType TEXT, " + "Prescan_TOFPulses INT(4), "
+			                                   + "Prescan_Accumulations INT(4), " + "Prescan_TICThreshold INT(4), "
+			                                   + "Prescan_Continuous BOOL, " + "Prescan_Profile STRING, "
+			                                   + "Instrument_Name STRING)";
 
-			m_dbCommandUimf.ExecuteNonQuery();
+			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
-			m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" +
-				"FrameNum INT(4) PRIMARY KEY, " +                // 0, Frame number (primary key)
-				"StartTime DOUBLE, " +                           // 1, Start time of frame, in minutes
-				"Duration DOUBLE, " +                            // 2, Duration of frame, in seconds 
-				"Accumulations INT(2), " +                       // 3, Number of collected and summed acquisitions in a frame 
-				"FrameType SHORT, " +                            // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-				"Scans INT(4), " +                               // 5, Number of TOF scans  
-				"IMFProfile STRING, " +                          // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-				"TOFLosses DOUBLE, " +                           // 7, Number of TOF Losses
-				"AverageTOFLength DOUBLE NOT NULL, " +           // 8, Average time between TOF trigger pulses
-				"CalibrationSlope DOUBLE, " +                    // 9, Value of k0  
-				"CalibrationIntercept DOUBLE, " +                // 10, Value of t0  
-				"a2 DOUBLE, " +                                  // 11, These six parameters below are coefficients for residual mass error correction
-				"b2 DOUBLE, " +                                  // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-				"c2 DOUBLE, " +                                  // 13
-				"d2 DOUBLE, " +                                  // 14
-				"e2 DOUBLE, " +                                  // 15
-				"f2 DOUBLE, " +                                  // 16
-				"Temperature DOUBLE, " +                         // 17, Ambient temperature
-				"voltHVRack1 DOUBLE, " +                         // 18, Voltage setting in the IMS system
-				"voltHVRack2 DOUBLE, " +                         // 19, Voltage setting in the IMS system
-				"voltHVRack3 DOUBLE, " +                         // 20, Voltage setting in the IMS system
-				"voltHVRack4 DOUBLE, " +                         // 21, Voltage setting in the IMS system
-				"voltCapInlet DOUBLE, " +                        // 22, Capillary Inlet Voltage
-				"voltEntranceHPFIn DOUBLE, " +                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
-				"voltEntranceHPFOut DOUBLE, " +                  // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
-				"voltEntranceCondLmt DOUBLE, " +                 // 25, Cond Limit Voltage
-				"voltTrapOut DOUBLE, " +                         // 26, Trap Out Voltage
-				"voltTrapIn DOUBLE, " +                          // 27, Trap In Voltage
-				"voltJetDist DOUBLE, " +                         // 28, Jet Disruptor Voltage
-				"voltQuad1 DOUBLE, " +                           // 29, Fragmentation Quadrupole Voltage
-				"voltCond1 DOUBLE, " +                           // 30, Fragmentation Conductance Voltage
-				"voltQuad2 DOUBLE, " +                           // 31, Fragmentation Quadrupole Voltage
-				"voltCond2 DOUBLE, " +                           // 32, Fragmentation Conductance Voltage
-				"voltIMSOut DOUBLE, " +                          // 33, IMS Out Voltage
-				"voltExitHPFIn DOUBLE, " +                       // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
-				"voltExitHPFOut DOUBLE, " +                      // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
-				"voltExitCondLmt DOUBLE, " +                     // 36, Cond Limit Voltage
-				"PressureFront DOUBLE, " +                       // 37, Pressure at front of Drift Tube 
-				"PressureBack DOUBLE, " +                        // 38, Pressure at back of Drift Tube 
-				"MPBitOrder INT(1), " +                          // 39, Determines original size of bit sequence 
-				"FragmentationProfile BLOB," +                   // 40, Voltage profile used in fragmentation
-				"HighPressureFunnelPressure DOUBLE, " +          // 41
-				"IonFunnelTrapPressure DOUBLE , " +              // 42
-				"RearIonFunnelPressure DOUBLE, " +               // 43
-				"QuadrupolePressure DOUBLE, " +                  // 44
-				"ESIVoltage DOUBLE, " +                          // 45
-				"FloatVoltage DOUBLE, " +                        // 46
-				"CalibrationDone INT, " +                        // 47, Set to 1 after a frame has been calibrated
-				"Decoded INT);";                                 // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+			this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" + "FrameNum INT(4) PRIMARY KEY, "
+			                                   + // 0, Frame number (primary key)
+			                                   "StartTime DOUBLE, " + // 1, Start time of frame, in minutes
+			                                   "Duration DOUBLE, " + // 2, Duration of frame, in seconds 
+			                                   "Accumulations INT(2), "
+			                                   + // 3, Number of collected and summed acquisitions in a frame 
+			                                   "FrameType SHORT, "
+			                                   +
+			                                   // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+			                                   "Scans INT(4), " + // 5, Number of TOF scans  
+			                                   "IMFProfile STRING, "
+			                                   +
+			                                   // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+			                                   "TOFLosses DOUBLE, " + // 7, Number of TOF Losses
+			                                   "AverageTOFLength DOUBLE NOT NULL, "
+			                                   + // 8, Average time between TOF trigger pulses
+			                                   "CalibrationSlope DOUBLE, " + // 9, Value of k0  
+			                                   "CalibrationIntercept DOUBLE, " + // 10, Value of t0  
+			                                   "a2 DOUBLE, "
+			                                   +
+			                                   // 11, These six parameters below are coefficients for residual mass error correction
+			                                   "b2 DOUBLE, " + // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
+			                                   "c2 DOUBLE, " + // 13
+			                                   "d2 DOUBLE, " + // 14
+			                                   "e2 DOUBLE, " + // 15
+			                                   "f2 DOUBLE, " + // 16
+			                                   "Temperature DOUBLE, " + // 17, Ambient temperature
+			                                   "voltHVRack1 DOUBLE, " + // 18, Voltage setting in the IMS system
+			                                   "voltHVRack2 DOUBLE, " + // 19, Voltage setting in the IMS system
+			                                   "voltHVRack3 DOUBLE, " + // 20, Voltage setting in the IMS system
+			                                   "voltHVRack4 DOUBLE, " + // 21, Voltage setting in the IMS system
+			                                   "voltCapInlet DOUBLE, " + // 22, Capillary Inlet Voltage
+			                                   "voltEntranceHPFIn DOUBLE, "
+			                                   +
+			                                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
+			                                   "voltEntranceHPFOut DOUBLE, "
+			                                   +
+			                                   // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
+			                                   "voltEntranceCondLmt DOUBLE, " + // 25, Cond Limit Voltage
+			                                   "voltTrapOut DOUBLE, " + // 26, Trap Out Voltage
+			                                   "voltTrapIn DOUBLE, " + // 27, Trap In Voltage
+			                                   "voltJetDist DOUBLE, " + // 28, Jet Disruptor Voltage
+			                                   "voltQuad1 DOUBLE, " + // 29, Fragmentation Quadrupole Voltage
+			                                   "voltCond1 DOUBLE, " + // 30, Fragmentation Conductance Voltage
+			                                   "voltQuad2 DOUBLE, " + // 31, Fragmentation Quadrupole Voltage
+			                                   "voltCond2 DOUBLE, " + // 32, Fragmentation Conductance Voltage
+			                                   "voltIMSOut DOUBLE, " + // 33, IMS Out Voltage
+			                                   "voltExitHPFIn DOUBLE, "
+			                                   +
+			                                   // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
+			                                   "voltExitHPFOut DOUBLE, "
+			                                   +
+			                                   // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
+			                                   "voltExitCondLmt DOUBLE, " + // 36, Cond Limit Voltage
+			                                   "PressureFront DOUBLE, " + // 37, Pressure at front of Drift Tube 
+			                                   "PressureBack DOUBLE, " + // 38, Pressure at back of Drift Tube 
+			                                   "MPBitOrder INT(1), " + // 39, Determines original size of bit sequence 
+			                                   "FragmentationProfile BLOB," + // 40, Voltage profile used in fragmentation
+			                                   "HighPressureFunnelPressure DOUBLE, " + // 41
+			                                   "IonFunnelTrapPressure DOUBLE , " + // 42
+			                                   "RearIonFunnelPressure DOUBLE, " + // 43
+			                                   "QuadrupolePressure DOUBLE, " + // 44
+			                                   "ESIVoltage DOUBLE, " + // 45
+			                                   "FloatVoltage DOUBLE, " + // 46
+			                                   "CalibrationDone INT, " + // 47, Set to 1 after a frame has been calibrated
+			                                   "Decoded INT);";
 
-			//Voltage profile used in fragmentation, Length number of Scans 
-			m_dbCommandUimf.ExecuteNonQuery();
+			// 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+
+			// Voltage profile used in fragmentation, Length number of Scans 
+			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			// Re-initialize m_dbCommandPrepareInsertFrame so that it uses voltEntranceHPFIn and voltEntranceHPFOut
-			PrepareInsertFrame();
+			this.PrepareInsertFrame();
 
 			// Create Frame_Scans Table
-			if (System.String.Equals(dataType, "double"))
+			if (string.Equals(dataType, "double"))
 			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
-					"FrameNum INT(4) NOT NULL, " + //  Contains the frame number
-					"ScanNum INT(2) NOT NULL, " + //Scan number
-					"NonZeroCount INT(4) NOT NULL, " +
-					"BPI DOUBLE NOT NULL, BPI_MZ DOUBLE NOT NULL, " + // base peak intensity and assocaited mz
-					"TIC DOUBLE NOT NULL, " + //  Total Ion Chromatogram
-					"Intensities BLOB);"; //  Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
+				                                   + // Contains the frame number
+				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
+				                                   "NonZeroCount INT(4) NOT NULL, "
+				                                   + "BPI DOUBLE NOT NULL, BPI_MZ DOUBLE NOT NULL, "
+				                                   + // base peak intensity and assocaited mz
+				                                   "TIC DOUBLE NOT NULL, " + // Total Ion Chromatogram
+				                                   "Intensities BLOB);"; // Intensities  
 			}
-			else if (System.String.Equals(dataType, "float"))
+			else if (string.Equals(dataType, "float"))
 			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
-					"FrameNum INT(4) NOT NULL, " + //  Contains the frame number
-					"ScanNum INT(2) NOT NULL, " + //Scan number
-					"BPI FLOAT NOT NULL, BPI_MZ DOUBLE NOT NULL, " + // base peak intensity and assocaited mz
-					"NonZeroCount INT(4) NOT NULL, " + 
-					"TIC FLOAT NOT NULL, " + //  Total Ion Chromatogram
-					"Intensities BLOB);"; //  Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
+				                                   + // Contains the frame number
+				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
+				                                   "BPI FLOAT NOT NULL, BPI_MZ DOUBLE NOT NULL, "
+				                                   + // base peak intensity and assocaited mz
+				                                   "NonZeroCount INT(4) NOT NULL, " + "TIC FLOAT NOT NULL, "
+				                                   + // Total Ion Chromatogram
+				                                   "Intensities BLOB);"; // Intensities  
 			}
-			else if (System.String.Equals(dataType, "short"))
+			else if (string.Equals(dataType, "short"))
 			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
-					"FrameNum INT(4) NOT NULL, " + //  Contains the frame number
-					"ScanNum INT(2) NOT NULL, " + //Scan number
-					"NonZeroCount INT(4) NOT NULL, " + //Non zero count
-					"BPI INT(2) NOT NULL, BPI_MZ DOUBLE NOT NULL, " + // base peak intensity and assocaited mz
-					"TIC INT(2) NOT NULL, " + //  Total Ion Chromatogram
-					"Intensities BLOB);"; //  Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
+				                                   + // Contains the frame number
+				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
+				                                   "NonZeroCount INT(4) NOT NULL, " + // Non zero count
+				                                   "BPI INT(2) NOT NULL, BPI_MZ DOUBLE NOT NULL, "
+				                                   + // base peak intensity and assocaited mz
+				                                   "TIC INT(2) NOT NULL, " + // Total Ion Chromatogram
+				                                   "Intensities BLOB);"; // Intensities  
 			}
 			else
 			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
-					"FrameNum INT(4) NOT NULL, " + //  Contains the frame number
-					"ScanNum INT(2) NOT NULL, " + //Scan number
-					"NonZeroCount INT(4) NOT NULL, " + //non zero count
-					"BPI INT(4) NOT NULL, BPI_MZ DOUBLE NOT NULL, " + // base peak intensity and assocaited mz
-					"TIC INT(4) NOT NULL, " + //  Total Ion Chromatogram
-					"Intensities BLOB);"; //  Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
+				                                   + // Contains the frame number
+				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
+				                                   "NonZeroCount INT(4) NOT NULL, " + // non zero count
+				                                   "BPI INT(4) NOT NULL, BPI_MZ DOUBLE NOT NULL, "
+				                                   + // base peak intensity and assocaited mz
+				                                   "TIC INT(4) NOT NULL, " + // Total Ion Chromatogram
+				                                   "Intensities BLOB);"; // Intensities  
 			}
 
-			//ARS made this change to facilitate faster retrieval of scans/spectrums.
-			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
+			// ARS made this change to facilitate faster retrieval of scans/spectrums.
+			this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
+
 			// m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index1 on Frame_Parameters(FrameNum, FrameType);";
-			//ARS change ends
-			m_dbCommandUimf.ExecuteNonQuery();
+			// ARS change ends
+			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (this.m_isScanParameterTable)
 			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
-					"ScanNum INT(2) NOT NULL, " + //Scan number
-					"MS_Level INT(2) NOT NULL);"; //  MS_Level  
-				m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
-				m_dbCommandUimf.ExecuteNonQuery();
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " + "ScanNum INT(2) NOT NULL, " + // Scan number
+				                                   "MS_Level INT(2) NOT NULL);"; // MS_Level  
+				this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
+				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
 
-			m_dbCommandUimf.Dispose();
+			this.m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
-		/// 
+		/// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Parameters for all frames.
 		/// </summary>
-		/// <returns></returns>
-		public GlobalParameters GetGlobalParameters()
+		/// <param name="frameType">
+		/// </param>
+		/// <param name="updateScanCountInFrameParams">
+		/// If true, then will update the Scans column to be 0 for the deleted frames
+		/// </param>
+		/// <param name="bShrinkDatabaseAfterDelete">
+		/// </param>
+		/// <remarks>
+		/// As an alternative to using this function, use CloneUIMF() in the DataReader class
+		/// </remarks>
+		public void DeleteAllFrameScans(int frameType, bool updateScanCountInFrameParams, bool bShrinkDatabaseAfterDelete)
 		{
-			return DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " + "WHERE FrameNum IN (SELECT FrameNum "
+			                                   + "FROM Frame_Parameters " + "WHERE FrameType = " + frameType.ToString() + ");";
+			this.m_dbCommandUimf.ExecuteNonQuery();
+
+			if (updateScanCountInFrameParams)
+			{
+				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters " + "SET Scans = 0 " + "WHERE FrameType = "
+				                                   + frameType.ToString() + ";";
+				this.m_dbCommandUimf.ExecuteNonQuery();
+			}
+
+			// Commmit the currently open transaction
+			this.TransactionCommit();
+			System.Threading.Thread.Sleep(100);
+
+			if (bShrinkDatabaseAfterDelete)
+			{
+				this.m_dbCommandUimf.CommandText = "VACUUM;";
+				this.m_dbCommandUimf.ExecuteNonQuery();
+			}
+
+			// Open a new transaction
+			this.TransactionBegin();
+
+			this.m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
 		/// Deletes the frame from the Frame_Parameters table and from the Frame_Scans table
 		/// </summary>
-		/// <param name="frameNum"></param>
-		/// <param name="updateGlobalParameters">If true, then decrements the NumFrames value in the Global_Parameters table</param>
+		/// <param name="frameNum">
+		/// </param>
+		/// <param name="updateGlobalParameters">
+		/// If true, then decrements the NumFrames value in the Global_Parameters table
+		/// </param>
 		public void DeleteFrame(int frameNum, bool updateGlobalParameters)
 		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum = " + frameNum.ToString() + "; ";
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum = " + frameNum.ToString() + "; ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateGlobalParameters)
 			{
-				m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - 1 WHERE NumFrames > 0; ";
+				this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - 1 WHERE NumFrames > 0; ";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
 
-			m_dbCommandUimf.Dispose();
+			this.m_dbCommandUimf.Dispose();
+
+			this.FlushUimf();
+		}
+
+		/// <summary>
+		/// Deletes all of the scans for the specified frame
+		/// </summary>
+		/// <param name="frameNum">
+		/// The frame number to delete
+		/// </param>
+		/// <param name="updateScanCountInFrameParams">
+		/// If true, then will update the Scans column to be 0 for the deleted frames
+		/// </param>
+		public void DeleteFrameScans(int frameNum, bool updateScanCountInFrameParams)
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
+			this.m_dbCommandUimf.ExecuteNonQuery();
+
+			if (updateScanCountInFrameParams)
+			{
+				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET Scans = 0 WHERE FrameNum = " + frameNum.ToString()
+				                                   + "; ";
+				this.m_dbCommandUimf.ExecuteNonQuery();
+			}
+
+			this.m_dbCommandUimf.Dispose();
 
 			this.FlushUimf();
 		}
@@ -292,113 +580,69 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Deletes given frames from the UIMF file. 
 		/// </summary>
-		/// <param name="frameNums"></param>
-		/// <param name="updateGlobalParameters"></param>
+		/// <param name="frameNums">
+		/// </param>
+		/// <param name="updateGlobalParameters">
+		/// </param>
 		public void DeleteFrames(List<int> frameNums, bool updateGlobalParameters)
 		{
 			StringBuilder sFrameList = new StringBuilder();
 
 			// Construct a comma-separated list of frame numbers
 			foreach (int frameNum in frameNums)
+			{
 				sFrameList.Append(frameNum + ",");
-						
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
+			}
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',') + "); ";
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',')
+			                                   + "); ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',') + "); ";
+			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN ("
+			                                   + sFrameList.ToString().TrimEnd(',') + "); ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateGlobalParameters)
 			{
-				m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - " + frameNums.Count + "; ";
+				this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - " + frameNums.Count + "; ";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 
 				// Make sure NumFrames is >= 0
-
-				m_dbCommandUimf.CommandText = "SELECT NumFrames FROM Global_Parameters; ";
+				this.m_dbCommandUimf.CommandText = "SELECT NumFrames FROM Global_Parameters; ";
 				object objResult = this.m_dbCommandUimf.ExecuteScalar();
 
 				if (Convert.ToInt32(objResult) < 0)
 				{
-					m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames 0; ";
+					this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET NumFrames 0; ";
 					this.m_dbCommandUimf.ExecuteNonQuery();
 				}
-
 			}
 
-			m_dbCommandUimf.Dispose();
-
-			this.FlushUimf();
-		}
-
-
-		/// <summary>
-		/// Deletes all of the scans for the specified frame
-		/// </summary>
-		/// <param name="frameNum">The frame number to delete</param>
-		/// <param name="updateScanCountInFrameParams">If true, then will update the Scans column to be 0 for the deleted frames</param>
-		public void DeleteFrameScans(int frameNum, bool updateScanCountInFrameParams)
-		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum.ToString() + "; ";
-			this.m_dbCommandUimf.ExecuteNonQuery();
-
-			if (updateScanCountInFrameParams)
-			{
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET Scans = 0 WHERE FrameNum = " + frameNum.ToString() + "; ";
-				this.m_dbCommandUimf.ExecuteNonQuery();
-			}
-
-			m_dbCommandUimf.Dispose();
+			this.m_dbCommandUimf.Dispose();
 
 			this.FlushUimf();
 		}
 
 		/// <summary>
-		/// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Parameters for all frames.
+		/// Dispose of any system resources
 		/// </summary>
-		/// <param name="frameType"></param>
-		/// <param name="updateScanCountInFrameParams">If true, then will update the Scans column to be 0 for the deleted frames</param>
-		/// <param name="bShrinkDatabaseAfterDelete"></param>
-		/// <remarks>As an alternative to using this function, use CloneUIMF() in the DataReader class</remarks>
-		public void DeleteAllFrameScans(int frameType, bool updateScanCountInFrameParams, bool bShrinkDatabaseAfterDelete)
+		public void Dispose()
 		{
-
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " +
-										  "WHERE FrameNum IN (SELECT FrameNum " +
-															 "FROM Frame_Parameters " +
-															 "WHERE FrameType = " + frameType.ToString() + ");";
-			this.m_dbCommandUimf.ExecuteNonQuery();
-
-			if (updateScanCountInFrameParams)
+			try
 			{
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters " +
-											  "SET Scans = 0 " +
-											  "WHERE FrameType = " + frameType.ToString() + ";";
-				this.m_dbCommandUimf.ExecuteNonQuery();
+				if (this.m_dbConnection != null)
+				{
+					this.TransactionCommit();
+
+					this.m_dbCommandUimf.Dispose();
+					this.m_dbConnection.Close();
+				}
 			}
-
-			// Commmit the currently open transaction
-			TransactionCommit();
-			System.Threading.Thread.Sleep(100);
-
-			if (bShrinkDatabaseAfterDelete)
+			catch
 			{
-				m_dbCommandUimf.CommandText = "VACUUM;";
-				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
-
-			// Open a new transaction
-			TransactionBegin();
-
-			m_dbCommandUimf.Dispose();
-
-
 		}
 
 		/// <summary>
@@ -407,190 +651,266 @@ namespace UIMFLibrary
 		/// </summary>
 		public void FlushUimf()
 		{
-			TransactionCommit();
+			this.TransactionCommit();
 			System.Threading.Thread.Sleep(100);
-			TransactionBegin();            
-		}
-
-		private void TransactionBegin()
-		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
-			m_dbCommandUimf.ExecuteNonQuery();
-		}
-
-		private void TransactionCommit()
-		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
-			m_dbCommandUimf.ExecuteNonQuery();
+			this.TransactionBegin();
 		}
 
 		/// <summary>
-		/// Assures that NumFrames in the Global_Parameters table match the number of rows in the Frame_Parameters table
 		/// </summary>
-		public void UpdateGlobalFrameCount()
-		{			
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			
-			m_dbCommandUimf.CommandText = "SELECT Count(*) FROM Frame_Parameters";
-			object frameCount = this.m_dbCommandUimf.ExecuteScalar();         
-			m_dbCommandUimf.Dispose();
-
-			if (frameCount != null)
-				UpdateGlobalParameter("NumFrames", frameCount.ToString());
-		}
-
-		/// <summary>
-		/// Updates the scan count for the given frame
-		/// </summary>
-		/// <param name="frameNum">The frame number to update</param>
-		/// <param name="NumScans">The new scan count</param>
-		public void UpdateFrameScanCount(int frameNum, int NumScans)
+		/// <returns>
+		/// The <see cref="GlobalParameters"/>.
+		/// </returns>
+		public GlobalParameters GetGlobalParameters()
 		{
-			UpdateFrameParameter(frameNum, "Scans", NumScans.ToString());
-		}
-
-		/// <summary>
-		/// Method to enter the details of the global parameters for the experiment
-		/// </summary>
-		/// <param name="header"></param>
-		public void InsertGlobal(GlobalParameters header)
-		{
-
-			m_globalParameters = header;
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters " +
-				"(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, " +
-				"TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) " +
-				"VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, " +
-				":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
-				
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TimeOffset", header.TimeOffset));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":BinWidth", header.BinWidth));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Bins", header.Bins));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", header.TOFCorrectionTime));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", header.FrameDataBlobVersion));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", header.ScanDataBlobVersion));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TOFIntensityType", header.TOFIntensityType));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DatasetType", header.DatasetType));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", header.Prescan_TOFPulses));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", header.Prescan_Accumulations));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", header.Prescan_Continuous));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Profile", header.Prescan_Profile));
-			m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Instrument_name", header.InstrumentName));
-			
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Parameters.Clear();
-			m_dbCommandUimf.Dispose();
+			return DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 		}
 
 		/// <summary>
 		/// Method to insert details related to each IMS frame
 		/// </summary>
-		/// <param name="frameParameters"></param>
+		/// <param name="frameParameters">
+		/// </param>
 		public void InsertFrame(FrameParameters frameParameters)
 		{
-			if ( m_dbCommandPrepareInsertFrame == null)
+			if (this.m_dbCommandPrepareInsertFrame == null)
 			{
-				PrepareInsertFrame();
+				this.PrepareInsertFrame();
 			}
 
 			// Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
+			this.ValidateFrameParameterColumns();
 
-			m_dbCommandPrepareInsertFrame.Parameters.Clear();
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));                       // 0, Frame number (primary key)     
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));                     // 1, Start time of frame, in minutes
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));                       // 2, Duration of frame, in seconds 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Accumulations", frameParameters.Accumulations));             // 3, Number of collected and summed acquisitions in a frame 
+			this.m_dbCommandPrepareInsertFrame.Parameters.Clear();
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));                     // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));                             // 5, Number of TOF scans  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));                   // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));                     // 7, Number of TOF Losses
+			// 0, Frame number (primary key)     
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));           // 8, Average time between TOF trigger pulses
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope));           // 9, Value of k0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept));   // 10, Value of t0  
+			// 1, Start time of frame, in minutes
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));                                   // 11, These six parameters below are coefficients for residual mass error correction            
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));                                   // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2));                                   // 13
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2));                                   // 14
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2));                                   // 15
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2));                                   // 16
+			// 2, Duration of frame, in seconds 
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature));                 // 17, Ambient temperature
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1));                 // 18, Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));                 // 19, Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));                 // 20, Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));                 // 21, Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));               // 22, Capillary Inlet Voltage
+			// 3, Number of collected and summed acquisitions in a frame 
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
+			// 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));
+
+			// 5, Number of TOF scans  
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));
+
+			// 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));
+
+			// 7, Number of TOF Losses
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));
+
+			// 8, Average time between TOF trigger pulses
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope)); // 9, Value of k0  
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept)); // 10, Value of t0  
+
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));
+
+			// 11, These six parameters below are coefficients for residual mass error correction            
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));
+
+			// 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2)); // 13
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2)); // 14
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2)); // 15
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2)); // 16
+
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature));
+
+			// 17, Ambient temperature
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1));
+
+			// 18, Voltage setting in the IMS system
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));
+
+			// 19, Voltage setting in the IMS system
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));
+
+			// 20, Voltage setting in the IMS system
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));
+
+			// 21, Voltage setting in the IMS system
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));
+
+			// 22, Capillary Inlet Voltage
+			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
 			{
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));     // 23, HPF In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));   // 24, HPF Out Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn)); // 23, HPF In Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut)); // 24, HPF Out Voltage
 			}
 			else
 			{
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn));     // 23, IFT In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut));   // 24, IFT Out Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn)); // 23, IFT In Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut)); // 24, IFT Out Voltage
 			}
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));                 // 26, Trap Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));                   // 27, Trap In Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));                 // 28, Jet Disruptor Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));                     // 29, Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));                     // 30, Fragmentation Conductance Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));                     // 31, Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));                     // 32, Fragmentation Conductance Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));                   // 33, IMS Out Voltage
+			// 26, Trap Out Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));
 
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
+			// 27, Trap In Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));
+
+			// 28, Jet Disruptor Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));
+
+			// 29, Fragmentation Quadrupole Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));
+
+			// 30, Fragmentation Conductance Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));
+
+			// 31, Fragmentation Quadrupole Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));
+
+			// 32, Fragmentation Conductance Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));
+
+			// 33, IMS Out Voltage
+			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
 			{
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));             // 34, HPF In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));           // 35, HPF Out Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn)); // 34, HPF In Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut)); // 35, HPF Out Voltage
 			}
 			else
 			{
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn));             // 34, IFT In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut));           // 35, IFT Out Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn)); // 34, IFT In Voltage
+				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+					new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut)); // 35, IFT Out Voltage
 			}
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));         // 36, Cond Limit Voltage
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt)); // 36, Cond Limit Voltage
 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureFront", frameParameters.PressureFront));             // 37, Pressure at front of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));               // 38, Pressure at back of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));                   // 39, Determines original size of bit sequence
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FragmentationProfile", ConvertToBlob(frameParameters.FragmentationProfile)));    // 40, Voltage profile used in fragmentation
-			
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));   // 41            
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure));    // 42
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));  // 43
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));         // 44
-		   
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));                   // 45
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));               // 46
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));         // 47, Set to 1 after a frame has been calibrated
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.Decoded));                         // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
-		   
-			m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
-			m_dbCommandPrepareInsertFrame.Parameters.Clear();
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":PressureFront", frameParameters.PressureFront)); // 37, Pressure at front of Drift Tube 
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));
+
+			// 38, Pressure at back of Drift Tube 
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));
+
+			// 39, Determines original size of bit sequence
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":FragmentationProfile", ConvertToBlob(frameParameters.FragmentationProfile)));
+
+			// 40, Voltage profile used in fragmentation
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure)); // 41            
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure)); // 42
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure)); // 43
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure)); // 44
+
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));
+
+			// 45
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));
+
+			// 46
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));
+
+			// 47, Set to 1 after a frame has been calibrated
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.Decoded));
+
+			// 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+			this.m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
+			this.m_dbCommandPrepareInsertFrame.Parameters.Clear();
 		}
 
-		//This function should be called for each scan, intensities is an array including all zeros
-		//TODO:: Deprecate this function since the bpi is calculated using an incorrect calibration function
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, double[] intensities, double binWidth)
-		{	
-			//RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-			int nrlze = 0; 
+		/// <summary>
+		/// Method to enter the details of the global parameters for the experiment
+		/// </summary>
+		/// <param name="header">
+		/// </param>
+		public void InsertGlobal(GlobalParameters header)
+		{
+			this.m_globalParameters = header;
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters "
+			                                   + "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, "
+			                                   + "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) "
+			                                   + "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, "
+			                                   + ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
+
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TimeOffset", header.TimeOffset));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":BinWidth", header.BinWidth));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Bins", header.Bins));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", header.TOFCorrectionTime));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", header.FrameDataBlobVersion));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", header.ScanDataBlobVersion));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":TOFIntensityType", header.TOFIntensityType));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DatasetType", header.DatasetType));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", header.Prescan_TOFPulses));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", header.Prescan_Accumulations));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", header.Prescan_Continuous));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Prescan_Profile", header.Prescan_Profile));
+			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Instrument_name", header.InstrumentName));
+
+			this.m_dbCommandUimf.ExecuteNonQuery();
+			this.m_dbCommandUimf.Parameters.Clear();
+			this.m_dbCommandUimf.Dispose();
+		}
+
+		/// <summary>
+		/// This function should be called for each scan, intensities is an array including all zeros
+		/// TODO:: Deprecate this function since the bpi is calculated using an incorrect calibration function
+		/// </summary>
+		/// <param name="frameParameters">
+		/// TODO The frame parameters.
+		/// </param>
+		/// <param name="scanNum">
+		/// TODO The scan num.
+		/// </param>
+		/// <param name="counter">
+		/// TODO The counter.
+		/// </param>
+		/// <param name="intensities">
+		/// TODO The intensities.
+		/// </param>
+		/// <param name="binWidth">
+		/// TODO The bin width.
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
+		[Obsolete]
+		public int InsertScan(
+			FrameParameters frameParameters, 
+			int scanNum, 
+			int counter, 
+			double[] intensities, 
+			double binWidth)
+		{
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
+			int nrlze = 0;
 			int zeroCount = 0;
 			double[] runLengthZeroEncodedData = new double[intensities.Length];
 			double tic = 0;
@@ -598,40 +918,50 @@ namespace UIMFLibrary
 			double bpiMz = 0;
 			int datatypeSize = 8;
 
-			if (m_globalParameters == null)
-				m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
 
-			for ( int i = 0; i < intensities.Length; i++)
+			for (int i = 0; i < intensities.Length; i++)
 			{
 				double intensity = intensities[i];
 				if (intensity > 0)
 				{
-					
-					//TIC is just the sum of all intensities
+					// TIC is just the sum of all intensities
 					tic += intensity;
 					if (intensity > bpi)
 					{
-						bpi = intensity; 
-						bpiMz = convertBinToMz(i, binWidth, frameParameters);
+						bpi = intensity;
+						bpiMz = this.convertBinToMz(i, binWidth, frameParameters);
 					}
-					if(zeroCount < 0)
+
+					if (zeroCount < 0)
 					{
 						runLengthZeroEncodedData[nrlze++] = (double)zeroCount;
 						zeroCount = 0;
 					}
+
 					runLengthZeroEncodedData[nrlze++] = intensity;
 				}
-				else zeroCount--;
+				else
+				{
+					zeroCount--;
+				}
 			}
 
-			//Compress intensities
+			// Compress intensities
 			int nlzf = 0;
 			byte[] compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
 			{
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(
+					ref byteBuffer, 
+					nrlze * datatypeSize, 
+					ref compressedData, 
+					nrlze * datatypeSize * 5);
 			}
 
 			if (nlzf != 0)
@@ -639,29 +969,39 @@ namespace UIMFLibrary
 				byte[] spectra = new byte[nlzf];
 				Array.Copy(compressedData, spectra, nlzf);
 
-				//Insert records
-				InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
-				m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-				m_dbCommandPrepareInsertScan.Parameters.Clear();
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
+
 			return nlzf;
 		}
 
 		/// <summary>
 		/// Insert a new scan using an array of intensities along with bin_width
 		/// </summary>
-		/// <param name="frameParameters">Frame parameters</param>
-		/// <param name="scanNum">Scan number</param>
-		/// <param name="intensities">Array of intensities, including all zeros</param>
-		/// <param name="bin_width">Bin width (used to compute m/z value of the BPI data point)</param>
-		/// <returns>Number of non-zero data points</returns>
+		/// <param name="frameParameters">
+		/// Frame parameters
+		/// </param>
+		/// <param name="scanNum">
+		/// Scan number
+		/// </param>
+		/// <param name="intensities">
+		/// Array of intensities, including all zeros
+		/// </param>
+		/// <param name="bin_width">
+		/// Bin width (used to compute m/z value of the BPI data point)
+		/// </param>
+		/// <returns>
+		/// Number of non-zero data points
+		/// </returns>
 		public int InsertScan(FrameParameters frameParameters, int scanNum, int[] intensities, double bin_width)
 		{
 			int nonZeroCount = 0;
 
 			if (frameParameters != null)
 			{
-
 				int nrlze = 0;
 				int zeroCount = 0;
 				int[] runLengthEncodedData = new int[intensities.Length];
@@ -670,29 +1010,36 @@ namespace UIMFLibrary
 				double bpiMz = 0;
 				int datatypeSize = 4;
 
-				if (m_globalParameters == null)
-					m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+				if (this.m_globalParameters == null)
+				{
+					this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+				}
 
 				for (int i = 0; i < intensities.Length; i++)
 				{
 					int intensity = intensities[i];
 					if (intensity > 0)
 					{
-						//TIC is just the sum of all intensities
+						// TIC is just the sum of all intensities
 						tic += intensity;
 						if (intensity > bpi)
 						{
 							bpi = intensity;
-							bpiMz = convertBinToMz(i, bin_width, frameParameters);
+							bpiMz = this.convertBinToMz(i, bin_width, frameParameters);
 						}
+
 						if (zeroCount < 0)
 						{
 							runLengthEncodedData[nrlze++] = zeroCount;
 							zeroCount = 0;
 						}
+
 						runLengthEncodedData[nrlze++] = intensity;
 					}
-					else zeroCount--;
+					else
+					{
+						zeroCount--;
+					}
 				}
 
 				byte[] compressedData = new byte[nrlze * datatypeSize * 5];
@@ -700,7 +1047,11 @@ namespace UIMFLibrary
 				{
 					byte[] byte_array = new byte[nrlze * datatypeSize];
 					Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
-					nonZeroCount = LZFCompressionUtil.Compress(ref byte_array, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+					nonZeroCount = LZFCompressionUtil.Compress(
+						ref byte_array, 
+						nrlze * datatypeSize, 
+						ref compressedData, 
+						nrlze * datatypeSize * 5);
 				}
 
 				if (nonZeroCount != 0)
@@ -708,12 +1059,11 @@ namespace UIMFLibrary
 					byte[] spectra = new byte[nonZeroCount];
 					Array.Copy(compressedData, spectra, nonZeroCount);
 
-					//Insert records
-					InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
-					m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-					m_dbCommandPrepareInsertScan.Parameters.Clear();
+					// Insert records
+					this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
+					this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+					this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 				}
-
 			}
 
 			return nonZeroCount;
@@ -722,15 +1072,27 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Insert a new scan using an array of intensities (as floats), bin_width, and "counter" which should be equivalent to the count of non-zero data in intensities
 		/// </summary>
-		/// <param name="frameParameters"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="counter"></param>
-		/// <param name="intensities"></param>
-		/// <param name="bin_width"></param>
-		/// <returns></returns>
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, float[] intensities, double bin_width)
-		{			
-			int nrlze = 0; 
+		/// <param name="frameParameters">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="counter">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="bin_width">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
+		public int InsertScan(
+			FrameParameters frameParameters, 
+			int scanNum, 
+			int counter, 
+			float[] intensities, 
+			double bin_width)
+		{
+			int nrlze = 0;
 			int zeroCount = 0;
 			float[] runLengthEncodedData = new float[intensities.Length];
 			double tic = 0;
@@ -738,32 +1100,37 @@ namespace UIMFLibrary
 			double bpiMz = 0;
 			int datatypeSize = 4;
 
-			if (m_globalParameters == null)
-				m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
 
 			for (int i = 0; i < intensities.Length; i++)
 			{
 				float intensity = intensities[i];
 				if (intensity > 0)
 				{
-					
-					//TIC is just the sum of all intensities
+					// TIC is just the sum of all intensities
 					tic += intensity;
 					if (intensity > bpi)
 					{
-						bpi = intensity; 
-						bpiMz = convertBinToMz(i, bin_width, frameParameters);
+						bpi = intensity;
+						bpiMz = this.convertBinToMz(i, bin_width, frameParameters);
 					}
+
 					if (zeroCount < 0)
 					{
 						runLengthEncodedData[nrlze++] = (float)zeroCount;
 						zeroCount = 0;
 					}
+
 					runLengthEncodedData[nrlze++] = intensity;
 				}
-				else zeroCount--;
+				else
+				{
+					zeroCount--;
+				}
 			}
-
 
 			int nlzf = 0;
 			byte[] compressedData = new byte[nrlze * datatypeSize * 5];
@@ -771,7 +1138,11 @@ namespace UIMFLibrary
 			{
 				byte[] byte_array = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(ref byte_array, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(
+					ref byte_array, 
+					nrlze * datatypeSize, 
+					ref compressedData, 
+					nrlze * datatypeSize * 5);
 			}
 
 			if (nlzf != 0)
@@ -779,50 +1150,64 @@ namespace UIMFLibrary
 				byte[] spectra = new byte[nlzf];
 				Array.Copy(compressedData, spectra, nlzf);
 
-				//Insert records
-				InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
-				m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-				m_dbCommandPrepareInsertScan.Parameters.Clear();
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
+
 			return nlzf;
 		}
 
-
 		/// <summary>
 		/// Insert a scan using a list of bins and a list of intensities
+		/// TODO:: Deprecate this function since superseded by InsertScan with: int[] intensities, double bin_width
 		/// </summary>
-		/// <param name="fp"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="bins"></param>
-		/// <param name="intensities"></param>
-		/// <param name="binWidth"></param>
-		/// <param name="timeOffset"></param>
-		/// <returns></returns>
-		//TODO:: Deprecate this function since superseded by InsertScan with: int[] intensities, double bin_width
+		/// <param name="fp">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="bins">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="binWidth">
+		/// </param>
+		/// <param name="timeOffset">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
 		[Obsolete]
-		public int InsertScan(FrameParameters fp, int scanNum, List<int> bins, List<int> intensities, double binWidth, int timeOffset)
+		public int InsertScan(
+			FrameParameters fp, 
+			int scanNum, 
+			List<int> bins, 
+			List<int> intensities, 
+			double binWidth, 
+			int timeOffset)
 		{
 			try
 			{
 				int nonZeroCount = 0;
 
-				if (m_globalParameters == null)
+				if (this.m_globalParameters == null)
 				{
-					m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+					this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 				}
 
 				if (fp != null)
 				{
-					if (bins != null && intensities != null && bins.Count != 0 && intensities.Count != 0 &&
-						bins.Count == intensities.Count)
+					if (bins != null && intensities != null && bins.Count != 0 && intensities.Count != 0
+					    && bins.Count == intensities.Count)
 					{
-						//that is the total number of data points that are to be encoded
+						// that is the total number of data points that are to be encoded
 						nonZeroCount = bins.Count;
 
-						//this is the maximum length required assuming that there are no continuous values
-						int[] rlze = new int[bins.Count*2];
+						// this is the maximum length required assuming that there are no continuous values
+						int[] rlze = new int[bins.Count * 2];
 
-						//now iterate through both arrays and attempt to run length zero encode the values
+						// now iterate through both arrays and attempt to run length zero encode the values
 						int tic = 0;
 						int bpi = 0;
 						int index = 0;
@@ -837,46 +1222,53 @@ namespace UIMFLibrary
 							int intensity = intensities[i];
 							int currentBin = bins[i];
 
-							//the intensities will always be positive integers
+							// the intensities will always be positive integers
 							tic += intensity;
 							if (bpi < intensity)
 							{
 								bpi = intensity;
-								bpiMz = convertBinToMz(currentBin, binWidth, fp);
+								bpiMz = this.convertBinToMz(currentBin, binWidth, fp);
 							}
 
 							if (i != 0 && currentBin != previousBin + 1)
 							{
-								//since the bin numbers are not continuous, add a negative index to the array
-								//and in some cases we have to add the offset from the previous index
+								// since the bin numbers are not continuous, add a negative index to the array
+								// and in some cases we have to add the offset from the previous index
 								rlze[index++] = previousBin - currentBin + 1;
 							}
 
-							//copy the intensity value and increment the index.
+							// copy the intensity value and increment the index.
 							rlze[index++] = intensity;
 
 							previousBin = currentBin;
 						}
 
-						//so now we have a run length zero encoded array
-						byte[] compresedRecord = new byte[index*datatypeSize*5];
-						byte[] byteBuffer = new byte[index*datatypeSize];
-						Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index*datatypeSize);
-						int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, index * datatypeSize, ref compresedRecord, compresedRecord.Length);
+						// so now we have a run length zero encoded array
+						byte[] compresedRecord = new byte[index * datatypeSize * 5];
+						byte[] byteBuffer = new byte[index * datatypeSize];
+						Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
+						int nlzf = LZFCompressionUtil.Compress(
+							ref byteBuffer, 
+							index * datatypeSize, 
+							ref compresedRecord, 
+							compresedRecord.Length);
 						byte[] spectra = new byte[nlzf];
 
 						Array.Copy(compresedRecord, spectra, nlzf);
-						//Insert records
+
+						// Insert records
 						if (true)
 						{
-							InsertScanAddParameters(fp.FrameNum, scanNum, bins.Count, bpi, bpiMz, tic, spectra);
-							m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-							m_dbCommandPrepareInsertScan.Parameters.Clear();
+							this.InsertScanAddParameters(fp.FrameNum, scanNum, bins.Count, bpi, bpiMz, tic, spectra);
+							this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+							this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 						}
 					}
 				}
+
 				return nonZeroCount;
-			} catch (Exception e)
+			}
+			catch (Exception e)
 			{
 				Console.WriteLine("Error writing scan: " + scanNum);
 				Console.WriteLine(e);
@@ -885,35 +1277,53 @@ namespace UIMFLibrary
 			}
 		}
 
-
 		/// <summary>
 		/// //this method takes in a list of bin numbers and intensities and converts them to a run length encoded array
-		///which is later compressed at the byte level for reduced size
+		/// which is later compressed at the byte level for reduced size
 		/// </summary>
-		/// <param name="frameParameters"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="bins"></param>
-		/// <param name="intensities"></param>
-		/// <param name="binWidth"></param>
-		/// <param name="timeOffset"></param>
-		/// <returns></returns>
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int [] bins, int[] intensities, double binWidth, int timeOffset)
+		/// <param name="frameParameters">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="bins">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="binWidth">
+		/// </param>
+		/// <param name="timeOffset">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
+		public int InsertScan(
+			FrameParameters frameParameters, 
+			int scanNum, 
+			int[] bins, 
+			int[] intensities, 
+			double binWidth, 
+			int timeOffset)
 		{
 			int nonZeroCount = 0;
 
-			if (m_globalParameters == null)
-				m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
 
 			if (frameParameters != null)
 			{
-				if (bins != null && intensities != null && bins.Length != 0 && intensities.Length != 0 && bins.Length == intensities.Length)
+				if (bins != null && intensities != null && bins.Length != 0 && intensities.Length != 0
+				    && bins.Length == intensities.Length)
 				{
-					//that is the total number of datapoints that are to be encoded
+					// that is the total number of datapoints that are to be encoded
 					nonZeroCount = bins.Length;
 
-					int[] rlze = new int[bins.Length * 2]; //this is the maximum length required assuming that there are no continuous values
+					int[] rlze = new int[bins.Length * 2];
 
-					//now iterate through both arrays and attempt to run length zero encode the values
+					// this is the maximum length required assuming that there are no continuous values
+
+					// now iterate through both arrays and attempt to run length zero encode the values
 					int tic = 0;
 					int bpi = 0;
 					int index = 0;
@@ -928,105 +1338,124 @@ namespace UIMFLibrary
 						int intensity = intensities[i];
 						int currentBin = bins[i];
 
-						//the intensities will always be positive integers
+						// the intensities will always be positive integers
 						tic += intensity;
 						if (bpi < intensity)
 						{
 							bpi = intensity;
-							bpiMz = convertBinToMz(currentBin, binWidth, frameParameters);
+							bpiMz = this.convertBinToMz(currentBin, binWidth, frameParameters);
 						}
 
 						if (i != 0 && currentBin != previousBin + 1)
 						{
-							//since the bin numbers are not continuous, add a negative index to the array
-							//and in some cases we have to add the offset from the previous index
+							// since the bin numbers are not continuous, add a negative index to the array
+							// and in some cases we have to add the offset from the previous index
 							rlze[index++] = previousBin - currentBin + 1;
 						}
-					   
-						//copy the intensity value and increment the index.
+
+						// copy the intensity value and increment the index.
 						rlze[index++] = intensity;
 
 						previousBin = currentBin;
 					}
 
-					//so now we have a run length zero encoded array
+					// so now we have a run length zero encoded array
 					byte[] compresedRecord = new byte[index * datatypeSize * 5];
 					byte[] byteBuffer = new byte[index * datatypeSize];
 					Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
-					int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, index * datatypeSize, ref compresedRecord, compresedRecord.Length); 
+					int nlzf = LZFCompressionUtil.Compress(
+						ref byteBuffer, 
+						index * datatypeSize, 
+						ref compresedRecord, 
+						compresedRecord.Length);
 					byte[] spectra = new byte[nlzf];
 
 					Array.Copy(compresedRecord, spectra, nlzf);
 
-					//Insert records
+					// Insert records
 					if (true)
 					{
-						InsertScanAddParameters(frameParameters.FrameNum, scanNum, bins.Length, bpi, bpiMz, tic, spectra);
-						m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-						m_dbCommandPrepareInsertScan.Parameters.Clear();
+						this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, bins.Length, bpi, bpiMz, tic, spectra);
+						this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+						this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 					}
 				}
 			}
+
 			return nonZeroCount;
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="frameParameters"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="counter"></param>
-		/// <param name="intensities"></param>
-		/// <param name="binWidth"></param>
-		/// <returns></returns>
+		/// <param name="frameParameters">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="counter">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="binWidth">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
 		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, int[] intensities, double binWidth)
 		{
-			if (frameParameters == null )
+			if (frameParameters == null)
 			{
 				return -1;
 			}
 
 			int arraySize = intensities.Length;
 
-			int nrlze = 0; 
+			int nrlze = 0;
 			int zero_count = 0;
 			List<int> rlzeDataList = new List<int>();
-			//int[] rlze_data = new int[arraySize];
+
+			// int[] rlze_data = new int[arraySize];
 			int tic_scan = 0;
 			int bpi = 0;
 			double bpi_mz = 0;
 			int datatypeSize = 4;
 			int indexOfMaxIntensity = 0;
 
-			if (m_globalParameters == null)
-				m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
 
-			//Calculate TIC and BPI
+			// Calculate TIC and BPI
 			for (int i = 0; i < arraySize; i++)
 			{
 				int intensity = intensities[i];
 				if (intensity > 0)
 				{
-					//TIC is just the sum of all intensities
+					// TIC is just the sum of all intensities
 					tic_scan += intensity;
 					if (intensity > bpi)
 					{
 						bpi = intensity;
 						indexOfMaxIntensity = i;
 					}
-					if(zero_count < 0)
+
+					if (zero_count < 0)
 					{
 						rlzeDataList.Add(zero_count);
 						zero_count = 0;
 					}
+
 					rlzeDataList.Add(intensity);
 				}
-				else zero_count--;
+				else
+				{
+					zero_count--;
+				}
 			}
 
-			bpi_mz = convertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+			bpi_mz = this.convertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
 
-			//Compress intensities
+			// Compress intensities
 			int nlzf = 0;
 
 			nrlze = rlzeDataList.Count;
@@ -1034,10 +1463,14 @@ namespace UIMFLibrary
 
 			byte[] compresedRecord = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
-			{   
+			{
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(rlze_data, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compresedRecord, compresedRecord.Length);
+				nlzf = LZFCompressionUtil.Compress(
+					ref byteBuffer, 
+					nrlze * datatypeSize, 
+					ref compresedRecord, 
+					compresedRecord.Length);
 			}
 
 			if (nlzf != 0)
@@ -1045,30 +1478,41 @@ namespace UIMFLibrary
 				byte[] spectra = new byte[nlzf];
 				Array.Copy(compresedRecord, spectra, nlzf);
 
-				//Insert records
+				// Insert records
 				if (true)
 				{
-					InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpi_mz, (int)tic_scan, spectra);
-					m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-					m_dbCommandPrepareInsertScan.Parameters.Clear();
+					this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpi_mz, (int)tic_scan, spectra);
+					this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+					this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 				}
-				
 			}
+
 			return nlzf;
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="frameParameters"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="counter"></param>
-		/// <param name="intensities"></param>
-		/// <param name="bin_width"></param>
-		/// <returns></returns>
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, short[] intensities, double bin_width)
+		/// <param name="frameParameters">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="counter">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="bin_width">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
+		public int InsertScan(
+			FrameParameters frameParameters, 
+			int scanNum, 
+			int counter, 
+			short[] intensities, 
+			double bin_width)
 		{
-			int nrlze = 0; 
+			int nrlze = 0;
 			int zeroCount = 0;
 			short[] runLengthEncodedData = new short[intensities.Length];
 			double tic_scan = 0;
@@ -1077,32 +1521,38 @@ namespace UIMFLibrary
 			int nonZeroIntensities = 0;
 			int datatypeSize = 2;
 
-			if (m_globalParameters == null)
-				m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
 
-			//Calculate TIC and BPI
-			for ( int i = 0; i < intensities.Length; i++)
+			// Calculate TIC and BPI
+			for (int i = 0; i < intensities.Length; i++)
 			{
 				short intensity = intensities[i];
 				if (intensity > 0)
 				{
-					
-					//TIC is just the sum of all intensities
+					// TIC is just the sum of all intensities
 					tic_scan += intensity;
 					if (intensity > bpi)
 					{
-						bpi = intensity; 
-						bpi_mz = convertBinToMz(i, bin_width, frameParameters);
+						bpi = intensity;
+						bpi_mz = this.convertBinToMz(i, bin_width, frameParameters);
 					}
-					if(zeroCount < 0)
+
+					if (zeroCount < 0)
 					{
 						runLengthEncodedData[nrlze++] = (short)zeroCount;
 						zeroCount = 0;
 					}
+
 					runLengthEncodedData[nrlze++] = intensity;
 					nonZeroIntensities++;
 				}
-				else zeroCount--;
+				else
+				{
+					zeroCount--;
+				}
 			}
 
 			int nlzf = 0;
@@ -1111,7 +1561,11 @@ namespace UIMFLibrary
 			{
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(ref byteBuffer, nrlze * datatypeSize, ref compressedData, nrlze * datatypeSize * 5);
+				nlzf = LZFCompressionUtil.Compress(
+					ref byteBuffer, 
+					nrlze * datatypeSize, 
+					ref compressedData, 
+					nrlze * datatypeSize * 5);
 			}
 
 			if (nlzf != 0)
@@ -1119,447 +1573,263 @@ namespace UIMFLibrary
 				byte[] spectra = new byte[nlzf];
 				Array.Copy(compressedData, spectra, nlzf);
 
-				//Insert records
-				InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpi_mz, (int)tic_scan, spectra);
-				m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-				m_dbCommandPrepareInsertScan.Parameters.Clear();
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpi_mz, (int)tic_scan, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
-			
+
 			return nlzf;
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="scanNum"></param>
-		/// <param name="ms_level"></param>
-		/// <returns></returns>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="ms_level">
+		/// </param>
+		/// <returns>
+		/// The <see cref="int"/>.
+		/// </returns>
 		public int InsertScanParameters(int scanNum, int ms_level)
 		{
-			insertScanAddScanParameters(scanNum, ms_level);
+			this.insertScanAddScanParameters(scanNum, ms_level);
 
-			m_dbCommandPrepareInsertScanParameters.ExecuteNonQuery();
-			m_dbCommandPrepareInsertScanParameters.Parameters.Clear();
+			this.m_dbCommandPrepareInsertScanParameters.ExecuteNonQuery();
+			this.m_dbCommandPrepareInsertScanParameters.Parameters.Clear();
 
 			return 0;
 		}
 
 		/// <summary>
-		/// 
+		/// Post a new log entry to table Log_Entries
 		/// </summary>
-		/// <param name="scan_number"></param>
-		/// <param name="MS_Level"></param>
-		private void insertScanAddScanParameters(int scan_number, int MS_Level)
+		/// <param name="EntryType">
+		/// Log entry type (typically Normal, Error, or Warning)
+		/// </param>
+		/// <param name="Message">
+		/// Log message
+		/// </param>
+		/// <param name="PostedBy">
+		/// Process or application posting the log message
+		/// </param>
+		/// <remarks>
+		/// The Log_Entries table will be created if it doesn't exist
+		/// </remarks>
+		public void PostLogEntry(string EntryType, string Message, string PostedBy)
 		{
-			m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("ScanNum", scan_number.ToString()));
-			m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("MS_Level", MS_Level.ToString()));
+			PostLogEntry(this.m_dbConnection, EntryType, Message, PostedBy);
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="tableName"></param>
-		/// <param name="fileBytesAsBuffer"></param>
-		/// <returns></returns>
-		public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
-		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			try
-			{
-				if (!DataReader.TableExists(m_dbConnection, tableName))
-				{
-					// Create the table
-					m_dbCommandUimf.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
-					m_dbCommandUimf.ExecuteNonQuery();
-				}
-				else
-				{
-					// Delete the data currently in the table
-					m_dbCommandUimf.CommandText = "DELETE FROM " + tableName + ";";
-					m_dbCommandUimf.ExecuteNonQuery();
-				}
-				
-				m_dbCommandUimf.CommandText = "INSERT INTO " + tableName + " VALUES (:Buffer);";
-				m_dbCommandUimf.Prepare();
-
-				m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Buffer", fileBytesAsBuffer));
-
-				m_dbCommandUimf.ExecuteNonQuery();
-			   
-			}
-			finally
-			{
-				m_dbCommandUimf.Parameters.Clear();
-				m_dbCommandUimf.Dispose();
-			}
-
-			return true;   
-
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="frameNumber"></param>
-		/// <param name="slope"></param>
-		/// <param name="intercept"></param>
+		/// <param name="frameNumber">
+		/// </param>
+		/// <param name="slope">
+		/// </param>
+		/// <param name="intercept">
+		/// </param>
 		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
 		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString() +
-				", CalibrationIntercept = " + intercept + " WHERE FrameNum = " + frameNumber;
-			
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
-		}
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString()
+			                                   + ", CalibrationIntercept = " + intercept + " WHERE FrameNum = " + frameNumber;
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="parameterName"></param>
-		/// <param name="parameterType"></param>
-		/// <param name="parameterValue"></param>
-		public void AddGlobalParameter(string parameterName, string parameterType, string parameterValue)
-		{
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "Alter TABLE Global_Parameters Add " + parameterName.ToString() + " " + parameterType.ToString();
-				m_dbCommandUimf.CommandText += " UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
-				this.m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
-			}
-			catch
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
-				this.m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
-				Console.WriteLine("Parameter " + parameterName + " already exists, its value will be updated to " + parameterValue);
-			}
-		}
-
-		/// <summary>
-		/// Add a column to the Frame_Parameters table
-		/// </summary>
-		/// <param name="parameterName"></param>
-		/// <param name="parameterType"></param>
-		/// <remarks>The new column will have Null values for all existing rows</remarks>
-		public void AddFrameParameter(string parameterName, string parameterType)
-		{
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " + parameterType;
-				this.m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error adding parameter " + parameterName + " to the Frame_Parameters table:" + ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// Add a column to the Frame_Parameters table
-		/// </summary>
-		/// <param name="parameterName">Parameter name (aka column name in the database)</param>
-		/// <param name="parameterType">Parameter type</param>
-		/// <param name="defaultValue">Value to assign to all rows</param>
-		public void AddFrameParameter(string parameterName, string parameterType, int defaultValue)
-		{
-			AddFrameParameter(parameterName, parameterType);
-
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + defaultValue.ToString() + " WHERE " + parameterName + " IS NULL";
-				this.m_dbCommandUimf.ExecuteNonQuery();
-
-				m_dbCommandUimf.Dispose();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// Add a column to the Frame_Parameters table
-		/// </summary>
-		/// <param name="parameterName">Parameter name (aka column name in the database)</param>
-		/// <param name="parameterType">Parameter type</param>
-		/// <param name="defaultValue">Value to assign to all rows</param>
-		public void AddFrameParameter(string parameterName, string parameterType, string defaultValue)
-		{
-			AddFrameParameter(parameterName, parameterType);
-
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = '" + defaultValue + "' WHERE " + parameterName + " IS NULL";
-				this.m_dbCommandUimf.ExecuteNonQuery();
-
-				m_dbCommandUimf.Dispose();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="parameterName"></param>
-		/// <param name="parameterValue"></param>
-		public void UpdateGlobalParameter(string parameterName, string parameterValue)
-		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = " + parameterValue;
 			this.m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
+			this.m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="frameNumber"></param>
-		/// <param name="parameters"></param>
-		/// <param name="values"></param>
+		/// <param name="frameNumber">
+		/// </param>
+		/// <param name="parameterName">
+		/// </param>
+		/// <param name="parameterValue">
+		/// </param>
+		public void UpdateFrameParameter(int frameNumber, string parameterName, string parameterValue)
+		{
+			// Make sure the Frame_Parameters table has all of the required columns
+			this.ValidateFrameParameterColumns();
+
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + parameterValue
+			                                   + " WHERE FrameNum = " + frameNumber;
+			this.m_dbCommandUimf.ExecuteNonQuery();
+			this.m_dbCommandUimf.Dispose();
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="frameNumber">
+		/// </param>
+		/// <param name="parameters">
+		/// </param>
+		/// <param name="values">
+		/// </param>
 		public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
 		{
 			// Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
+			this.ValidateFrameParameterColumns();
 
 			StringBuilder commandText = new StringBuilder("UPDATE Frame_Parameters SET ");
-			for (int i = 0; i < parameters.Count-1; i++)
+			for (int i = 0; i < parameters.Count - 1; i++)
 			{
 				commandText.Append(parameters[i] + "=" + values[i] + ",");
 			}
 
 			commandText.Append(parameters[parameters.Count - 1] + "=" + values[values.Count - 1]);
 
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = commandText.ToString() + " WHERE FrameNum = " + frameNumber;
-			//Console.WriteLine(m_dbCommandUimf.CommandText);
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = commandText.ToString() + " WHERE FrameNum = " + frameNumber;
+
+			// Console.WriteLine(m_dbCommandUimf.CommandText);
 			this.m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
-
+			this.m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
-		/// 
+		/// Updates the scan count for the given frame
 		/// </summary>
-		/// <param name="frameNumber"></param>
-		/// <param name="parameterName"></param>
-		/// <param name="parameterValue"></param>
-		public void UpdateFrameParameter(int frameNumber, string parameterName, string parameterValue)
+		/// <param name="frameNum">
+		/// The frame number to update
+		/// </param>
+		/// <param name="NumScans">
+		/// The new scan count
+		/// </param>
+		public void UpdateFrameScanCount(int frameNum, int NumScans)
 		{
-			// Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
+			this.UpdateFrameParameter(frameNum, "Scans", NumScans.ToString());
+		}
 
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + parameterValue + " WHERE FrameNum = " + frameNumber;
+		/// <summary>
+		/// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
+		/// It is used in the nunit tests
+		/// </summary>
+		/// <param name="startFrameNum">
+		/// The start Frame Num.
+		/// </param>
+		/// <param name="endFrameNum">
+		/// The end Frame Num.
+		/// </param>
+		public void UpdateFrameType(int startFrameNum, int endFrameNum)
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
+			this.m_dbCommandUimf.Prepare();
+
+			for (int i = startFrameNum; i <= endFrameNum; i++)
+			{
+				int frameType = i % 4 == 0 ? 1 : 2;
+				this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
+				this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
+				this.m_dbCommandUimf.ExecuteNonQuery();
+				this.m_dbCommandUimf.Parameters.Clear();
+			}
+		}
+
+		/// <summary>
+		/// Assures that NumFrames in the Global_Parameters table match the number of rows in the Frame_Parameters table
+		/// </summary>
+		public void UpdateGlobalFrameCount()
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+
+			this.m_dbCommandUimf.CommandText = "SELECT Count(*) FROM Frame_Parameters";
+			object frameCount = this.m_dbCommandUimf.ExecuteScalar();
+			this.m_dbCommandUimf.Dispose();
+
+			if (frameCount != null)
+			{
+				this.UpdateGlobalParameter("NumFrames", frameCount.ToString());
+			}
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="parameterName">
+		/// </param>
+		/// <param name="parameterValue">
+		/// </param>
+		public void UpdateGlobalParameter(string parameterName, string parameterValue)
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
+			                                   + parameterValue;
 			this.m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
+			this.m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
-		/// Post a new log entry to table Log_Entries
 		/// </summary>
-		/// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
-		/// <param name="Message">Log message</param>
-		/// <param name="PostedBy">Process or application posting the log message</param>
-		/// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
-		public void PostLogEntry(string EntryType, string Message, string PostedBy)
+		/// <param name="tableName">
+		/// </param>
+		/// <param name="fileBytesAsBuffer">
+		/// </param>
+		/// <returns>
+		/// The <see cref="bool"/>.
+		/// </returns>
+		public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
 		{
-			PostLogEntry(m_dbConnection, EntryType, Message, PostedBy);            
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			try
+			{
+				if (!DataReader.TableExists(this.m_dbConnection, tableName))
+				{
+					// Create the table
+					this.m_dbCommandUimf.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
+					this.m_dbCommandUimf.ExecuteNonQuery();
+				}
+				else
+				{
+					// Delete the data currently in the table
+					this.m_dbCommandUimf.CommandText = "DELETE FROM " + tableName + ";";
+					this.m_dbCommandUimf.ExecuteNonQuery();
+				}
+
+				this.m_dbCommandUimf.CommandText = "INSERT INTO " + tableName + " VALUES (:Buffer);";
+				this.m_dbCommandUimf.Prepare();
+
+				this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":Buffer", fileBytesAsBuffer));
+
+				this.m_dbCommandUimf.ExecuteNonQuery();
+			}
+			finally
+			{
+				this.m_dbCommandUimf.Parameters.Clear();
+				this.m_dbCommandUimf.Dispose();
+			}
+
+			return true;
 		}
 
-		/// <summary>
-		/// Post a new log entry to table Log_Entries
-		/// </summary>
-		/// <param name="oConnection">Database connection object</param>
-		/// <param name="EntryType">Log entry type (typically Normal, Error, or Warning)</param>
-		/// <param name="Message">Log message</param>
-		/// <param name="PostedBy">Process or application posting the log message</param>
-		/// <remarks>The Log_Entries table will be created if it doesn't exist</remarks>
-		public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
-		{
-			// Check whether the Log_Entries table needs to be created
+		#endregion
 
-			SQLiteCommand cmdPostLogEntry;
-			cmdPostLogEntry = oConnection.CreateCommand();
-
-			if (!DataReader.TableExists(oConnection, "Log_Entries"))
-			{
-				// Log_Entries not found; need to create it
-				
-				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " +
-					"Entry_ID INTEGER PRIMARY KEY, " +
-					"Posted_By STRING, " +
-					"Posting_Time STRING, " +
-					"Type STRING, " +
-					"Message STRING)";
-
-				cmdPostLogEntry.ExecuteNonQuery();
-
-			}
-
-			if (String.IsNullOrEmpty(EntryType))
-				EntryType = "Normal";
-
-			if (String.IsNullOrEmpty(PostedBy))
-				PostedBy = "";
-
-			if (String.IsNullOrEmpty(Message))
-				Message = "";
-
-			// Now add a log entry
-			cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + 
-										  "VALUES (" + 
-											 "datetime('now'), " + 
-											 "'" + PostedBy  + "', " + 
-											 "'" + EntryType + "', " + 
-											 "'" + Message   + "')";
-
-			cmdPostLogEntry.ExecuteNonQuery();
-			cmdPostLogEntry.Dispose();            
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		private void PrepareInsertFrame()
-		{
-			m_dbCommandPrepareInsertFrame = m_dbConnection.CreateCommand();
-
-			string voltEntranceHPFInColName;
-			string voltEntranceHPFOutColName;
-
-			string voltExitHPFInColName;
-			string voltExitHPFOutColName;
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
-			{
-				voltEntranceHPFInColName = "voltEntranceHPFIn";
-				voltEntranceHPFOutColName = "voltEntranceHPFOut";
-			}
-			else
-			{
-				voltEntranceHPFInColName = "voltEntranceIFTIn";
-				voltEntranceHPFOutColName = "voltEntranceIFTOut";
-			}
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
-			{
-				voltExitHPFInColName = "voltExitHPFIn";
-				voltExitHPFOutColName = "voltExitHPFOut";
-			}
-			else
-			{
-				voltExitHPFInColName = "voltExitIFTIn";
-				voltExitHPFOutColName = "voltExitIFTOut";
-			}
-
-			string cmd = "INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses," +
-				"AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, " +
-				"voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", ";
-
-			cmd += "voltEntranceCondLmt, " +
-				"voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, " +
-				"voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName + ", voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, " +
-				"RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)" +
-				"VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses," +
-				":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, " +
-				":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName + ",:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2," +
-				":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName +",:voltExitCondLmt, " +
-				":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " +
-				":HPPressure, :IPTrapPressure, " +
-				":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
-
-			m_dbCommandPrepareInsertFrame.CommandText = cmd;
-			m_dbCommandPrepareInsertFrame.Prepare();
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		private void PrepareInsertScan()
-		{
-			//This function should be called before looping through each frame and scan
-			m_dbCommandPrepareInsertScan = m_dbConnection.CreateCommand();
-			m_dbCommandPrepareInsertScan.CommandText = "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) " +
-				"VALUES(?,?,?,?,?,?,?);";
-			m_dbCommandPrepareInsertScan.Prepare();
-
-			if (this.m_isScanParameterTable)
-			{
-				this.m_dbCommandPrepareInsertScanParameters = m_dbConnection.CreateCommand();
-				this.m_dbCommandPrepareInsertScanParameters.CommandText = "INSERT INTO Scan_Parameters (ScanNum, MS_Level) VALUES (:ScanNum, :MS_Level);";
-
-				this.m_dbCommandPrepareInsertScanParameters.Prepare();
-			}			
-		}
+		#region Methods
 
 		/// <summary>
 		/// Assures that certain columns are present in the Frame_Parameters table
 		/// </summary>
 		protected void ValidateFrameParameterColumns()
 		{
-
-			if (!m_FrameParameterColumnsVerified)
+			if (!this.m_FrameParameterColumnsVerified)
 			{
-				if (!DataReader.TableHasColumn(m_dbConnection, "Frame_Parameters", "Decoded"))
+				if (!DataReader.TableHasColumn(this.m_dbConnection, "Frame_Parameters", "Decoded"))
 				{
-					AddFrameParameter("Decoded", "INT", 0);
+					this.AddFrameParameter("Decoded", "INT", 0);
 				}
 
-				m_FrameParameterColumnsVerified = true;
+				this.m_FrameParameterColumnsVerified = true;
 			}
-
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
-		/// <param name="frameNumber"></param>
-		/// <param name="scanNum"></param>
-		/// <param name="nonZeroCount"></param>
-		/// <param name="bpi"></param>
-		/// <param name="bpiMz"></param>
-		/// <param name="tic"></param>
-		/// <param name="spectraRecord"></param>
-		private void InsertScanAddParameters(int frameNumber, int scanNum, int nonZeroCount, int bpi, double bpiMz, int tic, byte[]spectraRecord)
-		{
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("Intensities", spectraRecord));
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="dt"></param>
-		/// <returns></returns>
-		private string ConvertDateTimeToString(DateTime dt)
-		{
-			//Convert DateTime to String yyyy-mm-dd hh:mm:ss
-			string dt_string = dt.Year.ToString("0000") + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00");
-
-			return "'" + dt_string + "'";
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="frag"></param>
-		/// <returns></returns>
+		/// <param name="frag">
+		/// </param>
+		/// <returns>
+		/// The <see cref="byte[]"/>.
+		/// </returns>
 		private static byte[] ConvertToBlob(double[] frag)
 		{
 			// convert the fragmentation profile into an array of bytes
@@ -1572,42 +1842,191 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// </summary>
+		/// <param name="dt">
+		/// </param>
+		/// <returns>
+		/// The <see cref="string"/>.
+		/// </returns>
+		private string ConvertDateTimeToString(DateTime dt)
+		{
+			// Convert DateTime to String yyyy-mm-dd hh:mm:ss
+			string dt_string = dt.Year.ToString("0000") + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + " "
+			                   + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00");
+
+			return "'" + dt_string + "'";
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="frameNumber">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="nonZeroCount">
+		/// </param>
+		/// <param name="bpi">
+		/// </param>
+		/// <param name="bpiMz">
+		/// </param>
+		/// <param name="tic">
+		/// </param>
+		/// <param name="spectraRecord">
+		/// </param>
+		private void InsertScanAddParameters(
+			int frameNumber, 
+			int scanNum, 
+			int nonZeroCount, 
+			int bpi, 
+			double bpiMz, 
+			int tic, 
+			byte[] spectraRecord)
+		{
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic.ToString()));
+			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("Intensities", spectraRecord));
+		}
+
+		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="binNumber"></param>
-		/// <param name="binWidth"></param>
-		/// <param name="frameParameters"></param>
-		/// <returns></returns>
-		private double convertBinToMz( int binNumber, double binWidth, FrameParameters frameParameters)
+		private void PrepareInsertFrame()
+		{
+			this.m_dbCommandPrepareInsertFrame = this.m_dbConnection.CreateCommand();
+
+			string voltEntranceHPFInColName;
+			string voltEntranceHPFOutColName;
+
+			string voltExitHPFInColName;
+			string voltExitHPFOutColName;
+
+			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
+			{
+				voltEntranceHPFInColName = "voltEntranceHPFIn";
+				voltEntranceHPFOutColName = "voltEntranceHPFOut";
+			}
+			else
+			{
+				voltEntranceHPFInColName = "voltEntranceIFTIn";
+				voltEntranceHPFOutColName = "voltEntranceIFTOut";
+			}
+
+			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
+			{
+				voltExitHPFInColName = "voltExitHPFIn";
+				voltExitHPFOutColName = "voltExitHPFOut";
+			}
+			else
+			{
+				voltExitHPFInColName = "voltExitIFTIn";
+				voltExitHPFOutColName = "voltExitIFTOut";
+			}
+
+			string cmd =
+				"INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses,"
+				+ "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, "
+				+ "voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", ";
+
+			cmd += "voltEntranceCondLmt, " + "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, "
+			       + "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName
+			       + ", voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, "
+			       + "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)"
+			       + "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses,"
+			       + ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, "
+			       + ":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName
+			       + ",:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2,"
+			       + ":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName + ",:voltExitCondLmt, "
+			       + ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " + ":HPPressure, :IPTrapPressure, "
+			       + ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
+
+			this.m_dbCommandPrepareInsertFrame.CommandText = cmd;
+			this.m_dbCommandPrepareInsertFrame.Prepare();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		private void PrepareInsertScan()
+		{
+			// This function should be called before looping through each frame and scan
+			this.m_dbCommandPrepareInsertScan = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandPrepareInsertScan.CommandText =
+				"INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
+				+ "VALUES(?,?,?,?,?,?,?);";
+			this.m_dbCommandPrepareInsertScan.Prepare();
+
+			if (this.m_isScanParameterTable)
+			{
+				this.m_dbCommandPrepareInsertScanParameters = this.m_dbConnection.CreateCommand();
+				this.m_dbCommandPrepareInsertScanParameters.CommandText =
+					"INSERT INTO Scan_Parameters (ScanNum, MS_Level) VALUES (:ScanNum, :MS_Level);";
+
+				this.m_dbCommandPrepareInsertScanParameters.Prepare();
+			}
+		}
+
+		/// <summary>
+		/// TODO The transaction begin.
+		/// </summary>
+		private void TransactionBegin()
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
+			this.m_dbCommandUimf.ExecuteNonQuery();
+		}
+
+		/// <summary>
+		/// TODO The transaction commit.
+		/// </summary>
+		private void TransactionCommit()
+		{
+			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
+			this.m_dbCommandUimf.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
+			this.m_dbCommandUimf.ExecuteNonQuery();
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="binNumber">
+		/// </param>
+		/// <param name="binWidth">
+		/// </param>
+		/// <param name="frameParameters">
+		/// </param>
+		/// <returns>
+		/// The <see cref="double"/>.
+		/// </returns>
+		private double convertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
 		{
 			// mz = (k * (t-t0))^2
-
-			double t = binNumber * binWidth/1000;
-			double resMassErr = frameParameters.a2*t + frameParameters.b2 * System.Math.Pow(t,3)+ frameParameters.c2 * System.Math.Pow(t,5) + frameParameters.d2 * System.Math.Pow(t,7) + frameParameters.e2 * System.Math.Pow(t,9) + frameParameters.f2 * System.Math.Pow(t,11);
-			double mz = (double)(frameParameters.CalibrationSlope * ((double)(t - (double)m_globalParameters.TOFCorrectionTime/1000 - frameParameters.CalibrationIntercept)));
+			double t = binNumber * binWidth / 1000;
+			double resMassErr = frameParameters.a2 * t + frameParameters.b2 * System.Math.Pow(t, 3)
+			                    + frameParameters.c2 * System.Math.Pow(t, 5) + frameParameters.d2 * System.Math.Pow(t, 7)
+			                    + frameParameters.e2 * System.Math.Pow(t, 9) + frameParameters.f2 * System.Math.Pow(t, 11);
+			double mz =
+				(double)
+				(frameParameters.CalibrationSlope
+				 * ((double)(t - (double)this.m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept)));
 			mz = (mz * mz) + resMassErr;
 			return mz;
 		}
 
 		/// <summary>
-		/// Dispose of any system resources
 		/// </summary>
-		public void Dispose()
+		/// <param name="scan_number">
+		/// </param>
+		/// <param name="MS_Level">
+		/// </param>
+		private void insertScanAddScanParameters(int scan_number, int MS_Level)
 		{
-			try
-			{
-				if (m_dbConnection != null)
-				{
-					TransactionCommit();
-
-					m_dbCommandUimf.Dispose();
-					m_dbConnection.Close();
-				}
-			}
-			catch
-			{
-				
-			}
+			this.m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("ScanNum", scan_number.ToString()));
+			this.m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("MS_Level", MS_Level.ToString()));
 		}
+
+		#endregion
 	}
 }

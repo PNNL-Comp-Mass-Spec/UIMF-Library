@@ -1,18 +1,36 @@
-﻿using System;
-using System.IO;
-
-using NUnit.Framework;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="BinCentricTests.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   TODO The bin centric tests.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
+	using System;
+	using System.IO;
+
+	using NUnit.Framework;
+
+	/// <summary>
+	/// TODO The bin centric tests.
+	/// </summary>
 	public class BinCentricTests
 	{
+		#region Public Methods and Operators
+
+		/// <summary>
+		/// TODO The test create bin centric tables.
+		/// </summary>
 		[Test]
 		public void TestCreateBinCentricTables()
 		{
 			try
 			{
-				string fileLocation = @"..\..\..\TestFiles\SarcCtrl_P21_1mgml_IMS6_AgTOF07_210min_CID_01_05Oct12_Frodo_Precursors_Removed_Collision_Energy_Collapsed.UIMF";
+				string fileLocation =
+					@"..\..\..\TestFiles\SarcCtrl_P21_1mgml_IMS6_AgTOF07_210min_CID_01_05Oct12_Frodo_Precursors_Removed_Collision_Energy_Collapsed.UIMF";
 				FileInfo uimfFile = new FileInfo(fileLocation);
 
 				using (DataWriter uimfWriter = new DataWriter(uimfFile.FullName))
@@ -22,12 +40,12 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 			}
 			catch (Exception)
 			{
-				
-				
 			}
-
 		}
 
+		/// <summary>
+		/// TODO The test create bin centric tables small file.
+		/// </summary>
 		[Test]
 		public void TestCreateBinCentricTablesSmallFile()
 		{
@@ -43,14 +61,12 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 			}
 			catch (Exception)
 			{
-				
-				
 			}
-			
-
-
 		}
 
+		/// <summary>
+		/// TODO The test encode decode functionality.
+		/// </summary>
 		[Test]
 		public void TestEncodeDecodeFunctionality()
 		{
@@ -66,5 +82,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 			Assert.AreEqual(calculatedScanLc, scanLc);
 			Assert.AreEqual(calculatedScanIms, scanIms);
 		}
+
+		#endregion
 	}
 }
