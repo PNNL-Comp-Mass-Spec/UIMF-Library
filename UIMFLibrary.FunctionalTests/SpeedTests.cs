@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+
 using NUnit.Framework;
 using System.Diagnostics;
 
@@ -32,7 +29,7 @@ namespace UIMFLibrary.UnitTests
         }
 
         [Test]
-        public void getSummedMassspectrumSpeedTests()
+        public void GetSummedMassspectrumSpeedTests()
         {
             int numIterations = 100;
             //int numFramesToSum = 1;

@@ -1,10 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="EventArgs.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   Defines the MessageEventArgs type.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+
 
 namespace UIMFLibrary
 {
+	using System;
+
 	public class MessageEventArgs : EventArgs
 	{
 		public readonly string Message;

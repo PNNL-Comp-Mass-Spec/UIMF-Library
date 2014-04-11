@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using NUnit.Framework;
-
-namespace UIMFLibrary.UnitTests
+﻿namespace UIMFLibrary.UnitTests
 {
     public class FileRefs
     {

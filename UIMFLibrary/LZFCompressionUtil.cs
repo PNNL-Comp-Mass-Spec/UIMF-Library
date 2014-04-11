@@ -42,10 +42,11 @@
  * you do not delete the provisions above, a recipient may use your version
  * of this file under either the BSD or the GPL.
  */
-using System;
 
-namespace Lzf
+namespace UIMFLibrary
 {
+	using System;
+
 	/* Benchmark with Alice29 Canterbury Corpus
 		---------------------------------------
 		(Compression) Original CLZF C#

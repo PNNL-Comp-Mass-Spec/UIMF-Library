@@ -13,7 +13,6 @@ using System;
 using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Text;
-using Lzf;
 
 namespace UIMFLibrary
 {
