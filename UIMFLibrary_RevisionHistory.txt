@@ -1,5 +1,10 @@
 UIMFLibrary Revision History
 
+Version 2.1.5288; June 24, 2014
+	- Standardized data type names for database fields to conform to standard SqLite types
+	- Refactored shared code in UIMFWriter.CreateTables
+	- Resharper code cleanup
+
 Version 2.1.5287; June 23, 2014
 	- UpdateGlobalParameter now supports updating a string field in Global_Parameters 
 	- Updated the UIMFLibrary_Demo to use the latest DataReader and DataWriter classes

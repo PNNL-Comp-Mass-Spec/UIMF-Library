@@ -172,6 +172,8 @@ UIMF database structure:
 Written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
 Copyright 2009, Battelle Memorial Institute.  All Rights Reserved.
 
+Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, and Bill Danielson
+
 E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
 Website: http://omics.pnl.gov/software/
 ----------------------------------------------------------------------------------------------------------------

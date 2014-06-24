@@ -1,8 +1,13 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <summary>
 //   UIMF Data Reader Class
+//
+//   Written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
+//   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, and Bill Danielson
+//   E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
+//   Website: http://omics.pnl.gov/software/
+//
 // </summary>
-// 
 // --------------------------------------------------------------------------------------------------------------------
 namespace UIMFLibrary
 {
@@ -18,7 +23,6 @@ namespace UIMFLibrary
 	/// </summary>
 	public class DataReader : IDisposable
 	{
-		// No longer used: private const int MAXMZ = 5000;
 		#region Constants
 
 		/// <summary>
@@ -52,7 +56,7 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Frame parameters cache
 		/// </summary>
-		protected FrameParameters[] m_frameParametersCache;
+		protected readonly FrameParameters[] m_frameParametersCache;
 
 		/// <summary>
 		/// Global parameterse
@@ -72,7 +76,7 @@ namespace UIMFLibrary
 		/// <summary>
 		/// UIMF database connection
 		/// </summary>
-		protected SQLiteConnection m_uimfDatabaseConnection;
+		protected readonly SQLiteConnection m_uimfDatabaseConnection;
 
 		/// <summary>
 		/// Calibration table
@@ -87,12 +91,12 @@ namespace UIMFLibrary
 		/// <summary>
 		/// True if the file has bin-centric data
 		/// </summary>
-		private bool m_doesContainBinCentricData;
+		private readonly bool m_doesContainBinCentricData;
 
 		/// <summary>
 		/// Dictionary tracking type by frame
 		/// </summary>
-		private IDictionary<FrameType, FrameTypeInfo> m_frameTypeInfo;
+		private readonly IDictionary<FrameType, FrameTypeInfo> m_frameTypeInfo;
 
 		/// <summary>
 		/// Frame type with MS1 data
@@ -134,12 +138,12 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Spectrum cache list
 		/// </summary>
-		private List<SpectrumCache> m_spectrumCacheList;
+		private readonly List<SpectrumCache> m_spectrumCacheList;
 
 		/// <summary>
 		/// UIMF file path
 		/// </summary>
-		private string m_uimfFilePath;
+		private readonly string m_uimfFilePath;
 
 		#endregion
 
@@ -304,7 +308,7 @@ namespace UIMFLibrary
 			bool columnExists = false;
 
 			using (
-				SQLiteCommand cmd = new SQLiteCommand(oConnection)
+				var cmd = new SQLiteCommand(oConnection)
 					                    {
 						                    CommandText =
 							                    "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '"
@@ -423,7 +427,7 @@ namespace UIMFLibrary
 		/// </exception>
 		public static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
 		{
-			GlobalParameters oGlobalParameters = new GlobalParameters();
+			var oGlobalParameters = new GlobalParameters();
 
 			SQLiteCommand dbCmd = oUimfDatabaseConnection.CreateCommand();
 			dbCmd.CommandText = "SELECT * FROM Global_Parameters";
@@ -463,7 +467,8 @@ namespace UIMFLibrary
 					{
 						oGlobalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"]);
 					}
-					catch (Exception)
+					// ReSharper disable once EmptyGeneralCatchClause
+					catch
 					{
 						// ignore since it may not be present in all previous versions
 					}
@@ -496,7 +501,7 @@ namespace UIMFLibrary
 			bool hasRows;
 
 			using (
-				SQLiteCommand cmd = new SQLiteCommand(oConnection)
+				var cmd = new SQLiteCommand(oConnection)
 					                    {
 						                    CommandText =
 							                    "SELECT name FROM sqlite_master WHERE type='table' And tbl_name = '"
@@ -532,7 +537,7 @@ namespace UIMFLibrary
 			bool hasColumn;
 
 			using (
-				SQLiteCommand cmd = new SQLiteCommand(oConnection) { CommandText = "Select * From '" + tableName + "' Limit 1;" })
+				var cmd = new SQLiteCommand(oConnection) { CommandText = "Select * From '" + tableName + "' Limit 1;" })
 			{
 				using (SQLiteDataReader rdr = cmd.ExecuteReader())
 				{
@@ -584,12 +589,12 @@ namespace UIMFLibrary
 			}
 
 			int width = endScan - startScan + 1;
-			int height = (int)Math.Round((endBin - startBin + 1) / yCompression);
-			double[,] frameData = new double[width, height];
+			var height = (int)Math.Round((endBin - startBin + 1) / yCompression);
+			var frameData = new double[width, height];
 
 			for (int currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
 			{
-				byte[] streamBinIntensity = new byte[this.m_globalParameters.Bins * 4];
+				var streamBinIntensity = new byte[this.m_globalParameters.Bins * 4];
 
 				// Create a calibration lookup table -- for speed
 				this.m_calibrationTable = new double[height];
@@ -784,7 +789,7 @@ namespace UIMFLibrary
 				try
 				{
 					string sTargetConnectionString = "Data Source = " + targetDBPath + "; Version=3; DateTimeFormat=Ticks;";
-					SQLiteConnection cnTargetDB = new SQLiteConnection(sTargetConnectionString);
+					var cnTargetDB = new SQLiteConnection(sTargetConnectionString);
 
 					cnTargetDB.Open();
 					SQLiteCommand cmdTargetDB = cnTargetDB.CreateCommand();
@@ -833,13 +838,13 @@ namespace UIMFLibrary
 								    && frameTypesToAlwaysCopy.Count > 0)
 								{
 									// Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
-									for (int i = 0; i < frameTypesToAlwaysCopy.Count; i++)
+									foreach (FrameType frameType in frameTypesToAlwaysCopy)
 									{
 										string sSql = "INSERT INTO main." + sCurrentTable + " SELECT * FROM SourceDB." + sCurrentTable
 										              + " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " + "WHERE FrameType = "
-										              + (frameTypesToAlwaysCopy[i].Equals(FrameType.MS1)
+										              + (frameType.Equals(FrameType.MS1)
 											                 ? this.m_frameTypeMs
-											                 : (int)frameTypesToAlwaysCopy[i]) + ");";
+											                 : (int)frameType) + ");";
 
 										cmdTargetDB.CommandText = sSql;
 										cmdTargetDB.ExecuteNonQuery();
@@ -977,7 +982,7 @@ namespace UIMFLibrary
 			{
 				throw new ArgumentException(
 					"Failed to get LCProfile. Input startFrame was greater than input endFrame. start_frame="
-					+ startFrameNumber.ToString() + ", end_frame=" + endFrameNumber.ToString());
+					+ startFrameNumber + ", end_frame=" + endFrameNumber);
 			}
 
 			if (startScan > endScan)
@@ -1122,12 +1127,12 @@ namespace UIMFLibrary
 		/// </exception>
 		public List<string> GetCalibrationTableNames()
 		{
-			SQLiteCommand cmd = new SQLiteCommand(this.m_uimfDatabaseConnection)
+			var cmd = new SQLiteCommand(this.m_uimfDatabaseConnection)
 				                    {
 					                    CommandText =
 						                    "SELECT NAME FROM Sqlite_master WHERE type='table' ORDER BY NAME"
 				                    };
-			List<string> calibrationTableNames = new List<string>();
+			var calibrationTableNames = new List<string>();
 			try
 			{
 				using (SQLiteDataReader reader = cmd.ExecuteReader())
@@ -1232,7 +1237,7 @@ namespace UIMFLibrary
 			{
 				throw new ArgumentException(
 					"Failed to get DriftTime profile. Input startFrame was greater than input endFrame. start_frame="
-					+ startFrameNumber.ToString() + ", end_frame=" + endFrameNumber.ToString());
+					+ startFrameNumber + ", end_frame=" + endFrameNumber);
 			}
 
 			if ((startScan > endScan) || (startScan < 0))
@@ -1323,12 +1328,12 @@ namespace UIMFLibrary
 		public Stack<int[]> GetFrameAndScanListByDescendingIntensity()
 		{
 			FrameParameters fp = this.GetFrameParameters(0);
-			Stack<int[]> tuples = new Stack<int[]>(this.m_globalParameters.NumFrames * fp.Scans);
+			var tuples = new Stack<int[]>(this.m_globalParameters.NumFrames * fp.Scans);
 
 			this.m_sqliteDataReader = this.m_getFramesAndScanByDescendingIntensityCommand.ExecuteReader();
 			while (this.m_sqliteDataReader.Read())
 			{
-				int[] values = new int[3];
+				var values = new int[3];
 				values[0] = Convert.ToInt32(this.m_sqliteDataReader[0]); // FrameNum
 				values[1] = Convert.ToInt32(this.m_sqliteDataReader[1]); // ScanNum
 				values[2] = Convert.ToInt32(this.m_sqliteDataReader[2]); // BPI
@@ -1351,7 +1356,7 @@ namespace UIMFLibrary
 		/// </returns>
 		public int[] GetFrameNumbers(FrameType frameType)
 		{
-			List<int> frameNumberList = new List<int>();
+			var frameNumberList = new List<int>();
 
 			using (SQLiteCommand dbCmd = this.m_uimfDatabaseConnection.CreateCommand())
 			{
@@ -1665,14 +1670,14 @@ namespace UIMFLibrary
 
 			using (SQLiteDataReader reader = this.m_getSpectrumCommand.ExecuteReader())
 			{
-				byte[] decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
+				var decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
 
 				while (reader.Read())
 				{
 					int frameNum = Convert.ToInt32(reader["FrameNum"]);
 					int binIndex = 0;
 
-					byte[] spectra = (byte[])reader["Intensities"];
+					var spectra = (byte[])reader["Intensities"];
 					int scanNum = Convert.ToInt32(reader["ScanNum"]);
 
 					// get frame number so that we can get the frame calibration parameters
@@ -1826,7 +1831,7 @@ namespace UIMFLibrary
 			this.m_getSpectrumCommand.Parameters.Add(
 				new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? this.m_frameTypeMs : (int)frameType));
 
-			byte[] decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
+			var decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
 
 			using (this.m_sqliteDataReader = this.m_getSpectrumCommand.ExecuteReader())
 			{
@@ -1834,7 +1839,7 @@ namespace UIMFLibrary
 				{
 					int binIndex = 0;
 
-					byte[] spectra = (byte[])this.m_sqliteDataReader["Intensities"];
+					var spectra = (byte[])this.m_sqliteDataReader["Intensities"];
 					int scanNumber = Convert.ToInt32(this.m_sqliteDataReader["ScanNum"]);
 
 					if (spectra.Length > 0)
@@ -1891,7 +1896,7 @@ namespace UIMFLibrary
 			int numScans = frameParameters.Scans;
 			FrameType frameType = frameParameters.FrameType;
 
-			Dictionary<int, int>[] dictionaryArray = new Dictionary<int, int>[numScans];
+			var dictionaryArray = new Dictionary<int, int>[numScans];
 			for (int i = 0; i < numScans; i++)
 			{
 				dictionaryArray[i] = new Dictionary<int, int>();
@@ -1906,13 +1911,13 @@ namespace UIMFLibrary
 
 			using (SQLiteDataReader reader = this.m_getSpectrumCommand.ExecuteReader())
 			{
-				byte[] decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
+				var decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
 
 				while (reader.Read())
 				{
 					int binIndex = 0;
 
-					byte[] spectra = (byte[])reader["Intensities"];
+					var spectra = (byte[])reader["Intensities"];
 					int scanNum = Convert.ToInt32(reader["ScanNum"]);
 
 					Dictionary<int, int> currentBinDictionary = dictionaryArray[scanNum];
@@ -1995,7 +2000,7 @@ namespace UIMFLibrary
 			{
 				throw new ArgumentException(
 					"Failed to get LCProfile. Input startFrame was greater than input endFrame. start_frame="
-					+ startFrameNumber.ToString() + ", end_frame=" + endFrameNumber.ToString());
+					+ startFrameNumber + ", end_frame=" + endFrameNumber);
 			}
 
 			frameValues = new int[endFrameNumber - startFrameNumber + 1];
@@ -2047,7 +2052,7 @@ namespace UIMFLibrary
 		/// </exception>
 		public SortedList<int, LogEntry> GetLogEntries(string entryType, string postedBy)
 		{
-			SortedList<int, LogEntry> lstLogEntries = new SortedList<int, LogEntry>();
+			var lstLogEntries = new SortedList<int, LogEntry>();
 
 			if (this.TableExists("Log_Entries"))
 			{
@@ -2090,7 +2095,7 @@ namespace UIMFLibrary
 						{
 							try
 							{
-								LogEntry logEntry = new LogEntry();
+								var logEntry = new LogEntry();
 
 								int iEntryID = Convert.ToInt32(reader["Entry_ID"]);
 								logEntry.PostedBy = Convert.ToString(reader["Posted_By"]);
@@ -2123,7 +2128,7 @@ namespace UIMFLibrary
 		/// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
 		public Dictionary<int, FrameType> GetMasterFrameList()
 		{
-			Dictionary<int, FrameType> masterFrameDictionary = new Dictionary<int, FrameType>();
+			var masterFrameDictionary = new Dictionary<int, FrameType>();
 
 			using (SQLiteCommand dbCmd = this.m_uimfDatabaseConnection.CreateCommand())
 			{
@@ -2473,19 +2478,17 @@ namespace UIMFLibrary
 					out mzArray, 
 					out intensityArray);
 			}
-			else
-			{
-				return this.GetSpectrumBinCentric(
-					startFrameNumber, 
-					endFrameNumber, 
-					frameType, 
-					startScanNumber, 
-					endScanNumber, 
-					startBin, 
-					endBin, 
-					out mzArray, 
-					out intensityArray);
-			}
+			
+			return this.GetSpectrumBinCentric(
+				startFrameNumber, 
+				endFrameNumber, 
+				frameType, 
+				startScanNumber, 
+				endScanNumber, 
+				startBin, 
+				endBin, 
+				out mzArray, 
+				out intensityArray);
 		}
 
 		/// <summary>
@@ -2537,7 +2540,7 @@ namespace UIMFLibrary
 		{
 			int nonZeroCount = 0;
 			int numBinsToConsider = endBin - startBin + 1;
-			int intensity = 0;
+			int intensity;
 
 			// Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
 			mzArray = new double[numBinsToConsider];
@@ -2676,16 +2679,16 @@ namespace UIMFLibrary
 				new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? this.m_frameTypeMs : (int)frameType));
 
 			// Adding 1 to the number of bins to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
-			int[] intensityArray = new int[this.m_globalParameters.Bins + 1];
+			var intensityArray = new int[this.m_globalParameters.Bins + 1];
 
 			using (SQLiteDataReader reader = this.m_getSpectrumCommand.ExecuteReader())
 			{
-				byte[] decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
+				var decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
 
 				while (reader.Read())
 				{
 					int binIndex = 0;
-					byte[] spectraRecord = (byte[])reader["Intensities"];
+					var spectraRecord = (byte[])reader["Intensities"];
 
 					if (spectraRecord.Length > 0)
 					{
@@ -2766,8 +2769,8 @@ namespace UIMFLibrary
 			out int[] intensityArray)
 		{
 			// Console.WriteLine("LC " + startFrameNumber + " - " + endFrameNumber + "\t IMS " + startScanNumber + " - " + endScanNumber + "\t Bin " + startBin + " - " + endBin);
-			List<double> mzList = new List<double>();
-			List<int> intensityList = new List<int>();
+			var mzList = new List<double>();
+			var intensityList = new List<int>();
 
 			FrameParameters frameParams = this.GetFrameParameters(startFrameNumber);
 			int numImsScans = frameParams.Scans;
@@ -2786,10 +2789,8 @@ namespace UIMFLibrary
 					int entryIndex = 0;
 
 					// int numEntries = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 
 					// if (spectraRecord.Length > 0)
 					// {
@@ -2809,6 +2810,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
 							// If we pass the LC Scan number we are interested in, then go ahead and quit
@@ -2989,7 +2992,7 @@ namespace UIMFLibrary
 			FrameTypeInfo frameTypeInfo = this.m_frameTypeInfo[frameType];
 			int[] frameIndexes = frameTypeInfo.FrameIndexes;
 
-			List<IntensityPoint> intensityList = new List<IntensityPoint>();
+			var intensityList = new List<IntensityPoint>();
 
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", targetBin));
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", targetBin));
@@ -2999,10 +3002,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3018,6 +3019,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3078,8 +3081,7 @@ namespace UIMFLibrary
 			int startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, lowMz)) - 1;
 			int endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, highMz)) + 1;
 
-			Dictionary<IntensityPoint, IntensityPoint> pointDictionary = new Dictionary<IntensityPoint, IntensityPoint>();
-			IntensityPoint dictionaryValue;
+			var pointDictionary = new Dictionary<IntensityPoint, IntensityPoint>();
 
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
@@ -3089,10 +3091,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3108,6 +3108,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3118,8 +3120,9 @@ namespace UIMFLibrary
 
 							// Add intensity to the result
 							int frameIndex = frameIndexes[scanLc];
-							IntensityPoint newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
+							var newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
+							IntensityPoint dictionaryValue;
 							if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
 							{
 								dictionaryValue.Intensity += decodedSpectraRecord;
@@ -3193,8 +3196,7 @@ namespace UIMFLibrary
 			int startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, lowMz)) - 1;
 			int endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, highMz)) + 1;
 
-			Dictionary<IntensityPoint, IntensityPoint> pointDictionary = new Dictionary<IntensityPoint, IntensityPoint>();
-			IntensityPoint dictionaryValue;
+			var pointDictionary = new Dictionary<IntensityPoint, IntensityPoint>();
 
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", startBin));
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", endBin));
@@ -3204,10 +3206,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3223,6 +3223,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3246,8 +3248,9 @@ namespace UIMFLibrary
 								continue;
 							}
 
-							IntensityPoint newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
+							var newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
+							IntensityPoint dictionaryValue;
 							if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
 							{
 								dictionaryValue.Intensity += decodedSpectraRecord;
@@ -3295,7 +3298,7 @@ namespace UIMFLibrary
 			int numFrames = frameTypeInfo.NumFrames;
 			int[] frameIndexes = frameTypeInfo.FrameIndexes;
 
-			double[,] result = new double[numFrames, numScans];
+			var result = new double[numFrames, numScans];
 
 			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
 			double lowMz = targetMz - mzTolerance;
@@ -3312,10 +3315,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3331,6 +3332,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3402,7 +3405,7 @@ namespace UIMFLibrary
 			int[] frameIndexes = frameTypeInfo.FrameIndexes;
 			int numFrames = frameIndexMax - frameIndexMin + 1;
 
-			double[,] result = new double[numFrames, numScans];
+			var result = new double[numFrames, numScans];
 
 			double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
 			double lowMz = targetMz - mzTolerance;
@@ -3419,10 +3422,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3438,6 +3439,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScansInFrame, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3492,7 +3495,7 @@ namespace UIMFLibrary
 			int numFrames = frameTypeInfo.NumFrames;
 			int[] frameIndexes = frameTypeInfo.FrameIndexes;
 
-			double[,] result = new double[numFrames, numScans];
+			var result = new double[numFrames, numScans];
 
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", targetBin));
 			this.m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMax", targetBin));
@@ -3502,10 +3505,8 @@ namespace UIMFLibrary
 				while (reader.Read())
 				{
 					int entryIndex = 0;
-					int scanLc = 0;
-					int scanIms = 0;
 
-					byte[] decompSpectraRecord = (byte[])reader["INTENSITIES"];
+					var decompSpectraRecord = (byte[])reader["INTENSITIES"];
 					int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
 					for (int i = 0; i < numPossibleRecords; i++)
@@ -3521,6 +3522,8 @@ namespace UIMFLibrary
 							entryIndex++;
 
 							// Calculate LC Scan and IMS Scan of this entry
+							int scanLc;
+							int scanIms;
 							this.CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
 
 							// Skip FrameTypes that do not match the given FrameType
@@ -3751,7 +3754,7 @@ namespace UIMFLibrary
 				this.m_preparedStatement.CommandText += ", CalibrationDone = 1";
 			}
 
-			this.m_preparedStatement.CommandText += " WHERE FrameNum = " + frameNumber.ToString();
+			this.m_preparedStatement.CommandText += " WHERE FrameNum = " + frameNumber;
 
 			this.m_preparedStatement.ExecuteNonQuery();
 			this.m_preparedStatement.Dispose();
@@ -3774,7 +3777,7 @@ namespace UIMFLibrary
 			{
 				this.PressureIsMilliTorr = false;
 
-				SQLiteCommand cmd = new SQLiteCommand(this.m_uimfDatabaseConnection);
+				var cmd = new SQLiteCommand(this.m_uimfDatabaseConnection);
 
 				bool isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
 				if (isMilliTorr)
@@ -3819,7 +3822,7 @@ namespace UIMFLibrary
 		/// </returns>
 		private static double[] ArrayFragmentationSequence(byte[] blob)
 		{
-			double[] frag = new double[blob.Length / 8];
+			var frag = new double[blob.Length / 8];
 
 			for (int i = 0; i < frag.Length; i++)
 			{
@@ -3886,8 +3889,8 @@ namespace UIMFLibrary
 		/// </typeparam>
 		private static void StripZerosFromArrays<T>(int nonZeroCount, ref T[] xDataArray, ref int[] yDataArray)
 		{
-			List<T> xArrayList = new List<T>(nonZeroCount);
-			List<int> yArrayList = new List<int>(nonZeroCount);
+			var xArrayList = new List<T>(nonZeroCount);
+			var yArrayList = new List<int>(nonZeroCount);
 
 			for (int i = 0; i < xDataArray.Length; i++)
 			{
@@ -4060,9 +4063,9 @@ namespace UIMFLibrary
 		/// </returns>
 		private Dictionary<string, string> CloneUIMFGetObjects(string sObjectType)
 		{
-			Dictionary<string, string> sObjects = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+			var sObjects = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 
-			SQLiteCommand cmd = new SQLiteCommand(this.m_uimfDatabaseConnection)
+			var cmd = new SQLiteCommand(this.m_uimfDatabaseConnection)
 				                    {
 					                    CommandText =
 						                    "SELECT name, sql FROM main.sqlite_master WHERE type='"
@@ -4089,7 +4092,7 @@ namespace UIMFLibrary
 		/// </summary>
 		private void DetermineFrameTypes()
 		{
-			List<int> frameTypeList = new List<int>();
+			var frameTypeList = new List<int>();
 
 			using (SQLiteCommand dbCmd = this.m_uimfDatabaseConnection.CreateCommand())
 			{
@@ -4130,14 +4133,14 @@ namespace UIMFLibrary
 			}
 
 			int[] ms1FrameNumbers = this.GetFrameNumbers(FrameType.MS1);
-			FrameTypeInfo ms1FrameTypeInfo = new FrameTypeInfo(this.m_globalParameters.NumFrames);
+			var ms1FrameTypeInfo = new FrameTypeInfo(this.m_globalParameters.NumFrames);
 			foreach (int ms1FrameNumber in ms1FrameNumbers)
 			{
 				ms1FrameTypeInfo.AddFrame(ms1FrameNumber);
 			}
 
 			int[] ms2FrameNumbers = this.GetFrameNumbers(FrameType.MS2);
-			FrameTypeInfo ms2FrameTypeInfo = new FrameTypeInfo(this.m_globalParameters.NumFrames);
+			var ms2FrameTypeInfo = new FrameTypeInfo(this.m_globalParameters.NumFrames);
 			foreach (int ms2FrameNumber in ms2FrameNumbers)
 			{
 				ms2FrameTypeInfo.AddFrame(ms2FrameNumber);
@@ -4176,7 +4179,7 @@ namespace UIMFLibrary
 			// Initialize List of arrays that will be used for the cache
 			int numScansInFrame = this.GetFrameParameters(startFrameNumber).Scans;
 			IList<IDictionary<int, int>> listOfIntensityDictionaries = new List<IDictionary<int, int>>(numScansInFrame);
-			Dictionary<int, int> summedIntensityDictionary = new Dictionary<int, int>();
+			var summedIntensityDictionary = new Dictionary<int, int>();
 
 			// Initialize each array that will be used for the cache
 			for (int i = 0; i < numScansInFrame; i++)
@@ -4193,12 +4196,12 @@ namespace UIMFLibrary
 
 			using (SQLiteDataReader reader = this.m_getSpectrumCommand.ExecuteReader())
 			{
-				byte[] decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
+				var decompSpectraRecord = new byte[this.m_globalParameters.Bins * DATASIZE];
 
 				while (reader.Read())
 				{
 					int binIndex = 0;
-					byte[] spectraRecord = (byte[])reader["Intensities"];
+					var spectraRecord = (byte[])reader["Intensities"];
 					if (spectraRecord.Length > 0)
 					{
 						int scanNum = Convert.ToInt32(reader["ScanNum"]);
@@ -4250,7 +4253,7 @@ namespace UIMFLibrary
 			}
 
 			// Create the new spectrum cache
-			SpectrumCache spectrumCache = new SpectrumCache(
+			var spectrumCache = new SpectrumCache(
 				startFrameNumber, 
 				endFrameNumber, 
 				listOfIntensityDictionaries, 
@@ -4304,7 +4307,7 @@ namespace UIMFLibrary
 				filterByFrameType: true, 
 				frameType: frameType);
 
-			double[] data = new double[dctTicOrBPI.Count];
+			var data = new double[dctTicOrBPI.Count];
 
 			int index = 0;
 			foreach (double Value in dctTicOrBPI.Values)
@@ -4353,7 +4356,7 @@ namespace UIMFLibrary
 				endFrameNumber = startFrameNumber;
 			}
 
-			Dictionary<int, double> dctTicOrBPI = new Dictionary<int, double>();
+			var dctTicOrBPI = new Dictionary<int, double>();
 
 			// Construct the SQL
 			string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value "
@@ -4430,7 +4433,7 @@ namespace UIMFLibrary
 		/// </returns>
 		private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)
 		{
-			int[] bins = new int[2];
+			var bins = new int[2];
 			double lowerMZ = targetMZ - toleranceInMZ;
 			double upperMZ = targetMZ + toleranceInMZ;
 			FrameParameters fp = this.GetFrameParameters(frameNumber);
@@ -4678,12 +4681,11 @@ namespace UIMFLibrary
 			// Reverses the data (for some reason it is extracted upside down!) SAP 3/19/2014
 			var length = data.GetLength(0);
 			var length1 = data.GetLength(1);
-			double temp;
 			for (int i = 0; i < length; i++)
 			{
 				for (int j = 0, k = length1 - 1; j < length1 / 2; j++, k--)
 				{
-					temp = data[i, j];
+					double temp = data[i, j];
 					data[i, j] = data[i, k];
 					data[i, k] = temp;
 				}
