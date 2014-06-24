@@ -4667,33 +4667,7 @@ namespace UIMFLibrary
 				throw new Exception("Failed to access frame parameters table " + ex);
 			}
 		}
-
-		/// <summary>
-		/// Reverses the 2D multidimensional array if it is upsidedown or just needs to be reversed. 
-		/// </summary>
-		/// <param name="data">
-		/// </param>
-		/// <returns>
-		/// Reversed multidimensional array
-		/// </returns>
-		private double[,] ReverseData(double[,] data)
-		{
-			// Reverses the data (for some reason it is extracted upside down!) SAP 3/19/2014
-			var length = data.GetLength(0);
-			var length1 = data.GetLength(1);
-			for (int i = 0; i < length; i++)
-			{
-				for (int j = 0, k = length1 - 1; j < length1 / 2; j++, k--)
-				{
-					double temp = data[i, j];
-					data[i, j] = data[i, k];
-					data[i, k] = temp;
-				}
-			}
-
-			return data;
-		}
-
+		
 		/// <summary>
 		// Unload the prep statements
 		/// </summary>
