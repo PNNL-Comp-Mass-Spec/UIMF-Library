@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="UIMFDataReader.cs">
-//   
-// </copyright>
 // <summary>
-//   TODO The data reader.
+//   UIMF Data Reader Class
 // </summary>
 // 
 // --------------------------------------------------------------------------------------------------------------------
@@ -17,7 +14,7 @@ namespace UIMFLibrary
 	using System.Text.RegularExpressions;
 
 	/// <summary>
-	/// TODO The data reader.
+	/// UIMF Data Reader Class
 	/// </summary>
 	public class DataReader : IDisposable
 	{
@@ -25,17 +22,17 @@ namespace UIMFLibrary
 		#region Constants
 
 		/// <summary>
-		/// TODO The bpi.
+		/// BPI text
 		/// </summary>
 		private const string BPI = "BPI";
 
 		/// <summary>
-		/// TODO The datasize.
+		/// Data size
 		/// </summary>
 		private const int DATASIZE = 4; // All intensities are stored as 4 byte quantities
 
 		/// <summary>
-		/// TODO The tic.
+		/// TIC text
 		/// </summary>
 		private const string TIC = "TIC";
 
@@ -44,7 +41,7 @@ namespace UIMFLibrary
 		#region Static Fields
 
 		/// <summary>
-		/// TODO The m_err message counter.
+		/// Number of error messages that have been caught
 		/// </summary>
 		private static int m_errMessageCounter;
 
@@ -53,109 +50,94 @@ namespace UIMFLibrary
 		#region Fields
 
 		/// <summary>
-		/// TODO The m_frame parameters cache.
+		/// Frame parameters cache
 		/// </summary>
 		protected FrameParameters[] m_frameParametersCache;
 
 		/// <summary>
-		/// TODO The m_global parameters.
+		/// Global parameterse
 		/// </summary>
 		protected GlobalParameters m_globalParameters;
 
 		/// <summary>
-		/// TODO The m_prepared statement.
+		/// Most recent prepared statement
 		/// </summary>
 		protected SQLiteCommand m_preparedStatement;
 
 		/// <summary>
-		/// TODO The m_sqlite data reader.
+		/// SqLite data reader
 		/// </summary>
 		protected SQLiteDataReader m_sqliteDataReader;
 
 		/// <summary>
-		/// TODO The m_uimf database connection.
+		/// UIMF database connection
 		/// </summary>
 		protected SQLiteConnection m_uimfDatabaseConnection;
 
 		/// <summary>
-		/// TODO The m_calibration table.
+		/// Calibration table
 		/// </summary>
 		private double[] m_calibrationTable;
 
 		/// <summary>
-		/// TODO The m_check for bin centric table command.
+		/// Command to check for bin centric tables
 		/// </summary>
 		private SQLiteCommand m_checkForBinCentricTableCommand;
 
 		/// <summary>
-		/// TODO The m_does contain bin centric data.
+		/// True if the file has bin-centric data
 		/// </summary>
 		private bool m_doesContainBinCentricData;
 
 		/// <summary>
-		/// TODO The m_frame type info.
+		/// Dictionary tracking type by frame
 		/// </summary>
 		private IDictionary<FrameType, FrameTypeInfo> m_frameTypeInfo;
 
 		/// <summary>
-		/// TODO The m_frame type ms.
+		/// Frame type with MS1 data
 		/// </summary>
 		private int m_frameTypeMs;
 
 		/// <summary>
-		/// TODO The m_get bin data command.
+		/// Sqlite command for getting bin data
 		/// </summary>
 		private SQLiteCommand m_getBinDataCommand;
 
 		// v1.2 prepared statements
 
 		/// <summary>
-		/// TODO The m_get count per frame command.
+		/// Sqlite command for getting data count per frame
 		/// </summary>
 		private SQLiteCommand m_getCountPerFrameCommand;
 
 		/// <summary>
-		/// TODO The m_get count per spectrum command.
-		/// </summary>
-		private SQLiteCommand m_getCountPerSpectrumCommand;
-
-		/// <summary>
-		/// TODO The m_get file bytes command.
+		/// Sqlite command for getting file bytes stored in a table
 		/// </summary>
 		private SQLiteCommand m_getFileBytesCommand;
 
 		/// <summary>
-		/// TODO The m_get frame numbers.
-		/// </summary>
-		private SQLiteCommand m_getFrameNumbers;
-
-		/// <summary>
-		/// TODO The m_get frame parameters command.
+		/// Sqlite command for getting the frame parameters
 		/// </summary>
 		private SQLiteCommand m_getFrameParametersCommand;
 
 		/// <summary>
-		/// TODO The m_get frames and scan by descending intensity command.
+		/// Sqlite command for getting frames and scans by descending intensity
 		/// </summary>
 		private SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
 
 		/// <summary>
-		/// TODO The m_get spectrum command.
+		/// Sqlite command for getting a spectrum
 		/// </summary>
 		private SQLiteCommand m_getSpectrumCommand;
 
 		/// <summary>
-		/// TODO The m_spectrum cache list.
+		/// Spectrum cache list
 		/// </summary>
 		private List<SpectrumCache> m_spectrumCacheList;
 
 		/// <summary>
-		/// TODO The m_sum variable scans per frame command.
-		/// </summary>
-		private SQLiteCommand m_sumVariableScansPerFrameCommand;
-
-		/// <summary>
-		/// TODO The m_uimf file path.
+		/// UIMF file path
 		/// </summary>
 		private string m_uimfFilePath;
 
@@ -167,7 +149,7 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="DataReader"/> class.
 		/// </summary>
 		/// <param name="fileName">
-		/// TODO The file name.
+		/// Path to the UIMF file
 		/// </param>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -227,43 +209,43 @@ namespace UIMFLibrary
 		#region Enums
 
 		/// <summary>
-		/// TODO The frame type.
+		/// Frame type.
 		/// </summary>
 		public enum FrameType
 		{
 			/// <summary>
-			/// TODO The m s 1.
+			/// MS1
 			/// </summary>
 			MS1 = 1, 
 
 			/// <summary>
-			/// TODO The m s 2.
+			/// MS2
 			/// </summary>
 			MS2 = 2, 
 
 			/// <summary>
-			/// TODO The calibration.
+			/// Calibration
 			/// </summary>
 			Calibration = 3, 
 
 			/// <summary>
-			/// TODO The prescan.
+			/// Prescan
 			/// </summary>
 			Prescan = 4
 		}
 
 		/// <summary>
-		/// TODO The tolerance type.
+		/// Tolerance type.
 		/// </summary>
 		public enum ToleranceType
 		{
 			/// <summary>
-			/// TODO The ppm.
+			/// Parts per million
 			/// </summary>
 			PPM = 1, 
 
 			/// <summary>
-			/// TODO The thomson.
+			/// Thomsons
 			/// </summary>
 			Thomson = 2
 		}
@@ -315,7 +297,7 @@ namespace UIMFLibrary
 		/// The column Name.
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the column exists<see cref="bool"/>.
 		/// </returns>
 		public static bool ColumnExists(SQLiteConnection oConnection, string tableName, string columnName)
 		{
@@ -364,25 +346,25 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The convert bin to mz.
+		/// Convert bin to mz.
 		/// </summary>
 		/// <param name="slope">
-		/// TODO The slope.
+		/// Slope.
 		/// </param>
 		/// <param name="intercept">
-		/// TODO The intercept.
+		/// Intercept.
 		/// </param>
 		/// <param name="binWidth">
-		/// TODO The bin width.
+		/// Bin width
 		/// </param>
 		/// <param name="correctionTimeForTOF">
-		/// TODO The correction time for tof.
+		/// Correction time for tof.
 		/// </param>
 		/// <param name="bin">
-		/// TODO The bin.
+		/// Bin number
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// m/z<see cref="double"/>.
 		/// </returns>
 		public static double ConvertBinToMZ(
 			double slope, 
@@ -411,7 +393,7 @@ namespace UIMFLibrary
 		/// <param name="targetMZ">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// Bin number<see cref="double"/>.
 		/// </returns>
 		public static double GetBinClosestToMZ(
 			double slope, 
@@ -429,13 +411,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get global parameters from table.
+		/// Get global parameters from table.
 		/// </summary>
 		/// <param name="oUimfDatabaseConnection">
-		/// TODO The o uimf database connection.
+		/// UIMF database connection.
 		/// </param>
 		/// <returns>
-		/// The <see cref="GlobalParameters"/>.
+		/// Global parameters object<see cref="GlobalParameters"/>.
 		/// </returns>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -507,7 +489,7 @@ namespace UIMFLibrary
 		/// <param name="tableName">
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the table exists<see cref="bool"/>.
 		/// </returns>
 		public static bool TableExists(SQLiteConnection oConnection, string tableName)
 		{
@@ -531,19 +513,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The table has column.
+		/// Check whether a table has a column
 		/// </summary>
 		/// <param name="oConnection">
-		/// TODO The o connection.
+		/// Sqlite connection
 		/// </param>
 		/// <param name="tableName">
-		/// TODO The table name.
+		/// Table name
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the table contains the specified column<see cref="bool"/>.
 		/// </returns>
 		public static bool TableHasColumn(SQLiteConnection oConnection, string tableName, string columnName)
 		{
@@ -894,7 +876,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The dispose.
+		/// Dispose this class
 		/// </summary>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -919,7 +901,7 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Runs a query to see if the bin centric data exists in this UIMF file
 		/// </summary>
-		/// <returns>true if the binc entric data exists, false otherwise</returns>
+		/// <returns>true if the bin centric data exists, false otherwise</returns>
 		public bool DoesContainBinCentricData()
 		{
 			using (SQLiteDataReader reader = this.m_checkForBinCentricTableCommand.ExecuteReader())
@@ -929,13 +911,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The frame type description.
+		/// Get the frame type description.
 		/// </summary>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Frame type text<see cref="string"/>.
 		/// </returns>
 		/// <exception cref="InvalidCastException">
 		/// </exception>
@@ -1055,7 +1037,7 @@ namespace UIMFLibrary
 		/// <param name="endScan">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[]"/>.
+		/// BPI values<see cref="double[]"/>.
 		/// </returns>
 		public double[] GetBPI(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
 		{
@@ -1131,10 +1113,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get calibration table names.
+		/// Get calibration table names.
 		/// </summary>
 		/// <returns>
-		/// The <see cref="List"/>.
+		/// List of calibration table names<see cref="List"/>.
 		/// </returns>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -1169,13 +1151,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get count per frame.
+		/// Count the number of non zero data points in a frame
 		/// </summary>
 		/// <param name="frameNumber">
-		/// TODO The frame number.
+		/// The frame number.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Sum of nonzerocount for the spectra in a frame<see cref="int"/>.
 		/// </returns>
 		public int GetCountPerFrame(int frameNumber)
 		{
@@ -1204,34 +1186,34 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get drift time profile.
+		/// Get drift time profile for the given range
 		/// </summary>
 		/// <param name="startFrameNumber">
-		/// TODO The start frame number.
+		/// Start frame number.
 		/// </param>
 		/// <param name="endFrameNumber">
-		/// TODO The end frame number.
+		/// End frame number.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="startScan">
-		/// TODO The start scan.
+		/// Start scan.
 		/// </param>
 		/// <param name="endScan">
-		/// TODO The end scan.
+		/// End scan.
 		/// </param>
 		/// <param name="targetMZ">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="toleranceInMZ">
-		/// TODO The tolerance in mz.
+		/// Tolerance in mz.
 		/// </param>
 		/// <param name="imsScanValues">
-		/// TODO The ims scan values.
+		/// Output: IMS scan values
 		/// </param>
 		/// <param name="intensities">
-		/// TODO The intensities.
+		/// Output: intensities
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// </exception>
@@ -1301,7 +1283,7 @@ namespace UIMFLibrary
 		/// <param name="tableName">
 		/// </param>
 		/// <returns>
-		/// The <see cref="byte[]"/>.
+		/// Byte array<see cref="byte[]"/>.
 		/// </returns>
 		public byte[] GetFileBytesFromTable(string tableName)
 		{
@@ -1333,10 +1315,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get frame and scan list by descending intensity.
+		/// Get frame and scan list by descending intensity.
 		/// </summary>
 		/// <returns>
-		/// The <see cref="Stack"/>.
+		/// Stack of tuples (FrameNum, ScanNum, BPI)<see cref="Stack"/>.
 		/// </returns>
 		public Stack<int[]> GetFrameAndScanListByDescendingIntensity()
 		{
@@ -1347,9 +1329,9 @@ namespace UIMFLibrary
 			while (this.m_sqliteDataReader.Read())
 			{
 				int[] values = new int[3];
-				values[0] = Convert.ToInt32(this.m_sqliteDataReader[0]);
-				values[1] = Convert.ToInt32(this.m_sqliteDataReader[1]);
-				values[2] = Convert.ToInt32(this.m_sqliteDataReader[2]);
+				values[0] = Convert.ToInt32(this.m_sqliteDataReader[0]); // FrameNum
+				values[1] = Convert.ToInt32(this.m_sqliteDataReader[1]); // ScanNum
+				values[2] = Convert.ToInt32(this.m_sqliteDataReader[2]); // BPI
 
 				tuples.Push(values);
 			}
@@ -1365,7 +1347,7 @@ namespace UIMFLibrary
 		/// The frame Type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int[]"/>.
+		/// Array of frame numbers<see cref="int[]"/>.
 		/// </returns>
 		public int[] GetFrameNumbers(FrameType frameType)
 		{
@@ -1390,13 +1372,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get frame parameters.
+		/// Get frame parameters for specified frame
 		/// </summary>
 		/// <param name="frameNumber">
-		/// TODO The frame number.
+		/// Frame number.
 		/// </param>
 		/// <returns>
-		/// The <see cref="FrameParameters"/>.
+		/// Frame Parameters for the given frame<see cref="FrameParameters"/>.
 		/// </returns>
 		/// <exception cref="ArgumentOutOfRangeException">
 		/// </exception>
@@ -1477,7 +1459,7 @@ namespace UIMFLibrary
 		/// <param name="frameNumber">
 		/// </param>
 		/// <returns>
-		/// The <see cref="FrameType"/>.
+		/// Frame type of the frame<see cref="FrameType"/>.
 		/// </returns>
 		public FrameType GetFrameTypeForFrame(int frameNumber)
 		{
@@ -1506,31 +1488,31 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get frames and scan intensities for a given mz.
+		/// Get frames and scan intensities for a given mz.
 		/// </summary>
 		/// <param name="startFrameNumber">
-		/// TODO The start frame number.
+		/// Start frame number.
 		/// </param>
 		/// <param name="endFrameNumber">
-		/// TODO The end frame number.
+		/// End frame number.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="startScan">
-		/// TODO The start scan.
+		/// Start scan.
 		/// </param>
 		/// <param name="endScan">
-		/// TODO The end scan.
+		/// Eend scan.
 		/// </param>
 		/// <param name="targetMZ">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="toleranceInMZ">
-		/// TODO The tolerance in mz.
+		/// Tolerance in mz.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int[][]"/>.
+		/// 2D array of scan intensities by frame <see cref="int[][]"/>.
 		/// </returns>
 		/// <exception cref="ArgumentException">
 		/// </exception>
@@ -1591,7 +1573,7 @@ namespace UIMFLibrary
 		/// We want to make sure that this method is only called once
 		/// </remarks>
 		/// <returns>
-		/// The <see cref="GlobalParameters"/>.
+		/// Global parameters for this UIMF library<see cref="GlobalParameters"/>.
 		/// </returns>
 		public GlobalParameters GetGlobalParameters()
 		{
@@ -1616,31 +1598,31 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get intensity block.
+		/// Get the intensity block for a given data range
 		/// </summary>
 		/// <param name="startFrameNumber">
-		/// TODO The start frame number.
+		/// Start frame number.
 		/// </param>
 		/// <param name="endFrameNumber">
-		/// TODO The end frame number.
+		/// End frame number.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="startScan">
-		/// TODO The start scan.
+		/// Start scan.
 		/// </param>
 		/// <param name="endScan">
-		/// TODO The end scan.
+		/// End scan.
 		/// </param>
 		/// <param name="startBin">
-		/// TODO The start bin.
+		/// Start bin.
 		/// </param>
 		/// <param name="endBin">
-		/// TODO The end bin.
+		/// End bin.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int[][][]"/>.
+		/// Array of intensities; dimensions are Frame, Scan, Bin<see cref="int[][][]"/>.
 		/// </returns>
 		public int[][][] GetIntensityBlock(
 			int startFrameNumber, 
@@ -1750,7 +1732,7 @@ namespace UIMFLibrary
 		/// Number of frames to sum. Must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[][]"/>.
+		///  Array of intensities for a given frame; dimensions are bin and scan<see cref="double[][]"/>.
 		/// </returns>
 		public double[][] GetIntensityBlockForDemultiplexing(
 			int frameNumber, 
@@ -1895,13 +1877,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get intensity block of frame.
+		/// Get intensity values by bin for a frame
 		/// </summary>
 		/// <param name="frameNumber">
-		/// TODO The frame number.
+		/// Frame number.
 		/// </param>
 		/// <returns>
-		/// The <see cref="Dictionary"/>.
+		/// Dictionary of intensity values by bin <see cref="Dictionary"/>.
 		/// </returns>
 		public Dictionary<int, int>[] GetIntensityBlockOfFrame(int frameNumber)
 		{
@@ -1967,34 +1949,34 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get lc profile.
+		/// Get the summed intensity values for a given data range
 		/// </summary>
 		/// <param name="startFrameNumber">
-		/// TODO The start frame number.
+		/// Start frame number.
 		/// </param>
 		/// <param name="endFrameNumber">
-		/// TODO The end frame number.
+		/// End frame number.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="startScan">
-		/// TODO The start scan.
+		/// Start scan.
 		/// </param>
 		/// <param name="endScan">
-		/// TODO The end scan.
+		/// End scan.
 		/// </param>
 		/// <param name="targetMZ">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="toleranceInMZ">
-		/// TODO The tolerance in mz.
+		/// Tolerance in mz.
 		/// </param>
 		/// <param name="frameValues">
-		/// TODO The frame values.
+		/// Ouput: list of frame numbers
 		/// </param>
 		/// <param name="intensities">
-		/// TODO The intensities.
+		/// Output: list of summed intensity values
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// </exception>
@@ -2029,6 +2011,7 @@ namespace UIMFLibrary
 				endScan, 
 				lowerAndUpperBinBoundaries[0], 
 				lowerAndUpperBinBoundaries[1]);
+
 			for (int frameNumber = startFrameNumber; frameNumber <= endFrameNumber; frameNumber++)
 			{
 				int scanSum = 0;
@@ -2049,16 +2032,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get log entries.
+		/// TGet log entries.
 		/// </summary>
 		/// <param name="entryType">
-		/// TODO The entry type.
+		/// Entry type filter (ignored if blank)
 		/// </param>
 		/// <param name="postedBy">
-		/// TODO The posted by.
+		/// Posted by filter (ignored if blank)
 		/// </param>
 		/// <returns>
-		/// The <see cref="SortedList"/>.
+		/// List of log entries<see cref="SortedList"/>.
 		/// </returns>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -2168,13 +2151,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get mz calibrator.
+		/// Gt mz calibrator.
 		/// </summary>
 		/// <param name="frameParameters">
-		/// TODO The frame parameters.
+		/// Frame parameters.
 		/// </param>
 		/// <returns>
-		/// The <see cref="MZ_Calibrator"/>.
+		/// MZ calibrator object<see cref="MZ_Calibrator"/>.
 		/// </returns>
 		public MZ_Calibrator GetMzCalibrator(FrameParameters frameParameters)
 		{
@@ -2182,11 +2165,12 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Get number of frames for given frame type
 		/// </summary>
 		/// <param name="frameType">
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Number of frames<see cref="int"/>.
 		/// </returns>
 		public int GetNumberOfFrames(FrameType frameType)
 		{
@@ -2212,13 +2196,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get pixel mz.
+		/// Get the intensity value for the given bin in the calibration table
 		/// </summary>
 		/// <param name="bin">
-		/// TODO The bin.
+		/// Bin number
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// Intensity<see cref="double"/>.
 		/// </returns>
 		public double GetPixelMZ(int bin)
 		{
@@ -2881,7 +2865,7 @@ namespace UIMFLibrary
 		/// <param name="endScan">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[]"/>.
+		/// TIC array<see cref="double[]"/>.
 		/// </returns>
 		public double[] GetTIC(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
 		{
@@ -2896,7 +2880,7 @@ namespace UIMFLibrary
 		/// <param name="scanNum">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// TIC value<see cref="double"/>.
 		/// </returns>
 		public double GetTIC(int frameNumber, int scanNum)
 		{
@@ -2986,16 +2970,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic.
+		/// Get the extracted ion chromatogram at the given bin for the specified frame type
 		/// </summary>
 		/// <param name="targetBin">
-		/// TODO The target bin.
+		/// Target bin number
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="List"/>.
+		/// IntensityPoint list <see cref="List"/>.
 		/// </returns>
 		public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
 		{
@@ -3054,22 +3038,22 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic.
+		/// Get the extracted ion chromatogram for a given m/z for the specified frame type
 		/// </summary>
 		/// <param name="targetMz">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="tolerance">
-		/// TODO The tolerance.
+		/// Tolerance.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="toleranceType">
-		/// TODO The tolerance type.
+		/// Tolerance type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="List"/>.
+		/// IntensityPoint list<see cref="List"/>.
 		/// </returns>
 		public List<IntensityPoint> GetXic(
 			double targetMz, 
@@ -3153,34 +3137,34 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic.
+		/// Get the extracted ion chromatogram for a given m/z for the specified frame type, limiting by frame range and scan range
 		/// </summary>
 		/// <param name="targetMz">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="tolerance">
-		/// TODO The tolerance.
+		/// Tolerance.
 		/// </param>
 		/// <param name="frameIndexMin">
-		/// TODO The frame index min.
+		/// Minimum frame index
 		/// </param>
 		/// <param name="frameIndexMax">
-		/// TODO The frame index max.
+		/// Maximum frame index
 		/// </param>
 		/// <param name="scanMin">
-		/// TODO The scan min.
+		/// Minimum scan number
 		/// </param>
 		/// <param name="scanMax">
-		/// TODO The scan max.
+		/// Maximum scan number
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type
 		/// </param>
 		/// <param name="toleranceType">
-		/// TODO The tolerance type.
+		/// Tolerance type
 		/// </param>
 		/// <returns>
-		/// The <see cref="List"/>.
+		/// IntensityPoint list <see cref="List"/>.
 		/// </returns>
 		public List<IntensityPoint> GetXic(
 			double targetMz, 
@@ -3281,22 +3265,22 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic as array.
+		/// Get the extracted ion chromatogram for a given m/z for the specified frame type
 		/// </summary>
 		/// <param name="targetMz">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="tolerance">
-		/// TODO The tolerance.
+		/// Tolerance.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="toleranceType">
-		/// TODO The tolerance type.
+		/// Tolerance type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[,]"/>.
+		/// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
 		/// </returns>
 		public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
 		{
@@ -3367,34 +3351,34 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic as array.
+		/// Get the extracted ion chromatogram for a given m/z for the specified frame type, limiting by frame range and scan range
 		/// </summary>
 		/// <param name="targetMz">
-		/// TODO The target mz.
+		/// Target mz.
 		/// </param>
 		/// <param name="tolerance">
-		/// TODO The tolerance.
+		/// Tolerance.
 		/// </param>
 		/// <param name="frameIndexMin">
-		/// TODO The frame index min.
+		/// Frame index min.
 		/// </param>
 		/// <param name="frameIndexMax">
-		/// TODO The frame index max.
+		/// Frame index max.
 		/// </param>
 		/// <param name="scanMin">
-		/// TODO The scan min.
+		/// Scan min.
 		/// </param>
 		/// <param name="scanMax">
-		/// TODO The scan max.
+		/// Scan max.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <param name="toleranceType">
-		/// TODO The tolerance type.
+		/// Tolerance type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[,]"/>.
+		/// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
 		/// </returns>
 		public double[,] GetXicAsArray(
 			double targetMz, 
@@ -3488,16 +3472,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get xic as array.
+		/// Get the extracted ion chromatogram for a given bin for the specified frame type
 		/// </summary>
 		/// <param name="targetBin">
-		/// TODO The target bin.
+		/// Target bin.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[,]"/>.
+		/// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
 		/// </returns>
 		public double[,] GetXicAsArray(int targetBin, FrameType frameType)
 		{
@@ -3586,7 +3570,7 @@ namespace UIMFLibrary
 		/// Returns True if all frames with frame types 0 through 3 have CalibrationDone &gt; 0 in frame_parameters
 		/// </summary>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if all frames in the UIMF file have been calibrated<see cref="bool"/>.
 		/// </returns>
 		public bool IsCalibrated()
 		{
@@ -3600,7 +3584,7 @@ namespace UIMFLibrary
 		/// Maximum frame type to examine when checking for calibrated frames
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if all frames of the specified FrameType (or lower) have been calibrated<see cref="bool"/>.
 		/// </returns>
 		public bool IsCalibrated(FrameType iMaxFrameTypeToExamine)
 		{
@@ -3673,13 +3657,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The table exists.
+		/// Check whether a table exists.
 		/// </summary>
 		/// <param name="tableName">
-		/// TODO The table name.
+		/// Table name.
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the table exists<see cref="bool"/>.
 		/// </returns>
 		public bool TableExists(string tableName)
 		{
@@ -3687,16 +3671,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The table has column.
+		/// Check whether a table has a specific column
 		/// </summary>
 		/// <param name="tableName">
-		/// TODO The table name.
+		/// Table name.
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the table has a column<see cref="bool"/>.
 		/// </returns>
 		public bool TableHasColumn(string tableName, string columnName)
 		{
@@ -3831,7 +3815,7 @@ namespace UIMFLibrary
 		/// <param name="blob">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[]"/>.
+		/// Array of doubles<see cref="double[]"/>.
 		/// </returns>
 		private static double[] ArrayFragmentationSequence(byte[] blob)
 		{
@@ -3846,19 +3830,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The column is milli torr.
+		/// Check whether a pressure column contains millitorr values
 		/// </summary>
 		/// <param name="cmd">
-		/// TODO The cmd.
+		/// SQLiteCommand object
 		/// </param>
 		/// <param name="tableName">
-		/// TODO The table name.
+		/// Table name.
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the pressure column in the given table is in millitorr<see cref="bool"/>.
 		/// </returns>
 		private static bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
 		{
@@ -3887,16 +3871,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The strip zeros from arrays.
+		/// Remove zero-intensity entries from parallel arrays
 		/// </summary>
 		/// <param name="nonZeroCount">
-		/// TODO The non zero count.
+		/// Non zero count.
 		/// </param>
 		/// <param name="xDataArray">
-		/// TODO The x data array.
+		/// x data array.
 		/// </param>
 		/// <param name="yDataArray">
-		/// TODO The y data array.
+		/// y data array.
 		/// </param>
 		/// <typeparam name="T">
 		/// </typeparam>
@@ -3921,19 +3905,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The try get frame param.
+		/// Get the value for a specified frame parameter
 		/// </summary>
 		/// <param name="reader">
-		/// TODO The reader.
+		/// Reader object
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <param name="defaultValue">
-		/// TODO The default value.
+		/// Default value.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
 		/// </returns>
 		private static double TryGetFrameParam(SQLiteDataReader reader, string columnName, double defaultValue)
 		{
@@ -3942,22 +3926,22 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The try get frame param.
+		/// Get the value for a specified frame parameter
 		/// </summary>
 		/// <param name="reader">
-		/// TODO The reader.
+		/// Reader object
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <param name="defaultValue">
-		/// TODO The default value.
+		/// Default value.
 		/// </param>
 		/// <param name="columnMissing">
-		/// TODO The column missing.
+		/// Output: true if the column is missing
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
 		/// </returns>
 		private static double TryGetFrameParam(
 			SQLiteDataReader reader, 
@@ -3981,19 +3965,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The try get frame param int 32.
+		/// Get the integer value for a specified frame parameter
 		/// </summary>
 		/// <param name="reader">
-		/// TODO The reader.
+		/// Reader object
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <param name="defaultValue">
-		/// TODO The default value.
+		/// Default value.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
 		/// </returns>
 		private static int TryGetFrameParamInt32(SQLiteDataReader reader, string columnName, int defaultValue)
 		{
@@ -4002,22 +3986,22 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The try get frame param int 32.
+		/// Get the integer value for a specified frame parameter
 		/// </summary>
 		/// <param name="reader">
-		/// TODO The reader.
+		/// Reader object
 		/// </param>
 		/// <param name="columnName">
-		/// TODO The column name.
+		/// Column name.
 		/// </param>
 		/// <param name="defaultValue">
-		/// TODO The default value.
+		/// Default value.
 		/// </param>
 		/// <param name="columnMissing">
-		/// TODO The column missing.
+		/// Output: true if the column is missing
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
 		/// </returns>
 		private static int TryGetFrameParamInt32(
 			SQLiteDataReader reader, 
@@ -4066,13 +4050,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The clone uimf get objects.
+		/// Lookup the names of the given objects in a UIMF library
 		/// </summary>
 		/// <param name="sObjectType">
-		/// TODO The s object type.
+		/// Object type to find, either table or index
 		/// </param>
 		/// <returns>
-		/// The <see cref="Dictionary"/>.
+		/// Dictionary with object name as the key and Sql creation code as the value<see cref="Dictionary"/>.
 		/// </returns>
 		private Dictionary<string, string> CloneUIMFGetObjects(string sObjectType)
 		{
@@ -4164,19 +4148,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get or create spectrum cache.
+		/// Get the spectrum cache (create it if missing)
 		/// </summary>
 		/// <param name="startFrameNumber">
-		/// TODO The start frame number.
+		/// Start frame number.
 		/// </param>
 		/// <param name="endFrameNumber">
-		/// TODO The end frame number.
+		/// End frame number.
 		/// </param>
 		/// <param name="frameType">
-		/// TODO The frame type.
+		/// Frame type.
 		/// </param>
 		/// <returns>
-		/// The <see cref="SpectrumCache"/>.
+		/// SpectrumCache object<see cref="SpectrumCache"/>.
 		/// </returns>
 		private SpectrumCache GetOrCreateSpectrumCache(int startFrameNumber, int endFrameNumber, FrameType frameType)
 		{
@@ -4301,7 +4285,7 @@ namespace UIMFLibrary
 		/// <param name="fieldName">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double[]"/>.
+		/// Array of intensity values<see cref="double[]"/>.
 		/// </returns>
 		private double[] GetTicOrBpi(
 			FrameType frameType, 
@@ -4430,22 +4414,20 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get upper lower bins from mz.
+		/// Get the two bins closest to the specified m/z
 		/// </summary>
 		/// <param name="frameNumber">
-		/// TODO The frame number.
+		/// Frame to search
 		/// </param>
 		/// <param name="targetMZ">
-		/// TODO The target mz.
+		/// mz to find
 		/// </param>
 		/// <param name="toleranceInMZ">
-		/// TODO The tolerance in mz.
+		/// mz tolerance
 		/// </param>
 		/// <returns>
-		/// The <see cref="int[]"/>.
+		/// Two element array of the closet bins<see cref="int[]"/>.
 		/// </returns>
-		/// <exception cref="NotImplementedException">
-		/// </exception>
 		private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)
 		{
 			int[] bins = new int[2];
@@ -4482,24 +4464,17 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The load prep stmts.
+		/// Load prep statements
 		/// </summary>
 		private void LoadPrepStmts()
 		{
 			this.m_getFileBytesCommand = this.m_uimfDatabaseConnection.CreateCommand();
-
-			this.m_getFrameNumbers = this.m_uimfDatabaseConnection.CreateCommand();
-			this.m_getFrameNumbers.CommandText = "SELECT FrameNum FROM Frame_Parameters WHERE FrameType = :FrameType";
-			this.m_getFrameNumbers.Prepare();
 
 			this.m_getFrameParametersCommand = this.m_uimfDatabaseConnection.CreateCommand();
 			this.m_getFrameParametersCommand.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = :FrameNum";
 				
 				// FrameType not necessary
 			this.m_getFrameParametersCommand.Prepare();
-
-			// Table: Frame_Scans
-			this.m_sumVariableScansPerFrameCommand = this.m_uimfDatabaseConnection.CreateCommand();
 
 			this.m_getFramesAndScanByDescendingIntensityCommand = this.m_uimfDatabaseConnection.CreateCommand();
 			this.m_getFramesAndScanByDescendingIntensityCommand.CommandText =
@@ -4510,11 +4485,6 @@ namespace UIMFLibrary
 			this.m_getSpectrumCommand.CommandText =
 				"SELECT FS.ScanNum, FS.FrameNum, FS.Intensities FROM Frame_Scans FS JOIN Frame_Parameters FP ON (FS.FrameNum = FP.FrameNum) WHERE FS.FrameNum >= :FrameNum1 AND FS.FrameNum <= :FrameNum2 AND FS.ScanNum >= :ScanNum1 AND FS.ScanNum <= :ScanNum2 AND FP.FrameType = :FrameType";
 			this.m_getSpectrumCommand.Prepare();
-
-			this.m_getCountPerSpectrumCommand = this.m_uimfDatabaseConnection.CreateCommand();
-			this.m_getCountPerSpectrumCommand.CommandText =
-				"SELECT NonZeroCount FROM Frame_Scans WHERE FrameNum = :FrameNum AND ScanNum = :ScanNum";
-			this.m_getCountPerSpectrumCommand.Prepare();
 
 			this.m_getCountPerFrameCommand = this.m_uimfDatabaseConnection.CreateCommand();
 			this.m_getCountPerFrameCommand.CommandText =
@@ -4533,13 +4503,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The populate frame parameters.
+		/// Populate frame parameters
 		/// </summary>
 		/// <param name="fp">
-		/// TODO The fp.
+		/// Frame parameters object
 		/// </param>
 		/// <param name="reader">
-		/// TODO The reader.
+		/// Reader object
 		/// </param>
 		/// <exception cref="Exception">
 		/// </exception>
@@ -4723,14 +4693,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The unload prep stmts.
+		// Unload the prep statements
 		/// </summary>
 		private void UnloadPrepStmts()
 		{
-			if (this.m_getCountPerSpectrumCommand != null)
-			{
-				this.m_getCountPerSpectrumCommand.Dispose();
-			}
 
 			if (this.m_getCountPerFrameCommand != null)
 			{
@@ -4740,11 +4706,6 @@ namespace UIMFLibrary
 			if (this.m_getFileBytesCommand != null)
 			{
 				this.m_getFileBytesCommand.Dispose();
-			}
-
-			if (this.m_getFrameNumbers != null)
-			{
-				this.m_getFrameNumbers.Dispose();
 			}
 
 			if (this.m_getFrameParametersCommand != null)
@@ -4762,10 +4723,6 @@ namespace UIMFLibrary
 				this.m_getSpectrumCommand.Dispose();
 			}
 
-			if (this.m_sumVariableScansPerFrameCommand != null)
-			{
-				this.m_sumVariableScansPerFrameCommand.Dispose();
-			}
 		}
 
 		#endregion

@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BinCentricTableCreation.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The bin centric table creation.
+//   Bin centric table creation.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -15,30 +12,30 @@ namespace UIMFLibrary
 	using System.IO;
 
 	/// <summary>
-	/// TODO The bin centric table creation.
+	/// The bin centric table creation.
 	/// </summary>
 	public class BinCentricTableCreation
 	{
 		#region Constants
 
 		/// <summary>
-		/// TODO The creat e_ bin s_ index.
+		/// Command for creating the Bin_intensities index
 		/// </summary>
 		public const string CREATE_BINS_INDEX = "CREATE INDEX Bin_Intensities_MZ_BIN_IDX ON Bin_Intensities(MZ_BIN);";
 
 		/// <summary>
-		/// TODO The creat e_ bin s_ table.
+		/// Command for creating the Bin_intensities table
 		/// </summary>
 		public const string CREATE_BINS_TABLE = "CREATE TABLE Bin_Intensities (MZ_BIN int(11), INTENSITIES BLOB);";
 
 		/// <summary>
-		/// TODO The inser t_ bi n_ intensities.
+		/// Command for adding a row to the Bin_Intensities table
 		/// </summary>
 		public const string INSERT_BIN_INTENSITIES =
 			"INSERT INTO Bin_Intensities (MZ_BIN, INTENSITIES) VALUES(:MZ_BIN, :INTENSITIES)";
 
 		/// <summary>
-		/// TODO The bi n_ size.
+		/// Bin size
 		/// </summary>
 		private const int BIN_SIZE = 200;
 
@@ -47,24 +44,24 @@ namespace UIMFLibrary
 		#region Delegates
 
 		/// <summary>
-		/// TODO The message event handler.
+		/// Message event handler.
 		/// </summary>
 		/// <param name="sender">
-		/// TODO The sender.
+		/// Message sender
 		/// </param>
 		/// <param name="e">
-		/// TODO The e.
+		/// Message event args
 		/// </param>
 		public delegate void MessageEventHandler(object sender, MessageEventArgs e);
 
 		/// <summary>
-		/// TODO The progress event handler.
+		/// Progress event handler.
 		/// </summary>
 		/// <param name="sender">
-		/// TODO The sender.
+		/// Progress sender
 		/// </param>
 		/// <param name="e">
-		/// TODO The e.
+		/// Progress event args
 		/// </param>
 		public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
 
@@ -73,17 +70,17 @@ namespace UIMFLibrary
 		#region Public Events
 
 		/// <summary>
-		/// TODO The error event.
+		/// Error event.
 		/// </summary>
 		public event MessageEventHandler ErrorEvent;
 
 		/// <summary>
-		/// TODO The message event.
+		/// Message event.
 		/// </summary>
 		public event MessageEventHandler MessageEvent;
 
 		/// <summary>
-		/// TODO The progress event.
+		/// Progress event.
 		/// </summary>
 		public event ProgressEventHandler ProgressEvent;
 
@@ -92,13 +89,13 @@ namespace UIMFLibrary
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The create bin centric table.
+		/// Create the bin centric table.
 		/// </summary>
 		/// <param name="uimfWriterConnection">
-		/// TODO The uimf writer connection.
+		/// UIMF Writer connection
 		/// </param>
 		/// <param name="uimfReader">
-		/// TODO The uimf reader.
+		/// UIMF Reader connection
 		/// </param>
 		public void CreateBinCentricTable(SQLiteConnection uimfWriterConnection, DataReader uimfReader)
 		{
@@ -106,16 +103,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The create bin centric table.
+		/// Create the bin centric table.
 		/// </summary>
 		/// <param name="uimfWriterConnection">
-		/// TODO The uimf writer connection.
+		/// UIMF Writer connection
 		/// </param>
 		/// <param name="uimfReader">
-		/// TODO The uimf reader.
+		/// UIMF Reader connection
 		/// </param>
 		/// <param name="workingDirectory">
-		/// TODO The working directory.
+		/// Working directory
 		/// </param>
 		public void CreateBinCentricTable(
 			SQLiteConnection uimfWriterConnection, 
@@ -146,10 +143,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The on error message.
+		/// Raise the error event
 		/// </summary>
 		/// <param name="e">
-		/// TODO The e.
+		/// Message event args
 		/// </param>
 		public void OnErrorMessage(MessageEventArgs e)
 		{
@@ -160,10 +157,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The on message.
+		/// Raise the message event
 		/// </summary>
 		/// <param name="e">
-		/// TODO The e.
+		/// Message event args
 		/// </param>
 		public void OnMessage(MessageEventArgs e)
 		{
@@ -174,10 +171,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The on progress update.
+		/// Raise the progress event
 		/// </summary>
 		/// <param name="e">
-		/// TODO The e.
+		/// Message event args
 		/// </param>
 		public void OnProgressUpdate(ProgressEventArgs e)
 		{
@@ -192,10 +189,10 @@ namespace UIMFLibrary
 		#region Methods
 
 		/// <summary>
-		/// TODO The create bin intensities index.
+		/// Create the bin intensities index.
 		/// </summary>
 		/// <param name="uimfWriterConnection">
-		/// TODO The uimf writer connection.
+		/// UIMF writer
 		/// </param>
 		private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
 		{
@@ -206,10 +203,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The create bin intensities table.
+		/// Create the bin intensities table.
 		/// </summary>
 		/// <param name="uimfWriterConnection">
-		/// TODO The uimf writer connection.
+		/// UIMF writer
 		/// </param>
 		private void CreateBinIntensitiesTable(SQLiteConnection uimfWriterConnection)
 		{
@@ -220,16 +217,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The create blank database.
+		/// Create a blank database.
 		/// </summary>
 		/// <param name="locationForNewDatabase">
-		/// TODO The location for new database.
+		/// File path for the new database.
 		/// </param>
 		/// <param name="numBins">
-		/// TODO The num bins.
+		/// Number of bins
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Number of tables created<see cref="int"/>.
 		/// </returns>
 		private int CreateBlankDatabase(string locationForNewDatabase, int numBins)
 		{
@@ -263,13 +260,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The create indexes.
+		/// Create the indices
 		/// </summary>
 		/// <param name="locationForNewDatabase">
-		/// TODO The location for new database.
+		/// File path for the new database.
 		/// </param>
 		/// <param name="numBins">
-		/// TODO The num bins.
+		/// Number of bins
 		/// </param>
 		private void CreateIndexes(string locationForNewDatabase, int numBins)
 		{
@@ -299,16 +296,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The create temporary database.
+		/// Create the temporary database.
 		/// </summary>
 		/// <param name="uimfReader">
-		/// TODO The uimf reader.
+		/// UIMF reader
 		/// </param>
 		/// <param name="workingDirectory">
-		/// TODO The working directory.
+		/// Working directory path
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Full path to the SqLite temporary database<see cref="string"/>.
 		/// </returns>
 		/// <exception cref="IOException">
 		/// </exception>
@@ -412,13 +409,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get create indexes query.
+		/// Create the indices for a given bin
 		/// </summary>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number.
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Query for creating a Bin_Intensities index<see cref="string"/>.
 		/// </returns>
 		private string GetCreateIndexesQuery(int binNumber)
 		{
@@ -430,13 +427,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get create intensities table query.
+		/// Create the intensities table for a given bin
 		/// </summary>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number.
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Query for creating a Bin_Intensities table<see cref="string"/>.
 		/// </returns>
 		private string GetCreateIntensitiesTableQuery(int binNumber)
 		{
@@ -448,13 +445,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get insert intensity query.
+		/// Get intensities for a given bin
 		/// </summary>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Query for insert into a Bin_Intensities table <see cref="string"/>.
 		/// </returns>
 		private string GetInsertIntensityQuery(int binNumber)
 		{
@@ -466,16 +463,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get min and max bin.
+		/// Get the min and max bin numbers
 		/// </summary>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number
 		/// </param>
 		/// <param name="minBin">
-		/// TODO The min bin.
+		/// Output: minimum bin index
 		/// </param>
 		/// <param name="maxBin">
-		/// TODO The max bin.
+		/// Output: maximum bin index
 		/// </param>
 		private void GetMinAndMaxBin(int binNumber, out int minBin, out int maxBin)
 		{
@@ -485,13 +482,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get read single bin query.
+		/// Get the statement for reading intensities for a given bin
 		/// </summary>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// Query for obtaining intensities for a single bin<see cref="string"/>.
 		/// </returns>
 		private string GetReadSingleBinQuery(int binNumber)
 		{
@@ -503,16 +500,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The insert bin centric data.
+		/// Insert bin centric data.
 		/// </summary>
 		/// <param name="uimfWriterConnection">
-		/// TODO The uimf writer connection.
+		/// UIMF Writer object
 		/// </param>
 		/// <param name="temporaryDatabaseConnection">
-		/// TODO The temporary database connection.
+		/// Temporary database connection.
 		/// </param>
 		/// <param name="uimfReader">
-		/// TODO The uimf reader.
+		/// UIMF reader object
 		/// </param>
 		private void InsertBinCentricData(
 			SQLiteConnection uimfWriterConnection, 
@@ -562,19 +559,19 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The sort data for bin.
+		/// Sort data for bin.
 		/// </summary>
 		/// <param name="inConnection">
-		/// TODO The in connection.
+		/// Sqlite connection
 		/// </param>
 		/// <param name="insertCommand">
-		/// TODO The insert command.
+		/// Insert command
 		/// </param>
 		/// <param name="binNumber">
-		/// TODO The bin number.
+		/// Bin number
 		/// </param>
 		/// <param name="numImsScans">
-		/// TODO The num ims scans.
+		/// Number of IMS scans
 		/// </param>
 		private void SortDataForBin(
 			SQLiteConnection inConnection, 
@@ -635,10 +632,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The update progress.
+		/// Update progress.
 		/// </summary>
 		/// <param name="percentComplete">
-		/// TODO The percent complete.
+		/// Percent complete.
 		/// </param>
 		private void UpdateProgress(double percentComplete)
 		{
@@ -646,13 +643,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The update progress.
+		/// Update progress.
 		/// </summary>
 		/// <param name="percentComplete">
-		/// TODO The percent complete.
+		/// Percent complete.
 		/// </param>
 		/// <param name="currentTask">
-		/// TODO The current task.
+		/// Current task.
 		/// </param>
 		private void UpdateProgress(double percentComplete, string currentTask)
 		{

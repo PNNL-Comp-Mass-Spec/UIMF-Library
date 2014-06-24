@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IntensityPoint.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Defines the IntensityPoint type.
 // </summary>
@@ -11,7 +8,7 @@ namespace UIMFLibrary
 	using System;
 
 	/// <summary>
-	/// TODO The intensity point.
+	/// Defines the IntensityPoint type.
 	/// </summary>
 	public class IntensityPoint : IComparable<IntensityPoint>
 	{
@@ -21,13 +18,13 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="IntensityPoint"/> class.
 		/// </summary>
 		/// <param name="scanLc">
-		/// TODO The scan lc.
+		/// LC scan
 		/// </param>
 		/// <param name="scanIms">
-		/// TODO The scan ims.
+		/// IMS scan
 		/// </param>
 		/// <param name="intensity">
-		/// TODO The intensity.
+		/// Intensity
 		/// </param>
 		public IntensityPoint(int scanLc, int scanIms, double intensity)
 		{
@@ -52,12 +49,12 @@ namespace UIMFLibrary
 		public bool IsSaturated { get; set; }
 
 		/// <summary>
-		/// Gets the scan ims.
+		/// Gets the IMS scan
 		/// </summary>
 		public int ScanIms { get; private set; }
 
 		/// <summary>
-		/// Gets the scan lc.
+		/// Gets the LC scan number
 		/// </summary>
 		public int ScanLc { get; private set; }
 
@@ -66,15 +63,16 @@ namespace UIMFLibrary
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The ==.
+		/// Overload the equals operator
 		/// </summary>
 		/// <param name="left">
-		/// TODO The left.
+		/// Left point
 		/// </param>
 		/// <param name="right">
-		/// TODO The right.
+		/// Right point
 		/// </param>
 		/// <returns>
+		/// True if the points are equivalent
 		/// </returns>
 		public static bool operator ==(IntensityPoint left, IntensityPoint right)
 		{
@@ -82,15 +80,16 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The !=.
+		/// Overload the not equals operator
 		/// </summary>
 		/// <param name="left">
-		/// TODO The left.
+		/// Left point
 		/// </param>
 		/// <param name="right">
-		/// TODO The right.
+		/// Right point
 		/// </param>
 		/// <returns>
+		/// /// True if the points are not equivalent
 		/// </returns>
 		public static bool operator !=(IntensityPoint left, IntensityPoint right)
 		{
@@ -98,13 +97,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The compare to.
+		/// Compare this point to another one
 		/// </summary>
 		/// <param name="other">
-		/// TODO The other.
+		/// Comparison point
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Comparison result<see cref="int"/>.
 		/// </returns>
 		public int CompareTo(IntensityPoint other)
 		{
@@ -112,13 +111,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The equals.
+		/// Check whether this point equals another point
 		/// </summary>
 		/// <param name="other">
-		/// TODO The other.
+		/// Comparison point
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the objects are equal<see cref="bool"/>.
 		/// </returns>
 		public bool Equals(IntensityPoint other)
 		{
@@ -136,13 +135,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The equals.
+		/// Check whether this point equals another point (as an object)
 		/// </summary>
 		/// <param name="obj">
-		/// TODO The obj.
+		/// Comparison object
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// True if the comparison object is an equivalent IntensityPoint<see cref="bool"/>.
 		/// </returns>
 		public override bool Equals(object obj)
 		{
@@ -165,16 +164,27 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The get hash code.
+		/// Get hash code for this point
 		/// </summary>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Hash code for this instance<see cref="int"/>.
 		/// </returns>
 		public override int GetHashCode()
 		{
+			// Overflow is fine, just wrap
 			unchecked
 			{
+				// Compute the hash code using a bitwise exclusive between ScanLc and ScanIMS
+				// This method effectively generates a wide distribution of hash codes
 				return (this.ScanLc * 397) ^ this.ScanIms;
+
+				// Alternative method from http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode
+				// This method produces a comparable distribution of hash codes
+				//
+				// int hash = 17;				
+				// hash = hash * 397 + this.ScanLc.GetHashCode();
+				// hash = hash * 397 + this.ScanIms.GetHashCode();				
+				// return hash;
 			}
 		}
 

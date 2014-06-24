@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DataReaderTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The data reader tests.
+//   Data reader tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -19,7 +16,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The data reader tests.
+	/// The data reader tests.
 	/// </summary>
 	[TestFixture]
 	public class DataReaderTests
@@ -27,7 +24,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Fields
 
 		/// <summary>
-		/// TODO The m_reader.
+		/// The m_reader.
 		/// </summary>
 		private DataReader m_reader;
 
@@ -36,7 +33,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The get frames and scan intensities for a given mz test.
+		/// The get frames and scan intensities for a given mz test.
 		/// </summary>
 		[Test]
 		public void GetFramesAndScanIntensitiesForAGivenMzTest()
@@ -153,7 +150,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The test get spectrum as bins 2.
+		/// The test get spectrum as bins 2.
 		/// </summary>
 		[Test]
 		public void TestGetSpectrumAsBins2()
@@ -210,7 +207,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The test get spectrum summed 1.
+		/// The test get spectrum summed 1.
 		/// </summary>
 		[Test]
 		public void TestGetSpectrumSummed1()
@@ -246,7 +243,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The test pressure determination 1.
+		/// The test pressure determination 1.
 		/// </summary>
 		[Test]
 		public void TestPressureDetermination1()
@@ -296,7 +293,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The display mz value for each bin_ test 1.
+		/// The display mz value for each bin_ test 1.
 		/// </summary>
 		[Test]
 		public void displayMZValueForEachBin_Test1()
@@ -335,7 +332,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get frame parameters test.
+		/// The get frame parameters test.
 		/// </summary>
 		[Test]
 		public void getFrameParametersTest()
@@ -387,7 +384,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 		// }
 
-		// TODO:   test seems to write out mostly zeros....  we should test a region richer in intensity data
+		// TODO:  test seems to write out mostly zeros....  we should test a region richer in intensity data
 		// TODO:  is this method the same as another??  Check against Get3DProfile
 
 		// TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this 
@@ -506,25 +503,25 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Methods
 
 		/// <summary>
-		/// TODO The convert bin to mz.
+		/// The convert bin to mz.
 		/// </summary>
 		/// <param name="slope">
-		/// TODO The slope.
+		/// The slope.
 		/// </param>
 		/// <param name="intercept">
-		/// TODO The intercept.
+		/// The intercept.
 		/// </param>
 		/// <param name="binWidth">
-		/// TODO The bin width.
+		/// The bin width.
 		/// </param>
 		/// <param name="correctionTimeForTOF">
-		/// TODO The correction time for tof.
+		/// The correction time for tof.
 		/// </param>
 		/// <param name="bin">
-		/// TODO The bin.
+		/// The bin.
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// mz<see cref="double"/>.
 		/// </returns>
 		private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
 		{
@@ -540,13 +537,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The write file.
+		/// The write file.
 		/// </summary>
 		/// <param name="data">
-		/// TODO The data.
+		/// The data.
 		/// </param>
 		/// <param name="fileName">
-		/// TODO The file name.
+		/// The file name.
 		/// </param>
 		private void writeFile(byte[] data, string fileName)
 		{

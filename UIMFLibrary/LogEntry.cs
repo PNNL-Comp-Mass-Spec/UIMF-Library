@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LogEntry.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Defines the LogEntry type.
 // </summary>
@@ -11,7 +8,7 @@ namespace UIMFLibrary
 	using System;
 
 	/// <summary>
-	/// TODO The log entry.
+	///  Defines the LogEntry type.
 	/// </summary>
 	public class LogEntry
 	{

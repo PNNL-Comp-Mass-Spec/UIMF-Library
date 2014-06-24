@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="UIMFDataWriter.cs">
-//   
-// </copyright>
 // <summary>
-//   TODO The data writer.
+//   UIMF Data Writer class
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace UIMFLibrary
@@ -14,54 +11,54 @@ namespace UIMFLibrary
 	using System.Text;
 
 	/// <summary>
-	/// TODO The data writer.
+	/// UIMF Data Writer class
 	/// </summary>
 	public class DataWriter : IDisposable
 	{
 		#region Fields
 
 		/// <summary>
-		/// TODO The m_ frame parameter columns verified.
+		/// Track whether frame parameter columns have been verified
 		/// </summary>
 		private bool m_FrameParameterColumnsVerified;
 
 		/// <summary>
-		/// TODO The m_db command prepare insert frame.
+		/// Command to insert a frame
 		/// </summary>
 		private SQLiteCommand m_dbCommandPrepareInsertFrame;
 
 		/// <summary>
-		/// TODO The m_db command prepare insert scan.
+		/// Command to insert a scan
 		/// </summary>
 		private SQLiteCommand m_dbCommandPrepareInsertScan;
 
 		/// <summary>
-		/// TODO The m_db command prepare insert scan parameters.
+		/// Command to insert scan parameters.
 		/// </summary>
 		private SQLiteCommand m_dbCommandPrepareInsertScanParameters;
 
 		/// <summary>
-		/// TODO The m_db command uimf.
+		/// General database update command
 		/// </summary>
 		private SQLiteCommand m_dbCommandUimf;
 
 		/// <summary>
-		/// TODO The m_db connection.
+		/// Connection to the database
 		/// </summary>
 		private SQLiteConnection m_dbConnection;
 
 		/// <summary>
-		/// TODO The m_file name.
+		/// Full path to the UIMF file
 		/// </summary>
 		private string m_fileName;
 
 		/// <summary>
-		/// TODO The m_global parameters.
+		/// Global parameters object
 		/// </summary>
 		private GlobalParameters m_globalParameters;
 
 		/// <summary>
-		/// TODO The m_is scan parameter table.
+		/// Tracks whether the scan parameters table was created
 		/// </summary>
 		private bool m_isScanParameterTable;
 
@@ -74,8 +71,10 @@ namespace UIMFLibrary
 		/// Constructor for UIMF datawriter that takes the filename and begins the transaction. 
 		/// </summary>
 		/// <param name="fileName">
+		/// Full path to the data file
 		/// </param>
 		/// <param name="createScanParameters">
+		/// True if the scan parameters table should be created
 		/// </param>
 		public DataWriter(string fileName, bool createScanParameters = false)
 		{
@@ -97,6 +96,7 @@ namespace UIMFLibrary
 			}
 			catch (Exception ex)
 			{
+				Console.WriteLine("Exception opening the UIMF file: " + ex.Message);
 			}
 		}
 
@@ -132,7 +132,7 @@ namespace UIMFLibrary
 			{
 				// Log_Entries not found; need to create it
 				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " + "Entry_ID INTEGER PRIMARY KEY, "
-				                              + "Posted_By STRING, " + "Posting_Time STRING, " + "Type STRING, " + "Message STRING)";
+											  + "Posted_By STRING, " + "Posting_Time STRING, " + "Type STRING, " + "Message STRING)";
 
 				cmdPostLogEntry.ExecuteNonQuery();
 			}
@@ -154,8 +154,8 @@ namespace UIMFLibrary
 
 			// Now add a log entry
 			cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " + "VALUES ("
-			                              + "datetime('now'), " + "'" + PostedBy + "', " + "'" + EntryType + "', " + "'"
-			                              + Message + "')";
+										  + "datetime('now'), " + "'" + PostedBy + "', " + "'" + EntryType + "', " + "'"
+										  + Message + "')";
 
 			cmdPostLogEntry.ExecuteNonQuery();
 			cmdPostLogEntry.Dispose();
@@ -206,7 +206,7 @@ namespace UIMFLibrary
 			{
 				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + defaultValue.ToString()
-				                                   + " WHERE " + parameterName + " IS NULL";
+												   + " WHERE " + parameterName + " IS NULL";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 
 				this.m_dbCommandUimf.Dispose();
@@ -237,7 +237,7 @@ namespace UIMFLibrary
 			{
 				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = '" + defaultValue
-				                                   + "' WHERE " + parameterName + " IS NULL";
+												   + "' WHERE " + parameterName + " IS NULL";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 
 				this.m_dbCommandUimf.Dispose();
@@ -262,9 +262,9 @@ namespace UIMFLibrary
 			{
 				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 				this.m_dbCommandUimf.CommandText = "Alter TABLE Global_Parameters Add " + parameterName.ToString() + " "
-				                                   + parameterType.ToString();
+												   + parameterType.ToString();
 				this.m_dbCommandUimf.CommandText += " UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
-				                                    + parameterValue;
+													+ parameterValue;
 				this.m_dbCommandUimf.ExecuteNonQuery();
 				this.m_dbCommandUimf.Dispose();
 			}
@@ -272,7 +272,7 @@ namespace UIMFLibrary
 			{
 				this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 				this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
-				                                   + parameterValue;
+												   + parameterValue;
 				this.m_dbCommandUimf.ExecuteNonQuery();
 				this.m_dbCommandUimf.Dispose();
 				Console.WriteLine("Parameter " + parameterName + " already exists, its value will be updated to " + parameterValue);
@@ -305,106 +305,102 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Method to create the table struture within a UIMF file. THis must be called
-		/// after open to create the default tables that are required for IMS data.
+		/// Create the table struture within a UIMF file, assumes 32-bit integers for intensity values 
+		/// </summary>
+		/// <remarks>
+		/// This must be called after opening a new file to create the default tables that are required for IMS data.
+		/// </remarks>
+		public void CreateTables()
+		{
+			const string dataType = "int";
+
+			CreateTables(dataType);
+		}
+
+		/// <summary>
+		/// Create the table struture within a UIMF file
 		/// </summary>
 		/// <param name="dataType">
+		/// Data type of intensity in the Frame_Scans table: Double, float short, or int
 		/// </param>
+		/// <remarks>
+		/// This must be called after opening a new file to create the default tables that are required for IMS data.
+		/// </remarks>
 		public void CreateTables(string dataType)
 		{
 			// https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
 
 			// Create Global_Parameters Table  
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
-			this.m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " + "DateStarted STRING, "
-			                                   + // date experiment was started
-			                                   "NumFrames INT(4) NOT NULL, " + // Number of frames in dataset  
-			                                   "TimeOffset INT(4) NOT NULL, "
-			                                   + // Offset from 0. All bin numbers must be offset by this amount  
-			                                   "BinWidth DOUBLE NOT NULL, " + // Width of TOF bins (in ns)  
-			                                   "Bins INT(4) NOT NULL, " + // Total TOF bins in a frame
-			                                   "TOFCorrectionTime FLOAT NOT NULL, " + // Instrument delay time
-			                                   "FrameDataBlobVersion FLOAT NOT NULL, " + // Version of FrameDataBlob in T_Frame  
-			                                   "ScanDataBlobVersion FLOAT NOT NULL, " + // Version of ScanInfoBlob in T_Frame  
-			                                   "TOFIntensityType TEXT NOT NULL, "
-			                                   +
-			                                   // Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float) 
-			                                   "DatasetType TEXT, " + "Prescan_TOFPulses INT(4), "
-			                                   + "Prescan_Accumulations INT(4), " + "Prescan_TICThreshold INT(4), "
-			                                   + "Prescan_Continuous BOOL, " + "Prescan_Profile STRING, "
-			                                   + "Instrument_Name STRING)";
+			this.m_dbCommandUimf.CommandText = "CREATE TABLE Global_Parameters ( " +
+											   "DateStarted STRING, " +
+											   "NumFrames INT(4) NOT NULL, " +
+											   "TimeOffset INT(4) NOT NULL, " +
+											   "BinWidth DOUBLE NOT NULL, " +
+											   "Bins INT(4) NOT NULL, " +
+											   "TOFCorrectionTime FLOAT NOT NULL, " +
+											   "FrameDataBlobVersion FLOAT NOT NULL, " +
+											   "ScanDataBlobVersion FLOAT NOT NULL, " +
+											   "TOFIntensityType TEXT NOT NULL, " +
+											   "DatasetType TEXT, " + "Prescan_TOFPulses INT(4), " +
+											   "Prescan_Accumulations INT(4), " +
+											   "Prescan_TICThreshold INT(4), " +
+											   "Prescan_Continuous BOOL, " +
+											   "Prescan_Profile STRING, " +
+											   "Instrument_Name STRING)";
 
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create Frame_parameters Table
-			this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" + "FrameNum INT(4) PRIMARY KEY, "
-			                                   + // 0, Frame number (primary key)
-			                                   "StartTime DOUBLE, " + // 1, Start time of frame, in minutes
-			                                   "Duration DOUBLE, " + // 2, Duration of frame, in seconds 
-			                                   "Accumulations INT(2), "
-			                                   + // 3, Number of collected and summed acquisitions in a frame 
-			                                   "FrameType SHORT, "
-			                                   +
-			                                   // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-			                                   "Scans INT(4), " + // 5, Number of TOF scans  
-			                                   "IMFProfile STRING, "
-			                                   +
-			                                   // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-			                                   "TOFLosses DOUBLE, " + // 7, Number of TOF Losses
-			                                   "AverageTOFLength DOUBLE NOT NULL, "
-			                                   + // 8, Average time between TOF trigger pulses
-			                                   "CalibrationSlope DOUBLE, " + // 9, Value of k0  
-			                                   "CalibrationIntercept DOUBLE, " + // 10, Value of t0  
-			                                   "a2 DOUBLE, "
-			                                   +
-			                                   // 11, These six parameters below are coefficients for residual mass error correction
-			                                   "b2 DOUBLE, " + // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-			                                   "c2 DOUBLE, " + // 13
-			                                   "d2 DOUBLE, " + // 14
-			                                   "e2 DOUBLE, " + // 15
-			                                   "f2 DOUBLE, " + // 16
-			                                   "Temperature DOUBLE, " + // 17, Ambient temperature
-			                                   "voltHVRack1 DOUBLE, " + // 18, Voltage setting in the IMS system
-			                                   "voltHVRack2 DOUBLE, " + // 19, Voltage setting in the IMS system
-			                                   "voltHVRack3 DOUBLE, " + // 20, Voltage setting in the IMS system
-			                                   "voltHVRack4 DOUBLE, " + // 21, Voltage setting in the IMS system
-			                                   "voltCapInlet DOUBLE, " + // 22, Capillary Inlet Voltage
-			                                   "voltEntranceHPFIn DOUBLE, "
-			                                   +
-			                                   // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
-			                                   "voltEntranceHPFOut DOUBLE, "
-			                                   +
-			                                   // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
-			                                   "voltEntranceCondLmt DOUBLE, " + // 25, Cond Limit Voltage
-			                                   "voltTrapOut DOUBLE, " + // 26, Trap Out Voltage
-			                                   "voltTrapIn DOUBLE, " + // 27, Trap In Voltage
-			                                   "voltJetDist DOUBLE, " + // 28, Jet Disruptor Voltage
-			                                   "voltQuad1 DOUBLE, " + // 29, Fragmentation Quadrupole Voltage
-			                                   "voltCond1 DOUBLE, " + // 30, Fragmentation Conductance Voltage
-			                                   "voltQuad2 DOUBLE, " + // 31, Fragmentation Quadrupole Voltage
-			                                   "voltCond2 DOUBLE, " + // 32, Fragmentation Conductance Voltage
-			                                   "voltIMSOut DOUBLE, " + // 33, IMS Out Voltage
-			                                   "voltExitHPFIn DOUBLE, "
-			                                   +
-			                                   // 34, HPF In Voltage   (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
-			                                   "voltExitHPFOut DOUBLE, "
-			                                   +
-			                                   // 35, HPF Out Voltage  (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
-			                                   "voltExitCondLmt DOUBLE, " + // 36, Cond Limit Voltage
-			                                   "PressureFront DOUBLE, " + // 37, Pressure at front of Drift Tube 
-			                                   "PressureBack DOUBLE, " + // 38, Pressure at back of Drift Tube 
-			                                   "MPBitOrder INT(1), " + // 39, Determines original size of bit sequence 
-			                                   "FragmentationProfile BLOB," + // 40, Voltage profile used in fragmentation
-			                                   "HighPressureFunnelPressure DOUBLE, " + // 41
-			                                   "IonFunnelTrapPressure DOUBLE , " + // 42
-			                                   "RearIonFunnelPressure DOUBLE, " + // 43
-			                                   "QuadrupolePressure DOUBLE, " + // 44
-			                                   "ESIVoltage DOUBLE, " + // 45
-			                                   "FloatVoltage DOUBLE, " + // 46
-			                                   "CalibrationDone INT, " + // 47, Set to 1 after a frame has been calibrated
-			                                   "Decoded INT);";
-
-			// 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+			this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Parameters (" + "FrameNum INT(4) PRIMARY KEY, " +
+											   "StartTime DOUBLE, " +
+											   "Duration DOUBLE, " +
+											   "Accumulations INT(2), " +
+											   "FrameType SHORT, " +
+											   "Scans INT(4), " +
+											   "IMFProfile STRING, " +
+											   "TOFLosses DOUBLE, " +
+											   "AverageTOFLength DOUBLE NOT NULL, " +
+											   "CalibrationSlope DOUBLE, " +
+											   "CalibrationIntercept DOUBLE, " +
+											   "a2 DOUBLE, " +
+											   "b2 DOUBLE, " +
+											   "c2 DOUBLE, " +
+											   "d2 DOUBLE, " +
+											   "e2 DOUBLE, " +
+											   "f2 DOUBLE, " +
+											   "Temperature DOUBLE, " +
+											   "voltHVRack1 DOUBLE, " +
+											   "voltHVRack2 DOUBLE, " +
+											   "voltHVRack3 DOUBLE, " +
+											   "voltHVRack4 DOUBLE, " +
+											   "voltCapInlet DOUBLE, " +
+											   "voltEntranceHPFIn DOUBLE, " +
+											   "voltEntranceHPFOut DOUBLE, " +
+											   "voltEntranceCondLmt DOUBLE, " +
+											   "voltTrapOut DOUBLE, " +
+											   "voltTrapIn DOUBLE, " +
+											   "voltJetDist DOUBLE, " +
+											   "voltQuad1 DOUBLE, " +
+											   "voltCond1 DOUBLE, " +
+											   "voltQuad2 DOUBLE, " +
+											   "voltCond2 DOUBLE, " +
+											   "voltIMSOut DOUBLE, " +
+											   "voltExitHPFIn DOUBLE, " +
+											   "voltExitHPFOut DOUBLE, " +
+											   "voltExitCondLmt DOUBLE, " +
+											   "PressureFront DOUBLE, " +
+											   "PressureBack DOUBLE, " +
+											   "MPBitOrder INT(1), " +
+											   "FragmentationProfile BLOB," +
+											   "HighPressureFunnelPressure DOUBLE, " +
+											   "IonFunnelTrapPressure DOUBLE , " +
+											   "RearIonFunnelPressure DOUBLE, " +
+											   "QuadrupolePressure DOUBLE, " +
+											   "ESIVoltage DOUBLE, " +
+											   "FloatVoltage DOUBLE, " +
+											   "CalibrationDone INT, " +
+											   "Decoded INT);";
 
 			// Voltage profile used in fragmentation, Length number of Scans 
 			this.m_dbCommandUimf.ExecuteNonQuery();
@@ -415,47 +411,44 @@ namespace UIMFLibrary
 			// Create Frame_Scans Table
 			if (string.Equals(dataType, "double"))
 			{
-				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
-				                                   + // Contains the frame number
-				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
-				                                   "NonZeroCount INT(4) NOT NULL, "
-				                                   + "BPI DOUBLE NOT NULL, BPI_MZ DOUBLE NOT NULL, "
-				                                   + // base peak intensity and assocaited mz
-				                                   "TIC DOUBLE NOT NULL, " + // Total Ion Chromatogram
-				                                   "Intensities BLOB);"; // Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
+												   "FrameNum INT(4) NOT NULL, " +
+												   "ScanNum INT(2) NOT NULL, " +
+												   "NonZeroCount INT(4) NOT NULL, " +
+												   "BPI DOUBLE NOT NULL, BPI_MZ DOUBLE NOT NULL, " +
+												   "TIC DOUBLE NOT NULL, " +
+												   "Intensities BLOB);";
 			}
 			else if (string.Equals(dataType, "float"))
 			{
-				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
-				                                   + // Contains the frame number
-				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
-				                                   "BPI FLOAT NOT NULL, BPI_MZ DOUBLE NOT NULL, "
-				                                   + // base peak intensity and assocaited mz
-				                                   "NonZeroCount INT(4) NOT NULL, " + "TIC FLOAT NOT NULL, "
-				                                   + // Total Ion Chromatogram
-				                                   "Intensities BLOB);"; // Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
+												   "FrameNum INT(4) NOT NULL, " +
+												   "ScanNum INT(2) NOT NULL, " +
+												   "BPI FLOAT NOT NULL, BPI_MZ DOUBLE NOT NULL, " +
+												   "NonZeroCount INT(4) NOT NULL, " +
+												   "TIC FLOAT NOT NULL, " +
+												   "Intensities BLOB);";
 			}
 			else if (string.Equals(dataType, "short"))
 			{
-				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
-				                                   + // Contains the frame number
-				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
-				                                   "NonZeroCount INT(4) NOT NULL, " + // Non zero count
-				                                   "BPI INT(2) NOT NULL, BPI_MZ DOUBLE NOT NULL, "
-				                                   + // base peak intensity and assocaited mz
-				                                   "TIC INT(2) NOT NULL, " + // Total Ion Chromatogram
-				                                   "Intensities BLOB);"; // Intensities  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
+												   "FrameNum INT(4) NOT NULL, " +
+												   "ScanNum INT(2) NOT NULL, " +
+												   "NonZeroCount INT(4) NOT NULL, " +
+												   "BPI INT(2) NOT NULL, BPI_MZ DOUBLE NOT NULL, " +
+												   "TIC INT(2) NOT NULL, " +
+												   "Intensities BLOB);";
 			}
 			else
 			{
-				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " + "FrameNum INT(4) NOT NULL, "
-				                                   + // Contains the frame number
-				                                   "ScanNum INT(2) NOT NULL, " + // Scan number
-				                                   "NonZeroCount INT(4) NOT NULL, " + // non zero count
-				                                   "BPI INT(4) NOT NULL, BPI_MZ DOUBLE NOT NULL, "
-				                                   + // base peak intensity and assocaited mz
-				                                   "TIC INT(4) NOT NULL, " + // Total Ion Chromatogram
-				                                   "Intensities BLOB);"; // Intensities  
+				// Assume 32-bit int
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Frame_Scans ( " +
+												   "FrameNum INT(4) NOT NULL, " +
+												   "ScanNum INT(2) NOT NULL, " +
+												   "NonZeroCount INT(4) NOT NULL, " +
+												   "BPI INT(4) NOT NULL, BPI_MZ DOUBLE NOT NULL, " +
+												   "TIC INT(4) NOT NULL, " +
+												   "Intensities BLOB);";
 			}
 
 			// ARS made this change to facilitate faster retrieval of scans/spectrums.
@@ -467,8 +460,9 @@ namespace UIMFLibrary
 
 			if (this.m_isScanParameterTable)
 			{
-				this.m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " + "ScanNum INT(2) NOT NULL, " + // Scan number
-				                                   "MS_Level INT(2) NOT NULL);"; // MS_Level  
+				this.m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
+													"ScanNum INT(2) NOT NULL, " +
+													"MS_Level INT(2) NOT NULL);";
 				this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
@@ -494,13 +488,13 @@ namespace UIMFLibrary
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 
 			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " + "WHERE FrameNum IN (SELECT FrameNum "
-			                                   + "FROM Frame_Parameters " + "WHERE FrameType = " + frameType.ToString() + ");";
+											   + "FROM Frame_Parameters " + "WHERE FrameType = " + frameType.ToString() + ");";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateScanCountInFrameParams)
 			{
 				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters " + "SET Scans = 0 " + "WHERE FrameType = "
-				                                   + frameType.ToString() + ";";
+												   + frameType.ToString() + ";";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
 
@@ -568,7 +562,7 @@ namespace UIMFLibrary
 			if (updateScanCountInFrameParams)
 			{
 				this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET Scans = 0 WHERE FrameNum = " + frameNum.ToString()
-				                                   + "; ";
+												   + "; ";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
 
@@ -597,11 +591,11 @@ namespace UIMFLibrary
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 
 			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList.ToString().TrimEnd(',')
-			                                   + "); ";
+											   + "); ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			this.m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN ("
-			                                   + sFrameList.ToString().TrimEnd(',') + "); ";
+											   + sFrameList.ToString().TrimEnd(',') + "); ";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateGlobalParameters)
@@ -642,13 +636,16 @@ namespace UIMFLibrary
 			}
 			catch
 			{
+				// Ignore errors here
 			}
 		}
 
 		/// <summary>
 		/// Commits the currently open transaction, then starts a new one
-		/// Note that a transaction is started when OpenUIMF() is called, then commited when CloseUIMF() is called
 		/// </summary>
+		/// <remarks>
+		/// Note that a transaction is started when the UIMF file is opened, then commited when the class is disposed
+		/// </remarks>
 		public void FlushUimf()
 		{
 			this.TransactionCommit();
@@ -657,9 +654,10 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Get global parameters
 		/// </summary>
 		/// <returns>
-		/// The <see cref="GlobalParameters"/>.
+		/// Global parameters class<see cref="GlobalParameters"/>.
 		/// </returns>
 		public GlobalParameters GetGlobalParameters()
 		{
@@ -682,162 +680,181 @@ namespace UIMFLibrary
 			this.ValidateFrameParameterColumns();
 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Clear();
+
+			// Frame number (primary key)     
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));
 
-			// 0, Frame number (primary key)     
+			// Start time of frame, in minutes
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));
 
-			// 1, Start time of frame, in minutes
+			// Duration of frame, in seconds 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));
 
-			// 2, Duration of frame, in seconds 
+			// Number of collected and summed acquisitions in a frame 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
 				new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
-			// 3, Number of collected and summed acquisitions in a frame 
+			// Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
-			// 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+			// Number of TOF scans  
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));
 
-			// 5, Number of TOF scans  
+			// IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));
 
-			// 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+			// Number of TOF Losses
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));
 
-			// 7, Number of TOF Losses
+			// Average time between TOF trigger pulses
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
 				new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));
 
-			// 8, Average time between TOF trigger pulses
+			// Value of k0  
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope)); // 9, Value of k0  
-			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept)); // 10, Value of t0  
+				new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope));
 
+			// Value of t0  
+			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
+				new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept));
+
+			// These six parameters below are coefficients for residual mass error correction      
+			//   ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));
-
-			// 11, These six parameters below are coefficients for residual mass error correction            
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));
-
-			// 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2)); // 13
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2)); // 14
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2)); // 15
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2)); // 16
 
+			// Ambient temperature
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature));
 
-			// 17, Ambient temperature
+			// Voltage setting in the IMS system
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1));
 
-			// 18, Voltage setting in the IMS system
+			// Voltage setting in the IMS system
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));
 
-			// 19, Voltage setting in the IMS system
+			// Voltage setting in the IMS system
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));
 
-			// 20, Voltage setting in the IMS system
+			// Voltage setting in the IMS system
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));
 
-			// 21, Voltage setting in the IMS system
+			// Capillary Inlet Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));
 
-			// 22, Capillary Inlet Voltage
+
 			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
 			{
+				// HPF In Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn)); // 23, HPF In Voltage
+					new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));
+
+				// HPF Out Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut)); // 24, HPF Out Voltage
+					new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));
 			}
 			else
 			{
+				// IFT In Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn)); // 23, IFT In Voltage
+					new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn));
+
+				// IFT Out Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut)); // 24, IFT Out Voltage
+					new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut));
 			}
 
+			// Cond Limit Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt)); // 25, Cond Limit Voltage
+				new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt));
+
+			// Trap Out Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));
 
-			// 26, Trap Out Voltage
+			// Trap In Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));
 
-			// 27, Trap In Voltage
+			// Jet Disruptor Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));
 
-			// 28, Jet Disruptor Voltage
+			// Fragmentation Quadrupole Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));
 
-			// 29, Fragmentation Quadrupole Voltage
+			// Fragmentation Conductance Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));
 
-			// 30, Fragmentation Conductance Voltage
+			// Fragmentation Quadrupole Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));
 
-			// 31, Fragmentation Quadrupole Voltage
+			// Fragmentation Conductance Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));
 
-			// 32, Fragmentation Conductance Voltage
+			// IMS Out Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));
 
-			// 33, IMS Out Voltage
 			if (DataReader.ColumnExists(this.m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
 			{
+				// HPF In Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn)); // 34, HPF In Voltage
+					new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));
+
+				// HPF Out Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut)); // 35, HPF Out Voltage
+					new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));
 			}
 			else
 			{
+				// IFT In Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn)); // 34, IFT In Voltage
+					new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn));
+
+				// IFT Out Voltage
 				this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut)); // 35, IFT Out Voltage
+					new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut));
 			}
 
+			// Cond Limit Voltage
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt)); // 36, Cond Limit Voltage
+				new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));
 
+			// Pressure at front of Drift Tube 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":PressureFront", frameParameters.PressureFront)); // 37, Pressure at front of Drift Tube 
+				new SQLiteParameter(":PressureFront", frameParameters.PressureFront));
+
+			// Pressure at back of Drift Tube 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));
 
-			// 38, Pressure at back of Drift Tube 
+			// Determines original size of bit sequence
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));
 
-			// 39, Determines original size of bit sequence
+			// Voltage profile used in fragmentation
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
 				new SQLiteParameter(":FragmentationProfile", ConvertToBlob(frameParameters.FragmentationProfile)));
 
-			// 40, Voltage profile used in fragmentation
+
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure)); // 41            
+				new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure)); // 42
+				new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure));
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure)); // 43
+				new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure)); // 44
+				new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
 
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));
 
-			// 45
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));
 
-			// 46
+			// Set to 1 after a frame has been calibrated
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(
 				new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));
 
-			// 47, Set to 1 after a frame has been calibrated
+			// Set to 1 after a frame has been decoded (added June 27, 2011)
 			this.m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.Decoded));
 
-			// 48, Set to 1 after a frame has been decoded (added June 27, 2011)
 			this.m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
 			this.m_dbCommandPrepareInsertFrame.Parameters.Clear();
 		}
@@ -852,10 +869,10 @@ namespace UIMFLibrary
 			this.m_globalParameters = header;
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 			this.m_dbCommandUimf.CommandText = "INSERT INTO Global_Parameters "
-			                                   + "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, "
-			                                   + "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) "
-			                                   + "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, "
-			                                   + ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
+											   + "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, "
+											   + "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) "
+											   + "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, "
+											   + ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
 
 			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
 			this.m_dbCommandUimf.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
@@ -884,29 +901,29 @@ namespace UIMFLibrary
 		/// TODO:: Deprecate this function since the bpi is calculated using an incorrect calibration function
 		/// </summary>
 		/// <param name="frameParameters">
-		/// TODO The frame parameters.
+		/// Frame parameters.
 		/// </param>
 		/// <param name="scanNum">
-		/// TODO The scan num.
+		/// Scan num.
 		/// </param>
 		/// <param name="counter">
-		/// TODO The counter.
+		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
-		/// TODO The intensities.
+		/// Intensities array
 		/// </param>
 		/// <param name="binWidth">
-		/// TODO The bin width.
+		/// Bin width
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
 		[Obsolete]
 		public int InsertScan(
-			FrameParameters frameParameters, 
-			int scanNum, 
-			int counter, 
-			double[] intensities, 
+			FrameParameters frameParameters,
+			int scanNum,
+			int counter,
+			double[] intensities,
 			double binWidth)
 		{
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
@@ -958,9 +975,9 @@ namespace UIMFLibrary
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
 				nlzf = LZFCompressionUtil.Compress(
-					ref byteBuffer, 
-					nrlze * datatypeSize, 
-					ref compressedData, 
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compressedData,
 					nrlze * datatypeSize * 5);
 			}
 
@@ -979,7 +996,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Insert a new scan using an array of intensities along with bin_width
+		/// Insert a new scan using an array of intensities (as ints) along with bin_width
 		/// </summary>
 		/// <param name="frameParameters">
 		/// Frame parameters
@@ -1048,9 +1065,9 @@ namespace UIMFLibrary
 					byte[] byte_array = new byte[nrlze * datatypeSize];
 					Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
 					nonZeroCount = LZFCompressionUtil.Compress(
-						ref byte_array, 
-						nrlze * datatypeSize, 
-						ref compressedData, 
+						ref byte_array,
+						nrlze * datatypeSize,
+						ref compressedData,
 						nrlze * datatypeSize * 5);
 				}
 
@@ -1070,26 +1087,31 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Insert a new scan using an array of intensities (as floats), bin_width, and "counter" which should be equivalent to the count of non-zero data in intensities
+		/// Insert a new scan using an array of intensities (as floats) and bin_width
 		/// </summary>
 		/// <param name="frameParameters">
+		/// Frame parameters.
 		/// </param>
 		/// <param name="scanNum">
+		/// Scan num.
 		/// </param>
 		/// <param name="counter">
+		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
+		/// Intensities array
 		/// </param>
-		/// <param name="bin_width">
+		/// <param name="binWidth">
+		/// Bin width
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
 		public int InsertScan(
-			FrameParameters frameParameters, 
-			int scanNum, 
-			int counter, 
-			float[] intensities, 
+			FrameParameters frameParameters,
+			int scanNum,
+			int counter,
+			float[] intensities,
 			double bin_width)
 		{
 			int nrlze = 0;
@@ -1139,9 +1161,9 @@ namespace UIMFLibrary
 				byte[] byte_array = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
 				nlzf = LZFCompressionUtil.Compress(
-					ref byte_array, 
-					nrlze * datatypeSize, 
-					ref compressedData, 
+					ref byte_array,
+					nrlze * datatypeSize,
+					ref compressedData,
 					nrlze * datatypeSize * 5);
 			}
 
@@ -1176,15 +1198,15 @@ namespace UIMFLibrary
 		/// <param name="timeOffset">
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
 		[Obsolete]
 		public int InsertScan(
-			FrameParameters fp, 
-			int scanNum, 
-			List<int> bins, 
-			List<int> intensities, 
-			double binWidth, 
+			FrameParameters fp,
+			int scanNum,
+			List<int> bins,
+			List<int> intensities,
+			double binWidth,
 			int timeOffset)
 		{
 			try
@@ -1199,7 +1221,7 @@ namespace UIMFLibrary
 				if (fp != null)
 				{
 					if (bins != null && intensities != null && bins.Count != 0 && intensities.Count != 0
-					    && bins.Count == intensities.Count)
+						&& bins.Count == intensities.Count)
 					{
 						// that is the total number of data points that are to be encoded
 						nonZeroCount = bins.Count;
@@ -1248,9 +1270,9 @@ namespace UIMFLibrary
 						byte[] byteBuffer = new byte[index * datatypeSize];
 						Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
 						int nlzf = LZFCompressionUtil.Compress(
-							ref byteBuffer, 
-							index * datatypeSize, 
-							ref compresedRecord, 
+							ref byteBuffer,
+							index * datatypeSize,
+							ref compresedRecord,
 							compresedRecord.Length);
 						byte[] spectra = new byte[nlzf];
 
@@ -1294,14 +1316,14 @@ namespace UIMFLibrary
 		/// <param name="timeOffset">
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
 		public int InsertScan(
-			FrameParameters frameParameters, 
-			int scanNum, 
-			int[] bins, 
-			int[] intensities, 
-			double binWidth, 
+			FrameParameters frameParameters,
+			int scanNum,
+			int[] bins,
+			int[] intensities,
+			double binWidth,
 			int timeOffset)
 		{
 			int nonZeroCount = 0;
@@ -1314,7 +1336,7 @@ namespace UIMFLibrary
 			if (frameParameters != null)
 			{
 				if (bins != null && intensities != null && bins.Length != 0 && intensities.Length != 0
-				    && bins.Length == intensities.Length)
+					&& bins.Length == intensities.Length)
 				{
 					// that is the total number of datapoints that are to be encoded
 					nonZeroCount = bins.Length;
@@ -1364,9 +1386,9 @@ namespace UIMFLibrary
 					byte[] byteBuffer = new byte[index * datatypeSize];
 					Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
 					int nlzf = LZFCompressionUtil.Compress(
-						ref byteBuffer, 
-						index * datatypeSize, 
-						ref compresedRecord, 
+						ref byteBuffer,
+						index * datatypeSize,
+						ref compresedRecord,
 						compresedRecord.Length);
 					byte[] spectra = new byte[nlzf];
 
@@ -1386,19 +1408,25 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Insert a new scan using an array of intensities (as ints) and bin_width
 		/// </summary>
 		/// <param name="frameParameters">
+		/// Frame parameters.
 		/// </param>
 		/// <param name="scanNum">
+		/// Scan num.
 		/// </param>
 		/// <param name="counter">
+		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
+		/// Intensities array
 		/// </param>
 		/// <param name="binWidth">
+		/// Bin width
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
 		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, int[] intensities, double binWidth)
 		{
@@ -1467,9 +1495,9 @@ namespace UIMFLibrary
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(rlze_data, 0, byteBuffer, 0, nrlze * datatypeSize);
 				nlzf = LZFCompressionUtil.Compress(
-					ref byteBuffer, 
-					nrlze * datatypeSize, 
-					ref compresedRecord, 
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compresedRecord,
 					compresedRecord.Length);
 			}
 
@@ -1491,25 +1519,27 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Insert a new scan using an array of intensities (as shorts) and bin_width
 		/// </summary>
 		/// <param name="frameParameters">
 		/// </param>
 		/// <param name="scanNum">
 		/// </param>
 		/// <param name="counter">
+		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
 		/// </param>
 		/// <param name="bin_width">
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
 		public int InsertScan(
-			FrameParameters frameParameters, 
-			int scanNum, 
-			int counter, 
-			short[] intensities, 
+			FrameParameters frameParameters,
+			int scanNum,
+			int counter,
+			short[] intensities,
 			double bin_width)
 		{
 			int nrlze = 0;
@@ -1562,9 +1592,9 @@ namespace UIMFLibrary
 				byte[] byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
 				nlzf = LZFCompressionUtil.Compress(
-					ref byteBuffer, 
-					nrlze * datatypeSize, 
-					ref compressedData, 
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compressedData,
 					nrlze * datatypeSize * 5);
 			}
 
@@ -1589,7 +1619,7 @@ namespace UIMFLibrary
 		/// <param name="ms_level">
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Always returns 0<see cref="int"/>.
 		/// </returns>
 		public int InsertScanParameters(int scanNum, int ms_level)
 		{
@@ -1633,7 +1663,7 @@ namespace UIMFLibrary
 		{
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 			this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope.ToString()
-			                                   + ", CalibrationIntercept = " + intercept + " WHERE FrameNum = " + frameNumber;
+											   + ", CalibrationIntercept = " + intercept + " WHERE FrameNum = " + frameNumber;
 
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			this.m_dbCommandUimf.Dispose();
@@ -1654,7 +1684,7 @@ namespace UIMFLibrary
 
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
 			this.m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + parameterValue
-			                                   + " WHERE FrameNum = " + frameNumber;
+											   + " WHERE FrameNum = " + frameNumber;
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			this.m_dbCommandUimf.Dispose();
 		}
@@ -1753,9 +1783,36 @@ namespace UIMFLibrary
 		/// </param>
 		public void UpdateGlobalParameter(string parameterName, string parameterValue)
 		{
+			var dctFields = new Dictionary<string, string>
+			{
+				{"DateStarted", "STRING"},
+				{"NumFrames", "INT"},
+				{"TimeOffset", "INT"},
+				{"BinWidth", "DOUBLE"},
+				{"Bins", "INT"},
+				{"TOFCorrectionTime", "FLOAT"},
+				{"FrameDataBlobVersion", "FLOAT"},
+				{"ScanDataBlobVersion", "FLOAT"},
+				{"TOFIntensityType", "TEXT"},
+				{"DatasetType", "TEXT"},
+				{"Prescan_Accumulations", "INT"},
+				{"Prescan_TICThreshold", "INT"},
+				{"Prescan_Continuous", "BOOL"},
+				{"Prescan_Profile", "STRING"},
+				{"Instrument_Name", "STRING"}
+			};
+
+			string fieldType;
+
+			if (!dctFields.TryGetValue(parameterName, out fieldType))
+				throw new Exception("Invalid global parameter name, " + parameterName);
+
+			if (fieldType == "STRING" || fieldType == "TEXT")
+				parameterValue = "'" + parameterValue + "'";
+
 			this.m_dbCommandUimf = this.m_dbConnection.CreateCommand();
-			this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName.ToString() + " = "
-			                                   + parameterValue;
+			this.m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName + " = "
+											   + parameterValue;
 			this.m_dbCommandUimf.ExecuteNonQuery();
 			this.m_dbCommandUimf.Dispose();
 		}
@@ -1767,7 +1824,7 @@ namespace UIMFLibrary
 		/// <param name="fileBytesAsBuffer">
 		/// </param>
 		/// <returns>
-		/// The <see cref="bool"/>.
+		/// Always returns true<see cref="bool"/>.
 		/// </returns>
 		public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
 		{
@@ -1828,7 +1885,7 @@ namespace UIMFLibrary
 		/// <param name="frag">
 		/// </param>
 		/// <returns>
-		/// The <see cref="byte[]"/>.
+		/// Byte array<see cref="byte[]"/>.
 		/// </returns>
 		private static byte[] ConvertToBlob(double[] frag)
 		{
@@ -1842,17 +1899,17 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Convert DateTime to String yyyy-mm-dd hh:mm:ss
 		/// </summary>
 		/// <param name="dt">
 		/// </param>
 		/// <returns>
-		/// The <see cref="string"/>.
+		/// DateTime string <see cref="string"/>.
 		/// </returns>
 		private string ConvertDateTimeToString(DateTime dt)
 		{
-			// Convert DateTime to String yyyy-mm-dd hh:mm:ss
 			string dt_string = dt.Year.ToString("0000") + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + " "
-			                   + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00");
+							   + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00");
 
 			return "'" + dt_string + "'";
 		}
@@ -1874,12 +1931,12 @@ namespace UIMFLibrary
 		/// <param name="spectraRecord">
 		/// </param>
 		private void InsertScanAddParameters(
-			int frameNumber, 
-			int scanNum, 
-			int nonZeroCount, 
-			int bpi, 
-			double bpiMz, 
-			int tic, 
+			int frameNumber,
+			int scanNum,
+			int nonZeroCount,
+			int bpi,
+			double bpiMz,
+			int tic,
 			byte[] spectraRecord)
 		{
 			this.m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString()));
@@ -1932,16 +1989,16 @@ namespace UIMFLibrary
 				+ "voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", ";
 
 			cmd += "voltEntranceCondLmt, " + "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, "
-			       + "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName
-			       + ", voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, "
-			       + "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)"
-			       + "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses,"
-			       + ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, "
-			       + ":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName
-			       + ",:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2,"
-			       + ":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName + ",:voltExitCondLmt, "
-			       + ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " + ":HPPressure, :IPTrapPressure, "
-			       + ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
+				   + "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName
+				   + ", voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, "
+				   + "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)"
+				   + "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses,"
+				   + ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, "
+				   + ":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName
+				   + ",:voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2,"
+				   + ":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName + ",:voltExitCondLmt, "
+				   + ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " + ":HPPressure, :IPTrapPressure, "
+				   + ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
 
 			this.m_dbCommandPrepareInsertFrame.CommandText = cmd;
 			this.m_dbCommandPrepareInsertFrame.Prepare();
@@ -1970,7 +2027,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The transaction begin.
+		/// Begin a transaction
 		/// </summary>
 		private void TransactionBegin()
 		{
@@ -1980,7 +2037,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The transaction commit.
+		/// Commit a transaction
 		/// </summary>
 		private void TransactionCommit()
 		{
@@ -1990,6 +2047,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Convert bin number to m/z value
 		/// </summary>
 		/// <param name="binNumber">
 		/// </param>
@@ -1998,15 +2056,15 @@ namespace UIMFLibrary
 		/// <param name="frameParameters">
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// m/z<see cref="double"/>.
 		/// </returns>
 		private double convertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
 		{
 			// mz = (k * (t-t0))^2
 			double t = binNumber * binWidth / 1000;
 			double resMassErr = frameParameters.a2 * t + frameParameters.b2 * System.Math.Pow(t, 3)
-			                    + frameParameters.c2 * System.Math.Pow(t, 5) + frameParameters.d2 * System.Math.Pow(t, 7)
-			                    + frameParameters.e2 * System.Math.Pow(t, 9) + frameParameters.f2 * System.Math.Pow(t, 11);
+								+ frameParameters.c2 * System.Math.Pow(t, 5) + frameParameters.d2 * System.Math.Pow(t, 7)
+								+ frameParameters.e2 * System.Math.Pow(t, 9) + frameParameters.f2 * System.Math.Pow(t, 11);
 			double mz =
 				(double)
 				(frameParameters.CalibrationSlope

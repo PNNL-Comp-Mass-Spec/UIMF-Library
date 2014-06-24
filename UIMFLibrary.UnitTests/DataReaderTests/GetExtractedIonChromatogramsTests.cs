@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="GetExtractedIonChromatogramsTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The get extracted ion chromatograms tests.
+//   Get extracted ion chromatograms tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -16,7 +13,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The get extracted ion chromatograms tests.
+	/// The get extracted ion chromatograms tests.
 	/// </summary>
 	[TestFixture]
 	public class GetExtractedIonChromatogramsTests
@@ -24,7 +21,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Fields
 
 		/// <summary>
-		/// TODO The m_reader.
+		/// The m_reader.
 		/// </summary>
 		private DataReader m_reader;
 
@@ -33,7 +30,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The get 3 d elution profile_test 1.
+		/// The get 3D elution profile_test 1.
 		/// </summary>
 		[Test]
 		public void Get3DElutionProfile_test1()
@@ -82,7 +79,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get 3 d elution profile_test 2.
+		/// The get 3D elution profile_test 2.
 		/// </summary>
 		[Test]
 		public void Get3DElutionProfile_test2()
@@ -122,7 +119,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get 3 d elution profile_test 3.
+		/// The get 3D elution profile_test 3.
 		/// </summary>
 		[Test]
 		public void Get3DElutionProfile_test3()
@@ -179,7 +176,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get drift time profile test 1.
+		/// The get drift time profile test 1.
 		/// </summary>
 		[Test]
 		public void GetDriftTimeProfileTest1()
@@ -214,7 +211,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get lc chromatogram test 2.
+		/// The get lc chromatogram test 2.
 		/// </summary>
 		[Test]
 		public void GetLCChromatogramTest2()
@@ -268,7 +265,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get lc chromatogram test 3.
+		/// The get lc chromatogram test 3.
 		/// </summary>
 		[Test]
 		public void GetLCChromatogramTest3()

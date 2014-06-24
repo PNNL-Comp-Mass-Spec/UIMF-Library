@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LZFCompressionUtil.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Improved C# LZF Compressor, a very small data compression library. The compression algorithm is extremely fast.
 // </summary>
@@ -53,27 +50,27 @@ namespace UIMFLibrary
 		#region Constants
 
 		/// <summary>
-		/// TODO The hlog.
+		/// H Log
 		/// </summary>
 		private const uint HLOG = 14;
 
 		/// <summary>
-		/// TODO The hsize.
+		/// H Size
 		/// </summary>
 		private const uint HSIZE = 1 << 14;
 
 		/// <summary>
-		/// TODO The ma x_ lit.
+		/// max lit
 		/// </summary>
 		private const uint MAX_LIT = 1 << 5;
 
 		/// <summary>
-		/// TODO The ma x_ off.
+		/// Mxx off
 		/// </summary>
 		private const uint MAX_OFF = 1 << 13;
 
 		/// <summary>
-		/// TODO The ma x_ ref.
+		/// Max ref
 		/// </summary>
 		private const uint MAX_REF = (1 << 8) + (1 << 3);
 

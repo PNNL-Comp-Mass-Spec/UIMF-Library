@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="createUIMFFileTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The create uimf file tests.
+//   Create uimf file tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -12,7 +9,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The create uimf file tests.
+	/// The create uimf file tests.
 	/// </summary>
 	[TestFixture]
 	public class createUIMFFileTests

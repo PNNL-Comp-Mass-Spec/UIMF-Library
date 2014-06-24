@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MSMS_relatedTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The msm s_related tests.
+//   MSMS related tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -14,14 +11,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The msm s_related tests.
+	/// The MSMS related tests.
 	/// </summary>
 	public class MSMS_relatedTests
 	{
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The get frame type test 1.
+		/// The get frame type test 1.
 		/// </summary>
 		[Test]
 		public void GetFrameTypeTest1()
@@ -42,7 +39,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get msms test 1.
+		/// The get msms test 1.
 		/// </summary>
 		[Test]
 		public void GetMSMSTest1()
@@ -76,7 +73,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The contains msms data test 3.
+		/// The contains msms data test 3.
 		/// </summary>
 		[Test]
 		public void containsMSMSDataTest3()
@@ -88,7 +85,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The contains msms data_test 1.
+		/// The contains msms data_test 1.
 		/// </summary>
 		[Test]
 		public void containsMSMSData_test1()
@@ -100,7 +97,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The contains msms data_test 2.
+		/// The contains msms data_test 2.
 		/// </summary>
 		[Test]
 		public void containsMSMSData_test2()

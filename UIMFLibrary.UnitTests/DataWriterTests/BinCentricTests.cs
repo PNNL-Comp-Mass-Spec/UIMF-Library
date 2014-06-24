@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BinCentricTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The bin centric tests.
+//   Bin centric tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -15,14 +12,14 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The bin centric tests.
+	/// The bin centric tests.
 	/// </summary>
 	public class BinCentricTests
 	{
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The test create bin centric tables.
+		/// The test create bin centric tables.
 		/// </summary>
 		[Test]
 		public void TestCreateBinCentricTables()
@@ -44,7 +41,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 		}
 
 		/// <summary>
-		/// TODO The test create bin centric tables small file.
+		/// The test create bin centric tables small file.
 		/// </summary>
 		[Test]
 		public void TestCreateBinCentricTablesSmallFile()
@@ -65,7 +62,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 		}
 
 		/// <summary>
-		/// TODO The test encode decode functionality.
+		/// The test encode decode functionality.
 		/// </summary>
 		[Test]
 		public void TestEncodeDecodeFunctionality()

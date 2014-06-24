@@ -1,16 +1,13 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FrameTypeInfo.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The frame type info.
+//   Defines the frame type info.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace UIMFLibrary
 {
 	/// <summary>
-	/// TODO The frame type info.
+	/// Defines the frame type info.
 	/// </summary>
 	internal class FrameTypeInfo
 	{
@@ -20,7 +17,7 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="FrameTypeInfo"/> class.
 		/// </summary>
 		/// <param name="numFramesInFile">
-		/// TODO The num frames in file.
+		/// Number of frames in the file.
 		/// </param>
 		public FrameTypeInfo(int numFramesInFile)
 		{
@@ -47,10 +44,10 @@ namespace UIMFLibrary
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The add frame.
+		/// Add a frame.
 		/// </summary>
 		/// <param name="frameNumber">
-		/// TODO The frame number.
+		/// Frame number.
 		/// </param>
 		public void AddFrame(int frameNumber)
 		{

@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FrameAndScanInfoTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The frame and scan info tests.
+//   Frame and scan info tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -14,7 +11,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The frame and scan info tests.
+	/// The frame and scan info tests.
 	/// </summary>
 	[TestFixture]
 	public class FrameAndScanInfoTests
@@ -22,7 +19,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The get avg tof length test 1.
+		/// The get avg tof length test 1.
 		/// </summary>
 		[Test]
 		public void getAvgTOFLengthTest1()
@@ -37,7 +34,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 		// TODO:  assert some values
 		/// <summary>
-		/// TODO The get frame info_demultiplexed frame 0_ test 1.
+		/// The get frame info_demultiplexed frame 0_ test 1.
 		/// </summary>
 		[Test]
 		public void getFrameInfo_demultiplexedFrame0_Test1()
@@ -54,7 +51,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 		// TODO:  assert some values
 		/// <summary>
-		/// TODO The get frame info_demultiplexed_first frame_ test 1.
+		/// The get frame info_demultiplexed_first frame_ test 1.
 		/// </summary>
 		[Test]
 		public void getFrameInfo_demultiplexed_firstFrame_Test1()
@@ -71,7 +68,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
 		// TODO:  assert some values
 		/// <summary>
-		/// TODO The get frame info_demultiplexed_last frame_ test 1.
+		/// The get frame info_demultiplexed_last frame_ test 1.
 		/// </summary>
 		[Test]
 		public void getFrameInfo_demultiplexed_lastFrame_Test1()
@@ -90,7 +87,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get frame pressure_last frame.
+		/// The get frame pressure_last frame.
 		/// </summary>
 		[Test]
 		public void getFramePressure_lastFrame()
@@ -111,7 +108,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get global params_test 1.
+		/// The get global params_test 1.
 		/// </summary>
 		[Test]
 		public void getGlobalParams_test1()
@@ -126,7 +123,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		}
 
 		/// <summary>
-		/// TODO The get number of frames test.
+		/// The get number of frames test.
 		/// </summary>
 		[Test]
 		public void getNumberOfFramesTest()

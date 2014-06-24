@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="updateFrameParameterTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The update frame parameter tests.
+//   Update frame parameter tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -12,7 +9,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The update frame parameter tests.
+	/// The update frame parameter tests.
 	/// </summary>
 	[TestFixture]
 	public class updateFrameParameterTests

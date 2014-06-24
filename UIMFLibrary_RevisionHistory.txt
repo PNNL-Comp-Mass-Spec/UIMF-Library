@@ -1,5 +1,17 @@
 UIMFLibrary Revision History
 
+Version 2.1.5287; June 23, 2014
+	- UpdateGlobalParameter now supports updating a string field in Global_Parameters 
+	- Updated the UIMFLibrary_Demo to use the latest DataReader and DataWriter classes
+	- Expanded the code documentation throughout
+
+Version 2.1.5214; April 11, 2014
+	- Updated the DataWriter to implement System.IDisposable and to use a constructor that requires the UIMF file string
+	- Removed the CloseUIMF() and OpenUIMF() methods
+
+Version 2.0.4891; May 23, 2013
+	- Added bin-centric functions
+
 Version 2.0.4450; March 8, 2012
 	- Added overloaded version of InsertScan that takes an integer array of intensities
 

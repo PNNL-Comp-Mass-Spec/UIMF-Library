@@ -31,11 +31,7 @@ namespace UIMFLibrary_Demo
                 return;
             }
 
-            UIMFLibrary.DataReader datareader = new UIMFLibrary.DataReader();
-            datareader.OpenUIMF(_testUIMFFile);
-
-
-
+			UIMFLibrary.DataReader datareader = new UIMFLibrary.DataReader(_testUIMFFile);
 
 
             //--------------------------------------------------------------------------Get Global parameters
@@ -64,15 +60,21 @@ namespace UIMFLibrary_Demo
             int imsScanLower = 125;
             int imsScanUpper = 131;
 
-            int frameType = 0;   //ms1 = 0 OR 1; ms2= 2
+	        var frameType = DataReader.FrameType.MS1;
 
-            double[] xvals = new double[gp.Bins];
-            int[] yvals = new int[gp.Bins];
-            datareader.SumScansNonCached(xvals, yvals, frameType, frameLower, frameUpper, imsScanLower, imsScanUpper);
+			// Old method:
+            // double[] xvals = new double[gp.Bins];
+            // int[] yvals = new int[gp.Bins];            
+			// datareader.SumScansNonCached(xvals, yvals, frameType, frameLower, frameUpper, imsScanLower, imsScanUpper);
+
+	        double[] xvals;
+	        int[] yvals;
+
+			datareader.GetSpectrum(frameLower, frameUpper, frameType, imsScanLower, imsScanLower, out xvals, out yvals);
 
             reportProgress();
             reportProgress();
-            reportProgress("The following are a few m/z and intensitys for the summed mass spectrum from frames: " + frameLower + "-" + frameUpper + "; Scans: " + imsScanLower + "-" + imsScanUpper);
+            reportProgress("The following are a few m/z and intensities for the summed mass spectrum from frames: " + frameLower + "-" + frameUpper + "; Scans: " + imsScanLower + "-" + imsScanUpper);
 
             UIMFDataUtilities.ParseOutZeroValues(ref xvals, ref yvals, 639, 640);    //note - this utility is for parsing out the zeros or filtering on m/z
 
@@ -89,7 +91,7 @@ namespace UIMFLibrary_Demo
             int[] frameVals = null;
             int[] intensityVals = null;
 
-            datareader.GetLCProfile(frameTarget - 25, frameTarget + 25, frameType, imsScanTarget - 2, imsScanTarget + 2, targetMZ, toleranceInMZ, ref frameVals, ref intensityVals);
+			datareader.GetLCProfile(frameTarget - 25, frameTarget + 25, frameType, imsScanTarget - 2, imsScanTarget + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
             reportProgress();
             reportProgress();
 
@@ -114,7 +116,7 @@ namespace UIMFLibrary_Demo
 
 
             //------------------------------------------------------------------------------------Get 3D elution profile
-            datareader.Get3DElutionProfile(frameTarget - 5, frameTarget + 5, 0, imsScanTarget - 5, imsScanTarget + 5, targetMZ, toleranceInMZ, ref frameVals, ref scanVals, ref intensityVals);
+            datareader.Get3DElutionProfile(frameTarget - 5, frameTarget + 5, 0, imsScanTarget - 5, imsScanTarget + 5, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
             reportProgress();
 
             reportProgress("3D Extracted ion chromatogram. Target m/z= " + targetMZ);

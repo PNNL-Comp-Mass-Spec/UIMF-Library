@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SpeedTests.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The speed tests.
+//   Speed tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -15,14 +12,14 @@ namespace UIMFLibrary.UnitTests
 	using NUnit.Framework;
 
 	/// <summary>
-	/// TODO The speed tests.
+	/// The speed tests.
 	/// </summary>
 	public class SpeedTests
 	{
 		#region Fields
 
 		/// <summary>
-		/// TODO The uimf standard file 1.
+		/// Standard non-multiplexed file
 		/// </summary>
 		private string uimfStandardFile1 =
 			@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
@@ -32,7 +29,7 @@ namespace UIMFLibrary.UnitTests
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The get summed massspectrum speed tests.
+		/// Summed mass spectrum speed tests.
 		/// </summary>
 		[Test]
 		public void GetSummedMassspectrumSpeedTests()
@@ -76,7 +73,7 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The get single summed mass spectrum test 1.
+		/// Single summed mass spectrum test 1.
 		/// </summary>
 		[Test]
 		public void getSingleSummedMassSpectrumTest1()

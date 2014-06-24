@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="TestUtilities.cs" company="">
-//   
-// </copyright>
 // <summary>
-//   TODO The test utilities.
+//   Test utilities.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -13,20 +10,20 @@ namespace UIMFLibrary.UnitTests
 	using System.Text;
 
 	/// <summary>
-	/// TODO The test utilities.
+	/// The test utilities.
 	/// </summary>
 	public class TestUtilities
 	{
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The display 2 d chromatogram.
+		/// Display 2D chromatogram.
 		/// </summary>
 		/// <param name="frameORScanVals">
-		/// TODO The frame or scan vals.
+		/// The frame or scan vals.
 		/// </param>
 		/// <param name="intensityVals">
-		/// TODO The intensity vals.
+		/// The intensity vals.
 		/// </param>
 		public static void display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
 		{
@@ -43,10 +40,10 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The display frame parameters.
+		/// Display frame parameters.
 		/// </summary>
 		/// <param name="fp">
-		/// TODO The fp.
+		/// The fp.
 		/// </param>
 		public static void displayFrameParameters(FrameParameters fp)
 		{
@@ -84,13 +81,13 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The display raw mass spectrum.
+		/// Display raw mass spectrum.
 		/// </summary>
 		/// <param name="mzValues">
-		/// TODO The mz values.
+		/// The mz values.
 		/// </param>
 		/// <param name="intensities">
-		/// TODO The intensities.
+		/// The intensities.
 		/// </param>
 		public static void displayRawMassSpectrum(double[] mzValues, int[] intensities)
 		{
@@ -107,13 +104,13 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The get max.
+		/// Get the max value in a list of ints
 		/// </summary>
 		/// <param name="values">
-		/// TODO The values.
+		/// The values.
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Maximum value<see cref="int"/>.
 		/// </returns>
 		public static int getMax(int[] values)
 		{
@@ -130,19 +127,19 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The get max.
+		/// Get the max value in a 2D array of ints
 		/// </summary>
 		/// <param name="values">
-		/// TODO The values.
+		/// The values.
 		/// </param>
 		/// <param name="xcoord">
-		/// TODO The xcoord.
+		/// The xcoord of the maximum value
 		/// </param>
 		/// <param name="ycoord">
-		/// TODO The ycoord.
+		/// The ycoord of the maximum value
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// Maximum value<see cref="int"/>.
 		/// </returns>
 		public static int getMax(int[][] values, out int xcoord, out int ycoord)
 		{
@@ -167,16 +164,16 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The print as a matrix.
+		/// Print data as a matrix
 		/// </summary>
 		/// <param name="frameVals">
-		/// TODO The frame vals.
+		/// The frame vals.
 		/// </param>
 		/// <param name="intensityVals">
-		/// TODO The intensity vals.
+		/// The intensity vals.
 		/// </param>
 		/// <param name="cutoff">
-		/// TODO The cutoff.
+		/// The cutoff.
 		/// </param>
 		public static void printAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
 		{
@@ -206,16 +203,16 @@ namespace UIMFLibrary.UnitTests
 		}
 
 		/// <summary>
-		/// TODO The print as a matrix.
+		/// Print data as a matrix
 		/// </summary>
 		/// <param name="frameVals">
-		/// TODO The frame vals.
+		/// The frame vals.
 		/// </param>
 		/// <param name="intensityVals">
-		/// TODO The intensity vals.
+		/// The intensity vals.
 		/// </param>
 		/// <param name="cutoff">
-		/// TODO The cutoff.
+		/// The cutoff.
 		/// </param>
 		public static void printAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
 		{

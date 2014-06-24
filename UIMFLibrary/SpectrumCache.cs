@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SpectrumCache.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Defines the SpectrumCache type.
 // </summary>
@@ -11,7 +8,7 @@ namespace UIMFLibrary
 	using System.Collections.Generic;
 
 	/// <summary>
-	/// TODO The spectrum cache.
+	/// The spectrum cache.
 	/// </summary>
 	public class SpectrumCache
 	{

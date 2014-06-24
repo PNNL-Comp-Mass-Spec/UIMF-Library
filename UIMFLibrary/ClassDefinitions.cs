@@ -1,9 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="ClassDefinitions.cs">
-//   
-// </copyright>
 // <summary>
-//   TODO The global parameters.
+//   Global parameters.
 // </summary>
 // 
 // --------------------------------------------------------------------------------------------------------------------
@@ -12,352 +9,388 @@ namespace UIMFLibrary
 	using System;
 
 	/// <summary>
-	/// TODO The global parameters.
+	/// The global parameters.
 	/// </summary>
 	public class GlobalParameters
 	{
-		// public DateTime DateStarted;         // 1, Date Experiment was acquired 
+		// public DateTime DateStarted;         // Date Experiment was acquired 
+
 		#region Fields
 
 		/// <summary>
-		/// TODO The bin width.
+		///Width of TOF bins (in ns)
 		/// </summary>
-		public double BinWidth; // 4, Width of TOF bins (in ns)
+		public double BinWidth;
 
 		/// <summary>
-		/// TODO The bins.
+		/// Total number of TOF bins in frame
 		/// </summary>
-		public int Bins; // 5, Total number of TOF bins in frame
+		public int Bins;
 
 		/// <summary>
-		/// TODO The dataset type.
+		/// Type of dataset (HMS/HMSMS/HMS-MSn)
 		/// </summary>
-		public string DatasetType; // 9, Type of dataset (HMS/HMSMS/HMS-MSn)
+		public string DatasetType; 
 
 		/// <summary>
-		/// TODO The date started.
+		/// Date started.
 		/// </summary>
 		public string DateStarted;
 
 		/// <summary>
-		/// TODO The frame data blob version.
+		/// Version of FrameDataBlob in T_Frame
 		/// </summary>
-		public float FrameDataBlobVersion; // 6, Version of FrameDataBlob in T_Frame
+		public float FrameDataBlobVersion;
 
 		/// <summary>
-		/// TODO The instrument name.
+		/// Instrument name.
 		/// </summary>
-		public string InstrumentName; // Name of the system on which data was acquired
+		public string InstrumentName;
 
 		/// <summary>
-		/// TODO The num frames.
+		/// Number of frames in dataset
 		/// </summary>
-		public int NumFrames; // 2, Number of frames in dataset
+		public int NumFrames;
 
 		/// <summary>
-		/// TODO The prescan_ accumulations.
+		/// Number of prescan accumulations
 		/// </summary>
 		public int Prescan_Accumulations;
 
 		/// <summary>
-		/// TODO The prescan_ continuous.
+		/// Prescan Continuous flag
 		/// </summary>
-		public bool Prescan_Continuous; // True or False
+		public bool Prescan_Continuous; 
 
 		/// <summary>
-		/// TODO The prescan_ profile.
+		/// Prescan profile.
 		/// </summary>
-		public string Prescan_Profile; // If continuous is true, set this to NULL;
+		/// <remarks>
+		/// If continuous is true, set this to NULL;
+		/// </remarks>
+		public string Prescan_Profile;
 
 		/// <summary>
-		/// TODO The prescan_ tic threshold.
+		/// Prescan TIC threshold
 		/// </summary>
 		public int Prescan_TICThreshold;
 
 		/// <summary>
-		/// TODO The prescan_ tof pulses.
+		/// Prescan TOF pulses
 		/// </summary>
-		public int Prescan_TOFPulses; // 10 - 14, Prescan parameter
+		public int Prescan_TOFPulses;
 
 		/// <summary>
-		/// TODO The scan data blob version.
+		/// Version of ScanInfoBlob in T_Frame
 		/// </summary>
-		public float ScanDataBlobVersion; // 7, Version of ScanInfoBlob in T_Frame
+		public float ScanDataBlobVersion;
 
 		/// <summary>
-		/// TODO The tof correction time.
+		/// TOF correction time.
 		/// </summary>
 		public float TOFCorrectionTime;
 
 		/// <summary>
-		/// TODO The tof intensity type.
+		/// Data type of intensity in each TOF record (ADC is int, TDC is short, FOLDED is float)
 		/// </summary>
 		public string TOFIntensityType;
-		              // 8, Data type of intensity in each TOF record (ADC is int/TDC is short/FOLDED is float)
 
 		/// <summary>
-		/// TODO The time offset.
+		/// Time offset from 0. All bin numbers must be offset by this amount
 		/// </summary>
-		public int TimeOffset; // 3, Offset from 0. All bin numbers must be offset by this amount
+		public int TimeOffset;
 
 		#endregion
 	}
 
 	/// <summary>
-	/// TODO The frame parameters.
+	/// The frame parameters.
 	/// </summary>
 	public class FrameParameters
 	{
 		#region Fields
 
 		/// <summary>
-		/// TODO The accumulations.
+		/// Number of collected and summed acquisitions in a frame 
 		/// </summary>
-		public int Accumulations; // 3, Number of collected and summed acquisitions in a frame 
+		public int Accumulations; 
 
 		/// <summary>
-		/// TODO The average tof length.
+		/// Average tof length.
 		/// </summary>
-		public double AverageTOFLength; // 8, Average time between TOF trigger pulses
+		/// <remarks>
+		/// Average time between TOF trigger pulses
+		/// </remarks>
+		public double AverageTOFLength; // 8, 
 
 		/// <summary>
-		/// TODO The calibration done.
+		/// Tracks whether frame has been calibrated
 		/// </summary>
-		public int CalibrationDone = -1; // 47, Set to 1 after a frame has been calibrated
+		/// <remarks>
+		/// Set to 1 after a frame has been calibrated
+		/// </remarks>
+		public int CalibrationDone = -1;
 
 		/// <summary>
-		/// TODO The calibration intercept.
+		/// Calibration intercept, t0
 		/// </summary>
-		public double CalibrationIntercept; // 10, Value of t0  
+		public double CalibrationIntercept;
 
 		/// <summary>
-		/// TODO The calibration slope.
+		/// Calibration slope, k0
 		/// </summary>
-		public double CalibrationSlope; // 9, Value of k0  
+		public double CalibrationSlope; 
 
 		/// <summary>
-		/// TODO The decoded.
+		/// Tracks whether frame has been decoded
 		/// </summary>
-		public int Decoded = 0; // 48, Set to 1 after a frame has been decoded (added June 27, 2011)
+		/// <remarks>
+		/// Set to 1 after a frame has been decoded (added June 27, 2011)
+		/// </remarks>
+		public int Decoded = 0;
 
 		/// <summary>
-		/// TODO The duration.
+		/// Frame duration, in seconds
 		/// </summary>
-		public double Duration; // 2, Duration of frame, in seconds 
+		public double Duration;
 
 		/// <summary>
-		/// TODO The esi voltage.
+		/// ESI voltage.
 		/// </summary>
-		public double ESIVoltage; // 45
+		public double ESIVoltage; 
 
 		/// <summary>
-		/// TODO The float voltage.
+		/// Float voltage.
 		/// </summary>
-		public double FloatVoltage; // 46
+		public double FloatVoltage;
 
 		/// <summary>
-		/// TODO The fragmentation profile.
+		/// Voltage profile used in fragmentation
 		/// </summary>
-		public double[] FragmentationProfile; // 40, Voltage profile used in fragmentation
+		public double[] FragmentationProfile;
 
 		/// <summary>
-		/// TODO The frame num.
+		/// Frame number
 		/// </summary>
-		public int FrameNum; // 0, Frame number (primary key)     
+		public int FrameNum; 
 
 		/// <summary>
-		/// TODO The frame type.
+		/// Frame type
 		/// </summary>
+		/// <remarks>
+		/// Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+		/// </remarks>
 		public DataReader.FrameType FrameType;
-		                            // 4, Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
 
 		/// <summary>
-		/// TODO The high pressure funnel pressure.
+		/// High pressure funnel pressure.
 		/// </summary>
-		public double HighPressureFunnelPressure; // 41
+		public double HighPressureFunnelPressure;
 
 		/// <summary>
-		/// TODO The imf profile.
+		/// IMFProfile Name
 		/// </summary>
-		public string IMFProfile;
-		              // 6, IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+		/// <remarks>
+		/// Stores the name of the sequence used to encode the data when acquiring data multiplexed
+		/// </remarks>
+		public string IMFProfile;		     
 
 		/// <summary>
-		/// TODO The ion funnel trap pressure.
+		/// Ion funnel trap pressure.
 		/// </summary>
-		public double IonFunnelTrapPressure; // 42
+		public double IonFunnelTrapPressure;
 
 		/// <summary>
-		/// TODO The mp bit order.
+		/// MP bit order
 		/// </summary>
-		public short MPBitOrder; // 39, Determines original size of bit sequence 
+		/// <remarks>
+		/// Determines original size of bit sequence 
+		/// </remarks>
+		public short MPBitOrder;
 
 		/// <summary>
-		/// TODO The pressure back.
+		/// Pressure at back of Drift Tube 
 		/// </summary>
-		public double PressureBack; // 38, Pressure at back of Drift Tube 
+		public double PressureBack;
 
 		/// <summary>
-		/// TODO The pressure front.
+		///  Pressure at front of Drift Tube 
 		/// </summary>
-		public double PressureFront; // 37, Pressure at front of Drift Tube 
+		public double PressureFront;
 
 		/// <summary>
-		/// TODO The quadrupole pressure.
+		/// Quadrupole pressure.
 		/// </summary>
-		public double QuadrupolePressure; // 44
+		public double QuadrupolePressure;
 
 		/// <summary>
-		/// TODO The rear ion funnel pressure.
+		/// Rear ion funnel pressure.
 		/// </summary>
-		public double RearIonFunnelPressure; // 43
+		public double RearIonFunnelPressure; 
 
 		/// <summary>
-		/// TODO The scans.
+		/// Number of TOF scans in a frame
 		/// </summary>
-		public int Scans; // 5, Number of TOF scans  
+		public int Scans;
 
 		/// <summary>
-		/// TODO The start time.
+		/// Start time of frame, in minutes
 		/// </summary>
-		public double StartTime; // 1, Start time of frame, in minutes
+		public double StartTime;
 
 		/// <summary>
-		/// TODO The tof losses.
+		/// Number of TOF Losses (lost/skipped scans due to I/O problems)
 		/// </summary>
-		public double TOFLosses; // 7, Number of TOF Losses
+		public double TOFLosses;
 
 		/// <summary>
-		/// TODO The temperature.
+		/// Ambient temperature
 		/// </summary>
-		public double Temperature; // 17, Ambient temperature
+		public double Temperature;
 
 		/// <summary>
-		/// TODO The a 2.
+		/// a2 parameter for residual mass error correction
 		/// </summary>
-		public double a2; // 11, These six parameters below are coefficients for residual mass error correction
+		/// <remarks>
+		/// ResidualMassError = a2t + b2t^3 + c2t^5 + d2t^7 + e2t^9 + f2t^11
+		/// </remarks>
+		public double a2;
 
 		/// <summary>
-		/// TODO The b 2.
+		/// b2 parameter for residual mass error correction
 		/// </summary>
-		public double b2; // 12, ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
+		public double b2;
 
 		/// <summary>
-		/// TODO The c 2.
+		/// c2 parameter for residual mass error correction
 		/// </summary>
-		public double c2; // 13
+		public double c2;
 
 		/// <summary>
-		/// TODO The d 2.
+		/// d2 parameter for residual mass error correction
 		/// </summary>
-		public double d2; // 14
+		public double d2;
 
 		/// <summary>
-		/// TODO The e 2.
+		/// e2 parameter for residual mass error correction
 		/// </summary>
-		public double e2; // 15
+		public double e2;
 
 		/// <summary>
-		/// TODO The f 2.
+		/// f2 parameter for residual mass error correction
 		/// </summary>
-		public double f2; // 16
+		/// <remarks>
+		/// ResidualMassError = a2t + b2t^3 + c2t^5 + d2t^7 + e2t^9 + f2t^11
+		/// </remarks>
+		public double f2;
 
 		/// <summary>
-		/// TODO The volt cap inlet.
+		/// Capillary Inlet Voltage
 		/// </summary>
-		public double voltCapInlet; // 22, Capillary Inlet Voltage
+		public double voltCapInlet;
 
 		/// <summary>
-		/// TODO The volt cond 1.
+		/// Fragmentation Conductance Voltage
 		/// </summary>
-		public double voltCond1; // 30, Fragmentation Conductance Voltage
+		public double voltCond1;
 
 		/// <summary>
-		/// TODO The volt cond 2.
+		/// Fragmentation Conductance Voltage
 		/// </summary>
-		public double voltCond2; // 32, Fragmentation Conductance Voltage
+		public double voltCond2;
 
 		/// <summary>
-		/// TODO The volt entrance cond lmt.
+		/// Entrance Cond Limit Voltage
 		/// </summary>
-		public double voltEntranceCondLmt; // 25, Cond Limit Voltage
+		public double voltEntranceCondLmt; 
 
 		/// <summary>
-		/// TODO The volt entrance hpf in.
+		/// HPF In Voltage
 		/// </summary>
+		/// <remarks>
+		/// Renamed from voltEntranceIFTIn to voltEntranceHPFIn in July 2011
+		/// </remarks>
 		public double voltEntranceHPFIn;
-		              // 23, HPF In Voltage  (renamed from voltEntranceIFTIn  to voltEntranceHPFIn  in July 2011)
+
 
 		/// <summary>
-		/// TODO The volt entrance hpf out.
+		/// HPF Out Voltage
 		/// </summary>
+		/// <remarks>
+		/// Renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011
+		/// </remarks>
 		public double voltEntranceHPFOut;
-		              // 24, HPF Out Voltage (renamed from voltEntranceIFTOut to voltEntranceHPFOut in July 2011)
 
 		/// <summary>
-		/// TODO The volt exit cond lmt.
+		/// Exit Cond Limit Voltage
 		/// </summary>
-		public double voltExitCondLmt; // 36, Cond Limit Voltage
+		public double voltExitCondLmt; 
 
 		/// <summary>
-		/// TODO The volt exit hpf in.
+		/// HPF In Voltage
 		/// </summary>
-		public double voltExitHPFIn; // 34, HPF In Voltage  (renamed from voltExitIFTIn  to voltExitHPFIn  in July 2011)
+		/// /// <remarks>
+		/// Renamed from voltExitIFTIn to voltExitHPFIn in July 2011
+		/// </remarks>
+		public double voltExitHPFIn;
 
 		/// <summary>
-		/// TODO The volt exit hpf out.
+		/// HPF Out Voltage
 		/// </summary>
-		public double voltExitHPFOut; // 35, HPF Out Voltage (renamed from voltExitIFTOut to voltExitHPFOut in July 2011)
+		/// /// <remarks>
+		/// Renamed from voltExitIFTOut to voltExitHPFOut in July 2011
+		/// </remarks>
+		public double voltExitHPFOut;
 
 		/// <summary>
-		/// TODO The volt hv rack 1.
+		/// Volt hv rack 1.
 		/// </summary>
-		public double voltHVRack1; // 18, Voltage setting in the IMS system
+		public double voltHVRack1; 
 
 		/// <summary>
-		/// TODO The volt hv rack 2.
+		/// Volt hv rack 2.
 		/// </summary>
-		public double voltHVRack2; // 19, Voltage setting in the IMS system
+		public double voltHVRack2;
 
 		/// <summary>
-		/// TODO The volt hv rack 3.
+		/// Volt hv rack 3.
 		/// </summary>
-		public double voltHVRack3; // 20, Voltage setting in the IMS system
+		public double voltHVRack3;
 
 		/// <summary>
-		/// TODO The volt hv rack 4.
+		/// Volt hv rack 4.
 		/// </summary>
-		public double voltHVRack4; // 21, Voltage setting in the IMS system
+		public double voltHVRack4;
 
 		/// <summary>
-		/// TODO The volt ims out.
+		/// IMS Out Voltage
 		/// </summary>
-		public double voltIMSOut; // 33, IMS Out Voltage
+		public double voltIMSOut;
 
 		/// <summary>
-		/// TODO The volt jet dist.
+		/// Jet Disruptor Voltage
 		/// </summary>
-		public double voltJetDist; // 28, Jet Disruptor Voltage
+		public double voltJetDist;
 
 		/// <summary>
-		/// TODO The volt quad 1.
+		/// Fragmentation Quadrupole Voltage 1
 		/// </summary>
-		public double voltQuad1; // 29, Fragmentation Quadrupole Voltage
+		public double voltQuad1;
 
 		/// <summary>
-		/// TODO The volt quad 2.
+		/// Fragmentation Quadrupole Voltage 2
 		/// </summary>
-		public double voltQuad2; // 31, Fragmentation Quadrupole Voltage
+		public double voltQuad2;
 
 		/// <summary>
-		/// TODO The volt trap in.
+		/// Trap In Voltage
 		/// </summary>
-		public double voltTrapIn; // 27, Trap In Voltage
+		public double voltTrapIn;
 
 		/// <summary>
-		/// TODO The volt trap out.
+		/// Trap Out Voltage
 		/// </summary>
-		public double voltTrapOut; // 26, Trap Out Voltage
+		public double voltTrapOut;
 
 		#endregion
 
@@ -455,10 +488,10 @@ namespace UIMFLibrary
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The copy to.
+		/// Copy the frame parameters to a target
 		/// </summary>
 		/// <param name="Target">
-		/// TODO The target.
+		/// Output: target object
 		/// </param>
 		public void CopyTo(out FrameParameters Target)
 		{
@@ -524,22 +557,23 @@ namespace UIMFLibrary
 		#endregion
 	}
 
-	// /////////////////////////////////////////////////////////////////////
-	// Calibrate TOF to m/z according to formula mass = (k * (t-t0))^2
 	/// <summary>
-	/// TODO The m z_ calibrator.
+	/// The m z_ calibrator.
 	/// </summary>
+	/// <remarks>
+	/// Calibrate TOF to m/z according to formula: mass = (k * (t-t0))^2
+	/// </remarks>
 	public class MZ_Calibrator
 	{
 		#region Fields
 
 		/// <summary>
-		/// TODO The k.
+		/// k
 		/// </summary>
 		private double K;
 
 		/// <summary>
-		/// TODO The t 0.
+		/// t0
 		/// </summary>
 		private double T0;
 
@@ -551,11 +585,14 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="MZ_Calibrator"/> class.
 		/// </summary>
 		/// <param name="k">
-		/// TODO The k.
+		/// k
 		/// </param>
 		/// <param name="t0">
-		/// TODO The t 0.
+		/// t0
 		/// </param>
+		/// <remarks>
+		/// mass = (k * (t-t0))^2
+		/// </remarks>
 		public MZ_Calibrator(double k, double t0)
 		{
 			this.K = k;
@@ -614,13 +651,13 @@ namespace UIMFLibrary
 		#region Public Methods and Operators
 
 		/// <summary>
-		/// TODO The m zto tof.
+		/// Convert m/z to TOF value
 		/// </summary>
 		/// <param name="mz">
-		/// TODO The mz.
+		/// mz
 		/// </param>
 		/// <returns>
-		/// The <see cref="int"/>.
+		/// TOF value<see cref="int"/>.
 		/// </returns>
 		public int MZtoTOF(double mz)
 		{
@@ -629,13 +666,13 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// TODO The to fto mz.
+		/// Convert TOF value to m/z
 		/// </summary>
 		/// <param name="TOFValue">
-		/// TODO The tof value.
+		/// The tof value
 		/// </param>
 		/// <returns>
-		/// The <see cref="double"/>.
+		/// m/z<see cref="double"/>.
 		/// </returns>
 		public double TOFtoMZ(double TOFValue)
 		{

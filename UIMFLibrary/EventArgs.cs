@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EventArgs.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Defines the MessageEventArgs type.
 // </summary>
@@ -11,14 +8,14 @@ namespace UIMFLibrary
 	using System;
 
 	/// <summary>
-	/// TODO The message event args.
+	/// Message event args
 	/// </summary>
 	public class MessageEventArgs : EventArgs
 	{
 		#region Fields
 
 		/// <summary>
-		/// TODO The message.
+		/// Message.
 		/// </summary>
 		public readonly string Message;
 
@@ -30,7 +27,7 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="MessageEventArgs"/> class.
 		/// </summary>
 		/// <param name="message">
-		/// TODO The message.
+		/// Message.
 		/// </param>
 		public MessageEventArgs(string message)
 		{
@@ -41,7 +38,7 @@ namespace UIMFLibrary
 	}
 
 	/// <summary>
-	/// TODO The progress event args.
+	/// The progress event args.
 	/// </summary>
 	public class ProgressEventArgs : EventArgs
 	{
@@ -60,7 +57,7 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="ProgressEventArgs"/> class.
 		/// </summary>
 		/// <param name="percentComplete">
-		/// TODO The percent complete.
+		/// Percent complete.
 		/// </param>
 		public ProgressEventArgs(double percentComplete)
 		{

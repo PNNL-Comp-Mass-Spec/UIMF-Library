@@ -1,7 +1,4 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="UIMFDataUtilities.cs" company="">
-//   
-// </copyright>
 // <summary>
 //   Defines the UIMFDataUtilities type.
 // </summary>
