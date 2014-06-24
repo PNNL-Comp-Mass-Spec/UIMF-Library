@@ -72,7 +72,7 @@ UIMF database structure:
     -----------------------
     Column Name             Data Type    Comment
     ----------              ----------   -------
-    DateStarted             date         Date Experiment was acquired
+    DateStarted             string       Date Experiment was acquired
     NumFrames               int          Number of frames in dataset
     TimeOffset              int          Offset from 0. All bin numbers must be offset by this amount
     BinWidth                double       Width of TOF bins (in ns)
@@ -94,10 +94,10 @@ UIMF database structure:
     ----------------------
     Column Name                 Data Type        Comment
     -----------                 ---------        -------
-    FrameNum                    Integer          (Primary Key) Frame number
-    StartTime                   DateTime         Start time of frame
+    FrameNum                    int              (Primary Key) Frame number
+    StartTime                   double           Start time of frame
     Duration                    double           Duration of frame
-    Accumulations               int              Number of collected and summed acquisitions in a frame
+    Accumulations               short            Number of collected and summed acquisitions in a frame
     FrameType                   short            Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
     Scans                       int              Number of TOF scans
     IMFProfile                  string           File name for IMF Profile
@@ -133,27 +133,27 @@ UIMF database structure:
     voltExitCondLimit           double           Cond Limit Voltage
     PressureFront               double           Pressure at front of Drift Tube
     PressureBack                double           Pressure at back of Drift Tube
-    MPBitOrder                  smallint         Determines original size of bit sequence
+    MPBitOrder                  short            Determines original size of bit sequence
     FragmentationProfile        binary (BLOB)    Voltage profile used in fragmentation, Length number of Scans
     HighPressureFunnelPressure  double           
     IonFunnelTrapPressure       double           
     QuadropolePressure          double           
     ESIVoltage                  double           
     FloatVolage                 double           
-    CALIBRATIONDONE             smallint         Set to 1 after a frame has been calibrated
-    Decoded                     smallint         Set to 1 after a frame has been decoded
+    CALIBRATIONDONE             int              Set to 1 after a frame has been calibrated
+    Decoded                     int              Set to 1 after a frame has been decoded
 
 
     Frame_Scans table:
     -----------------
     Column Name    Data Type          Comment
     -----------    ---------          -------
-    FrameNum       Integer            Contains the frame number
-    ScanNum        Int                Contains the TOF pulse number the spectra are located in
-    NonZeroCount   Int                Nonzero intensities
-    BPI            Double/Float/Int   Base Peak Intensity per Scan
-    BPI_MZ         Double/Float/Int   m/z associated with BPI
-    TIC            Double/Float/Int   Total Ion Chromatogram per Scan
+    FrameNum       int                Contains the frame number
+    ScanNum        short              Contains the TOF pulse number the spectra are located in
+    NonZeroCount   int                Nonzero intensities
+    BPI            double/float/int   Base Peak Intensity per Scan
+    BPI_MZ         double             m/z associated with BPI
+    TIC            double/float/int   Total Ion Chromatogram per Scan
     Intensities    binary (BLOB)      Intensities in compressed binary format 
 
 
@@ -161,7 +161,7 @@ UIMF database structure:
     -----------------
     Column Name    Data Type   Comment
     -----------    ---------   -------
-    Entry_ID       integer     Log entry ID
+    Entry_ID       int        Log entry ID
     Posted_By      string      Log source
     Posting_Time   string      DateTime
     Type           string      Message type

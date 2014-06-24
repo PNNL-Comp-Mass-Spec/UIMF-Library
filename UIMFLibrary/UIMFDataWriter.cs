@@ -136,8 +136,12 @@ namespace UIMFLibrary
 			if (!DataReader.TableExists(oConnection, "Log_Entries"))
 			{
 				// Log_Entries not found; need to create it
-				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " + "Entry_ID INTEGER PRIMARY KEY, "
-											  + "Posted_By STRING, " + "Posting_Time STRING, " + "Type STRING, " + "Message STRING)";
+				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " + 
+					                            "Entry_ID INTEGER PRIMARY KEY, " +
+											    "Posted_By STRING, " + 
+											    "Posting_Time STRING, " + 
+											    "Type STRING, " + 
+											    "Message STRING)";
 
 				cmdPostLogEntry.ExecuteNonQuery();
 			}
@@ -361,8 +365,8 @@ namespace UIMFLibrary
 			if (this.m_isScanParameterTable)
 			{
 				this.m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
-													"ScanNum INTEGER NOT NULL, " +
-													"MS_Level SMALLINT NOT NULL);";
+													 "ScanNum INTEGER NOT NULL, " +
+													 "MS_Level SMALLINT NOT NULL);";
 				this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
 				this.m_dbCommandUimf.ExecuteNonQuery();
 			}
@@ -819,7 +823,7 @@ namespace UIMFLibrary
 		/// <returns>
 		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
-		[Obsolete]
+		[Obsolete("BPI is calculated using an incorrect calibration function")]
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
@@ -1101,7 +1105,7 @@ namespace UIMFLibrary
 		/// <returns>
 		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
-		[Obsolete]
+		[Obsolete("Superseded by InsertScan with: int[] intensities, double bin_width")]
 		public int InsertScan(
 			FrameParameters fp,
 			int scanNum,
@@ -1789,6 +1793,16 @@ namespace UIMFLibrary
 			return blob_values;
 		}
 
+		/// <summary>
+		/// Creates the table creation DDL using the table name and field info
+		/// </summary>
+		/// <param name="tableName">
+		/// Table name
+		/// </param>
+		/// <param name="lstFields">
+		/// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+		/// </param>
+		/// <returns></returns>
 		private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
 		{
 			var sbSql = new StringBuilder("CREATE TABLE " + tableName + " ( ");

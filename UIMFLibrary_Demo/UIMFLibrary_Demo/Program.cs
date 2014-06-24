@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace UIMFLibrary_Demo
 {
@@ -18,7 +15,7 @@ namespace UIMFLibrary_Demo
 				return;
 			}
 
-			DemoRunner runner = new DemoRunner(args[0]);
+			var runner = new DemoRunner(args[0]);
 			runner.Execute();
 
 			WriterTest();
@@ -71,10 +68,12 @@ namespace UIMFLibrary_Demo
 
 					Console.WriteLine("Adding frame 1");
 
-					var fp = new UIMFLibrary.FrameParameters();
-					fp.FragmentationProfile = new double[2];
-					fp.FrameNum = 1;
-					fp.FrameType = UIMFLibrary.DataReader.FrameType.MS1;
+					var fp = new UIMFLibrary.FrameParameters
+					{
+						FragmentationProfile = new double[2],
+						FrameNum = 1,
+						FrameType = UIMFLibrary.DataReader.FrameType.MS1
+					};
 
 					writer.InsertFrame(fp);
 
@@ -94,7 +93,6 @@ namespace UIMFLibrary_Demo
 			catch (Exception ex)
 			{
 				Console.WriteLine("Error testing the writer: " + ex.Message);
-				return;
 			}
 
 		}
