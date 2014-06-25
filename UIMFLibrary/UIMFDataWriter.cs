@@ -814,7 +814,7 @@ namespace UIMFLibrary
 		/// <param name="scanNum">
 		/// Scan num.
 		/// </param>
-		/// <param name="nonZeroCount">
+		/// <param name="nonZeroCountIgnored">
 		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
@@ -830,7 +830,7 @@ namespace UIMFLibrary
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
-			int nonZeroCount,                  // Ignored, since LZFCompressionUtil.Compress reports this
+			int nonZeroCountIgnored,                  // Ignored, since LZFCompressionUtil.Compress reports this
 			double[] intensities,
 			double binWidth)
 		{
@@ -1102,7 +1102,7 @@ namespace UIMFLibrary
 			int nonZeroCount = 0;
 
 			var nrlze = rlzeDataList.Count;
-			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+			float[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
 			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
@@ -1552,7 +1552,7 @@ namespace UIMFLibrary
 			int nonZeroCount = 0;
 
 			var nrlze = rlzeDataList.Count;
-			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+			short[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
 			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
