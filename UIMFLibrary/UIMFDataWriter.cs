@@ -9,6 +9,9 @@
 //
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Linq;
+
 namespace UIMFLibrary
 {
 	using System;
@@ -136,12 +139,12 @@ namespace UIMFLibrary
 			if (!DataReader.TableExists(oConnection, "Log_Entries"))
 			{
 				// Log_Entries not found; need to create it
-				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " + 
-					                            "Entry_ID INTEGER PRIMARY KEY, " +
-											    "Posted_By STRING, " + 
-											    "Posting_Time STRING, " + 
-											    "Type STRING, " + 
-											    "Message STRING)";
+				cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " +
+												"Entry_ID INTEGER PRIMARY KEY, " +
+												"Posted_By STRING, " +
+												"Posting_Time STRING, " +
+												"Type STRING, " +
+												"Message STRING)";
 
 				cmdPostLogEntry.ExecuteNonQuery();
 			}
@@ -359,7 +362,7 @@ namespace UIMFLibrary
 			this.m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Scans", lstFields);
 
 			// Facilitate faster retrieval of scans/spectrums.
-			this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";			
+			this.m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
 			this.m_dbCommandUimf.ExecuteNonQuery();
 
 			if (this.m_isScanParameterTable)
@@ -811,7 +814,7 @@ namespace UIMFLibrary
 		/// <param name="scanNum">
 		/// Scan num.
 		/// </param>
-		/// <param name="counter">
+		/// <param name="nonZeroCount">
 		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
@@ -822,30 +825,36 @@ namespace UIMFLibrary
 		/// </param>
 		/// <returns>
 		/// The size of the compressed archive in the output buffer<see cref="int"/>.
-		/// </returns>
-		[Obsolete("BPI is calculated using an incorrect calibration function")]
+		/// </returns>		
+
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
-			int counter,
+			int nonZeroCount,                  // Ignored, since LZFCompressionUtil.Compress reports this
 			double[] intensities,
 			double binWidth)
 		{
+			if (frameParameters == null)
+				return -1;
+
+			int arraySize = intensities.Length;
+
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-			int nrlze = 0;
 			int zeroCount = 0;
-			var runLengthZeroEncodedData = new double[intensities.Length];
+			var rlzeDataList = new List<double>();
+
 			double tic = 0;
 			double bpi = 0;
-			double bpiMz = 0;
 			const int datatypeSize = 8;
+			int indexOfMaxIntensity = 0;
 
 			if (this.m_globalParameters == null)
 			{
 				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 			}
 
-			for (int i = 0; i < intensities.Length; i++)
+			// Calculate TIC and BPI while run length zero encoding
+			for (int i = 0; i < arraySize; i++)
 			{
 				double intensity = intensities[i];
 				if (intensity > 0)
@@ -855,16 +864,16 @@ namespace UIMFLibrary
 					if (intensity > bpi)
 					{
 						bpi = intensity;
-						bpiMz = this.ConvertBinToMz(i, binWidth, frameParameters);
+						indexOfMaxIntensity = i;
 					}
 
 					if (zeroCount < 0)
 					{
-						runLengthZeroEncodedData[nrlze++] = zeroCount;
+						rlzeDataList.Add(zeroCount);
 						zeroCount = 0;
 					}
 
-					runLengthZeroEncodedData[nrlze++] = intensity;
+					rlzeDataList.Add(intensity);
 				}
 				else
 				{
@@ -872,33 +881,39 @@ namespace UIMFLibrary
 				}
 			}
 
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
 			// Compress intensities
-			int nlzf = 0;
+			int nonZeroCount = 0;
+
+			var nrlze = rlzeDataList.Count;
+			double[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
 			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
 			{
 				var byteBuffer = new byte[nrlze * datatypeSize];
 				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(
+				nonZeroCount = LZFCompressionUtil.Compress(
 					ref byteBuffer,
 					nrlze * datatypeSize,
 					ref compressedData,
-					nrlze * datatypeSize * 5);
+					compressedData.Length);
 			}
 
-			if (nlzf != 0)
+			if (nonZeroCount != 0)
 			{
-				var spectra = new byte[nlzf];
-				Array.Copy(compressedData, spectra, nlzf);
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
 
 				// Insert records
-				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
 				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
 				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
-			return nlzf;
-		}
+			return nonZeroCount;
+		}		
 
 		/// <summary>
 		/// Insert a new scan using an array of intensities (as ints) along with bin_width
@@ -912,80 +927,94 @@ namespace UIMFLibrary
 		/// <param name="intensities">
 		/// Array of intensities, including all zeros
 		/// </param>
-		/// <param name="bin_width">
+		/// <param name="binWidth">
 		/// Bin width (used to compute m/z value of the BPI data point)
 		/// </param>
 		/// <returns>
 		/// Number of non-zero data points
 		/// </returns>
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int[] intensities, double bin_width)
+		public int InsertScan(
+			FrameParameters frameParameters,
+			int scanNum,
+			int[] intensities,
+			double binWidth)
 		{
+			if (frameParameters == null)
+				return -1;
+
+			int arraySize = intensities.Length;
+
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
+			int zeroCount = 0;
+			var rlzeDataList = new List<int>();
+
+			int tic = 0;
+			int bpi = 0;
+			const int datatypeSize = 4;
+			int indexOfMaxIntensity = 0;
+
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
+
+			// Calculate TIC and BPI while run length zero encoding
+			for (int i = 0; i < arraySize; i++)
+			{
+				int intensity = intensities[i];
+				if (intensity > 0)
+				{
+					// TIC is just the sum of all intensities
+					tic += intensity;
+					if (intensity > bpi)
+					{
+						bpi = intensity;
+						indexOfMaxIntensity = i;
+					}
+
+					if (zeroCount < 0)
+					{
+						rlzeDataList.Add(zeroCount);
+						zeroCount = 0;
+					}
+
+					rlzeDataList.Add(intensity);
+				}
+				else
+				{
+					zeroCount--;
+				}
+			}
+
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+			// Compress intensities
 			int nonZeroCount = 0;
 
-			if (frameParameters != null)
+			var nrlze = rlzeDataList.Count;
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
+			var compressedData = new byte[nrlze * datatypeSize * 5];
+			if (nrlze > 0)
 			{
-				int nrlze = 0;
-				int zeroCount = 0;
-				var runLengthEncodedData = new int[intensities.Length];
-				int tic = 0;
-				int bpi = 0;
-				double bpiMz = 0;
-				const int datatypeSize = 4;
+				var byteBuffer = new byte[nrlze * datatypeSize];
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compressedData,
+					compressedData.Length);
+			}
 
-				if (this.m_globalParameters == null)
-				{
-					this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
-				}
+			if (nonZeroCount != 0)
+			{
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
 
-				for (int i = 0; i < intensities.Length; i++)
-				{
-					int intensity = intensities[i];
-					if (intensity > 0)
-					{
-						// TIC is just the sum of all intensities
-						tic += intensity;
-						if (intensity > bpi)
-						{
-							bpi = intensity;
-							bpiMz = this.ConvertBinToMz(i, bin_width, frameParameters);
-						}
-
-						if (zeroCount < 0)
-						{
-							runLengthEncodedData[nrlze++] = zeroCount;
-							zeroCount = 0;
-						}
-
-						runLengthEncodedData[nrlze++] = intensity;
-					}
-					else
-					{
-						zeroCount--;
-					}
-				}
-
-				var compressedData = new byte[nrlze * datatypeSize * 5];
-				if (nrlze > 0)
-				{
-					var byte_array = new byte[nrlze * datatypeSize];
-					Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
-					nonZeroCount = LZFCompressionUtil.Compress(
-						ref byte_array,
-						nrlze * datatypeSize,
-						ref compressedData,
-						nrlze * datatypeSize * 5);
-				}
-
-				if (nonZeroCount != 0)
-				{
-					var spectra = new byte[nonZeroCount];
-					Array.Copy(compressedData, spectra, nonZeroCount);
-
-					// Insert records
-					this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
-					this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-					this.m_dbCommandPrepareInsertScan.Parameters.Clear();
-				}
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
 			return nonZeroCount;
@@ -1000,39 +1029,47 @@ namespace UIMFLibrary
 		/// <param name="scanNum">
 		/// Scan num.
 		/// </param>
-		/// <param name="counter">
+		/// <param name="nonZeroCountIgnored">
 		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
 		/// Intensities array
 		/// </param>
-		/// <param name="bin_width">
+		/// <param name="binWidth">
 		/// Bin width
 		/// </param>
 		/// <returns>
 		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
+
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
-			int counter,
+			int nonZeroCountIgnored,                  // Ignored, since LZFCompressionUtil.Compress reports this
 			float[] intensities,
-			double bin_width)
+			double binWidth)
 		{
-			int nrlze = 0;
+			if (frameParameters == null)
+				return -1;
+
+			int arraySize = intensities.Length;
+
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			int zeroCount = 0;
-			var runLengthEncodedData = new float[intensities.Length];
+			var rlzeDataList = new List<float>();
+
 			double tic = 0;
 			double bpi = 0;
-			double bpiMz = 0;
 			const int datatypeSize = 4;
+			int indexOfMaxIntensity = 0;
 
 			if (this.m_globalParameters == null)
 			{
 				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 			}
 
-			for (int i = 0; i < intensities.Length; i++)
+			// Calculate TIC and BPI while run length zero encoding
+			for (int i = 0; i < arraySize; i++)
 			{
 				float intensity = intensities[i];
 				if (intensity > 0)
@@ -1042,16 +1079,16 @@ namespace UIMFLibrary
 					if (intensity > bpi)
 					{
 						bpi = intensity;
-						bpiMz = this.ConvertBinToMz(i, bin_width, frameParameters);
+						indexOfMaxIntensity = i;
 					}
 
 					if (zeroCount < 0)
 					{
-						runLengthEncodedData[nrlze++] = zeroCount;
+						rlzeDataList.Add(zeroCount);
 						zeroCount = 0;
 					}
 
-					runLengthEncodedData[nrlze++] = intensity;
+					rlzeDataList.Add(intensity);
 				}
 				else
 				{
@@ -1059,154 +1096,44 @@ namespace UIMFLibrary
 				}
 			}
 
-			int nlzf = 0;
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+			// Compress intensities
+			int nonZeroCount = 0;
+
+			var nrlze = rlzeDataList.Count;
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
 			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
 			{
-				var byte_array = new byte[nrlze * datatypeSize];
-				Buffer.BlockCopy(runLengthEncodedData, 0, byte_array, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(
-					ref byte_array,
+				var byteBuffer = new byte[nrlze * datatypeSize];
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
+					ref byteBuffer,
 					nrlze * datatypeSize,
 					ref compressedData,
-					nrlze * datatypeSize * 5);
+					compressedData.Length);
 			}
 
-			if (nlzf != 0)
+			if (nonZeroCount != 0)
 			{
-				var spectra = new byte[nlzf];
-				Array.Copy(compressedData, spectra, nlzf);
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
 
 				// Insert records
-				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpiMz, (int)tic, spectra);
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
 				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
 				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
-			return nlzf;
+			return nonZeroCount;
 		}
+		
 
 		/// <summary>
 		/// Insert a scan using a list of bins and a list of intensities
 		/// TODO:: Deprecate this function since superseded by InsertScan with: int[] intensities, double bin_width
-		/// </summary>
-		/// <param name="fp">
-		/// </param>
-		/// <param name="scanNum">
-		/// </param>
-		/// <param name="bins">
-		/// </param>
-		/// <param name="intensities">
-		/// </param>
-		/// <param name="binWidth">
-		/// </param>
-		/// <param name="timeOffset">
-		/// </param>
-		/// <returns>
-		/// Non-zero data count<see cref="int"/>.
-		/// </returns>
-		[Obsolete("Superseded by InsertScan with: int[] intensities, double bin_width")]
-		public int InsertScan(
-			FrameParameters fp,
-			int scanNum,
-			List<int> bins,
-			List<int> intensities,
-			double binWidth,
-			int timeOffset)
-		{
-			try
-			{
-				int nonZeroCount = 0;
-
-				if (this.m_globalParameters == null)
-				{
-					this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
-				}
-
-				if (fp != null)
-				{
-					if (bins != null && intensities != null && bins.Count != 0 && intensities.Count != 0
-						&& bins.Count == intensities.Count)
-					{
-						// that is the total number of data points that are to be encoded
-						nonZeroCount = bins.Count;
-
-						// this is the maximum length required assuming that there are no continuous values
-						var rlze = new int[bins.Count * 2];
-
-						// now iterate through both arrays and attempt to run length zero encode the values
-						int tic = 0;
-						int bpi = 0;
-						int index = 0;
-						double bpiMz = 0;
-						const int datatypeSize = 4;
-
-						int previousBin = int.MinValue;
-
-						rlze[index++] = -(timeOffset + bins[0]);
-						for (int i = 0; i < bins.Count; i++)
-						{
-							int intensity = intensities[i];
-							int currentBin = bins[i];
-
-							// the intensities will always be positive integers
-							tic += intensity;
-							if (bpi < intensity)
-							{
-								bpi = intensity;
-								bpiMz = this.ConvertBinToMz(currentBin, binWidth, fp);
-							}
-
-							if (i != 0 && currentBin != previousBin + 1)
-							{
-								// since the bin numbers are not continuous, add a negative index to the array
-								// and in some cases we have to add the offset from the previous index
-								rlze[index++] = previousBin - currentBin + 1;
-							}
-
-							// copy the intensity value and increment the index.
-							rlze[index++] = intensity;
-
-							previousBin = currentBin;
-						}
-
-						// so now we have a run length zero encoded array
-						var compresedRecord = new byte[index * datatypeSize * 5];
-						var byteBuffer = new byte[index * datatypeSize];
-						Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
-						int nlzf = LZFCompressionUtil.Compress(
-							ref byteBuffer,
-							index * datatypeSize,
-							ref compresedRecord,
-							compresedRecord.Length);
-						var spectra = new byte[nlzf];
-
-						Array.Copy(compresedRecord, spectra, nlzf);
-
-						// Insert records
-						if (true)
-						{
-							this.InsertScanAddParameters(fp.FrameNum, scanNum, bins.Count, bpi, bpiMz, tic, spectra);
-							this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-							this.m_dbCommandPrepareInsertScan.Parameters.Clear();
-						}
-					}
-				}
-
-				return nonZeroCount;
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Error writing scan: " + scanNum);
-				Console.WriteLine(e);
-				Console.WriteLine(e.StackTrace);
-				return 0;
-			}
-		}
-
-		/// <summary>
-		/// //this method takes in a list of bin numbers and intensities and converts them to a run length encoded array
-		/// which is later compressed at the byte level for reduced size
 		/// </summary>
 		/// <param name="frameParameters">
 		/// </param>
@@ -1223,6 +1150,125 @@ namespace UIMFLibrary
 		/// <returns>
 		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
+		[Obsolete("Superseded by InsertScan with: int[] intensities, double bin_width; alternatively use InsertScan with: Dictionary<int, int> binToIntensityMap")]
+		public int InsertScan(
+			FrameParameters frameParameters,
+			int scanNum,
+			List<int> bins,
+			List<int> intensities,
+			double binWidth,
+			int timeOffset)
+		{
+			if (frameParameters == null)
+				return -1;
+
+			if (bins == null || intensities == null || bins.Count == 0 || intensities.Count == 0 ||
+				bins.Count != intensities.Count)
+			{
+				return 0;
+			}
+
+			int arraySize = intensities.Count;
+
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
+			var rlzeDataList = new List<int>();
+
+			int tic = 0;
+			int bpi = 0;
+			const int datatypeSize = 4;
+			int indexOfMaxIntensity = 0;
+
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
+
+			// Calculate TIC and BPI while run length zero encoding
+			int previousBin = int.MinValue;
+
+			rlzeDataList.Add(-(timeOffset + bins[0]));
+			for (int i = 0; i < arraySize; i++)
+			{
+				int intensity = intensities[i];
+				int currentBin = bins[i];
+
+				// the intensities will always be positive integers
+				tic += intensity;
+				if (bpi < intensity)
+				{
+					bpi = intensity;
+					indexOfMaxIntensity = i;
+				}
+
+				if (i != 0 && currentBin != previousBin + 1)
+				{
+					// since the bin numbers are not continuous, add a negative index to the array
+					// and in some cases we have to add the offset from the previous index
+					rlzeDataList.Add(previousBin - currentBin + 1);
+				}
+
+				rlzeDataList.Add(intensity);
+
+				previousBin = currentBin;
+			}
+
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+			// Compress intensities
+			int nonZeroCount = 0;
+
+			var nrlze = rlzeDataList.Count;
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
+			var compressedData = new byte[nrlze * datatypeSize * 5];
+			if (nrlze > 0)
+			{
+				var byteBuffer = new byte[nrlze * datatypeSize];
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compressedData,
+					compressedData.Length);
+			}
+
+			if (nonZeroCount != 0)
+			{
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
+
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
+			}
+
+			return nonZeroCount;
+		}
+		
+
+		/// <summary>
+		/// This method takes in a list of bin numbers and intensities and converts them to a run length encoded array
+		/// which is later compressed at the byte level for reduced size
+		///   Used by the IonMobility data acquisition software in ADC_Acqiris_AP240.cs
+		///   Used by the UIMF_DataViewer in DataViewer.cs
+		/// </summary>
+		/// <param name="frameParameters">
+		/// </param>
+		/// <param name="scanNum">
+		/// </param>
+		/// <param name="bins">
+		/// </param>
+		/// <param name="intensities">
+		/// </param>
+		/// <param name="binWidth">
+		/// </param>
+		/// <param name="timeOffset">
+		/// </param>
+		/// <returns>
+		/// Non-zero data count<see cref="int"/>.
+		/// </returns>
+		[Obsolete("Superseded by InsertScan with: Dictionary<int, int> binToIntensityMap, double bin_width")]
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
@@ -1231,86 +1277,93 @@ namespace UIMFLibrary
 			double binWidth,
 			int timeOffset)
 		{
-			int nonZeroCount = 0;
+			if (frameParameters == null)
+				return -1;
+
+			if (bins == null || intensities == null || bins.Length == 0 || intensities.Length == 0 ||
+				bins.Length != intensities.Length)
+			{
+				return 0;
+			}
+
+			int arraySize = intensities.Length;
+
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
+			var rlzeDataList = new List<int>();
+
+			int tic = 0;
+			int bpi = 0;
+			const int datatypeSize = 4;
+			int indexOfMaxIntensity = 0;
 
 			if (this.m_globalParameters == null)
 			{
 				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 			}
 
-			if (frameParameters != null)
+			// Calculate TIC and BPI while run length zero encoding
+			int previousBin = int.MinValue;
+
+			rlzeDataList.Add(-(timeOffset + bins[0]));
+			for (int i = 0; i < arraySize; i++)
 			{
-				if (bins != null && intensities != null && bins.Length != 0 && intensities.Length != 0
-					&& bins.Length == intensities.Length)
+				int intensity = intensities[i];
+				int currentBin = bins[i];
+
+				// the intensities will always be positive integers
+				tic += intensity;
+				if (bpi < intensity)
 				{
-					// that is the total number of datapoints that are to be encoded
-					nonZeroCount = bins.Length;
-
-					var rlze = new int[bins.Length * 2];
-
-					// this is the maximum length required assuming that there are no continuous values
-
-					// now iterate through both arrays and attempt to run length zero encode the values
-					int tic = 0;
-					int bpi = 0;
-					int index = 0;
-					double bpiMz = 0;
-					const int datatypeSize = 4;
-
-					int previousBin = int.MinValue;
-
-					rlze[index++] = -(timeOffset + bins[0]);
-					for (int i = 0; i < bins.Length; i++)
-					{
-						int intensity = intensities[i];
-						int currentBin = bins[i];
-
-						// the intensities will always be positive integers
-						tic += intensity;
-						if (bpi < intensity)
-						{
-							bpi = intensity;
-							bpiMz = this.ConvertBinToMz(currentBin, binWidth, frameParameters);
-						}
-
-						if (i != 0 && currentBin != previousBin + 1)
-						{
-							// since the bin numbers are not continuous, add a negative index to the array
-							// and in some cases we have to add the offset from the previous index
-							rlze[index++] = previousBin - currentBin + 1;
-						}
-
-						// copy the intensity value and increment the index.
-						rlze[index++] = intensity;
-
-						previousBin = currentBin;
-					}
-
-					// so now we have a run length zero encoded array
-					var compresedRecord = new byte[index * datatypeSize * 5];
-					var byteBuffer = new byte[index * datatypeSize];
-					Buffer.BlockCopy(rlze, 0, byteBuffer, 0, index * datatypeSize);
-					int nlzf = LZFCompressionUtil.Compress(
-						ref byteBuffer,
-						index * datatypeSize,
-						ref compresedRecord,
-						compresedRecord.Length);
-					var spectra = new byte[nlzf];
-
-					Array.Copy(compresedRecord, spectra, nlzf);
-
-					// Insert records
-					if (true)
-					{
-						this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, bins.Length, bpi, bpiMz, tic, spectra);
-						this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-						this.m_dbCommandPrepareInsertScan.Parameters.Clear();
-					}
+					bpi = intensity;
+					indexOfMaxIntensity = i;
 				}
+
+				if (i != 0 && currentBin != previousBin + 1)
+				{
+					// since the bin numbers are not continuous, add a negative index to the array
+					// and in some cases we have to add the offset from the previous index
+					rlzeDataList.Add(previousBin - currentBin + 1);
+				}
+
+				rlzeDataList.Add(intensity);
+
+				previousBin = currentBin;
+			}
+
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+			// Compress intensities
+			int nonZeroCount = 0;
+
+			var nrlze = rlzeDataList.Count;
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
+			var compressedData = new byte[nrlze * datatypeSize * 5];
+			if (nrlze > 0)
+			{
+				var byteBuffer = new byte[nrlze * datatypeSize];
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
+					ref byteBuffer,
+					nrlze * datatypeSize,
+					ref compressedData,
+					compressedData.Length);
+			}
+
+			if (nonZeroCount != 0)
+			{
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
+
+				// Insert records
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
 			return nonZeroCount;
 		}
+		
 
 		/// <summary>
 		/// Insert a new scan using an array of intensities (as ints) and bin_width
@@ -1321,7 +1374,7 @@ namespace UIMFLibrary
 		/// <param name="scanNum">
 		/// Scan num.
 		/// </param>
-		/// <param name="counter">
+		/// <param name="nonZeroCountIgnored">
 		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
@@ -1333,20 +1386,23 @@ namespace UIMFLibrary
 		/// <returns>
 		/// The size of the compressed archive in the output buffer<see cref="int"/>.
 		/// </returns>
-		public int InsertScan(FrameParameters frameParameters, int scanNum, int counter, int[] intensities, double binWidth)
+		public int InsertScan(
+			FrameParameters frameParameters,
+			int scanNum,
+			int nonZeroCountIgnored,			 // Ignored, since LZFCompressionUtil.Compress reports this
+			int[] intensities,
+			double binWidth)
 		{
 			if (frameParameters == null)
-			{
 				return -1;
-			}
 
 			int arraySize = intensities.Length;
 
-			int zero_count = 0;
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
+			int zeroCount = 0;
 			var rlzeDataList = new List<int>();
 
-			// int[] rlze_data = new int[arraySize];
-			int tic_scan = 0;
+			int tic = 0;
 			int bpi = 0;
 			const int datatypeSize = 4;
 			int indexOfMaxIntensity = 0;
@@ -1356,70 +1412,68 @@ namespace UIMFLibrary
 				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 			}
 
-			// Calculate TIC and BPI
+			// Calculate TIC and BPI while run length zero encoding
 			for (int i = 0; i < arraySize; i++)
 			{
 				int intensity = intensities[i];
 				if (intensity > 0)
 				{
 					// TIC is just the sum of all intensities
-					tic_scan += intensity;
+					tic += intensity;
 					if (intensity > bpi)
 					{
 						bpi = intensity;
 						indexOfMaxIntensity = i;
 					}
 
-					if (zero_count < 0)
+					if (zeroCount < 0)
 					{
-						rlzeDataList.Add(zero_count);
-						zero_count = 0;
+						rlzeDataList.Add(zeroCount);
+						zeroCount = 0;
 					}
 
 					rlzeDataList.Add(intensity);
 				}
 				else
 				{
-					zero_count--;
+					zeroCount--;
 				}
 			}
 
-			var bpi_mz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
 
 			// Compress intensities
-			int nlzf = 0;
+			int nonZeroCount = 0;
 
 			var nrlze = rlzeDataList.Count;
-			int[] rlze_data = rlzeDataList.ToArray();
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
-			var compresedRecord = new byte[nrlze * datatypeSize * 5];
+			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
 			{
 				var byteBuffer = new byte[nrlze * datatypeSize];
-				Buffer.BlockCopy(rlze_data, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
 					ref byteBuffer,
 					nrlze * datatypeSize,
-					ref compresedRecord,
-					compresedRecord.Length);
+					ref compressedData,
+					compressedData.Length);
 			}
 
-			if (nlzf != 0)
+			if (nonZeroCount != 0)
 			{
-				var spectra = new byte[nlzf];
-				Array.Copy(compresedRecord, spectra, nlzf);
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
 
 				// Insert records
-				if (true)
-				{
-					this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, bpi, bpi_mz, tic_scan, spectra);
-					this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-					this.m_dbCommandPrepareInsertScan.Parameters.Clear();
-				}
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
+				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
+				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
-			return nlzf;
+			return nonZeroCount;
 		}
+		
 
 		/// <summary>
 		/// Insert a new scan using an array of intensities (as shorts) and bin_width
@@ -1428,12 +1482,12 @@ namespace UIMFLibrary
 		/// </param>
 		/// <param name="scanNum">
 		/// </param>
-		/// <param name="counter">
+		/// <param name="nonZeroCountIgnored">
 		/// Number of non-zero values in intensities
 		/// </param>
 		/// <param name="intensities">
 		/// </param>
-		/// <param name="bin_width">
+		/// <param name="binWidth">
 		/// </param>
 		/// <returns>
 		/// The size of the compressed archive in the output buffer<see cref="int"/>.
@@ -1441,46 +1495,50 @@ namespace UIMFLibrary
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
-			int counter,
+			int nonZeroCountIgnored,			 // Ignored, since LZFCompressionUtil.Compress reports this
 			short[] intensities,
-			double bin_width)
+			double binWidth)
 		{
-			int nrlze = 0;
+			if (frameParameters == null)
+				return -1;
+
+			int arraySize = intensities.Length;
+
+			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			int zeroCount = 0;
-			var runLengthEncodedData = new short[intensities.Length];
-			double tic_scan = 0;
+			var rlzeDataList = new List<short>();
+
+			double tic = 0;
 			double bpi = 0;
-			double bpi_mz = 0;
-			int nonZeroIntensities = 0;
 			const int datatypeSize = 2;
+			int indexOfMaxIntensity = 0;
 
 			if (this.m_globalParameters == null)
 			{
 				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
 			}
 
-			// Calculate TIC and BPI
-			for (int i = 0; i < intensities.Length; i++)
+			// Calculate TIC and BPI while run length zero encoding
+			for (int i = 0; i < arraySize; i++)
 			{
 				short intensity = intensities[i];
 				if (intensity > 0)
 				{
 					// TIC is just the sum of all intensities
-					tic_scan += intensity;
+					tic += intensity;
 					if (intensity > bpi)
 					{
 						bpi = intensity;
-						bpi_mz = this.ConvertBinToMz(i, bin_width, frameParameters);
+						indexOfMaxIntensity = i;
 					}
 
 					if (zeroCount < 0)
 					{
-						runLengthEncodedData[nrlze++] = (short)zeroCount;
+						rlzeDataList.Add((short)zeroCount);
 						zeroCount = 0;
 					}
 
-					runLengthEncodedData[nrlze++] = intensity;
-					nonZeroIntensities++;
+					rlzeDataList.Add(intensity);
 				}
 				else
 				{
@@ -1488,32 +1546,40 @@ namespace UIMFLibrary
 				}
 			}
 
-			int nlzf = 0;
+			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+			// Compress intensities
+			int nonZeroCount = 0;
+
+			var nrlze = rlzeDataList.Count;
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+
 			var compressedData = new byte[nrlze * datatypeSize * 5];
 			if (nrlze > 0)
 			{
 				var byteBuffer = new byte[nrlze * datatypeSize];
-				Buffer.BlockCopy(runLengthEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
-				nlzf = LZFCompressionUtil.Compress(
+				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * datatypeSize);
+				nonZeroCount = LZFCompressionUtil.Compress(
 					ref byteBuffer,
 					nrlze * datatypeSize,
 					ref compressedData,
-					nrlze * datatypeSize * 5);
+					compressedData.Length);
 			}
 
-			if (nlzf != 0)
+			if (nonZeroCount != 0)
 			{
-				var spectra = new byte[nlzf];
-				Array.Copy(compressedData, spectra, nlzf);
+				var spectra = new byte[nonZeroCount];
+				Array.Copy(compressedData, spectra, nonZeroCount);
 
 				// Insert records
-				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, counter, (int)bpi, bpi_mz, (int)tic_scan, spectra);
+				this.InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
 				this.m_dbCommandPrepareInsertScan.ExecuteNonQuery();
 				this.m_dbCommandPrepareInsertScan.Parameters.Clear();
 			}
 
-			return nlzf;
+			return nonZeroCount;
 		}
+		
 
 		/// <summary>
 		/// </summary>
@@ -1890,6 +1956,9 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Gets the field names for the Frame_Scans table
 		/// </summary>
+		/// <param name="dataType">
+		/// double, float, or int
+		/// </param>
 		/// <returns>
 		/// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
 		/// </returns>
@@ -1908,11 +1977,6 @@ namespace UIMFLibrary
 			{
 				sqlDataType = "FLOAT";
 				dotNetDataType = "float";
-			}
-			else if (string.Equals(dataType, "short"))
-			{
-				sqlDataType = "SMALLINT";
-				dotNetDataType = "short";
 			}
 			else
 			{
@@ -2041,7 +2105,7 @@ namespace UIMFLibrary
 				"INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses,"
 				  + "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, "
 				  + "voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", "
-			      + "voltEntranceCondLmt, " + "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, "
+				  + "voltEntranceCondLmt, " + "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, "
 				  + "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName + ", "
 				  + "voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, "
 				  + "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)"
