@@ -16,7 +16,6 @@ namespace UIMFLibrary
 		/// <param name="indexOfMaxIntensity"></param>
 		/// <returns></returns>
 		public static int Encode(
-			FrameParameters frameParameters,
 			int[] intensities,
 			out byte[] spectra,
 			out double tic,
@@ -27,9 +26,6 @@ namespace UIMFLibrary
 			tic = 0;
 			bpi = 0;
 			indexOfMaxIntensity = 0;
-
-			if (frameParameters == null)
-				return -1;
 
 			int arraySize = intensities.Length;
 

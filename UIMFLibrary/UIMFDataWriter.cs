@@ -557,10 +557,23 @@ namespace UIMFLibrary
 				{
 					this.TransactionCommit();
 
-					this.m_dbCommandUimf.Dispose();
+					DisposeCommand(m_dbCommandUimf);
+					DisposeCommand(m_dbCommandPrepareInsertFrame);
+					DisposeCommand(m_dbCommandPrepareInsertScan);
+					DisposeCommand(m_dbCommandPrepareInsertScanParameters);
+				
 					this.m_dbConnection.Close();
 					this.m_dbConnection = null;
 				}
+			}
+		}
+
+		protected void DisposeCommand(SQLiteCommand dbCommand )
+		{
+			if (dbCommand != null)
+			{
+				dbCommand.Dispose();
+				dbCommand=null;
 			}
 		}
 
@@ -844,6 +857,11 @@ namespace UIMFLibrary
 			if (nonZeroCount <= 0)
 				return;
 
+			if (this.m_globalParameters == null)
+			{
+				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
+			}
+
 			var bpiMz = this.ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
 
 			// Insert records
@@ -884,7 +902,10 @@ namespace UIMFLibrary
 			double bpi;
 			int indexOfMaxIntensity;
 
-			int nonZeroCount = IntensityConverterInt32.Encode(frameParameters, intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+			if (frameParameters == null)
+				return -1;
+
+			int nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
 			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
 
@@ -919,7 +940,10 @@ namespace UIMFLibrary
 			double bpi;
 			int indexOfMaxIntensity;
 
-			int nonZeroCount = IntensityConverterInt16.Encode(frameParameters, intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+			if (frameParameters == null)
+				return -1;
+
+			int nonZeroCount = IntensityConverterInt16.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
 			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
 
@@ -958,7 +982,10 @@ namespace UIMFLibrary
 			double bpi;
 			int indexOfMaxIntensity;
 
-			int nonZeroCount = IntensityConverterFloat.Encode(frameParameters, intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+			if (frameParameters == null)
+				return -1;
+
+			int nonZeroCount = IntensityConverterFloat.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
 			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
 
@@ -997,7 +1024,10 @@ namespace UIMFLibrary
 			double bpi;
 			int indexOfMaxIntensity;
 
-			int nonZeroCount = IntensityConverterDouble.Encode(frameParameters, intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+			if (frameParameters == null)
+				return -1;
+
+			int nonZeroCount = IntensityConverterDouble.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
 			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
 
@@ -1029,6 +1059,11 @@ namespace UIMFLibrary
 			double binWidth,
 			int timeOffset)
 		{
+			byte[] spectra;
+			double tic;
+			double bpi;
+			int binNumberMaxIntensity;
+
 			if (frameParameters == null)
 				return -1;
 
@@ -1037,76 +1072,10 @@ namespace UIMFLibrary
 				return 0;
 			}
 
-			int arraySize = binToIntensityMap.Count;
+			int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
-			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-			var rlzeDataList = new List<int>();
-
-			int tic = 0;
-			int bpi = 0;
-			const byte dataTypeSize = 4;
-			int indexOfMaxIntensity = 0;
-
-			if (this.m_globalParameters == null)
-			{
-				this.m_globalParameters = DataReader.GetGlobalParametersFromTable(this.m_dbConnection);
-			}
-
-			// Calculate TIC and BPI while run length zero encoding
-			int previousBin = int.MinValue;
-
-			rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Key));
-			for (int i = 0; i < arraySize; i++)
-			{
-				int intensity = binToIntensityMap[0].Value;
-				int currentBin = binToIntensityMap[0].Key;
-
-				// the intensities will always be positive integers
-				tic += intensity;
-				if (bpi < intensity)
-				{
-					bpi = intensity;
-					indexOfMaxIntensity = i;
-				}
-
-				if (i != 0 && currentBin != previousBin + 1)
-				{
-					// since the bin numbers are not continuous, add a negative index to the array
-					// and in some cases we have to add the offset from the previous index
-					rlzeDataList.Add(previousBin - currentBin + 1);
-				}
-
-				rlzeDataList.Add(intensity);
-
-				previousBin = currentBin;
-			}
-
-			// Compress intensities
-			int nonZeroCount = 0;
-
-			var nrlze = rlzeDataList.Count;
-			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
-
-			var compressedData = new byte[nrlze * dataTypeSize * 5];
-			if (nrlze > 0)
-			{
-				var byteBuffer = new byte[nrlze * dataTypeSize];
-				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * dataTypeSize);
-				nonZeroCount = LZFCompressionUtil.Compress(
-					ref byteBuffer,
-					nrlze * dataTypeSize,
-					ref compressedData,
-					compressedData.Length);
-			}
-
-			if (nonZeroCount != 0)
-			{
-				var spectra = new byte[nonZeroCount];
-				Array.Copy(compressedData, spectra, nonZeroCount);
-
-				InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
-			}
-
+			InsertScanStoreBytes(frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, tic, spectra);
+		
 			return nonZeroCount;
 
 		}

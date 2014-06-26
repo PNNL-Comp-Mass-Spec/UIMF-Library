@@ -8,7 +8,6 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Convert an array of intensities to a zero length encoded byte array
 		/// </summary>
-		/// <param name="frameParameters"></param>
 		/// <param name="intensities"></param>
 		/// <param name="spectra"></param>
 		/// <param name="tic"></param>
@@ -16,7 +15,6 @@ namespace UIMFLibrary
 		/// <param name="indexOfMaxIntensity"></param>
 		/// <returns></returns>
 		public static int Encode(
-			FrameParameters frameParameters,
 			double[] intensities,
 			out byte[] spectra,
 			out double tic,
@@ -27,9 +25,6 @@ namespace UIMFLibrary
 			tic = 0;
 			bpi = 0;
 			indexOfMaxIntensity = 0;
-
-			if (frameParameters == null)
-				return -1;
 
 			int arraySize = intensities.Length;
 

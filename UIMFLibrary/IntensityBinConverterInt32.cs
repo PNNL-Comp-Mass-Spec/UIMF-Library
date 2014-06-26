@@ -3,79 +3,73 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
-	static class IntensityConverterFloat
+	static class IntensityBinConverterInt32
 	{
 		/// <summary>
-		/// Convert an array of intensities to a zero length encoded byte array
+		/// Convert a list of intensity information by bin to a zero length encoded byte array
 		/// </summary>
-		/// <param name="intensities"></param>
+		/// <param name="binToIntensityMap"></param>
+		/// <param name="timeOffset"></param>
 		/// <param name="spectra"></param>
 		/// <param name="tic"></param>
 		/// <param name="bpi"></param>
-		/// <param name="indexOfMaxIntensity"></param>
+		/// <param name="binNumberMaxIntensity"></param>
 		/// <returns></returns>
 		public static int Encode(
-			float[] intensities,
+			List<KeyValuePair<int, int>> binToIntensityMap,
+			int timeOffset,
 			out byte[] spectra,
 			out double tic,
 			out double bpi,
-			out int indexOfMaxIntensity)
+			out int binNumberMaxIntensity)
 		{
 			spectra = null;
 			tic = 0;
 			bpi = 0;
-			indexOfMaxIntensity = 0;
+			binNumberMaxIntensity = 0;
 
-			int arraySize = intensities.Length;
+			int arraySize = binToIntensityMap.Count;
 
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-			short zeroCount = 0;
-			var rlzeDataList = new List<float>();
+			var rlzeDataList = new List<int>();
 
-			// Floats are 4 bytes
+			// 32-bit integers are 4 bytes
 			const int dataTypeSize = 4;
 
 			// Calculate TIC and BPI while run length zero encoding
+			int previousBin = int.MinValue;
+
+			rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Key));
 			for (int i = 0; i < arraySize; i++)
 			{
-				float intensity = intensities[i];
-				if (intensity > 0)
+				int intensity = binToIntensityMap[0].Value;
+				int currentBin = binToIntensityMap[0].Key;
+
+				// the intensities will always be positive integers
+				tic += intensity;
+				if (bpi < intensity)
 				{
-					// TIC is just the sum of all intensities
-					tic += intensity;
-					if (intensity > bpi)
-					{
-						bpi = intensity;
-						indexOfMaxIntensity = i;
-					}
-
-					if (zeroCount < 0)
-					{
-						rlzeDataList.Add(zeroCount);
-						zeroCount = 0;
-					}
-
-					rlzeDataList.Add(intensity);
+					bpi = intensity;
+					binNumberMaxIntensity = currentBin;
 				}
-				else
+
+				if (i != 0 && currentBin != previousBin + 1)
 				{
-					if (zeroCount == short.MinValue)
-					{
-						// Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
-						rlzeDataList.Add(zeroCount);
-						rlzeDataList.Add((short)0);
-						zeroCount = 0;
-					}
-
-					zeroCount--;
+					// since the bin numbers are not continuous, add a negative index to the array
+					// and in some cases we have to add the offset from the previous index
+					rlzeDataList.Add(previousBin - currentBin + 1);
 				}
+
+				rlzeDataList.Add(intensity);
+
+				previousBin = currentBin;
 			}
 
 			// Compress intensities
 			int nonZeroCount = 0;
 
 			var nrlze = rlzeDataList.Count;
-			float[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
 			var compressedData = new byte[nrlze * dataTypeSize * 5];
 			if (nrlze > 0)
@@ -101,3 +95,5 @@ namespace UIMFLibrary
 
 	}
 }
+
+
