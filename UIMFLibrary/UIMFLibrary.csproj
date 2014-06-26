@@ -89,6 +89,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -111,6 +112,10 @@
     </Compile>
     <Compile Include="EventArgs.cs" />
     <Compile Include="FrameTypeInfo.cs" />
+    <Compile Include="IntensityConverterDouble.cs" />
+    <Compile Include="IntensityConverterFloat.cs" />
+    <Compile Include="IntensityConverterInt16.cs" />
+    <Compile Include="IntensityConverterInt32.cs" />
     <Compile Include="IntensityPoint.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="LZFCompressionUtil.cs" />
@@ -122,6 +127,9 @@
     <Compile Include="UIMFDataWriter.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

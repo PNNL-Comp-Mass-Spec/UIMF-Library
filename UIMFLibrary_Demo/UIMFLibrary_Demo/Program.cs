@@ -3,7 +3,7 @@ using System.IO;
 
 namespace UIMFLibrary_Demo
 {
-	class Program
+	static class Program
 	{
 		static void Main(string[] args)
 		{
@@ -54,7 +54,7 @@ namespace UIMFLibrary_Demo
 
 					var globalParams = new UIMFLibrary.GlobalParameters
 					{
-						BinWidth = 4,
+						BinWidth = 1,
 						TOFIntensityType= "int",
 						DateStarted = DateTime.Now.ToString()
 					};
@@ -72,22 +72,36 @@ namespace UIMFLibrary_Demo
 					{
 						FragmentationProfile = new double[2],
 						FrameNum = 1,
-						FrameType = UIMFLibrary.DataReader.FrameType.MS1
+						FrameType = UIMFLibrary.DataReader.FrameType.MS1,
+						CalibrationSlope = 0.3476349957054481,
+						CalibrationIntercept = 0.034341488647460935,
+						AverageTOFLength = 163366.6666666667
 					};
 
 					writer.InsertFrame(fp);
 
-					Console.WriteLine("Adding frame 1, scan 1");
-
-					var intensities = new int[599];
-					var randGenerator = new Random();
-
-					for (int i = 0; i < intensities.Length; i++)
+					for (int scanNumber = 1; scanNumber < 600; scanNumber++)
 					{
-						intensities[i] = randGenerator.Next(0, 255);
-					}
+						if (scanNumber % 10 == 0)
+							Console.WriteLine("Adding frame 1, scan " + scanNumber);
 
-					writer.InsertScan(fp, 1, intensities, globalParams.BinWidth);
+
+						var randGenerator = new Random();
+						var intensities = new int[148000];
+
+						for (int i = 0; i < intensities.Length; i++)
+						{
+							int nextRandom = randGenerator.Next(0, 255);
+							if (nextRandom < 200)
+								intensities[i] = 0;
+							else
+								intensities[i] = nextRandom;
+
+						}
+
+						writer.InsertScan(fp, scanNumber, intensities, globalParams.BinWidth);
+					}
+					
 				}
 			}
 			catch (Exception ex)
