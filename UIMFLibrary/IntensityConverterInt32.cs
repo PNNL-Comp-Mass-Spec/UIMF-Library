@@ -8,13 +8,14 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Convert an array of intensities to a zero length encoded byte array
 		/// </summary>
-		/// <param name="frameParameters"></param>
 		/// <param name="intensities"></param>
 		/// <param name="spectra"></param>
 		/// <param name="tic"></param>
 		/// <param name="bpi"></param>
 		/// <param name="indexOfMaxIntensity"></param>
-		/// <returns></returns>
+		/// <returns>
+		/// Number of non-zero data points
+		/// </returns>
 		public static int Encode(
 			int[] intensities,
 			out byte[] spectra,
@@ -27,17 +28,16 @@ namespace UIMFLibrary
 			bpi = 0;
 			indexOfMaxIntensity = 0;
 
-			int arraySize = intensities.Length;
-
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			short zeroCount = 0;
 			var rlzeDataList = new List<int>();
+			int nonZeroCount = 0;
 
 			// 32-bit integers are 4 bytes
 			const int dataTypeSize = 4;
 
 			// Calculate TIC and BPI while run length zero encoding
-			for (int i = 0; i < arraySize; i++)
+			for (int i = 0; i < intensities.Length; i++)
 			{
 				int intensity = intensities[i];
 				if (intensity > 0)
@@ -57,6 +57,7 @@ namespace UIMFLibrary
 					}
 
 					rlzeDataList.Add(intensity);
+					nonZeroCount++;
 				}
 				else
 				{
@@ -73,8 +74,7 @@ namespace UIMFLibrary
 			}
 
 			// Compress intensities
-			int nonZeroCount = 0;
-
+			int nlzf = 0;
 			var nrlze = rlzeDataList.Count;
 			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
@@ -83,17 +83,17 @@ namespace UIMFLibrary
 			{
 				var byteBuffer = new byte[nrlze * dataTypeSize];
 				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * dataTypeSize);
-				nonZeroCount = LZFCompressionUtil.Compress(
+				nlzf = LZFCompressionUtil.Compress(
 					ref byteBuffer,
 					nrlze * dataTypeSize,
 					ref compressedData,
 					compressedData.Length);
 			}
 
-			if (nonZeroCount != 0)
+			if (nlzf != 0)
 			{
-				spectra = new byte[nonZeroCount];
-				Array.Copy(compressedData, spectra, nonZeroCount);
+				spectra = new byte[nlzf];
+				Array.Copy(compressedData, spectra, nlzf);
 			}
 
 			return nonZeroCount;

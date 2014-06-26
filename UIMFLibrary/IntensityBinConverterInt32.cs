@@ -14,7 +14,12 @@ namespace UIMFLibrary
 		/// <param name="tic"></param>
 		/// <param name="bpi"></param>
 		/// <param name="binNumberMaxIntensity"></param>
-		/// <returns></returns>
+		/// <returns>
+		/// Number of non-zero data points
+		/// </returns>
+		/// <remarks>
+		/// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
+		/// </remarks>
 		public static int Encode(
 			List<KeyValuePair<int, int>> binToIntensityMap,
 			int timeOffset,
@@ -28,10 +33,9 @@ namespace UIMFLibrary
 			bpi = 0;
 			binNumberMaxIntensity = 0;
 
-			int arraySize = binToIntensityMap.Count;
-
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			var rlzeDataList = new List<int>();
+			int nonZeroCount = 0;
 
 			// 32-bit integers are 4 bytes
 			const int dataTypeSize = 4;
@@ -40,10 +44,10 @@ namespace UIMFLibrary
 			int previousBin = int.MinValue;
 
 			rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Key));
-			for (int i = 0; i < arraySize; i++)
+			for (int i = 0; i < binToIntensityMap.Count; i++)
 			{
-				int intensity = binToIntensityMap[0].Value;
-				int currentBin = binToIntensityMap[0].Key;
+				int intensity = binToIntensityMap[i].Value;
+				int currentBin = binToIntensityMap[i].Key;
 
 				// the intensities will always be positive integers
 				tic += intensity;
@@ -61,13 +65,13 @@ namespace UIMFLibrary
 				}
 
 				rlzeDataList.Add(intensity);
+				nonZeroCount++;
 
 				previousBin = currentBin;
 			}
 
 			// Compress intensities
-			int nonZeroCount = 0;
-
+			int nlzf = 0;
 			var nrlze = rlzeDataList.Count;
 			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
 
@@ -76,17 +80,17 @@ namespace UIMFLibrary
 			{
 				var byteBuffer = new byte[nrlze * dataTypeSize];
 				Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * dataTypeSize);
-				nonZeroCount = LZFCompressionUtil.Compress(
+				nlzf = LZFCompressionUtil.Compress(
 					ref byteBuffer,
 					nrlze * dataTypeSize,
 					ref compressedData,
 					compressedData.Length);
 			}
 
-			if (nonZeroCount != 0)
+			if (nlzf != 0)
 			{
-				spectra = new byte[nonZeroCount];
-				Array.Copy(compressedData, spectra, nonZeroCount);
+				spectra = new byte[nlzf];
+				Array.Copy(compressedData, spectra, nlzf);
 			}
 
 			return nonZeroCount;

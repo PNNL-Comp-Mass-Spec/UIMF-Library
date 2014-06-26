@@ -1052,6 +1052,9 @@ namespace UIMFLibrary
 		/// <returns>
 		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
+		/// <remarks>
+		/// Assumes that all data in binToIntensityMap has positive (non-zero) intensities
+		/// </remarks>
 		public int InsertScan(
 			FrameParameters frameParameters,
 			int scanNum,
@@ -1101,6 +1104,9 @@ namespace UIMFLibrary
 		/// <returns>
 		/// Non-zero data count<see cref="int"/>.
 		/// </returns>
+		/// <remarks>
+		/// Assumes that all data in intensities[] has positive (non-zero) intensities
+		/// </remarks>
 		[Obsolete("Superseded by InsertScan with: List<KeyValuePair<int, int>> binToIntensityMap, double binWidth")]
 		public int InsertScan(
 			FrameParameters frameParameters,
@@ -1118,8 +1124,7 @@ namespace UIMFLibrary
 
 			var binToIntensityMap = new List<KeyValuePair<int, int>>();
 
-			int arraySize = intensities.Length;
-			for (int i = 0; i < arraySize; i++)
+			for (int i = 0; i < intensities.Length; i++)
 			{
 				binToIntensityMap.Add(new KeyValuePair<int, int>(bins[i], intensities[i]));
 			}
@@ -1165,8 +1170,7 @@ namespace UIMFLibrary
 
 			var binToIntensityMap = new List<KeyValuePair<int, int>>();
 
-			int arraySize = intensities.Count;
-			for (int i = 0; i < arraySize; i++)
+			for (int i = 0; i < intensities.Count; i++)
 			{
 				binToIntensityMap.Add(new KeyValuePair<int, int>(bins[i], intensities[i]));
 			}
