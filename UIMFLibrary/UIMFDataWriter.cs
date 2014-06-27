@@ -89,8 +89,10 @@ namespace UIMFLibrary
 		{
 			this.m_fileName = fileName;
 			this.m_isScanParameterTable = createScanParameters;
+
+			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 			string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
-			this.m_dbConnection = new SQLiteConnection(connectionString);
+			this.m_dbConnection = new SQLiteConnection(connectionString, true);
 			try
 			{
 				this.m_dbConnection.Open();

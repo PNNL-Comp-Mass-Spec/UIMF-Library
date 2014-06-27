@@ -122,8 +122,9 @@ namespace UIMFLibrary
 			// Create the temporary database
 			string temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
 
+			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 			string connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
-			using (SQLiteConnection temporaryDatabaseConnection = new SQLiteConnection(connectionString))
+			using (var temporaryDatabaseConnection = new SQLiteConnection(connectionString, true))
 			{
 				temporaryDatabaseConnection.Open();
 
@@ -231,7 +232,7 @@ namespace UIMFLibrary
 		private int CreateBlankDatabase(string locationForNewDatabase, int numBins)
 		{
 			// Create new SQLite file
-			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
+			var sqliteFile = new FileInfo(locationForNewDatabase);
 			if (sqliteFile.Exists)
 			{
 				sqliteFile.Delete();
@@ -241,13 +242,14 @@ namespace UIMFLibrary
 
 			int tablesCreated = 0;
 
-			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+			using (var connection = new SQLiteConnection(connectionString, true))
 			{
 				connection.Open();
 
 				for (int i = 0; i <= numBins; i += BIN_SIZE)
 				{
-					using (SQLiteCommand sqlCommand = new SQLiteCommand(this.GetCreateIntensitiesTableQuery(i), connection))
+					using (var sqlCommand = new SQLiteCommand(this.GetCreateIntensitiesTableQuery(i), connection))
 					{
 						sqlCommand.ExecuteNonQuery();
 					}
@@ -270,16 +272,16 @@ namespace UIMFLibrary
 		/// </param>
 		private void CreateIndexes(string locationForNewDatabase, int numBins)
 		{
-			FileInfo sqliteFile = new FileInfo(locationForNewDatabase);
+			var sqliteFile = new FileInfo(locationForNewDatabase);
 			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
-			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			using (var connection = new SQLiteConnection(connectionString, true))
 			{
 				connection.Open();
 
 				for (int i = 0; i <= numBins; i += BIN_SIZE)
 				{
-					using (SQLiteCommand sqlCommand = new SQLiteCommand(this.GetCreateIndexesQuery(i), connection))
+					using (var sqlCommand = new SQLiteCommand(this.GetCreateIndexesQuery(i), connection))
 					{
 						sqlCommand.ExecuteNonQuery();
 					}
@@ -341,16 +343,16 @@ namespace UIMFLibrary
 
 			int tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
 
-			using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+			using (var connection = new SQLiteConnection(connectionString, true))
 			{
 				connection.Open();
 
-				Dictionary<int, SQLiteCommand> commandDictionary = new Dictionary<int, SQLiteCommand>();
+				var commandDictionary = new Dictionary<int, SQLiteCommand>();
 
 				for (int i = 0; i <= numBins; i += BIN_SIZE)
 				{
 					string query = this.GetInsertIntensityQuery(i);
-					SQLiteCommand sqlCommand = new SQLiteCommand(query, connection);
+					var sqlCommand = new SQLiteCommand(query, connection);
 					sqlCommand.Prepare();
 					commandDictionary.Add(i, sqlCommand);
 				}

@@ -170,8 +170,9 @@ namespace UIMFLibrary
 
 			if (uimfFileInfo.Exists)
 			{
+				// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 				string connectionString = "Data Source = " + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
-				this.m_uimfDatabaseConnection = new SQLiteConnection(connectionString);
+				this.m_uimfDatabaseConnection = new SQLiteConnection(connectionString, true);
 
 				try
 				{
@@ -788,8 +789,9 @@ namespace UIMFLibrary
 
 				try
 				{
+					// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 					string sTargetConnectionString = "Data Source = " + targetDBPath + "; Version=3; DateTimeFormat=Ticks;";
-					var cnTargetDB = new SQLiteConnection(sTargetConnectionString);
+					var cnTargetDB = new SQLiteConnection(sTargetConnectionString, true);
 
 					cnTargetDB.Open();
 					SQLiteCommand cmdTargetDB = cnTargetDB.CreateCommand();
