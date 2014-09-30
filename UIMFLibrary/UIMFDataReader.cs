@@ -1396,14 +1396,14 @@ namespace UIMFLibrary
 				throw new ArgumentOutOfRangeException("FrameNumber should be greater than or equal to zero.");
 			}
 
-			FrameParameters frameParameters = this.m_frameParametersCache[frameNumber];
-
 			// Check in cache first
+			FrameParameters frameParameters = this.m_frameParametersCache[frameNumber];
+			
 			if (frameParameters == null)
 			{
-				frameParameters = new FrameParameters();
-
 				// Parameters are not yet cached; retrieve and cache them
+				frameParameters = new FrameParameters();
+				
 				if (this.m_uimfDatabaseConnection != null)
 				{
 					this.m_getFrameParametersCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -4440,9 +4440,9 @@ namespace UIMFLibrary
 			double upperMZ = targetMZ + toleranceInMZ;
 			FrameParameters fp = this.GetFrameParameters(frameNumber);
 			GlobalParameters gp = this.GetGlobalParameters();
-			bool polynomialCalibrantsAreUsed = Math.Abs(fp.a2 - 0) > float.Epsilon || Math.Abs(fp.b2 - 0) > float.Epsilon
-			                                    || Math.Abs(fp.c2 - 0) > float.Epsilon || Math.Abs(fp.d2 - 0) > float.Epsilon
-			                                    || Math.Abs(fp.e2 - 0) > float.Epsilon || Math.Abs(fp.f2 - 0) > float.Epsilon;
+			bool polynomialCalibrantsAreUsed = Math.Abs(fp.a2) > float.Epsilon || Math.Abs(fp.b2) > float.Epsilon
+			                                    || Math.Abs(fp.c2) > float.Epsilon || Math.Abs(fp.d2) > float.Epsilon
+			                                    || Math.Abs(fp.e2) > float.Epsilon || Math.Abs(fp.f2) > float.Epsilon;
 			if (polynomialCalibrantsAreUsed)
 			{
 				// note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
