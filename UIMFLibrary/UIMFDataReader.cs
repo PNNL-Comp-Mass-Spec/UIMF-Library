@@ -40,6 +40,8 @@ namespace UIMFLibrary
 		/// </summary>
 		private const string TIC = "TIC";
 
+		private const double FRAME_PRESSURE_STANDARD = 4.0;
+
 		#endregion
 
 		#region Static Fields
@@ -1193,6 +1195,32 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
+		/// Returns the drift time for the given frame and IMS scan
+		/// </summary>
+		/// <param name="frameNum">Frame number (1-based)</param>
+		/// <param name="scanNum">IMS scan number (1-based)</param>
+		/// <returns>Drift time (milliseconds)</returns>
+		public double GetDriftTime(int frameNum, int scanNum)
+		{
+			FrameParameters fp = GetFrameParameters(frameNum);
+
+			double averageTOFLength = fp.AverageTOFLength;
+			double driftTime = averageTOFLength * scanNum / 1e6;
+
+			// Get the frame pressure (in torr)
+			var framePressure = GetFramePressureForCalculationOfDriftTime(fp);
+
+			if (double.IsNaN(framePressure) || Math.Abs(framePressure) < double.Epsilon)
+			{
+				// Return uncorrected drift time
+				return driftTime;
+			}
+
+			// Return drift time corrected for pressure
+			return driftTime * (FRAME_PRESSURE_STANDARD / framePressure);
+		}
+
+		/// <summary>
 		/// Get drift time profile for the given range
 		/// </summary>
 		/// <param name="startFrameNumber">
@@ -1393,7 +1421,7 @@ namespace UIMFLibrary
 		{
 			if (frameNumber < 0)
 			{
-				throw new ArgumentOutOfRangeException("FrameNumber should be greater than or equal to zero.");
+				throw new ArgumentOutOfRangeException("frameNumber", "FrameNumber should be greater than or equal to zero.");
 			}
 
 			// Check in cache first
@@ -1435,6 +1463,13 @@ namespace UIMFLibrary
 		/// </returns>
 		public double GetFramePressureForCalculationOfDriftTime(int frameIndex)
 		{
+			FrameParameters fp = this.GetFrameParameters(frameIndex);
+			return GetFramePressureForCalculationOfDriftTime(fp);
+		}
+		
+		private double GetFramePressureForCalculationOfDriftTime(FrameParameters fp)
+		{
+
 			/*
 			 * [gord, April 2011] A little history..
 			 * Earlier UIMF files have the column 'PressureBack' but not the 
@@ -1444,15 +1479,15 @@ namespace UIMFLibrary
 			 * if there is a value there, will use it.  If not,
 			 * look for newer columns and use these values. 
 			 */
-			FrameParameters fp = this.GetFrameParameters(frameIndex);
+			
 			double pressure = fp.PressureBack;
 
-			if (Math.Abs(pressure - 0) < float.Epsilon)
+			if (Math.Abs(pressure) < float.Epsilon)
 			{
 				pressure = fp.RearIonFunnelPressure;
 			}
 
-			if (Math.Abs(pressure - 0) < float.Epsilon)
+			if (Math.Abs(pressure) < float.Epsilon)
 			{
 				pressure = fp.IonFunnelTrapPressure;
 			}
