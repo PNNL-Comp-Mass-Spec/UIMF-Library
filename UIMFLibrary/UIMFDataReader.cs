@@ -352,7 +352,37 @@ namespace UIMFLibrary
 			return columnExists;
 		}
 
-		/// <summary>
+        /// <summary>
+        /// Compute the spacing between bins in a given frame
+        /// </summary>
+        /// <param name="frameNumber">Frame number</param>
+        /// <returns>Spacing between bins (in Thompsons)</returns>
+	    public double GetDeltaMz(int frameNumber)
+	    {
+            FrameParameters frameParams = this.GetFrameParameters(frameNumber);
+
+            var mz1 = ConvertBinToMZ(
+	            frameParams.CalibrationSlope,
+	            frameParams.CalibrationIntercept,
+	            m_globalParameters.BinWidth,
+	            m_globalParameters.TOFCorrectionTime,
+	            1);
+
+            var mz2 = ConvertBinToMZ(
+	            frameParams.CalibrationSlope,
+	            frameParams.CalibrationIntercept,
+	            m_globalParameters.BinWidth,
+	            m_globalParameters.TOFCorrectionTime,
+	            2);
+
+	        var deltaMz = mz2 - mz1;
+
+            return deltaMz;
+
+	    }
+
+
+	    /// <summary>
 		/// Convert bin to mz.
 		/// </summary>
 		/// <param name="slope">
