@@ -353,19 +353,30 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Compute the spacing between bins in a given frame
+        /// Compute the spacing between the two midpoint bins in a given frame
         /// </summary>
         /// <param name="frameNumber">Frame number</param>
         /// <returns>Spacing between bins (in Thompsons)</returns>
         public double GetDeltaMz(int frameNumber)
         {
-            FrameParameters frameParams = GetFrameParameters(frameNumber);
-
             // Determine the bin number at the midpoint
             var startBin = m_globalParameters.Bins / 2;
             if (startBin < 0)
                 startBin = 0;
 
+            return GetDeltaMz(frameNumber, startBin);
+        }
+
+        /// <summary>
+        /// Compute the spacing between any two adjacent bins in a given frame
+        /// </summary>
+        /// <param name="frameNumber">Frame number</param>
+        /// <param name="startBin">Starting bin nuber</param>
+        /// <returns>Spacing between bins (in Thompsons)</returns>
+        public double GetDeltaMz(int frameNumber, int startBin)
+        {
+            FrameParameters frameParams = GetFrameParameters(frameNumber);
+          
             var mz1 = ConvertBinToMZ(
                 frameParams.CalibrationSlope,
                 frameParams.CalibrationIntercept,
