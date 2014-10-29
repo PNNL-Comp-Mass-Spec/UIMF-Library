@@ -22,7 +22,7 @@ namespace UIMFLibrary.UnitTests
 		/// Standard non-multiplexed file
 		/// </summary>
 		private string uimfStandardFile1 =
-			@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+			@"C:\Users\maji301\Desktop\LDRD\SlowerMethod\ImsInformedTests\testFiles\uimf_files\peptide\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
 		#endregion
 
