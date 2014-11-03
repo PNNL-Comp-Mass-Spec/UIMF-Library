@@ -10,6 +10,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Globalization;
+
 namespace UIMFLibrary
 {
 	using System;
@@ -333,7 +335,7 @@ namespace UIMFLibrary
 		/// Create the table struture within a UIMF file
 		/// </summary>
 		/// <param name="dataType">
-		/// Data type of intensity in the Frame_Scans table: Double, float short, or int
+		/// Data type of intensity in the Frame_Scans table: Double, float, short, or int
 		/// </param>
 		/// <remarks>
 		/// This must be called after opening a new file to create the default tables that are required for IMS data.
@@ -853,8 +855,8 @@ namespace UIMFLibrary
 			double binWidth, 
 			int indexOfMaxIntensity,
 			int nonZeroCount, 
-			double bpi, 
-			double tic, 
+			double bpi,
+            Int64 tic, 
 			byte[] spectra)
 		{
 			if (nonZeroCount <= 0)
@@ -868,7 +870,7 @@ namespace UIMFLibrary
 			var bpiMz = ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
 
 			// Insert records
-			InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, (int)tic, spectra);
+			InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
 			m_dbCommandPrepareInsertScan.ExecuteNonQuery();
 			m_dbCommandPrepareInsertScan.Parameters.Clear();
 		}
@@ -910,7 +912,7 @@ namespace UIMFLibrary
 
 			int nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
+			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
 			return nonZeroCount;
 		}
@@ -948,7 +950,7 @@ namespace UIMFLibrary
 
 			int nonZeroCount = IntensityConverterInt16.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
+			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
 			return nonZeroCount;
 		}
@@ -990,7 +992,7 @@ namespace UIMFLibrary
 
 			int nonZeroCount = IntensityConverterFloat.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
+            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
 			return nonZeroCount;
 		}
@@ -1032,7 +1034,7 @@ namespace UIMFLibrary
 
 			int nonZeroCount = IntensityConverterDouble.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-			InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, tic, spectra);
+            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
 			return nonZeroCount;
 		}
@@ -1080,7 +1082,7 @@ namespace UIMFLibrary
 
 			int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
-			InsertScanStoreBytes(frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, tic, spectra);
+            InsertScanStoreBytes(frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 		
 			return nonZeroCount;
 
@@ -1616,9 +1618,11 @@ namespace UIMFLibrary
 			}
 			else
 			{
-				// Assume 32-bit int
+				// Assume an integer
+                // Note that SqLite stores both 32-bit and 64-bit integers in fields tagged with INTEGER
+                // This function casts TIC values to int64 when storing (to avoid int32 overflow errors) and we thus report the .NET data type as int64
 				sqlDataType = "INTEGER";
-				dotNetDataType = "int";
+				dotNetDataType = "int64";
 			}
 
 			var lstFields = new List<Tuple<string, string, string>>
@@ -1690,15 +1694,15 @@ namespace UIMFLibrary
 			int nonZeroCount,
 			int bpi,
 			double bpiMz,
-			int tic,
+			Int64 tic,
 			byte[] spectraRecord)
 		{
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz.ToString()));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic.ToString()));
+            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString(CultureInfo.InvariantCulture)));
+            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString(CultureInfo.InvariantCulture)));
+            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString(CultureInfo.InvariantCulture)));
+            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString(CultureInfo.InvariantCulture)));
+			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz.ToString(CultureInfo.InvariantCulture)));
+            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic.ToString(CultureInfo.InvariantCulture)));
 			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("Intensities", spectraRecord));
 		}
 
