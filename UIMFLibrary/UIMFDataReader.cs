@@ -942,8 +942,15 @@ namespace UIMFLibrary
                 if (m_uimfDatabaseConnection != null)
                 {
                     m_uimfDatabaseConnection.Close();
-                    m_uimfDatabaseConnection.Dispose();
+                    if (m_uimfDatabaseConnection != null)
+                    {
+                        m_uimfDatabaseConnection.Dispose();
+                    }
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore this error
             }
             catch (Exception ex)
             {

@@ -77,7 +77,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void TestBinValueGreaterThanMax()
 		{
-			string uimfFile = @"\\protoapps\UserData\Slysz\For_Kevin\LSDF2_10-0457-03_A_26May11_Roc_11-02-26.uimf";
+            string uimfFile = @"\\proto-2\unitTest_Files\DeconTools_TestFiles\UIMF\LSDF2_10-0457-03_A_26May11_Roc_11-02-26.uimf";
 			using (DataReader reader = new DataReader(uimfFile))
 			{
 				int frameStart = 164;
