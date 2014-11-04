@@ -139,7 +139,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 			double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
 			string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
 			int[] frameVals = null;
 			int[] scanVals = null;

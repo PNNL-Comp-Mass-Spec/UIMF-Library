@@ -39,7 +39,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void GetFramesAndScanIntensitiesForAGivenMzTest()
 		{
 			string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
 			int startFrame = 306;
 			int startScan = 128;
@@ -106,7 +106,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void TestGetSpectrum()
 		{
 			const string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
@@ -136,7 +136,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void TestGetSpectrumAsBins()
 		{
 			const string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameNumber = 6;
 			const int scanNumber = 285;
 
@@ -156,7 +156,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void TestGetSpectrumAsBins2()
 		{
 			const string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 			const int startFrame = 162;
 			const int stopFrame = 164;
 			const int scan = 121;
@@ -213,7 +213,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void TestGetSpectrumSummed1()
 		{
 			const string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 			const int frameStart = 6;
 			const int frameStop = 8;
 			const int scanStart = 285;
@@ -249,16 +249,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		public void TestPressureDetermination1()
 		{
 			string uimfFilePressureInTorr1 =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
 			string uimfFilePressureInTorr2 =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
 			string uimfFileWithPressureInMillitorr =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_ctrl_1ugul_Run2_4bit_23Sep11_Frodo.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_ctrl_1ugul_Run2_4bit_23Sep11_Frodo.uimf";
 
 			string uimfFileWithExtraPressureColumnsInTorr =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_P28_A10_2602_187_19Dec11_Cheetah_11-09-03.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_P28_A10_2602_187_19Dec11_Cheetah_11-09-03.uimf";
 
 			Stopwatch sw = new Stopwatch();
 			sw.Start();
@@ -300,7 +300,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		{
 			int testFrame = 1000;
 			string filePath =
-				@"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
+				@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
 			using (this.m_reader = new DataReader(filePath))
 			{
@@ -352,7 +352,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		// [Test]
 		// public void GetBPISortedList()
 		// {
-		// string filePath = @"\\protoapps\UserData\Slysz\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+		// string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
 		// m_reader = new DataReader();
 		// m_reader.OpenUIMF(filePath);
