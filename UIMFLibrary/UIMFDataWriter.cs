@@ -11,6 +11,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Globalization;
+using System.Linq;
 
 namespace UIMFLibrary
 {
@@ -26,25 +27,25 @@ namespace UIMFLibrary
 	{
 		#region Fields
 
-		/// <summary>
-		/// Track whether frame parameter columns have been verified
-		/// </summary>
-		private bool m_FrameParameterColumnsVerified;
+        /// <summary>
+        /// Frame parameter keys
+        /// </summary>
+        protected Dictionary<int, FrameParamDef> m_frameParameterKeys;
+
+        /// <summary>
+        /// Command to insert a frame parameter key
+        /// </summary>
+        private SQLiteCommand m_dbCommandInsertFrameParamKey;
 
 		/// <summary>
-		/// Command to insert a frame
+		/// Command to insert a frame parameter value
 		/// </summary>
-		private SQLiteCommand m_dbCommandPrepareInsertFrame;
+		private SQLiteCommand m_dbCommandInsertFrameParamValue;
 
 		/// <summary>
 		/// Command to insert a scan
 		/// </summary>
-		private SQLiteCommand m_dbCommandPrepareInsertScan;
-
-		/// <summary>
-		/// Command to insert scan parameters.
-		/// </summary>
-		private SQLiteCommand m_dbCommandPrepareInsertScanParameters;
+		private SQLiteCommand m_dbCommandInsertScan;
 
 		/// <summary>
 		/// General database update command
@@ -66,11 +67,6 @@ namespace UIMFLibrary
 		/// </summary>
 		private GlobalParameters m_globalParameters;
 
-		/// <summary>
-		/// Tracks whether the scan parameters table was created
-		/// </summary>
-		private readonly bool m_isScanParameterTable;
-
 		#endregion
 
 		#region Constructors and Destructors
@@ -82,17 +78,14 @@ namespace UIMFLibrary
 		/// <param name="fileName">
 		/// Full path to the data file
 		/// </param>
-		/// <param name="createScanParameters">
-		/// True if the scan parameters table should be created
-		/// </param>
-		public DataWriter(string fileName, bool createScanParameters = false)
+		public DataWriter(string fileName)
 		{
 			m_fileName = fileName;
-			m_isScanParameterTable = createScanParameters;
 
 			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 			string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
 			m_dbConnection = new SQLiteConnection(connectionString, true);
+
 			try
 			{
 				m_dbConnection.Open();
@@ -100,18 +93,47 @@ namespace UIMFLibrary
 				// Note that the following call will instantiate m_dbCommandUimf
 				TransactionBegin();
 
-				PrepareInsertFrame();
+                PrepareInsertFrameParamKey();
+				PrepareInsertFrameParamValue();
 				PrepareInsertScan();
 
-				m_FrameParameterColumnsVerified = false;
+			    m_frameParameterKeys = new Dictionary<int, FrameParamDef>();
+
+                // If table Frame_Parameters exists, use it to populate a Frame_Params table
+		        ConvertLegacyFrameParameters();
+
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("Exception opening the UIMF file: " + ex.Message);
+                ReportError("Exception opening the UIMF file: " + ex.Message, ex);
+                throw;
 			}
 		}
 
-		#endregion
+	    private void ConvertLegacyFrameParameters()
+	    {
+
+	        try
+	        {
+	            if (!DataReader.TableExists(m_dbConnection, "Frame_Parameters"))
+	            {
+                    // Nothing to do
+                    return;
+	            }
+
+
+	        }
+            catch (Exception ex)
+			{
+                ReportError("Exception creating the Frame_Params table using existint table Frame_Parameters: " + ex.Message, ex);
+                throw;
+			}
+		
+	        // xxx Need to Code This
+
+	    }
+
+	    #endregion
 
 		#region Public Methods and Operators
 
@@ -173,127 +195,49 @@ namespace UIMFLibrary
 
 			cmdPostLogEntry.ExecuteNonQuery();
 			cmdPostLogEntry.Dispose();
-		}
+		}	
 
 		/// <summary>
-		/// Add a column to the Frame_Parameters table
+		/// Add or update a frame parameter entry in the Frame_Params table
 		/// </summary>
-		/// <param name="parameterName">
-		/// </param>
-		/// <param name="parameterType">
-		/// </param>
-		/// <remarks>
-		/// The new column will have Null values for all existing rows
-		/// </remarks>
-		public void AddFrameParameter(string parameterName, string parameterType)
+        /// <param name="frameNum">Frame number</param>
+        /// <param name="paramKeyType">Frame number</param>
+        /// <param name="paramValue">Frame number</param>
+        public void AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
 		{
+            // Make sure the Frame_Param_Keys table contains key paramKeyType
+            ValidateFrameParameterKeys(new List<FrameParamKeyType> {paramKeyType});
+
 			try
 			{
+                // SQLite does not have a merge statement
+                // We therefore must first try an Update query
+                // If no rows are matched, then run an insert query
+
 				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " + parameterType;
-				m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Params SET ParamValue = '" + paramValue + "' " +
+                                              "WHERE FrameNum = " + frameNum + " AND ParamID = " + (int)paramKeyType;
+				var updateCount = m_dbCommandUimf.ExecuteNonQuery();
+
+                m_dbCommandUimf.Dispose();
+
+			    if (updateCount == 0)
+			    {
+                    m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                    m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
+                    m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+                    m_dbCommandInsertFrameParamValue.ExecuteNonQuery();
+			    }
+			    
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("Error adding parameter " + parameterName + " to the Frame_Parameters table:" + ex.Message);
+			    ReportError("Error adding/updating parameter " + paramKeyType + " for frame " + frameNum + ": " + ex.Message, ex);
+			    throw;
 			}
 		}
 
-		/// <summary>
-		/// Add a column to the Frame_Parameters table
-		/// </summary>
-		/// <param name="parameterName">
-		/// Parameter name (aka column name in the database)
-		/// </param>
-		/// <param name="parameterType">
-		/// Parameter type
-		/// </param>
-		/// <param name="defaultValue">
-		/// Value to assign to all rows
-		/// </param>
-		public void AddFrameParameter(string parameterName, string parameterType, int defaultValue)
-		{
-			AddFrameParameter(parameterName, parameterType);
-
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + defaultValue
-												   + " WHERE " + parameterName + " IS NULL";
-				m_dbCommandUimf.ExecuteNonQuery();
-
-				m_dbCommandUimf.Dispose();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// Add a column to the Frame_Parameters table
-		/// </summary>
-		/// <param name="parameterName">
-		/// Parameter name (aka column name in the database)
-		/// </param>
-		/// <param name="parameterType">
-		/// Parameter type
-		/// </param>
-		/// <param name="defaultValue">
-		/// Value to assign to all rows
-		/// </param>
-		public void AddFrameParameter(string parameterName, string parameterType, string defaultValue)
-		{
-			AddFrameParameter(parameterName, parameterType);
-
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = '" + defaultValue
-												   + "' WHERE " + parameterName + " IS NULL";
-				m_dbCommandUimf.ExecuteNonQuery();
-
-				m_dbCommandUimf.Dispose();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error setting default value for parameter " + parameterName + ": " + ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// </summary>
-		/// <param name="parameterName">
-		/// </param>
-		/// <param name="parameterType">
-		/// </param>
-		/// <param name="parameterValue">
-		/// </param>
-		public void AddGlobalParameter(string parameterName, string parameterType, string parameterValue)
-		{
-			try
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "Alter TABLE Global_Parameters Add " + parameterName + " "
-												   + parameterType;
-				m_dbCommandUimf.CommandText += " UPDATE Global_Parameters SET " + parameterName + " = "
-													+ parameterValue;
-				m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
-			}
-			catch
-			{
-				m_dbCommandUimf = m_dbConnection.CreateCommand();
-				m_dbCommandUimf.CommandText = "UPDATE Global_Parameters SET " + parameterName + " = "
-												   + parameterValue;
-				m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Dispose();
-				Console.WriteLine("Parameter " + parameterName + " already exists, its value will be updated to " + parameterValue);
-			}
-		}
-
-		/// <summary>
+	    /// <summary>
 		/// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
 		/// Bin centric data is important for data access speed in informed workflows.
 		/// </summary>
@@ -342,45 +286,58 @@ namespace UIMFLibrary
 		/// </remarks>
 		public void CreateTables(string dataType)
 		{
-			// https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
+			// Detailed information on columns is at
+            // https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
 
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
 
 			// Create the Global_Parameters Table  
 			var lstFields = GetGlobalParametersFields();
-			m_dbCommandUimf.CommandText = GetCreateTableSql("Global_Parameters", lstFields);
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Global_Parameters", lstFields);
 			m_dbCommandUimf.ExecuteNonQuery();
 
-			// Create the Frame_parameters Table
-			lstFields = GetFrameParametersFields();
-			m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Parameters", lstFields);
-			m_dbCommandUimf.ExecuteNonQuery();
+            // Create the Frame_Param_Keys Table
+            lstFields = GetFrameParamKeysFields();
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Param_Keys", lstFields);
+            m_dbCommandUimf.ExecuteNonQuery();
 
-			// Re-initialize m_dbCommandPrepareInsertFrame so that it uses voltEntranceHPFIn and voltEntranceHPFOut
-			PrepareInsertFrame();
+			// Create the Frame_Params Table
+            lstFields = GetFrameParamsFields();
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Params", lstFields);
+			m_dbCommandUimf.ExecuteNonQuery();
 
 			// Create the Frame_Scans Table
-			lstFields = GetFrameScansFields(dataType);
-			m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Scans", lstFields);
+			lstFields = GetFrameScansFields(dataType);		 
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Scans", lstFields);
+            m_dbCommandUimf.ExecuteNonQuery();
 
-			// Facilitate faster retrieval of scans/spectrums.
-			m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX pk_index on Frame_Scans(FrameNum, ScanNum);";
+            // Create the unique constraint indices
+            // Although SQLite supports multi-column (compound) primary keys, the SQLite Manager plugin does not fully support them
+            // thus, we'll use unique constraint indices to prevent duplicates
+
+            // Create the unique index index on Frame_Param_Keys
+            m_dbCommandUimf.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on Frame_Param_Keys(ParamID);";
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            // Create the unique index index on Frame_Params
+            m_dbCommandUimf.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParams on Frame_Params(FrameNum, ParamID);";
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            // Create a second index on Frame_Params, to allow for lookups by ParamID
+            m_dbCommandUimf.CommandText = "CREATE INDEX ix_index_FrameParams_By_ParamID on Frame_Params(ParamID, FrameNum);";
+            m_dbCommandUimf.ExecuteNonQuery();
+
+			// Create the unique index on Frame_Scans
+            m_dbCommandUimf.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on Frame_Scans(FrameNum, ScanNum);";
 			m_dbCommandUimf.ExecuteNonQuery();
 
-			if (m_isScanParameterTable)
-			{
-				m_dbCommandUimf.CommandText = "CREATE TABLE Scan_Parameters ( " +
-													 "ScanNum INTEGER NOT NULL, " +
-													 "MS_Level SMALLINT NOT NULL);";
-				m_dbCommandUimf.CommandText += "CREATE UNIQUE INDEX scan_index on Scan_Parameters(ScanNum, MS_Level);";
-				m_dbCommandUimf.ExecuteNonQuery();
-			}
-
 			m_dbCommandUimf.Dispose();
+
+		    FlushUimf();
 		}
 
 		/// <summary>
-		/// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Parameters for all frames.
+        /// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Params for all frames.
 		/// </summary>
 		/// <param name="frameType">
 		/// </param>
@@ -395,16 +352,26 @@ namespace UIMFLibrary
 		public void DeleteAllFrameScans(int frameType, bool updateScanCountInFrameParams, bool bShrinkDatabaseAfterDelete)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " + "WHERE FrameNum IN (SELECT FrameNum " +
-											   "FROM Frame_Parameters " + "WHERE FrameType = " + frameType + ");";
+            
+			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans " + 
+                                          "WHERE FrameNum IN " +
+			                              "   (SELECT DISTINCT FrameNum " +
+                                          "    FROM Frame_Params " + 
+                                          "    WHERE ParamID = " + (int)FrameParamKeyType.FrameType + " AND" +
+			                                       " Value = " + frameType + ");";
 			m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateScanCountInFrameParams)
 			{
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters " + "SET Scans = 0 " + "WHERE FrameType = "
-												   + frameType + ";";
-				m_dbCommandUimf.ExecuteNonQuery();
+                m_dbCommandUimf.CommandText = "UPDATE Frame_Params " + 
+                                              "SET Value = '0' " +
+                                              "WHERE ParamID = " + (int)FrameParamKeyType.Scans + 
+                                                   " AND FrameNum IN " +
+                                                   "   (SELECT DISTINCT FrameNum " +
+                                                   "    FROM Frame_Params " +
+                                                   "    WHERE ParamID = " + (int)FrameParamKeyType.FrameType + " AND" +
+                                                            " Value = " + frameType + ");";
+                m_dbCommandUimf.ExecuteNonQuery();
 			}
 
 			// Commmit the currently open transaction
@@ -424,7 +391,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Deletes the frame from the Frame_Parameters table and from the Frame_Scans table
+		/// Deletes the frame from the Frame_Params table and from the Frame_Scans table
 		/// </summary>
 		/// <param name="frameNum">
 		/// </param>
@@ -438,7 +405,7 @@ namespace UIMFLibrary
 			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum + "; ";
 			m_dbCommandUimf.ExecuteNonQuery();
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum = " + frameNum + "; ";
+			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Params WHERE FrameNum = " + frameNum + "; ";
 			m_dbCommandUimf.ExecuteNonQuery();
 
 			if (updateGlobalParameters)
@@ -470,9 +437,11 @@ namespace UIMFLibrary
 
 			if (updateScanCountInFrameParams)
 			{
-				m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET Scans = 0 WHERE FrameNum = " + frameNum
-												   + "; ";
-				m_dbCommandUimf.ExecuteNonQuery();
+			    m_dbCommandUimf.CommandText = "UPDATE Frame_Params " +
+			                                  "SET Value = '0' " +
+			                                  "WHERE FrameNum = " + frameNum + " AND " +
+			                                       " ParamID = " + (int)FrameParamKeyType.Scans + ";";
+                m_dbCommandUimf.ExecuteNonQuery();
 			}
 
 			m_dbCommandUimf.Dispose();
@@ -481,7 +450,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// Deletes given frames from the UIMF file. 
+		/// Delete the given frames from the UIMF file. 
 		/// </summary>
 		/// <param name="frameNums">
 		/// </param>
@@ -503,7 +472,7 @@ namespace UIMFLibrary
 											   + "); ";
 			m_dbCommandUimf.ExecuteNonQuery();
 
-			m_dbCommandUimf.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN ("
+            m_dbCommandUimf.CommandText = "DELETE FROM Frame_Params WHERE FrameNum IN ("
 											   + sFrameList.ToString().TrimEnd(',') + "); ";
 			m_dbCommandUimf.ExecuteNonQuery();
 
@@ -560,9 +529,9 @@ namespace UIMFLibrary
 					TransactionCommit();
 
 					DisposeCommand(m_dbCommandUimf);
-					DisposeCommand(m_dbCommandPrepareInsertFrame);
-					DisposeCommand(m_dbCommandPrepareInsertScan);
-					DisposeCommand(m_dbCommandPrepareInsertScanParameters);
+				    DisposeCommand(m_dbCommandInsertFrameParamKey);
+					DisposeCommand(m_dbCommandInsertFrameParamValue);
+					DisposeCommand(m_dbCommandInsertScan);
 				
 					m_dbConnection.Close();
 					m_dbConnection = null;
@@ -602,203 +571,220 @@ namespace UIMFLibrary
 			return DataReader.GetGlobalParametersFromTable(m_dbConnection);
 		}
 
-		/// <summary>
+	    /// <summary>
+	    /// Method to insert details related to each IMS frame
+	    /// </summary>
+	    /// <param name="frameParameters">
+	    /// </param>
+	    public void InsertFrame(FrameParameters frameParameters)
+	    {
+	        var frameParametersDictionary = new Dictionary<FrameParamKeyType, string>
+	        {
+	            // Start time of frame, in minutes
+	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.FloatToString(frameParameters.StartTime)},
+                
+	            // Duration of frame, in seconds
+	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.FloatToString(frameParameters.Duration)},
+                
+	            // Number of collected and summed acquisitions in a frame 
+	            {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
+                
+	            // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+	            {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
+
+                // Set to 1 after a frame has been decoded (added June 27, 2011)
+                {FrameParamKeyType.Decoded, UIMFDataUtilities.IntToString(frameParameters.Decoded)},
+
+                // Set to 1 after a frame has been calibrated
+                {FrameParamKeyType.CalibrationDone, UIMFDataUtilities.IntToString(frameParameters.CalibrationDone)},
+
+	            // Number of TOF scans
+	            {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
+
+	            // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+	            {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
+
+	            // Original size of bit sequence
+	            {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
+
+                // Number of TOF Losses
+	            {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
+	        
+                // Average time between TOF trigger pulses
+                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.FloatToString(frameParameters.AverageTOFLength)},
+
+                // Calibration slope, k0
+	            {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
+
+                // Calibration intercept, t0
+	            {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
+	        };
+
+	        // These six parameters are coefficients for residual mass error correction      
+            // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
+	        if (Math.Abs(frameParameters.a2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.b2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.c2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.d2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.e2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.f2) > Single.Epsilon)
+	        {
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
+                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
+	        }	        
+
+            // Ambient temperature
+            frameParametersDictionary.Add(FrameParamKeyType.AmbientTemperature, UIMFDataUtilities.FloatToString(frameParameters.Temperature));            
+
+            // Voltage settings in the IMS system
+	        if (Math.Abs(frameParameters.voltHVRack1) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltHVRack2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltHVRack3) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltHVRack4) > Single.Epsilon)
+	        {
+                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack1, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack1));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack2, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack2));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack3, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack3));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack4, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack4));
+	        }
+
+            // Capillary Inlet Voltage
+	        // HPF In Voltage
+            // HPF Out Voltage
+            // Cond Limit Voltage
+            if (Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltEntranceHPFOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceCondLmt) > Single.Epsilon)
+	        {
+                frameParametersDictionary.Add(FrameParamKeyType.VoltCapInlet, UIMFDataUtilities.FloatToString(frameParameters.voltCapInlet)); 
+                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFIn));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFOut));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceCondLmt));
+	        }
+
+            // Trap Out Voltage
+            // Trap In Voltage
+            // Jet Disruptor Voltage
+            if (Math.Abs(frameParameters.voltTrapOut) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltTrapIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltJetDist) > Single.Epsilon)
+	        {
+	            frameParametersDictionary.Add(FrameParamKeyType.VoltTrapOut, UIMFDataUtilities.FloatToString(frameParameters.voltTrapOut));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltTrapIn, UIMFDataUtilities.FloatToString(frameParameters.voltTrapIn));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltJetDist, UIMFDataUtilities.FloatToString(frameParameters.voltJetDist));
+	        }
+
+            // Fragmentation Quadrupole 1 Voltage
+            // Fragmentation Conductance 1 Voltage
+	        if (Math.Abs(frameParameters.voltQuad1) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltCond1) > Single.Epsilon)
+	        {
+	            frameParametersDictionary.Add(FrameParamKeyType.VoltQuad1, UIMFDataUtilities.FloatToString(frameParameters.voltQuad1));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltCond1, UIMFDataUtilities.FloatToString(frameParameters.voltCond1));
+	        }
+
+            // Fragmentation Quadrupole 2 Voltage
+            // Fragmentation Conductance 2 Voltage
+	        if (Math.Abs(frameParameters.voltQuad2) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltCond2) > Single.Epsilon)
+	        {
+	            frameParametersDictionary.Add(FrameParamKeyType.VoltQuad2, UIMFDataUtilities.FloatToString(frameParameters.voltQuad2));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltCond2, UIMFDataUtilities.FloatToString(frameParameters.voltCond2));
+	        }
+        
+            // IMS Out Voltage
+            // HPF In Voltage
+            // HPF Out Voltage
+            if (Math.Abs(frameParameters.voltIMSOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltExitHPFIn) > Single.Epsilon ||
+	            Math.Abs(frameParameters.voltExitHPFOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltExitCondLmt) > Single.Epsilon)
+	        {
+                frameParametersDictionary.Add(FrameParamKeyType.VoltIMSOut, UIMFDataUtilities.FloatToString(frameParameters.voltIMSOut));
+	            frameParametersDictionary.Add(FrameParamKeyType.VoltExitHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFIn));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltExitHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFOut));
+                frameParametersDictionary.Add(FrameParamKeyType.VoltExitCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltExitCondLmt));
+	        }
+
+            // Pressure at front of Drift Tube
+            // Pressure at back of Drift Tube
+            if (Math.Abs(frameParameters.PressureFront) > Single.Epsilon ||
+                Math.Abs(frameParameters.PressureBack) > Single.Epsilon)
+            {
+                frameParametersDictionary.Add(FrameParamKeyType.PressureFront, UIMFDataUtilities.FloatToString(frameParameters.PressureFront));
+                frameParametersDictionary.Add(FrameParamKeyType.PressureBack, UIMFDataUtilities.FloatToString(frameParameters.PressureBack));
+            }
+
+            // High pressure funnel pressure
+            // Ion funnel trap pressure
+            // Rear ion funnel pressure
+            // Quadruple pressure
+            if (Math.Abs(frameParameters.HighPressureFunnelPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.IonFunnelTrapPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.RearIonFunnelPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.QuadrupolePressure) > Single.Epsilon)
+            {
+                frameParametersDictionary.Add(FrameParamKeyType.HighPressureFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.HighPressureFunnelPressure));
+                frameParametersDictionary.Add(FrameParamKeyType.IonFunnelTrapPressure, UIMFDataUtilities.FloatToString(frameParameters.IonFunnelTrapPressure));
+                frameParametersDictionary.Add(FrameParamKeyType.RearIonFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.RearIonFunnelPressure));
+                frameParametersDictionary.Add(FrameParamKeyType.QuadrupolePressure, UIMFDataUtilities.FloatToString(frameParameters.QuadrupolePressure));
+            }
+
+            // ESI Voltage
+            if (Math.Abs(frameParameters.ESIVoltage) > Single.Epsilon)
+            {
+                frameParametersDictionary.Add(FrameParamKeyType.ESIVoltage, UIMFDataUtilities.FloatToString(frameParameters.ESIVoltage));
+            }
+
+             // Float Voltage
+            if (Math.Abs(frameParameters.FloatVoltage) > Single.Epsilon)
+	        {
+                frameParametersDictionary.Add(FrameParamKeyType.FloatVoltage, UIMFDataUtilities.FloatToString(frameParameters.FloatVoltage));
+	        }
+
+
+            // Voltage profile used in fragmentation
+            // Legacy parameter, likely never used
+            if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
+            {
+                var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
+                string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+                frameParametersDictionary.Add(FrameParamKeyType.FragmentationProfile, base64String);
+            }
+
+	        InsertFrame(frameParameters.FrameNum, frameParametersDictionary);
+	    }
+
+	    /// <summary>
 		/// Method to insert details related to each IMS frame
 		/// </summary>
-		/// <param name="frameParameters">
-		/// </param>
-		public void InsertFrame(FrameParameters frameParameters)
+		/// <param name="frameNum">Frame number</param>
+		/// <param name="frameParameters">Frame parameters dictionary</param>
+		public void InsertFrame(int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
 		{
-			if (m_dbCommandPrepareInsertFrame == null)
-			{
-                // Initialize m_dbCommandPrepareInsertFrame
-				PrepareInsertFrame();
 
-			    if (m_dbCommandPrepareInsertFrame == null)
-			        throw new Exception("m_dbCommandPrepareInsertFrame is still null after calling PrepareInsertFrame");
-			}		    
+            // Make sure the Frame_Param_Keys table has the required keys
+            ValidateFrameParameterKeys(frameParameters.Keys.ToList());
 
-		    // Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
+            // Store each of the FrameParameters values as FrameNum, ParamID, Value entries
 
-			m_dbCommandPrepareInsertFrame.Parameters.Clear();
+	        foreach (var paramValue in frameParameters)
+	        {
+                m_dbCommandInsertFrameParamValue.Parameters.Clear();
 
-			// Frame number (primary key)     
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));
+                m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramValue.Key));
+                m_dbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue.Value));
+                m_dbCommandInsertFrameParamValue.ExecuteNonQuery();
 
-			// Start time of frame, in minutes
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));
-
-			// Duration of frame, in seconds 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));
-
-			// Number of collected and summed acquisitions in a frame 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
-
-			// Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
-
-			// Number of TOF scans  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));
-
-			// IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));
-
-			// Number of TOF Losses
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));
-
-			// Average time between TOF trigger pulses
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));
-
-			// Value of k0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope));
-
-			// Value of t0  
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept));
-
-			// These six parameters below are coefficients for residual mass error correction      
-			//   ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2)); // 13
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2)); // 14
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2)); // 15
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2)); // 16
-
-			// Ambient temperature
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature));
-
-			// Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1));
-
-			// Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));
-
-			// Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));
-
-			// Voltage setting in the IMS system
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));
-
-			// Capillary Inlet Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));
-
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
-			{
-				// HPF In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));
-
-				// HPF Out Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));
-			}
-			else
-			{
-				// IFT In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceIFTIn", frameParameters.voltEntranceHPFIn));
-
-				// IFT Out Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltEntranceIFTOut", frameParameters.voltEntranceHPFOut));
-			}
-
-			// Cond Limit Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt));
-
-			// Trap Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));
-
-			// Trap In Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));
-
-			// Jet Disruptor Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));
-
-			// Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));
-
-			// Fragmentation Conductance Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));
-
-			// Fragmentation Quadrupole Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));
-
-			// Fragmentation Conductance Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));
-
-			// IMS Out Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
-			{
-				// HPF In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));
-
-				// HPF Out Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));
-			}
-			else
-			{
-				// IFT In Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitIFTIn", frameParameters.voltExitHPFIn));
-
-				// IFT Out Voltage
-				m_dbCommandPrepareInsertFrame.Parameters.Add(
-					new SQLiteParameter(":voltExitIFTOut", frameParameters.voltExitHPFOut));
-			}
-
-			// Cond Limit Voltage
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));
-
-			// Pressure at front of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":PressureFront", frameParameters.PressureFront));
-
-			// Pressure at back of Drift Tube 
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));
-
-			// Determines original size of bit sequence
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));
-
-			// Voltage profile used in fragmentation
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":FragmentationProfile", ConvertToBlob(frameParameters.FragmentationProfile)));
-
-
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure));
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
-
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));
-
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));
-
-			// Set to 1 after a frame has been calibrated
-			m_dbCommandPrepareInsertFrame.Parameters.Add(
-				new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));
-
-			// Set to 1 after a frame has been decoded (added June 27, 2011)
-			m_dbCommandPrepareInsertFrame.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.Decoded));
-
-			m_dbCommandPrepareInsertFrame.ExecuteNonQuery();
-			m_dbCommandPrepareInsertFrame.Parameters.Clear();
+                m_dbCommandInsertFrameParamValue.Parameters.Clear();
+	        }
+	        
 		}
 
 		/// <summary>
@@ -871,8 +857,8 @@ namespace UIMFLibrary
 
 			// Insert records
 			InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
-			m_dbCommandPrepareInsertScan.ExecuteNonQuery();
-			m_dbCommandPrepareInsertScan.Parameters.Clear();
+			m_dbCommandInsertScan.ExecuteNonQuery();
+			m_dbCommandInsertScan.Parameters.Clear();
 		}
 
 		/// <summary>
@@ -1220,25 +1206,6 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// </summary>
-		/// <param name="scanNum">
-		/// </param>
-		/// <param name="ms_level">
-		/// </param>
-		/// <returns>
-		/// Always returns 0<see cref="int"/>.
-		/// </returns>
-		public int InsertScanParameters(int scanNum, int ms_level)
-		{
-			insertScanAddScanParameters(scanNum, ms_level);
-
-			m_dbCommandPrepareInsertScanParameters.ExecuteNonQuery();
-			m_dbCommandPrepareInsertScanParameters.Parameters.Clear();
-
-			return 0;
-		}
-
-		/// <summary>
 		/// Post a new log entry to table Log_Entries
 		/// </summary>
 		/// <param name="EntryType">
@@ -1269,14 +1236,24 @@ namespace UIMFLibrary
 		public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET CalibrationSlope = " + slope
-											   + ", CalibrationIntercept = " + intercept + " WHERE FrameNum = " + frameNumber;
 
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
+            m_dbCommandUimf.CommandText = "UPDATE Frame_Params " +
+                                          "SET Value = " + slope + " " +
+                                          "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope +
+                                               " AND FrameNum = " + frameNumber;
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            m_dbCommandUimf.CommandText = "UPDATE Frame_Params " +
+                                          "SET Value = " + intercept + " " +
+                                          "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept +
+                                               " AND FrameNum = " + frameNumber;
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
+		/// Add or update a the value of a given parameter in a frame
 		/// </summary>
 		/// <param name="frameNumber">
 		/// </param>
@@ -1284,16 +1261,17 @@ namespace UIMFLibrary
 		/// </param>
 		/// <param name="parameterValue">
 		/// </param>
+		[Obsolete("Use AddUpdateFrameParameter")]
 		public void UpdateFrameParameter(int frameNumber, string parameterName, string parameterValue)
 		{
-			// Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
+			// Resolve parameter name to param key
+            var paramType = FrameParamUtilities.GetParamTypeByName(parameterName);
 
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE Frame_Parameters SET " + parameterName + " = " + parameterValue
-											   + " WHERE FrameNum = " + frameNumber;
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
+            if (paramType == FrameParamKeyType.Unknown)
+		        throw new ArgumentOutOfRangeException("parameterName", "Unrecognized parameter name " + parameterName + "; cannot update");
+
+            AddUpdateFrameParameter(frameNumber, paramType, parameterValue);
+
 		}
 
 		/// <summary>
@@ -1304,25 +1282,16 @@ namespace UIMFLibrary
 		/// </param>
 		/// <param name="values">
 		/// </param>
+        [Obsolete("Use AddUpdateFrameParameter")]
 		public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
-		{
-			// Make sure the Frame_Parameters table has all of the required columns
-			ValidateFrameParameterColumns();
-
-			var commandText = new StringBuilder("UPDATE Frame_Parameters SET ");
+		{						
 			for (int i = 0; i < parameters.Count - 1; i++)
 			{
-				commandText.Append(parameters[i] + "=" + values[i] + ",");
+                if (i >= values.Count)
+                    break;
+
+			    UpdateFrameParameter(frameNumber, parameters[i], values[i]);
 			}
-
-			commandText.Append(parameters[parameters.Count - 1] + "=" + values[values.Count - 1]);
-
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = commandText + " WHERE FrameNum = " + frameNumber;
-
-			// Console.WriteLine(m_dbCommandUimf.CommandText);
-			m_dbCommandUimf.ExecuteNonQuery();
-			m_dbCommandUimf.Dispose();
 		}
 
 		/// <summary>
@@ -1336,7 +1305,7 @@ namespace UIMFLibrary
 		/// </param>
 		public void UpdateFrameScanCount(int frameNum, int NumScans)
 		{
-			UpdateFrameParameter(frameNum, "Scans", NumScans.ToString());
+            AddUpdateFrameParameter(frameNum, FrameParamKeyType.Scans, NumScans.ToString(CultureInfo.InvariantCulture));
 		}
 
 		/// <summary>
@@ -1351,28 +1320,21 @@ namespace UIMFLibrary
 		/// </param>
 		public void UpdateFrameType(int startFrameNum, int endFrameNum)
 		{
-			m_dbCommandUimf = m_dbConnection.CreateCommand();
-			m_dbCommandUimf.CommandText = "UPDATE FRAME_PARAMETERS SET FRAMETYPE= :FRAMETYPE WHERE FRAMENUM = :FRAMENUM";
-			m_dbCommandUimf.Prepare();
-
 			for (int i = startFrameNum; i <= endFrameNum; i++)
 			{
-				int frameType = i % 4 == 0 ? 1 : 2;
-				m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMETYPE", frameType));
-				m_dbCommandUimf.Parameters.Add(new SQLiteParameter("FRAMENUM", i));
-				m_dbCommandUimf.ExecuteNonQuery();
-				m_dbCommandUimf.Parameters.Clear();
+                int frameType = i % 4 == 0 ? 1 : 2;
+			    AddUpdateFrameParameter(i, FrameParamKeyType.FrameType, frameType.ToString(CultureInfo.InvariantCulture));
 			}
 		}
 
 		/// <summary>
-		/// Assures that NumFrames in the Global_Parameters table match the number of rows in the Frame_Parameters table
+		/// Assures that NumFrames in the Global_Parameters table matches the number of frames in the Frame_Params table
 		/// </summary>
 		public void UpdateGlobalFrameCount()
 		{
 			m_dbCommandUimf = m_dbConnection.CreateCommand();
 
-			m_dbCommandUimf.CommandText = "SELECT Count(*) FROM Frame_Parameters";
+			m_dbCommandUimf.CommandText = "Select Count (Distinct FrameNum) from Frame_Params";
 			object frameCount = m_dbCommandUimf.ExecuteScalar();
 			m_dbCommandUimf.Dispose();
 
@@ -1464,19 +1426,56 @@ namespace UIMFLibrary
 		#region Methods
 
 		/// <summary>
-		/// Assures that certain columns are present in the Frame_Parameters table
+		/// Assures that the Frame_Params_Keys table contains each of the keys in paramKeys
 		/// </summary>
-		protected void ValidateFrameParameterColumns()
+		protected void ValidateFrameParameterKeys(List<FrameParamKeyType> paramKeys)
 		{
-			if (!m_FrameParameterColumnsVerified)
-			{
-				if (!DataReader.TableHasColumn(m_dbConnection, "Frame_Parameters", "Decoded"))
-				{
-					AddFrameParameter("Decoded", "INT", 0);
-				}
+		    bool updateRequired = false;
 
-				m_FrameParameterColumnsVerified = true;
-			}
+		    foreach (var newKey in paramKeys)
+		    {
+		        if (!m_frameParameterKeys.ContainsKey((int)newKey))
+		        {
+		            updateRequired = true;
+                    break;
+		        }
+		    }
+
+            if (!updateRequired)
+                return;
+
+            // Assure that m_frameParameterKeys is synchronized with the .UIMF file
+            // Obtain the current contents of Frame_Param_Keys
+            m_frameParameterKeys = DataReader.GetFrameParameterKeys(m_dbConnection);
+
+            // Add any new keys not yet in Frame_Param_Keys
+            foreach (var newKey in paramKeys)
+            {
+                if (!m_frameParameterKeys.ContainsKey((int)newKey))
+                {
+                    var paramDef = FrameParamUtilities.GetParamDefByType(newKey);
+
+                    try
+                    {
+                        m_dbCommandInsertFrameParamKey.Parameters.Clear();
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamID", paramDef.ID));
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamName", paramDef.Name));
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamDataType", paramDef.DataType));
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamDescription", paramDef.Description));
+
+                        m_dbCommandInsertFrameParamKey.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        ReportError("Exception adding parameter " + paramDef.Name + " to table Frame_Param_Keys: " + ex.Message, ex);
+                        throw;
+                    }
+
+                    m_frameParameterKeys.Add(paramDef.ID, paramDef);
+                }
+            }
+
+            FlushUimf();
 		}
 
 		/// <summary>
@@ -1507,8 +1506,11 @@ namespace UIMFLibrary
 		/// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
 		/// </param>
 		/// <returns></returns>
-		private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
+        private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
 		{
+            // Construct a Sql Statement of the form 
+            // CREATE TABLE Frame_Scans (FrameNum INTEGER NOT NULL, ParamID INTEGER NOT NULL, Value TEXT)";
+
 			var sbSql = new StringBuilder("CREATE TABLE " + tableName + " ( ");
 
 			for (int i = 0; i < lstFields.Count; i++)
@@ -1520,9 +1522,32 @@ namespace UIMFLibrary
 					sbSql.Append(", ");
 				}
 			}
-			sbSql.Append(");");
+
+            sbSql.Append(");");
 
 			return sbSql.ToString();
+		}
+
+        
+        /// <summary>
+        /// Gets the field names for the Frame_Param_Keys table
+		/// </summary>
+		/// <returns>
+		/// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+		/// </returns>
+        private List<Tuple<string, string, string>> GetFrameParamKeysFields()
+		{
+
+			var lstFields = new List<Tuple<string, string, string>>
+			{
+				Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+                Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
+				Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
+                Tuple.Create("ParamDescription", "TEXT NULL", "string"),
+			};
+
+			return lstFields;
+
 		}
 
 		/// <summary>
@@ -1531,60 +1556,15 @@ namespace UIMFLibrary
 		/// <returns>
 		/// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
 		/// </returns>
-		private List<Tuple<string, string, string>> GetFrameParametersFields()
+		/// <remarks>This table has a dual-column primary key, enforced using an index</remarks>
+		private List<Tuple<string, string, string>> GetFrameParamsFields()
 		{
 
 			var lstFields = new List<Tuple<string, string, string>>
 			{
-				Tuple.Create("FrameNum", "INTEGER PRIMARY KEY", "int"),
-				Tuple.Create("StartTime", "DOUBLE", "double"),
-				Tuple.Create("Duration", "DOUBLE", "double"),
-				Tuple.Create("Accumulations", "SMALLINT", "short"),
-				Tuple.Create("FrameType", "SMALLINT", "short"),
-				Tuple.Create("Scans", "INTEGER", "int"),
-				Tuple.Create("IMFProfile", "TEXT", "string"),
-				Tuple.Create("TOFLosses", "DOUBLE", "double"),
-				Tuple.Create("AverageTOFLength", "DOUBLE NOT NULL", "double"),
-				Tuple.Create("CalibrationSlope", "DOUBLE", "double"),
-				Tuple.Create("CalibrationIntercept", "DOUBLE", "double"),
-				Tuple.Create("a2", "DOUBLE", "double"),
-				Tuple.Create("b2", "DOUBLE", "double"),
-				Tuple.Create("c2", "DOUBLE", "double"),
-				Tuple.Create("d2", "DOUBLE", "double"),
-				Tuple.Create("e2", "DOUBLE", "double"),
-				Tuple.Create("f2", "DOUBLE", "double"),
-				Tuple.Create("Temperature", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack1", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack2", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack3", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack4", "DOUBLE", "double"),
-				Tuple.Create("voltCapInlet", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceHPFIn", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceHPFOut", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceCondLmt", "DOUBLE", "double"),
-				Tuple.Create("voltTrapOut", "DOUBLE", "double"),
-				Tuple.Create("voltTrapIn", "DOUBLE", "double"),
-				Tuple.Create("voltJetDist", "DOUBLE", "double"),
-				Tuple.Create("voltQuad1", "DOUBLE", "double"),
-				Tuple.Create("voltCond1", "DOUBLE", "double"),
-				Tuple.Create("voltQuad2", "DOUBLE", "double"),
-				Tuple.Create("voltCond2", "DOUBLE", "double"),
-				Tuple.Create("voltIMSOut", "DOUBLE", "double"),
-				Tuple.Create("voltExitHPFIn", "DOUBLE", "double"),
-				Tuple.Create("voltExitHPFOut", "DOUBLE", "double"),
-				Tuple.Create("voltExitCondLmt", "DOUBLE", "double"),
-				Tuple.Create("PressureFront", "DOUBLE", "double"),
-				Tuple.Create("PressureBack", "DOUBLE", "double"),
-				Tuple.Create("MPBitOrder", "TINYINT", "short"),
-				Tuple.Create("FragmentationProfile", "BLOB", "object"),
-				Tuple.Create("HighPressureFunnelPressure", "DOUBLE", "double"),
-				Tuple.Create("IonFunnelTrapPressure", "DOUBLE ", "double"),
-				Tuple.Create("RearIonFunnelPressure", "DOUBLE", "double"),
-				Tuple.Create("QuadrupolePressure", "DOUBLE", "double"),
-				Tuple.Create("ESIVoltage", "DOUBLE", "double"),
-				Tuple.Create("FloatVoltage", "DOUBLE", "double"),
-				Tuple.Create("CalibrationDone", "INTEGER", "int"),
-				Tuple.Create("Decoded", "INTEGER", "int")
+				Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
+                Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+				Tuple.Create("ParamValue", "TEXT", "string"),
 			};
 
 			return lstFields;
@@ -1697,68 +1677,39 @@ namespace UIMFLibrary
 			Int64 tic,
 			byte[] spectraRecord)
 		{
-            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber.ToString(CultureInfo.InvariantCulture)));
-            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum.ToString(CultureInfo.InvariantCulture)));
-            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount.ToString(CultureInfo.InvariantCulture)));
-            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi.ToString(CultureInfo.InvariantCulture)));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz.ToString(CultureInfo.InvariantCulture)));
-            m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic.ToString(CultureInfo.InvariantCulture)));
-			m_dbCommandPrepareInsertScan.Parameters.Add(new SQLiteParameter("Intensities", spectraRecord));
+            m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
+            m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("ScanNum", scanNum));
+            m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("NonZeroCount", nonZeroCount));
+            m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("BPI", bpi));
+			m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("BPI_MZ", bpiMz));
+            m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("TIC", tic));
+			m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("Intensities", spectraRecord));
+		}
+
+        
+
+        /// <summary>
+		/// Create command for inserting frames
+		/// </summary>
+        private void PrepareInsertFrameParamKey()
+		{
+			m_dbCommandInsertFrameParamKey = m_dbConnection.CreateCommand();
+
+            m_dbCommandInsertFrameParamKey.CommandText = "INSERT INTO Frame_Param_Keys (ParamID, ParamName, ParamDataType, ParamDescription) " +
+                                                         "VALUES (:ParamID, :ParamName, :ParamDataType, :ParamDescription);";
+            m_dbCommandInsertFrameParamKey.Prepare();
 		}
 
 		/// <summary>
-		/// Create command for inserting frames
+		/// Create command for inserting frame parameters
 		/// </summary>
-		private void PrepareInsertFrame()
+		private void PrepareInsertFrameParamValue()
 		{
-			m_dbCommandPrepareInsertFrame = m_dbConnection.CreateCommand();
+			m_dbCommandInsertFrameParamValue = m_dbConnection.CreateCommand();
 
-			string voltEntranceHPFInColName;
-			string voltEntranceHPFOutColName;
-
-			string voltExitHPFInColName;
-			string voltExitHPFOutColName;
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltEntranceHPFIn"))
-			{
-				voltEntranceHPFInColName = "voltEntranceHPFIn";
-				voltEntranceHPFOutColName = "voltEntranceHPFOut";
-			}
-			else
-			{
-				voltEntranceHPFInColName = "voltEntranceIFTIn";
-				voltEntranceHPFOutColName = "voltEntranceIFTOut";
-			}
-
-			if (DataReader.ColumnExists(m_dbConnection, "Frame_Parameters", "voltExitHPFIn"))
-			{
-				voltExitHPFInColName = "voltExitHPFIn";
-				voltExitHPFOutColName = "voltExitHPFOut";
-			}
-			else
-			{
-				voltExitHPFInColName = "voltExitIFTIn";
-				voltExitHPFOutColName = "voltExitIFTOut";
-			}
-
-			string cmd =
-				"INSERT INTO Frame_Parameters (FrameNum, StartTime, Duration, Accumulations, FrameType, Scans, IMFProfile, TOFLosses,"
-				  + "AverageTOFLength, CalibrationSlope, CalibrationIntercept,a2, b2, c2, d2, e2, f2, Temperature, voltHVRack1, voltHVRack2, voltHVRack3, voltHVRack4, "
-				  + "voltCapInlet, " + voltEntranceHPFInColName + ", " + voltEntranceHPFOutColName + ", "
-				  + "voltEntranceCondLmt, " + "voltTrapOut, voltTrapIn, voltJetDist, voltQuad1, voltCond1, voltQuad2, voltCond2, "
-				  + "voltIMSOut, " + voltExitHPFInColName + ", " + voltExitHPFOutColName + ", "
-				  + "voltExitCondLmt, PressureFront, PressureBack, MPBitOrder, FragmentationProfile, HighPressureFunnelPressure, IonFunnelTrapPressure, "
-				  + "RearIonFunnelPressure, QuadrupolePressure, ESIVoltage, FloatVoltage, CalibrationDone, Decoded)"
-				+ "VALUES (:FrameNum, :StartTime, :Duration, :Accumulations, :FrameType,:Scans,:IMFProfile,:TOFLosses,"
-				  + ":AverageTOFLength,:CalibrationSlope,:CalibrationIntercept,:a2,:b2,:c2,:d2,:e2,:f2,:Temperature,:voltHVRack1,:voltHVRack2,:voltHVRack3,:voltHVRack4, "
-				  + ":voltCapInlet,:" + voltEntranceHPFInColName + ",:" + voltEntranceHPFOutColName + ","
-				  + ":voltEntranceCondLmt,:voltTrapOut,:voltTrapIn,:voltJetDist,:voltQuad1,:voltCond1,:voltQuad2,:voltCond2,"
-				  + ":voltIMSOut,:" + voltExitHPFInColName + ",:" + voltExitHPFOutColName + ",:voltExitCondLmt, "
-				  + ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " + ":HPPressure, :IPTrapPressure, "
-				  + ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
-
-			m_dbCommandPrepareInsertFrame.CommandText = cmd;
-			m_dbCommandPrepareInsertFrame.Prepare();
+            m_dbCommandInsertFrameParamValue.CommandText = "INSERT INTO Frame_Params (FrameNum, ParamID, ParamValue) " +
+                                                           "VALUES (:FrameNum, :ParamID, :ParamValue);";
+			m_dbCommandInsertFrameParamValue.Prepare();
 		}
 
 		/// <summary>
@@ -1767,21 +1718,24 @@ namespace UIMFLibrary
 		private void PrepareInsertScan()
 		{
 			// This function should be called before looping through each frame and scan
-			m_dbCommandPrepareInsertScan = m_dbConnection.CreateCommand();
-			m_dbCommandPrepareInsertScan.CommandText =
+			m_dbCommandInsertScan = m_dbConnection.CreateCommand();
+			m_dbCommandInsertScan.CommandText =
 				"INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
-				+ "VALUES(?,?,?,?,?,?,?);";
-			m_dbCommandPrepareInsertScan.Prepare();
+                + "VALUES(:FrameNum, :ScanNum, :NonZeroCount, :BPI, :BPI_MZ, :TIC, :Intensities);";
+			m_dbCommandInsertScan.Prepare();
 
-			if (m_isScanParameterTable)
-			{
-				m_dbCommandPrepareInsertScanParameters = m_dbConnection.CreateCommand();
-				m_dbCommandPrepareInsertScanParameters.CommandText =
-					"INSERT INTO Scan_Parameters (ScanNum, MS_Level) VALUES (:ScanNum, :MS_Level);";
-
-				m_dbCommandPrepareInsertScanParameters.Prepare();
-			}
 		}
+
+        /// <summary>
+        /// Print an error message to the console, then throw an exception
+        /// </summary>
+        /// <param name="errorMessage"></param>
+        /// <param name="ex"></param>
+        private void ReportError(string errorMessage, Exception ex)
+        {
+            Console.WriteLine(errorMessage);
+            throw new Exception(errorMessage, ex);
+        }
 
 		/// <summary>
 		/// Begin a transaction
@@ -1827,18 +1781,6 @@ namespace UIMFLibrary
 				((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
 			mz = (mz * mz) + resMassErr;
 			return mz;
-		}
-
-		/// <summary>
-		/// </summary>
-		/// <param name="scan_number">
-		/// </param>
-		/// <param name="MS_Level">
-		/// </param>
-		private void insertScanAddScanParameters(int scan_number, int MS_Level)
-		{
-			m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("ScanNum", scan_number.ToString()));
-			m_dbCommandPrepareInsertScanParameters.Parameters.Add(new SQLiteParameter("MS_Level", MS_Level.ToString()));
 		}
 
 		#endregion

@@ -134,6 +134,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BinCentricTableCreation.cs" />
+    <Compile Include="FrameParam.cs" />
+    <Compile Include="FrameParamDef.cs" />
     <Compile Include="IntensityBinConverterInt32.cs" />
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>

@@ -6,14 +6,13 @@ namespace UIMFLibrary_Demo
 {
     public class DemoRunner
     {
-        private string _testUIMFFile;
+        private readonly string mTestUIMFFilePath;
 
         #region Constructors
 
         public DemoRunner(string uimfFile)
         {
-
-            _testUIMFFile = uimfFile;
+            mTestUIMFFilePath = uimfFile;
         }
 
         #endregion
@@ -25,13 +24,13 @@ namespace UIMFLibrary_Demo
         {
             //open and close UIMF file
             
-            if (!File.Exists(_testUIMFFile))
+            if (!File.Exists(mTestUIMFFilePath))
             {
-                reportProgress("UIMFFile not found. Input file path was: "+_testUIMFFile);
+                reportProgress("UIMFFile not found. Input file path was: "+mTestUIMFFilePath);
                 return;
             }
 
-			UIMFLibrary.DataReader datareader = new UIMFLibrary.DataReader(_testUIMFFile);
+			var datareader = new DataReader(mTestUIMFFilePath);
 
 
             //--------------------------------------------------------------------------Get Global parameters
@@ -46,7 +45,7 @@ namespace UIMFLibrary_Demo
 
             //--------------------------------------------------------------------------Get Frame parameters
 
-            int testFrame = 500;
+            const int testFrame = 500;
             FrameParameters fp = datareader.GetFrameParameters(testFrame);
 
             reportProgress();
@@ -55,12 +54,12 @@ namespace UIMFLibrary_Demo
             reportProgress(TestUtilities.FrameParametersToString(fp));
 
             //--------------------------------------------------------------------------Get mass spectrum
-            int frameLower = 500;
-            int frameUpper = 502;
-            int imsScanLower = 125;
-            int imsScanUpper = 131;
+            const int frameLower = 500;
+            const int frameUpper = 502;
+            const int imsScanLower = 125;
+            const int imsScanUpper = 131;
 
-	        var frameType = DataReader.FrameType.MS1;
+	        const DataReader.FrameType frameType = DataReader.FrameType.MS1;
 
 			// Old method:
             // double[] xvals = new double[gp.Bins];
@@ -70,7 +69,7 @@ namespace UIMFLibrary_Demo
 	        double[] xvals;
 	        int[] yvals;
 
-			datareader.GetSpectrum(frameLower, frameUpper, frameType, imsScanLower, imsScanLower, out xvals, out yvals);
+            datareader.GetSpectrum(frameLower, frameUpper, frameType, imsScanLower, imsScanLower, out xvals, out yvals);
 
             reportProgress();
             reportProgress();

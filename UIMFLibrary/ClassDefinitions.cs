@@ -35,6 +35,9 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Date started.
 		/// </summary>
+		/// <remarks>
+		/// Format has traditionally been M/d/yyyy hh:mm:ss tt
+        /// For example, 6/4/2014 12:56:44 PM</remarks>
 		public string DateStarted;
 
 		/// <summary>
@@ -116,12 +119,12 @@ namespace UIMFLibrary
 		public int Accumulations; 
 
 		/// <summary>
-		/// Average tof length.
+		/// Average TOF length, in nanoseconds
 		/// </summary>
 		/// <remarks>
 		/// Average time between TOF trigger pulses
 		/// </remarks>
-		public double AverageTOFLength; // 8, 
+		public double AverageTOFLength;
 
 		/// <summary>
 		/// Tracks whether frame has been calibrated
@@ -252,7 +255,7 @@ namespace UIMFLibrary
 		/// a2 parameter for residual mass error correction
 		/// </summary>
 		/// <remarks>
-		/// ResidualMassError = a2t + b2t^3 + c2t^5 + d2t^7 + e2t^9 + f2t^11
+        /// ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
 		/// </remarks>
 		public double a2;
 
@@ -311,7 +314,6 @@ namespace UIMFLibrary
 		/// Renamed from voltEntranceIFTIn to voltEntranceHPFIn in July 2011
 		/// </remarks>
 		public double voltEntranceHPFIn;
-
 
 		/// <summary>
 		/// HPF Out Voltage

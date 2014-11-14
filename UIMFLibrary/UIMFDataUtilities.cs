@@ -3,6 +3,9 @@
 //   Defines the UIMFDataUtilities type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Globalization;
+
 namespace UIMFLibrary
 {
 	using System;
@@ -14,7 +17,36 @@ namespace UIMFLibrary
 	{
 		#region Public Methods and Operators
 
-		/// <summary>
+        public static string DoubleToString(double value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+	    public static string FloatToString(double value)
+	    {
+	        return FloatToString((float)value);
+	    }
+
+        public static string FloatToString(float value)
+        {
+            if ((value - (int)value) < float.Epsilon * 2)
+                return ((int)value).ToString(CultureInfo.InvariantCulture);
+
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string IntToString(double value)
+        {
+            return IntToString((int)value);
+        }
+
+        public static string IntToString(int value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+
+	    /// <summary>
 		/// The parse out zero values.
 		/// </summary>
 		/// <param name="xvals">
@@ -67,6 +99,28 @@ namespace UIMFLibrary
 			Array.Resize(ref yvals, intensityArrLength - zeros);
 		}
 
-		#endregion
+        public static string StandardizeDate(string dateString)
+        {
+            if (string.IsNullOrWhiteSpace(dateString))
+                return string.Empty;
+
+            DateTime dateValue;
+            if (DateTime.TryParse(dateString, out dateValue))
+            {
+                return StandardizeDate(dateValue);
+            }
+
+            throw new ArgumentException("dateString parameter is not a valid date");
+        }
+
+        public static string StandardizeDate(DateTime dateValue)
+	    {
+	        if (dateValue > DateTime.MinValue)
+                return dateValue.ToString("yyyy-MM-dd hh:mm:ss tt");
+
+            return string.Empty;
+	    }
+
+	    #endregion
 	}
 }
