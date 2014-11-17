@@ -74,7 +74,7 @@ namespace UIMFLibrary
         /// Frame parameters cache
         /// </summary>
         /// <remarks>Key is frame number, value is a dictionary of the frame parameters</remarks>
-        protected readonly Dictionary<int, Dictionary<FrameParamDef, string>> m_CachedFrameParameters;
+        protected readonly Dictionary<int, Dictionary<FrameParamKeyType, FrameParam>> m_CachedFrameParameters;
 
         /// <summary>
         /// Global parameterse
@@ -121,10 +121,12 @@ namespace UIMFLibrary
         /// </summary>
         private readonly IDictionary<FrameType, FrameTypeInfo> m_frameTypeInfo;
 
+        private static readonly SortedSet<int> m_UnrecognizedParamTypes = new SortedSet<int>();
+
         /// <summary>
         /// Frame type with MS1 data
         /// </summary>
-        private int m_frameTypeMs;
+        private int m_frameTypeMS1;
 
         /// <summary>
         /// Sqlite command for getting bin data
@@ -212,7 +214,7 @@ namespace UIMFLibrary
 
                     // Initialize the frame parameters cache
                     // Obsolete: m_frameParametersCache = new FrameParameters[m_globalParameters.NumFrames + 1];
-                    m_CachedFrameParameters = new Dictionary<int, Dictionary<FrameParamDef, string>>();
+                    m_CachedFrameParameters = new Dictionary<int, Dictionary<FrameParamKeyType, FrameParam>>();
 
                     LoadPrepStmts();
 
@@ -232,9 +234,7 @@ namespace UIMFLibrary
                     DetermineFrameTypes();
 
                     // Discover and store info about each frame type
-                    FillOutFrameInfo();
-
-                    
+                    FillOutFrameInfo();                    
 
                     m_doesContainBinCentricData = DoesContainBinCentricData();
                 }
@@ -852,6 +852,9 @@ namespace UIMFLibrary
         {
             string sCurrentTable = string.Empty;
 
+            // ToDo xxx Update this to support Frame_Params xxx
+            // ToDo xxx implement    if (m_UsingLegacyFrameParameters) ...
+
             try
             {
                 // Get list of tables in source DB
@@ -929,7 +932,7 @@ namespace UIMFLibrary
                                         string sSql = "INSERT INTO main." + sCurrentTable + " SELECT * FROM SourceDB." + sCurrentTable
                                                       + " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " + "WHERE FrameType = "
                                                       + (frameType.Equals(FrameType.MS1)
-                                                             ? m_frameTypeMs
+                                                             ? m_frameTypeMS1
                                                              : (int)frameType) + ");";
 
                                         cmdTargetDB.CommandText = sSql;
@@ -1135,7 +1138,7 @@ namespace UIMFLibrary
         /// <param name="endScan">
         /// </param>
         /// <returns>
-        /// BPI values<see cref="double[]"/>.
+        /// BPI values array
         /// </returns>
         public double[] GetBPI(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
@@ -1214,7 +1217,7 @@ namespace UIMFLibrary
         /// Get calibration table names.
         /// </summary>
         /// <returns>
-        /// List of calibration table names<see cref="List"/>.
+        /// List of calibration table names
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
@@ -1291,13 +1294,13 @@ namespace UIMFLibrary
         /// <returns>Drift time (milliseconds)</returns>
         public double GetDriftTime(int frameNum, int scanNum)
         {
-            FrameParameters fp = GetFrameParameters(frameNum);
+            var frameParams = GetFrameParametersDictionary(frameNum);
 
-            double averageTOFLength = fp.AverageTOFLength;
+            double averageTOFLength = FrameParamUtilities.GetFrameParamOrDefault(frameParams, FrameParamKeyType.AverageTOFLength, 0);
             double driftTime = averageTOFLength * scanNum / 1e6;
 
             // Get the frame pressure (in torr)
-            var framePressure = GetFramePressureForCalculationOfDriftTime(fp);
+            var framePressure = GetFramePressureForCalculationOfDriftTime(frameParams);
 
             if (double.IsNaN(framePressure) || Math.Abs(framePressure) < double.Epsilon)
             {
@@ -1407,7 +1410,7 @@ namespace UIMFLibrary
         /// <param name="tableName">
         /// </param>
         /// <returns>
-        /// Byte array<see cref="byte[]"/>.
+        /// Byte array
         /// </returns>
         public byte[] GetFileBytesFromTable(string tableName)
         {
@@ -1442,7 +1445,7 @@ namespace UIMFLibrary
         /// Get frame and scan list by descending intensity.
         /// </summary>
         /// <returns>
-        /// Stack of tuples (FrameNum, ScanNum, BPI)<see cref="Stack"/>.
+        /// Stack of tuples (FrameNum, ScanNum, BPI)
         /// </returns>
         public Stack<int[]> GetFrameAndScanListByDescendingIntensity()
         {
@@ -1471,23 +1474,45 @@ namespace UIMFLibrary
         /// The frame Type.
         /// </param>
         /// <returns>
-        /// Array of frame numbers<see cref="int[]"/>.
+        /// Array of frame numbers
         /// </returns>
         public int[] GetFrameNumbers(FrameType frameType)
         {
             var frameNumberList = new List<int>();
-
+           
             using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
             {
-                dbCmd.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
-                dbCmd.Parameters.Add(
-                    new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
-                dbCmd.Prepare();
-                using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+                var frameTypeValue = m_frameTypeMS1;
+
+                if (frameType != FrameType.MS1)
+                    frameTypeValue = (int)frameType;
+
+                if (m_UsingLegacyFrameParameters)
                 {
-                    while (reader.Read())
+                    dbCmd.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
+                    dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
+                    dbCmd.Prepare();
+                    using (SQLiteDataReader reader = dbCmd.ExecuteReader())
                     {
-                        frameNumberList.Add(Convert.ToInt32(reader["FrameNum"]));
+                        while (reader.Read())
+                        {
+                            frameNumberList.Add(Convert.ToInt32(reader["FrameNum"]));
+                        }
+                    }
+                }
+                else
+                {
+                    dbCmd.CommandText = "SELECT FrameNum From Frame_Params " +
+                                        "WHERE ParamID = :ParamID AND ParamValue = :FrameType ORDER BY FrameNum";
+                    dbCmd.Parameters.Add(new SQLiteParameter("ParamID", (int)FrameParamKeyType.FrameType));
+                    dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
+                    dbCmd.Prepare();
+                    using (SQLiteDataReader reader = dbCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            frameNumberList.Add(Convert.ToInt32(reader["FrameNum"]));
+                        }
                     }
                 }
             }
@@ -1503,7 +1528,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        public Dictionary<int, FrameParamDef> GetFrameParameterKeys(bool forceRefresh)
+        public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh)
         {
             if (m_uimfDatabaseConnection == null)
             {
@@ -1514,7 +1539,7 @@ namespace UIMFLibrary
                 return m_frameParameterKeys;
 
             if (m_frameParameterKeys == null)
-                m_frameParameterKeys = new Dictionary<int, FrameParamDef>();
+                m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
             else
                 m_frameParameterKeys.Clear();
 
@@ -1531,9 +1556,9 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        public static Dictionary<int, FrameParamDef> GetFrameParameterKeys(SQLiteConnection oConnection)
+        public static Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(SQLiteConnection oConnection)
         {
-            var frameParamKeys = new Dictionary<int, FrameParamDef>();
+            var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
             if (!TableExists(oConnection, "Frame_Param_Keys"))
             {
@@ -1569,9 +1594,9 @@ namespace UIMFLibrary
             return frameParamKeys;
         }
 
-        private static Dictionary<int, FrameParamDef> GetLegacyFrameParameterKeys()
+        private static Dictionary<FrameParamKeyType, FrameParamDef> GetLegacyFrameParameterKeys()
         {
-            var frameParamKeys = new Dictionary<int, FrameParamDef>();
+            var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.StartTimeMinutes);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.DurationSeconds);
@@ -1636,6 +1661,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
+        [Obsolete("Use GetFrameParametersDictionary instead")]
         public FrameParameters GetFrameParameters(int frameNumber)
         {
             if (frameNumber < 0)
@@ -1644,7 +1670,7 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            Dictionary<FrameParamDef, string> frameParams;
+            Dictionary<FrameParamKeyType, FrameParam> frameParams;
             if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParams))
             {
                 return GetFrameParameters(frameParams);
@@ -1664,73 +1690,19 @@ namespace UIMFLibrary
             return legacyFrameParams;
         }
 
-        private FrameParameters GetFrameParameters(Dictionary<FrameParamDef, string> frameParams)
+        private FrameParameters GetFrameParameters(Dictionary<FrameParamKeyType, FrameParam> frameParams)
         {
-            var legacyFrameParams = new FrameParameters();
-
-            // ToDo: populate legacyFrameParams using dictionary frameParams
-
-            legacyFrameParams.StartTime = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.StartTimeMinutes, 0);
-            legacyFrameParams.Duration = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.DurationSeconds, 0);
-            legacyFrameParams.Accumulations = FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.Accumulations, 0);
-
-            var frametype = FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.FrameType, 0);
-            legacyFrameParams.FrameType = (FrameType)frametype;
-
-            legacyFrameParams.Decoded = FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.Decoded, 0);
-            legacyFrameParams.CalibrationDone = FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.CalibrationDone, 0);
-            legacyFrameParams.Scans = FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.Scans, 0);
-            legacyFrameParams.IMFProfile = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MultiplexingEncodingSequence, string.Empty);
-            legacyFrameParams.MPBitOrder = (short)FrameParamUtilities.TryGetFrameParamInt32(frameParams, FrameParamKeyType.MPBitOrder, 0);
-            legacyFrameParams.TOFLosses = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.TOFLosses, 0);
-            legacyFrameParams.AverageTOFLength = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.AverageTOFLength, 0);
-            legacyFrameParams.CalibrationSlope = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.CalibrationSlope, 0);
-            legacyFrameParams.CalibrationIntercept = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.CalibrationIntercept, 0);
-            legacyFrameParams.a2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficienta2, 0);
-            legacyFrameParams.b2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficientb2, 0);
-            legacyFrameParams.c2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficientc2, 0);
-            legacyFrameParams.d2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficientd2, 0);
-            legacyFrameParams.e2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficiente2, 0);
-            legacyFrameParams.f2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.MassErrorCoefficientf2, 0);
-            legacyFrameParams.Temperature = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.AmbientTemperature, 0);
-            legacyFrameParams.voltHVRack1 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltHVRack1, 0);
-            legacyFrameParams.voltHVRack2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltHVRack2, 0);
-            legacyFrameParams.voltHVRack3 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltHVRack3, 0);
-            legacyFrameParams.voltHVRack4 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltHVRack4, 0);
-            legacyFrameParams.voltCapInlet = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltCapInlet, 0);
-            legacyFrameParams.voltEntranceHPFIn = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltEntranceHPFIn, 0);
-            legacyFrameParams.voltEntranceHPFOut = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltEntranceHPFOut, 0);
-            legacyFrameParams.voltEntranceCondLmt = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltEntranceCondLmt, 0);
-            legacyFrameParams.voltTrapOut = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltTrapOut, 0);
-            legacyFrameParams.voltTrapIn = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltTrapIn, 0);
-            legacyFrameParams.voltJetDist = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltJetDist, 0);
-            legacyFrameParams.voltQuad1 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltQuad1, 0);
-            legacyFrameParams.voltCond1 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltCond1, 0);
-            legacyFrameParams.voltQuad2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltQuad2, 0);
-            legacyFrameParams.voltCond2 = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltCond2, 0);
-            legacyFrameParams.voltIMSOut = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltIMSOut, 0);
-            legacyFrameParams.voltExitHPFIn = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltExitHPFIn, 0);
-            legacyFrameParams.voltExitHPFOut = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltExitHPFOut, 0);
-            legacyFrameParams.voltExitCondLmt = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.VoltExitCondLmt, 0);
-            legacyFrameParams.PressureFront = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.PressureFront, 0);
-            legacyFrameParams.PressureBack = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.PressureBack, 0);
-            legacyFrameParams.HighPressureFunnelPressure = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.HighPressureFunnelPressure, 0);
-            legacyFrameParams.IonFunnelTrapPressure = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.IonFunnelTrapPressure, 0);
-            legacyFrameParams.RearIonFunnelPressure = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.RearIonFunnelPressure, 0);
-            legacyFrameParams.QuadrupolePressure = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.QuadrupolePressure, 0);
-            legacyFrameParams.ESIVoltage = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.ESIVoltage, 0);
-            legacyFrameParams.FloatVoltage = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.FloatVoltage, 0);
-
-            var framgentationProfile = FrameParamUtilities.TryGetFrameParam(frameParams, FrameParamKeyType.FragmentationProfile, string.Empty);
-            
-            // ToDo: implement this conversion
-            //legacyFrameParams.FragmentationProfile = Byte
-
+            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameParams);
             return legacyFrameParams;
 
         }
 
-        public Dictionary<FrameParamDef, string> GetFrameParametersDictionary(int frameNumber)
+        /// <summary>
+        /// Get frame parameters dictionary
+        /// </summary>
+        /// <param name="frameNumber"></param>
+        /// <returns></returns>
+        public Dictionary<FrameParamKeyType, FrameParam> GetFrameParametersDictionary(int frameNumber)
         {
             if (frameNumber < 0)
             {
@@ -1738,7 +1710,7 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            Dictionary<FrameParamDef, string> frameParams;
+            Dictionary<FrameParamKeyType, FrameParam> frameParams;
             if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParams))
             {
                 return frameParams;
@@ -1758,7 +1730,9 @@ namespace UIMFLibrary
                 {
                     var legacyFrameParams = new FrameParameters();
                     PopulateLegacyFrameParameters(legacyFrameParams, reader);
-                    frameParams = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
+                    var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
+
+                    frameParams = FrameParamUtilities.ConvertStringParamsToParamDefs(frameParamsByType);
                 }
 
                 reader.Close();
@@ -1766,7 +1740,7 @@ namespace UIMFLibrary
             else
             {
                 var frameParamKeys = GetFrameParameterKeys(false);
-                frameParams = new Dictionary<FrameParamDef, string>();
+                frameParams = new Dictionary<FrameParamKeyType, FrameParam>();
 
                 m_getFrameParamsCommand.Parameters.Clear();
                 m_getFrameParamsCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -1778,26 +1752,18 @@ namespace UIMFLibrary
                     int paramID = Convert.ToInt32(reader["ParamID"]);
                     string paramValue = Convert.ToString(reader["ParamValue"]);
 
+                    var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+
                     FrameParamDef paramDef;
-                    if (frameParamKeys.TryGetValue(paramID, out paramDef))
+                    if (frameParamKeys.TryGetValue(paramType, out paramDef))
                     {
-                        frameParams.Add(paramDef, paramValue);
+                        frameParams.Add(paramType, new FrameParam(paramDef, paramValue));
                         continue;
                     }
 
                     // Entry not defined in frameParamKeys
-                    // This is unexpected, but we'll store the parameter anyway
-                    var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
-                    if (paramType == FrameParamKeyType.Unknown)
-                    {
-                        paramDef = new FrameParamDef(paramID, "UnknownParameter", "string");
-                    }
-                    else
-                    {
-                        paramDef = FrameParamUtilities.GetParamDefByType(paramType);
-                    }
-
-                    frameParams.Add(paramDef, paramValue);
+                    // Ignore this parameter
+                    WarnUnrecognizedID(paramID, "UnknownParamName");
                 }
 
                 reader.Close();
@@ -1821,11 +1787,11 @@ namespace UIMFLibrary
         /// </returns>
         public double GetFramePressureForCalculationOfDriftTime(int frameIndex)
         {
-            FrameParameters fp = GetFrameParameters(frameIndex);
-            return GetFramePressureForCalculationOfDriftTime(fp);
+            var frameParams = GetFrameParametersDictionary(frameIndex);
+            return GetFramePressureForCalculationOfDriftTime(frameParams);
         }
 
-        private double GetFramePressureForCalculationOfDriftTime(FrameParameters fp)
+        private double GetFramePressureForCalculationOfDriftTime(Dictionary<FrameParamKeyType, FrameParam> frameParams)
         {
 
             /*
@@ -1838,16 +1804,16 @@ namespace UIMFLibrary
              * look for newer columns and use these values. 
              */
 
-            double pressure = fp.PressureBack;
+            double pressure = FrameParamUtilities.GetFrameParamOrDefault(frameParams, FrameParamKeyType.PressureBack, 0);
 
             if (Math.Abs(pressure) < float.Epsilon)
             {
-                pressure = fp.RearIonFunnelPressure;
+                pressure = FrameParamUtilities.GetFrameParamOrDefault(frameParams, FrameParamKeyType.RearIonFunnelPressure, 0);
             }
 
             if (Math.Abs(pressure) < float.Epsilon)
             {
-                pressure = fp.IonFunnelTrapPressure;
+                pressure = FrameParamUtilities.GetFrameParamOrDefault(frameParams, FrameParamKeyType.IonFunnelTrapPressure, 0);
             }
 
             return pressure;
@@ -1863,20 +1829,15 @@ namespace UIMFLibrary
         /// </returns>
         public FrameType GetFrameTypeForFrame(int frameNumber)
         {
-            int frameTypeInt = -1;
 
-            using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
+            var frameParams = GetFrameParametersDictionary(frameNumber);
+            if (frameParams == null)
             {
-                dbCmd.CommandText = "SELECT FrameType FROM Frame_Parameters WHERE FrameNum = :FrameNumber";
-                dbCmd.Parameters.Add(new SQLiteParameter("FrameNumber", frameNumber));
-                using (SQLiteDataReader reader = dbCmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        frameTypeInt = Convert.ToInt32(reader["FrameType"]);
-                    }
-                }
+                // Frame number out of range
+                throw new ArgumentOutOfRangeException("frameNumber", "FrameNumber " + frameNumber + " is not in the .UIMF file");
             }
+
+            int frameTypeInt = FrameParamUtilities.GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.FrameType, 0);
 
             // If the frame type is 0, then this is an older UIMF file where the MS1 frames were labeled as 0
             if (frameTypeInt == 0)
@@ -1935,7 +1896,7 @@ namespace UIMFLibrary
                 throw new ArgumentException("Failed to get 3D profile. Input startScan was greater than input endScan");
             }
 
-            int[][] intensityValues = new int[endFrameNumber - startFrameNumber + 1][];
+            var intensityValues = new int[endFrameNumber - startFrameNumber + 1][];
             int[] lowerUpperBins = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
 
             int[][][] frameIntensities = GetIntensityBlock(
@@ -2022,7 +1983,7 @@ namespace UIMFLibrary
         /// End bin.
         /// </param>
         /// <returns>
-        /// Array of intensities; dimensions are Frame, Scan, Bin<see cref="int[][][]"/>.
+        /// Array of intensities; dimensions are Frame, Scan, Bin
         /// </returns>
         public int[][][] GetIntensityBlock(
             int startFrameNumber,
@@ -2045,7 +2006,7 @@ namespace UIMFLibrary
 
             int lengthOfFrameArray = endFrameNumber - startFrameNumber + 1;
 
-            int[][][] intensities = new int[lengthOfFrameArray][][];
+            var intensities = new int[lengthOfFrameArray][][];
             for (int i = 0; i < lengthOfFrameArray; i++)
             {
                 intensities[i] = new int[endScan - startScan + 1][];
@@ -2061,7 +2022,7 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScan));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScan));
             m_getSpectrumCommand.Parameters.Add(
-                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
+                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType));
 
             using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
@@ -2076,30 +2037,32 @@ namespace UIMFLibrary
                     int scanNum = Convert.ToInt32(reader["ScanNum"]);
 
                     // get frame number so that we can get the frame calibration parameters
-                    if (spectra.Length > 0)
+                    if (spectra.Length <= 0)
                     {
-                        int outputLength = LZFCompressionUtil.Decompress(
-                            ref spectra,
-                            spectra.Length,
-                            ref decompSpectraRecord,
-                            m_globalParameters.Bins * DATASIZE);
-                        int numBins = outputLength / DATASIZE;
-                        for (int i = 0; i < numBins; i++)
-                        {
-                            int decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-                            if (decodedIntensityValue < 0)
-                            {
-                                binIndex += -decodedIntensityValue;
-                            }
-                            else
-                            {
-                                if (startBin <= binIndex && binIndex <= endBin)
-                                {
-                                    intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] = decodedIntensityValue;
-                                }
+                        continue;
+                    }
 
-                                binIndex++;
+                    int outputLength = LZFCompressionUtil.Decompress(
+                        ref spectra,
+                        spectra.Length,
+                        ref decompSpectraRecord,
+                        m_globalParameters.Bins * DATASIZE);
+                    int numBins = outputLength / DATASIZE;
+                    for (int i = 0; i < numBins; i++)
+                    {
+                        int decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        if (decodedIntensityValue < 0)
+                        {
+                            binIndex += -decodedIntensityValue;
+                        }
+                        else
+                        {
+                            if (startBin <= binIndex && binIndex <= endBin)
+                            {
+                                intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] = decodedIntensityValue;
                             }
+
+                            binIndex++;
                         }
                     }
                 }
@@ -2132,7 +2095,7 @@ namespace UIMFLibrary
         /// Number of frames to sum. Must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
         /// </param>
         /// <returns>
-        ///  Array of intensities for a given frame; dimensions are bin and scan<see cref="double[][]"/>.
+        ///  Array of intensities for a given frame; dimensions are bin and scan
         /// </returns>
         public double[][] GetIntensityBlockForDemultiplexing(
             int frameNumber,
@@ -2224,7 +2187,7 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
             m_getSpectrumCommand.Parameters.Add(
-                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
+                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType));
 
             var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
 
@@ -2283,7 +2246,7 @@ namespace UIMFLibrary
         /// Frame number.
         /// </param>
         /// <returns>
-        /// Dictionary of intensity values by bin <see cref="Dictionary"/>.
+        /// Dictionary of intensity values by bin.
         /// </returns>
         public Dictionary<int, int>[] GetIntensityBlockOfFrame(int frameNumber)
         {
@@ -2302,7 +2265,7 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans - 1));
             m_getSpectrumCommand.Parameters.Add(
-                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
+                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType));
 
             using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
@@ -2441,7 +2404,7 @@ namespace UIMFLibrary
         /// Posted by filter (ignored if blank)
         /// </param>
         /// <returns>
-        /// List of log entries<see cref="SortedList"/>.
+        /// List of log entries
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
@@ -2527,7 +2490,11 @@ namespace UIMFLibrary
 
             using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
             {
-                dbCmd.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
+                if (m_UsingLegacyFrameParameters)
+                    dbCmd.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
+                else
+                    dbCmd.CommandText = "SELECT FrameNum, ParamValue AS FrameType From Frame_Params WHERE ParamID=" + (int)FrameParamKeyType.FrameType;
+
                 dbCmd.Prepare();
                 using (SQLiteDataReader reader = dbCmd.ExecuteReader())
                 {
@@ -2578,10 +2545,22 @@ namespace UIMFLibrary
 
             using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
             {
-                dbCmd.CommandText =
-                    "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType IN (:FrameType)";
-                dbCmd.Parameters.Add(
-                    new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? "0,1" : ((int)frameType).ToString()));
+                var frameTypeList = "0,1";
+
+                if (frameType != FrameType.MS1)
+                    frameTypeList = ((int)frameType).ToString(CultureInfo.InvariantCulture);
+
+                if (m_UsingLegacyFrameParameters)
+                    dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
+                                        "FROM Frame_Parameters " +
+                                        "WHERE FrameType IN (:FrameType)";
+                else
+                    dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
+                                        "FROM Frame_Params " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType  + 
+                                         " AND ParamValue IN (:FrameType)";
+                
+                dbCmd.Parameters.Add(new SQLiteParameter("FrameType", frameTypeList));
                 dbCmd.Prepare();
                 using (SQLiteDataReader reader = dbCmd.ExecuteReader())
                 {
@@ -3071,7 +3050,7 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
             m_getSpectrumCommand.Parameters.Add(
-                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
+                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType));
 
             // Adding 1 to the number of bins to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
             var intensityArray = new int[m_globalParameters.Bins + 1];
@@ -3263,7 +3242,7 @@ namespace UIMFLibrary
         /// <param name="endScan">
         /// </param>
         /// <returns>
-        /// TIC array<see cref="double[]"/>.
+        /// TIC array
         /// </returns>
         public double[] GetTIC(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
@@ -3377,7 +3356,7 @@ namespace UIMFLibrary
         /// Frame type.
         /// </param>
         /// <returns>
-        /// IntensityPoint list <see cref="List"/>.
+        /// IntensityPoint list
         /// </returns>
         public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
         {
@@ -3451,7 +3430,7 @@ namespace UIMFLibrary
         /// Tolerance type.
         /// </param>
         /// <returns>
-        /// IntensityPoint list<see cref="List"/>.
+        /// IntensityPoint list
         /// </returns>
         public List<IntensityPoint> GetXic(
             double targetMz,
@@ -3562,7 +3541,7 @@ namespace UIMFLibrary
         /// Tolerance type
         /// </param>
         /// <returns>
-        /// IntensityPoint list <see cref="List"/>.
+        /// IntensityPoint list
         /// </returns>
         public List<IntensityPoint> GetXic(
             double targetMz,
@@ -3678,7 +3657,7 @@ namespace UIMFLibrary
         /// Tolerance type.
         /// </param>
         /// <returns>
-        /// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
+        /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
         public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
         {
@@ -3776,7 +3755,7 @@ namespace UIMFLibrary
         /// Tolerance type.
         /// </param>
         /// <returns>
-        /// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
+        /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
         public double[,] GetXicAsArray(
             double targetMz,
@@ -3879,7 +3858,7 @@ namespace UIMFLibrary
         /// Frame type.
         /// </param>
         /// <returns>
-        /// 2D array of XIC values [frame,scan] <see cref="double[,]"/>.
+        /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
         public double[,] GetXicAsArray(int targetBin, FrameType frameType)
         {
@@ -3948,8 +3927,16 @@ namespace UIMFLibrary
 
             using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
             {
-                dbCmd.CommandText =
-                    "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount FROM Frame_Parameters WHERE FrameType = :FrameType";
+                if (m_UsingLegacyFrameParameters)
+                    dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
+                                        "FROM Frame_Parameters " +
+                                        "WHERE FrameType = :FrameType";
+                else
+                    dbCmd.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
+                                        "FROM Frame_Params " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType + 
+                                         " AND ParamValue = :FrameType";
+
                 dbCmd.Parameters.Add(new SQLiteParameter("FrameType", (int)FrameType.MS2));
                 dbCmd.Prepare();
                 using (SQLiteDataReader reader = dbCmd.ExecuteReader())
@@ -3993,6 +3980,7 @@ namespace UIMFLibrary
 
             using (SQLiteCommand dbCmd = m_uimfDatabaseConnection.CreateCommand())
             {
+                // ToDo xxx implement    if (m_UsingLegacyFrameParameters) ...
                 dbCmd.CommandText =
                     "SELECT FrameType, COUNT(*)  AS FrameCount, SUM(IFNULL(CalibrationDone, 0)) AS FramesCalibrated "
                     + "FROM frame_parameters " + "GROUP BY FrameType;";
@@ -4114,18 +4102,16 @@ namespace UIMFLibrary
             foreach (var frameNumber in framesToUpdate)
             {
                 var frameParams = m_CachedFrameParameters[frameNumber];
-                var matchedItem = (from item in frameParams where item.Key.ParamType == FrameParamKeyType.CalibrationSlope select item.Key).ToList();
 
-                if (matchedItem.Count > 0)
+                FrameParam paramEntry;
+                if (frameParams.TryGetValue(FrameParamKeyType.CalibrationSlope, out paramEntry))
                 {
-                    frameParams[matchedItem[0]] = slope.ToString(CultureInfo.InvariantCulture);
+                    paramEntry.Value = slope.ToString(CultureInfo.InvariantCulture);
                 }
 
-                matchedItem = (from item in frameParams where item.Key.ParamType == FrameParamKeyType.CalibrationIntercept select item.Key).ToList();
-
-                if (matchedItem.Count > 0)
+                if (frameParams.TryGetValue(FrameParamKeyType.CalibrationIntercept, out paramEntry))
                 {
-                    frameParams[matchedItem[0]] = intercept.ToString(CultureInfo.InvariantCulture);
+                    paramEntry.Value = intercept.ToString(CultureInfo.InvariantCulture);
                 }
             }
            
@@ -4173,12 +4159,12 @@ namespace UIMFLibrary
         #endregion
 
         #region Methods
-    
-        private static void AddFrameParamKey(Dictionary<int, FrameParamDef> frameParamKeys, FrameParamKeyType paramType)
+
+        private static void AddFrameParamKey(Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, FrameParamKeyType paramType)
         {
             var paramDef = FrameParamUtilities.GetParamDefByType(paramType);
 
-            if (frameParamKeys.ContainsKey(paramDef.ID))
+            if (frameParamKeys.ContainsKey(paramDef.ParamType))
             {
                 throw new Exception("Duplicate Key ID; cannot add " + paramType);
             }
@@ -4188,33 +4174,38 @@ namespace UIMFLibrary
                 throw new Exception("Duplicate Key Name; cannot add " + paramType);
             }
 
-            frameParamKeys.Add((int)paramType, paramDef);
+            frameParamKeys.Add(paramType, paramDef);
         }
 
-        private static void AddFrameParamKey(Dictionary<int, FrameParamDef> frameParamKeys, int paramID, string paramName, string paramDataType, string paramDescription)
+        private static void AddFrameParamKey(Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, int paramID, string paramName, string paramDataType, string paramDescription)
         {
             if (string.IsNullOrWhiteSpace(paramName))
                 throw new ArgumentOutOfRangeException("paramName", "paramName cannot be empty");
 
-            if (string.IsNullOrWhiteSpace(paramDataType))
-                throw new ArgumentOutOfRangeException("paramDataType", "paramDataType cannot be empty");
-
-            var paramKey = new FrameParamDef(paramID, paramName, paramDataType, paramDescription);
-
-            if (frameParamKeys.ContainsKey(paramID))
+            FrameParamKeyType paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+            if (paramType == FrameParamKeyType.Unknown)
             {
-                throw new Exception("Duplicate Key ID; cannot add " + paramName + " with ID " + paramID);
+                // Unrecognized parameter ID; ignore this key
+                WarnUnrecognizedID(paramID, paramName);
+                return;
             }
 
-            if (frameParamKeys.Any(existingKey => String.CompareOrdinal(existingKey.Value.Name, paramKey.Name) == 0))
+            var paramDef = new FrameParamDef(paramType, paramName, paramDataType, paramDescription);
+
+            if (frameParamKeys.ContainsKey(paramDef.ParamType))
             {
-                throw new Exception("Duplicate Key Name; cannot add " + paramName + " with ID " + paramID);
+                throw new Exception("Duplicate Key; cannot add " + paramType + " (ID " + (int)paramType + ")");
             }
 
-            frameParamKeys.Add(paramID, paramKey);
+            if (frameParamKeys.Any(existingKey => String.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
+            {
+                throw new Exception("Duplicate Key Name; cannot add " + paramType + " (ID " + (int)paramType + ")");
+            }
+
+            frameParamKeys.Add(paramType, paramDef);
 
         }
-
+       
         /// <summary>
         /// Examines the pressure columns to determine whether they are in torr or mTorr
         /// </summary>
@@ -4299,7 +4290,7 @@ namespace UIMFLibrary
         /// <param name="blob">
         /// </param>
         /// <returns>
-        /// Array of doubles<see cref="double[]"/>.
+        /// Array of doubles
         /// </returns>
         private static double[] ArrayFragmentationSequence(byte[] blob)
         {
@@ -4447,10 +4438,10 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static double TryGetFrameParam(SQLiteDataReader reader, string columnName, double defaultValue)
+        private static double GetFrameParamOrDefault(SQLiteDataReader reader, string columnName, double defaultValue)
         {
             bool columnMissing;
-            return TryGetFrameParam(reader, columnName, defaultValue, out columnMissing);
+            return GetFrameParamOrDefault(reader, columnName, defaultValue, out columnMissing);
         }
 
         /// <summary>
@@ -4471,7 +4462,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static double TryGetFrameParam(
+        private static double GetFrameParamOrDefault(
             SQLiteDataReader reader,
             string columnName,
             double defaultValue,
@@ -4507,10 +4498,10 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static int TryGetFrameParamInt32(SQLiteDataReader reader, string columnName, int defaultValue)
+        private static int GetFrameParamOrDefaultInt32(SQLiteDataReader reader, string columnName, int defaultValue)
         {
             bool columnMissing;
-            return TryGetFrameParamInt32(reader, columnName, defaultValue, out columnMissing);
+            return GetFrameParamOrDefaultInt32(reader, columnName, defaultValue, out columnMissing);
         }
 
         /// <summary>
@@ -4531,7 +4522,8 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static int TryGetFrameParamInt32(
+        [Obsolete("Use GetFrameParametersDictionary instead")]
+        private static int GetFrameParamOrDefaultInt32(
             SQLiteDataReader reader,
             string columnName,
             int defaultValue,
@@ -4584,7 +4576,7 @@ namespace UIMFLibrary
         /// Object type to find, either table or index
         /// </param>
         /// <returns>
-        /// Dictionary with object name as the key and Sql creation code as the value<see cref="Dictionary"/>.
+        /// Dictionary with object name as the key and Sql creation code as the value
         /// </returns>
         private Dictionary<string, string> CloneUIMFGetObjects(string sObjectType)
         {
@@ -4635,7 +4627,7 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    dbCmd.CommandText = "SELECT Value FROM Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
+                    dbCmd.CommandText = "SELECT DISTINCT(ParamValue) FROM Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
                     dbCmd.Prepare();
                     using (SQLiteDataReader reader = dbCmd.ExecuteReader())
                     {
@@ -4645,8 +4637,6 @@ namespace UIMFLibrary
                         }
                     }
                 }
-                
-
                
             }
 
@@ -4657,11 +4647,11 @@ namespace UIMFLibrary
                     throw new Exception("FrameTypes of 0 and 1 found. Not a valid UIMF file.");
                 }
 
-                m_frameTypeMs = 0;
+                m_frameTypeMS1 = 0;
             }
             else
             {
-                m_frameTypeMs = 1;
+                m_frameTypeMS1 = 1;
             }
         }
 
@@ -4735,7 +4725,7 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 1));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
             m_getSpectrumCommand.Parameters.Add(
-                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType));
+                new SQLiteParameter("FrameType", frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType));
 
             using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
@@ -4831,7 +4821,7 @@ namespace UIMFLibrary
         /// <param name="fieldName">
         /// </param>
         /// <returns>
-        /// Array of intensity values<see cref="double[]"/>.
+        /// Array of intensity values
         /// </returns>
         private double[] GetTicOrBpi(
             FrameType frameType,
@@ -4923,7 +4913,7 @@ namespace UIMFLibrary
                 }
 
                 whereClause += "Frame_Parameters.FrameType = "
-                               + (frameType.Equals(FrameType.MS1) ? m_frameTypeMs : (int)frameType);
+                               + (frameType.Equals(FrameType.MS1) ? m_frameTypeMS1 : (int)frameType);
             }
 
             if (!(startScan == 0 && endScan == 0))
@@ -4972,7 +4962,7 @@ namespace UIMFLibrary
         /// mz tolerance
         /// </param>
         /// <returns>
-        /// Two element array of the closet bins<see cref="int[]"/>.
+        /// Two element array of the closet bins
         /// </returns>
         private int[] GetUpperLowerBinsFromMz(int frameNumber, double targetMZ, double toleranceInMZ)
         {
@@ -5113,16 +5103,16 @@ namespace UIMFLibrary
                 fp.voltHVRack4 = Convert.ToDouble(reader["voltHVRack4"]);
                 fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"]); // 14, Capillary Inlet Voltage
 
-                fp.voltEntranceHPFIn = TryGetFrameParam(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
+                fp.voltEntranceHPFIn = GetFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.voltEntranceHPFIn = TryGetFrameParam(reader, "voltEntranceIFTIn", 0);
-                    fp.voltEntranceHPFOut = TryGetFrameParam(reader, "voltEntranceIFTOut", 0);
+                    fp.voltEntranceHPFIn = GetFrameParamOrDefault(reader, "voltEntranceIFTIn", 0);
+                    fp.voltEntranceHPFOut = GetFrameParamOrDefault(reader, "voltEntranceIFTOut", 0);
                 }
                 else
                 {
-                    fp.voltEntranceHPFOut = TryGetFrameParam(reader, "voltEntranceHPFOut", 0); // 16, HPF Out Voltage
+                    fp.voltEntranceHPFOut = GetFrameParamOrDefault(reader, "voltEntranceHPFOut", 0); // 16, HPF Out Voltage
                 }
 
                 fp.voltEntranceCondLmt = Convert.ToDouble(reader["voltEntranceCondLmt"]); // 17, Cond Limit Voltage
@@ -5135,16 +5125,16 @@ namespace UIMFLibrary
                 fp.voltCond2 = Convert.ToDouble(reader["voltCond2"]); // 24, Fragmentation Conductance Voltage
                 fp.voltIMSOut = Convert.ToDouble(reader["voltIMSOut"]); // 25, IMS Out Voltage
 
-                fp.voltExitHPFIn = TryGetFrameParam(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
+                fp.voltExitHPFIn = GetFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.voltExitHPFIn = TryGetFrameParam(reader, "voltExitIFTIn", 0);
-                    fp.voltExitHPFOut = TryGetFrameParam(reader, "voltExitIFTOut", 0);
+                    fp.voltExitHPFIn = GetFrameParamOrDefault(reader, "voltExitIFTIn", 0);
+                    fp.voltExitHPFOut = GetFrameParamOrDefault(reader, "voltExitIFTOut", 0);
                 }
                 else
                 {
-                    fp.voltExitHPFOut = TryGetFrameParam(reader, "voltExitHPFOut", 0); // 27, HPF Out Voltage
+                    fp.voltExitHPFOut = GetFrameParamOrDefault(reader, "voltExitHPFOut", 0); // 27, HPF Out Voltage
                 }
 
                 fp.voltExitCondLmt = Convert.ToDouble(reader["voltExitCondLmt"]); // 28, Cond Limit Voltage
@@ -5153,7 +5143,7 @@ namespace UIMFLibrary
                 fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"]);
                 fp.FragmentationProfile = ArrayFragmentationSequence((byte[])reader["FragmentationProfile"]);
 
-                fp.HighPressureFunnelPressure = TryGetFrameParam(reader, "HighPressureFunnelPressure", 0, out columnMissing);
+                fp.HighPressureFunnelPressure = GetFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing);
                 if (columnMissing)
                 {
                     if (m_errMessageCounter < 5)
@@ -5165,13 +5155,13 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    fp.IonFunnelTrapPressure = TryGetFrameParam(reader, "IonFunnelTrapPressure", 0);
-                    fp.RearIonFunnelPressure = TryGetFrameParam(reader, "RearIonFunnelPressure", 0);
-                    fp.QuadrupolePressure = TryGetFrameParam(reader, "QuadrupolePressure", 0);
-                    fp.ESIVoltage = TryGetFrameParam(reader, "ESIVoltage", 0);
-                    fp.FloatVoltage = TryGetFrameParam(reader, "FloatVoltage", 0);
-                    fp.CalibrationDone = TryGetFrameParamInt32(reader, "CalibrationDone", 0);
-                    fp.Decoded = TryGetFrameParamInt32(reader, "Decoded", 0);
+                    fp.IonFunnelTrapPressure = GetFrameParamOrDefault(reader, "IonFunnelTrapPressure", 0);
+                    fp.RearIonFunnelPressure = GetFrameParamOrDefault(reader, "RearIonFunnelPressure", 0);
+                    fp.QuadrupolePressure = GetFrameParamOrDefault(reader, "QuadrupolePressure", 0);
+                    fp.ESIVoltage = GetFrameParamOrDefault(reader, "ESIVoltage", 0);
+                    fp.FloatVoltage = GetFrameParamOrDefault(reader, "FloatVoltage", 0);
+                    fp.CalibrationDone = GetFrameParamOrDefaultInt32(reader, "CalibrationDone", 0);
+                    fp.Decoded = GetFrameParamOrDefaultInt32(reader, "Decoded", 0);
 
                     if (PressureIsMilliTorr)
                     {
@@ -5183,7 +5173,7 @@ namespace UIMFLibrary
                     }
                 }
 
-                fp.a2 = TryGetFrameParam(reader, "a2", 0, out columnMissing);
+                fp.a2 = GetFrameParamOrDefault(reader, "a2", 0, out columnMissing);
                 if (columnMissing)
                 {
                     fp.b2 = 0;
@@ -5200,11 +5190,11 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    fp.b2 = TryGetFrameParam(reader, "b2", 0);
-                    fp.c2 = TryGetFrameParam(reader, "c2", 0);
-                    fp.d2 = TryGetFrameParam(reader, "d2", 0);
-                    fp.e2 = TryGetFrameParam(reader, "e2", 0);
-                    fp.f2 = TryGetFrameParam(reader, "f2", 0);
+                    fp.b2 = GetFrameParamOrDefault(reader, "b2", 0);
+                    fp.c2 = GetFrameParamOrDefault(reader, "c2", 0);
+                    fp.d2 = GetFrameParamOrDefault(reader, "d2", 0);
+                    fp.e2 = GetFrameParamOrDefault(reader, "e2", 0);
+                    fp.f2 = GetFrameParamOrDefault(reader, "f2", 0);
                 }
             }
             catch (Exception ex)
@@ -5236,6 +5226,17 @@ namespace UIMFLibrary
 
             if (m_getSpectrumCommand != null)
                 m_getSpectrumCommand.Dispose();
+
+        }
+
+        private static void WarnUnrecognizedID(int paramID, string paramName)
+        {
+            if (!m_UnrecognizedParamTypes.Contains(paramID))
+            {
+                m_UnrecognizedParamTypes.Add(paramID);
+                Console.WriteLine("Ignoring frame parameter " + paramName + " (ID " + paramID + "); " +
+                                  "you need an updated copy of the UIMFLibary that supports this new parameter");
+            }
 
         }
 

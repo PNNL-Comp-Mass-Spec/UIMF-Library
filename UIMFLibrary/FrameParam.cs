@@ -9,5 +9,11 @@ namespace UIMFLibrary
     {
         public FrameParamDef Definition { get; set; }
         public string Value { get; set; }
+
+        public FrameParam(FrameParamDef paramDef, string value)
+        {
+            Definition = paramDef;
+            Value = value;
+        }
     }
 }

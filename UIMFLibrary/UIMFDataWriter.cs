@@ -30,7 +30,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Frame parameter keys
         /// </summary>
-        protected Dictionary<int, FrameParamDef> m_frameParameterKeys;
+        protected Dictionary<FrameParamKeyType, FrameParamDef> m_frameParameterKeys;
 
         /// <summary>
         /// Command to insert a frame parameter key
@@ -60,7 +60,7 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Full path to the UIMF file
 		/// </summary>
-		private readonly string m_fileName;
+		private readonly string m_FilePath;
 
 		/// <summary>
 		/// Global parameters object
@@ -80,7 +80,7 @@ namespace UIMFLibrary
 		/// </param>
 		public DataWriter(string fileName)
 		{
-			m_fileName = fileName;
+			m_FilePath = fileName;
 
 			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 			string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
@@ -97,9 +97,9 @@ namespace UIMFLibrary
 				PrepareInsertFrameParamValue();
 				PrepareInsertScan();
 
-			    m_frameParameterKeys = new Dictionary<int, FrameParamDef>();
+                m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
-                // If table Frame_Parameters exists, use it to populate a Frame_Params table
+                // If table Frame_Parameters exists and table Frame_Params does not exist, then create Frame_Params using Frame_Parameters
 		        ConvertLegacyFrameParameters();
 
 			}
@@ -115,21 +115,54 @@ namespace UIMFLibrary
 
 	        try
 	        {
+                if (DataReader.TableExists(m_dbConnection, "Frame_Params"))
+	            {
+                    // Assume that the parameters have already been converted
+                    // Nothing to do
+                    return;
+	            }
+
 	            if (!DataReader.TableExists(m_dbConnection, "Frame_Parameters"))
 	            {
                     // Nothing to do
                     return;
 	            }
 
+                // TODO xxx Need to Code This
+
+                var cachedFrameParams = new Dictionary<int, Dictionary<FrameParamKeyType, FrameParam>>();
+
+                // Read and cache the legacy frame parameters
+	            using (var reader = new UIMFLibrary.DataReader(m_FilePath))
+	            {
+	                var frameList = reader.GetMasterFrameList();
+
+                    foreach (var frameInfo in frameList)
+	                {
+                        var frameParams = reader.GetFrameParametersDictionary(frameInfo.Key);
+                        cachedFrameParams.Add(frameInfo.Key, frameParams);
+	                }
+	                
+	            }
+
+                CreateFrameParamsTables();
+	            foreach (var frameParamsEntry in cachedFrameParams)
+	            {
+	                var frameParamsLite = new Dictionary<FrameParamKeyType, string>();
+	                foreach (var frameParam in frameParamsEntry.Value)
+	                {
+	                    frameParamsLite.Add(frameParam.Key, frameParam.Value.Value);
+	                }
+
+                    InsertFrame(frameParamsEntry.Key, frameParamsLite);
+	            }
 
 	        }
             catch (Exception ex)
 			{
-                ReportError("Exception creating the Frame_Params table using existint table Frame_Parameters: " + ex.Message, ex);
+                ReportError("Exception creating the Frame_Params table using existing table Frame_Parameters: " + ex.Message, ex);
                 throw;
-			}
-		
-	        // xxx Need to Code This
+			}			        
 
 	    }
 
@@ -255,14 +288,27 @@ namespace UIMFLibrary
 		/// </param>
 		public void CreateBinCentricTables(string workingDirectory)
 		{
-			using (var uimfReader = new DataReader(m_fileName))
+			using (var uimfReader = new DataReader(m_FilePath))
 			{
 				var binCentricTableCreator = new BinCentricTableCreation();
 				binCentricTableCreator.CreateBinCentricTable(m_dbConnection, uimfReader, workingDirectory);
 			}
 		}
 
-		/// <summary>
+	    private void CreateFrameParamsTables()
+	    {
+            // Create the Frame_Param_Keys Table
+            var lstFields = GetFrameParamKeysFields();
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Param_Keys", lstFields);
+            m_dbCommandUimf.ExecuteNonQuery();
+
+            // Create the Frame_Params Table
+            lstFields = GetFrameParamsFields();
+            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Params", lstFields);
+            m_dbCommandUimf.ExecuteNonQuery();
+	    }
+
+	    /// <summary>
 		/// Create the table struture within a UIMF file, assumes 32-bit integers for intensity values 
 		/// </summary>
 		/// <remarks>
@@ -296,15 +342,7 @@ namespace UIMFLibrary
             m_dbCommandUimf.CommandText = GetCreateTableSql("Global_Parameters", lstFields);
 			m_dbCommandUimf.ExecuteNonQuery();
 
-            // Create the Frame_Param_Keys Table
-            lstFields = GetFrameParamKeysFields();
-            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Param_Keys", lstFields);
-            m_dbCommandUimf.ExecuteNonQuery();
-
-			// Create the Frame_Params Table
-            lstFields = GetFrameParamsFields();
-            m_dbCommandUimf.CommandText = GetCreateTableSql("Frame_Params", lstFields);
-			m_dbCommandUimf.ExecuteNonQuery();
+		    CreateFrameParamsTables();
 
 			// Create the Frame_Scans Table
 			lstFields = GetFrameScansFields(dataType);		 
@@ -578,186 +616,9 @@ namespace UIMFLibrary
 	    /// </param>
 	    public void InsertFrame(FrameParameters frameParameters)
 	    {
-	        var frameParametersDictionary = new Dictionary<FrameParamKeyType, string>
-	        {
-	            // Start time of frame, in minutes
-	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.FloatToString(frameParameters.StartTime)},
-                
-	            // Duration of frame, in seconds
-	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.FloatToString(frameParameters.Duration)},
-                
-	            // Number of collected and summed acquisitions in a frame 
-	            {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
-                
-	            // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-	            {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
+	        var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
 
-                // Set to 1 after a frame has been decoded (added June 27, 2011)
-                {FrameParamKeyType.Decoded, UIMFDataUtilities.IntToString(frameParameters.Decoded)},
-
-                // Set to 1 after a frame has been calibrated
-                {FrameParamKeyType.CalibrationDone, UIMFDataUtilities.IntToString(frameParameters.CalibrationDone)},
-
-	            // Number of TOF scans
-	            {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
-
-	            // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-	            {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
-
-	            // Original size of bit sequence
-	            {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
-
-                // Number of TOF Losses
-	            {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
-	        
-                // Average time between TOF trigger pulses
-                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.FloatToString(frameParameters.AverageTOFLength)},
-
-                // Calibration slope, k0
-	            {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
-
-                // Calibration intercept, t0
-	            {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
-	        };
-
-	        // These six parameters are coefficients for residual mass error correction      
-            // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
-	        if (Math.Abs(frameParameters.a2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.b2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.c2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.d2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.e2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.f2) > Single.Epsilon)
-	        {
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
-                frameParametersDictionary.Add(FrameParamKeyType.MassErrorCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
-	        }	        
-
-            // Ambient temperature
-            frameParametersDictionary.Add(FrameParamKeyType.AmbientTemperature, UIMFDataUtilities.FloatToString(frameParameters.Temperature));            
-
-            // Voltage settings in the IMS system
-	        if (Math.Abs(frameParameters.voltHVRack1) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltHVRack2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltHVRack3) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltHVRack4) > Single.Epsilon)
-	        {
-                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack1, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack1));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack2, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack2));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack3, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack3));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltHVRack4, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack4));
-	        }
-
-            // Capillary Inlet Voltage
-	        // HPF In Voltage
-            // HPF Out Voltage
-            // Cond Limit Voltage
-            if (Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltEntranceHPFOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltEntranceCondLmt) > Single.Epsilon)
-	        {
-                frameParametersDictionary.Add(FrameParamKeyType.VoltCapInlet, UIMFDataUtilities.FloatToString(frameParameters.voltCapInlet)); 
-                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFIn));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFOut));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltEntranceCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceCondLmt));
-	        }
-
-            // Trap Out Voltage
-            // Trap In Voltage
-            // Jet Disruptor Voltage
-            if (Math.Abs(frameParameters.voltTrapOut) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltTrapIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltJetDist) > Single.Epsilon)
-	        {
-	            frameParametersDictionary.Add(FrameParamKeyType.VoltTrapOut, UIMFDataUtilities.FloatToString(frameParameters.voltTrapOut));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltTrapIn, UIMFDataUtilities.FloatToString(frameParameters.voltTrapIn));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltJetDist, UIMFDataUtilities.FloatToString(frameParameters.voltJetDist));
-	        }
-
-            // Fragmentation Quadrupole 1 Voltage
-            // Fragmentation Conductance 1 Voltage
-	        if (Math.Abs(frameParameters.voltQuad1) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltCond1) > Single.Epsilon)
-	        {
-	            frameParametersDictionary.Add(FrameParamKeyType.VoltQuad1, UIMFDataUtilities.FloatToString(frameParameters.voltQuad1));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltCond1, UIMFDataUtilities.FloatToString(frameParameters.voltCond1));
-	        }
-
-            // Fragmentation Quadrupole 2 Voltage
-            // Fragmentation Conductance 2 Voltage
-	        if (Math.Abs(frameParameters.voltQuad2) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltCond2) > Single.Epsilon)
-	        {
-	            frameParametersDictionary.Add(FrameParamKeyType.VoltQuad2, UIMFDataUtilities.FloatToString(frameParameters.voltQuad2));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltCond2, UIMFDataUtilities.FloatToString(frameParameters.voltCond2));
-	        }
-        
-            // IMS Out Voltage
-            // HPF In Voltage
-            // HPF Out Voltage
-            if (Math.Abs(frameParameters.voltIMSOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltExitHPFIn) > Single.Epsilon ||
-	            Math.Abs(frameParameters.voltExitHPFOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltExitCondLmt) > Single.Epsilon)
-	        {
-                frameParametersDictionary.Add(FrameParamKeyType.VoltIMSOut, UIMFDataUtilities.FloatToString(frameParameters.voltIMSOut));
-	            frameParametersDictionary.Add(FrameParamKeyType.VoltExitHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFIn));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltExitHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFOut));
-                frameParametersDictionary.Add(FrameParamKeyType.VoltExitCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltExitCondLmt));
-	        }
-
-            // Pressure at front of Drift Tube
-            // Pressure at back of Drift Tube
-            if (Math.Abs(frameParameters.PressureFront) > Single.Epsilon ||
-                Math.Abs(frameParameters.PressureBack) > Single.Epsilon)
-            {
-                frameParametersDictionary.Add(FrameParamKeyType.PressureFront, UIMFDataUtilities.FloatToString(frameParameters.PressureFront));
-                frameParametersDictionary.Add(FrameParamKeyType.PressureBack, UIMFDataUtilities.FloatToString(frameParameters.PressureBack));
-            }
-
-            // High pressure funnel pressure
-            // Ion funnel trap pressure
-            // Rear ion funnel pressure
-            // Quadruple pressure
-            if (Math.Abs(frameParameters.HighPressureFunnelPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.IonFunnelTrapPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.RearIonFunnelPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.QuadrupolePressure) > Single.Epsilon)
-            {
-                frameParametersDictionary.Add(FrameParamKeyType.HighPressureFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.HighPressureFunnelPressure));
-                frameParametersDictionary.Add(FrameParamKeyType.IonFunnelTrapPressure, UIMFDataUtilities.FloatToString(frameParameters.IonFunnelTrapPressure));
-                frameParametersDictionary.Add(FrameParamKeyType.RearIonFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.RearIonFunnelPressure));
-                frameParametersDictionary.Add(FrameParamKeyType.QuadrupolePressure, UIMFDataUtilities.FloatToString(frameParameters.QuadrupolePressure));
-            }
-
-            // ESI Voltage
-            if (Math.Abs(frameParameters.ESIVoltage) > Single.Epsilon)
-            {
-                frameParametersDictionary.Add(FrameParamKeyType.ESIVoltage, UIMFDataUtilities.FloatToString(frameParameters.ESIVoltage));
-            }
-
-             // Float Voltage
-            if (Math.Abs(frameParameters.FloatVoltage) > Single.Epsilon)
-	        {
-                frameParametersDictionary.Add(FrameParamKeyType.FloatVoltage, UIMFDataUtilities.FloatToString(frameParameters.FloatVoltage));
-	        }
-
-
-            // Voltage profile used in fragmentation
-            // Legacy parameter, likely never used
-            if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
-            {
-                var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
-                string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
-                frameParametersDictionary.Add(FrameParamKeyType.FragmentationProfile, base64String);
-            }
-
-	        InsertFrame(frameParameters.FrameNum, frameParametersDictionary);
+	        InsertFrame(frameParameters.FrameNum, frameParams);
 	    }
 
 	    /// <summary>
@@ -1434,7 +1295,7 @@ namespace UIMFLibrary
 
 		    foreach (var newKey in paramKeys)
 		    {
-		        if (!m_frameParameterKeys.ContainsKey((int)newKey))
+		        if (!m_frameParameterKeys.ContainsKey(newKey))
 		        {
 		            updateRequired = true;
                     break;
@@ -1451,16 +1312,16 @@ namespace UIMFLibrary
             // Add any new keys not yet in Frame_Param_Keys
             foreach (var newKey in paramKeys)
             {
-                if (!m_frameParameterKeys.ContainsKey((int)newKey))
+                if (!m_frameParameterKeys.ContainsKey(newKey))
                 {
                     var paramDef = FrameParamUtilities.GetParamDefByType(newKey);
 
                     try
                     {
                         m_dbCommandInsertFrameParamKey.Parameters.Clear();
-                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamID", paramDef.ID));
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamID", paramDef.ParamType));
                         m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamName", paramDef.Name));
-                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamDataType", paramDef.DataType));
+                        m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamDataType", paramDef.DataType.FullName));
                         m_dbCommandInsertFrameParamKey.Parameters.Add(new SQLiteParameter("ParamDescription", paramDef.Description));
 
                         m_dbCommandInsertFrameParamKey.ExecuteNonQuery();
@@ -1471,29 +1332,11 @@ namespace UIMFLibrary
                         throw;
                     }
 
-                    m_frameParameterKeys.Add(paramDef.ID, paramDef);
+                    m_frameParameterKeys.Add(paramDef.ParamType, paramDef);
                 }
             }
 
             FlushUimf();
-		}
-
-		/// <summary>
-		/// </summary>
-		/// <param name="frag">
-		/// </param>
-		/// <returns>
-		/// Byte array
-		/// </returns>
-		private static byte[] ConvertToBlob(double[] frag)
-		{
-			// convert the fragmentation profile into an array of bytes
-			int length_blob = frag.Length;
-			var blob_values = new byte[length_blob * 8];
-
-			Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
-
-			return blob_values;
 		}
 
 		/// <summary>

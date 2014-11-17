@@ -5,17 +5,309 @@ using System.Linq;
 namespace UIMFLibrary
 {
     public static class FrameParamUtilities
-    {       
+    {
+        private static readonly Dictionary<string, string> mDataTypeAliasMap = 
+            new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase)
+        { 
+            {"bool", "System.Boolean"},
+            {"byte", "System.Byte"},
+            {"sbyte", "System.SByte"},
+            {"char", "System.Char"},
+            {"decimal", "System.Decimal"},
+            {"double", "System.Double"},
+            {"float", "System.Single"},
+            {"int", "System.Int32"},
+            {"uint", "System.UInt32"},
+            {"long", "System.Int64"},
+            {"ulong", "System.UInt64"},
+            {"object", "System.Object"},
+            {"short", "System.Int16"},
+            {"ushort", "System.UInt16"},
+            {"string", "System.String"},
+            {"Boolean", "System.Boolean"},
+            {"Single", "System.Single"},
+            {"Int32", "System.Int32"},
+            {"UInt32", "System.UInt32"},
+            {"Int64", "System.Int64"},
+            {"UInt64", "System.UInt64"},
+            {"Int16", "System.Int16"},
+            {"UInt16", "System.UInt16"}
+        };
+
         /// <summary>
         /// Create a frame parameter dictionary using a FrameParameters class instance
         /// </summary>
-        /// <param name="legacyFrameParams"></param>
+        /// <param name="frameParameters"></param>
         /// <returns></returns>
-        public static Dictionary<FrameParamDef, string> ConvertFrameParameters(this FrameParamDef fp, FrameParameters legacyFrameParams)
+        public static Dictionary<FrameParamKeyType, string> ConvertFrameParameters(FrameParameters frameParameters)
         {
-            //xxx this needs to be coded
+            var frameParams = new Dictionary<FrameParamKeyType, string>
+            {
+	            // Start time of frame, in minutes
+	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.FloatToString(frameParameters.StartTime)},
+                
+	            // Duration of frame, in seconds
+	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.FloatToString(frameParameters.Duration)},
+                
+	            // Number of collected and summed acquisitions in a frame 
+	            {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
+                
+	            // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+	            {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
 
-            throw new NotImplementedException();
+                // Set to 1 after a frame has been decoded (added June 27, 2011)
+                {FrameParamKeyType.Decoded, UIMFDataUtilities.IntToString(frameParameters.Decoded)},
+
+                // Set to 1 after a frame has been calibrated
+                {FrameParamKeyType.CalibrationDone, UIMFDataUtilities.IntToString(frameParameters.CalibrationDone)},
+
+	            // Number of TOF scans
+	            {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
+
+	            // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+	            {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
+
+	            // Original size of bit sequence
+	            {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
+
+                // Number of TOF Losses
+	            {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
+	        
+                // Average time between TOF trigger pulses
+                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.FloatToString(frameParameters.AverageTOFLength)},
+
+                // Calibration slope, k0
+	            {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
+
+                // Calibration intercept, t0
+	            {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
+	        };
+
+            // These six parameters are coefficients for residual mass error correction      
+            // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
+            if (Math.Abs(frameParameters.a2) > Single.Epsilon ||
+                Math.Abs(frameParameters.b2) > Single.Epsilon ||
+                Math.Abs(frameParameters.c2) > Single.Epsilon ||
+                Math.Abs(frameParameters.d2) > Single.Epsilon ||
+                Math.Abs(frameParameters.e2) > Single.Epsilon ||
+                Math.Abs(frameParameters.f2) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
+                frameParams.Add(FrameParamKeyType.MassErrorCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
+            }
+
+            // Ambient temperature
+            frameParams.Add(FrameParamKeyType.AmbientTemperature, UIMFDataUtilities.FloatToString(frameParameters.Temperature));
+
+            // Voltage settings in the IMS system
+            if (Math.Abs(frameParameters.voltHVRack1) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack2) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack3) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack4) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltHVRack1, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack1));
+                frameParams.Add(FrameParamKeyType.VoltHVRack2, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack2));
+                frameParams.Add(FrameParamKeyType.VoltHVRack3, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack3));
+                frameParams.Add(FrameParamKeyType.VoltHVRack4, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack4));
+            }
+
+            // Capillary Inlet Voltage
+            // HPF In Voltage
+            // HPF Out Voltage
+            // Cond Limit Voltage
+            if (Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceHPFOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceCondLmt) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltCapInlet, UIMFDataUtilities.FloatToString(frameParameters.voltCapInlet));
+                frameParams.Add(FrameParamKeyType.VoltEntranceHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFIn));
+                frameParams.Add(FrameParamKeyType.VoltEntranceHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFOut));
+                frameParams.Add(FrameParamKeyType.VoltEntranceCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceCondLmt));
+            }
+
+            // Trap Out Voltage
+            // Trap In Voltage
+            // Jet Disruptor Voltage
+            if (Math.Abs(frameParameters.voltTrapOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltTrapIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltJetDist) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltTrapOut, UIMFDataUtilities.FloatToString(frameParameters.voltTrapOut));
+                frameParams.Add(FrameParamKeyType.VoltTrapIn, UIMFDataUtilities.FloatToString(frameParameters.voltTrapIn));
+                frameParams.Add(FrameParamKeyType.VoltJetDist, UIMFDataUtilities.FloatToString(frameParameters.voltJetDist));
+            }
+
+            // Fragmentation Quadrupole 1 Voltage
+            // Fragmentation Conductance 1 Voltage
+            if (Math.Abs(frameParameters.voltQuad1) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltCond1) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltQuad1, UIMFDataUtilities.FloatToString(frameParameters.voltQuad1));
+                frameParams.Add(FrameParamKeyType.VoltCond1, UIMFDataUtilities.FloatToString(frameParameters.voltCond1));
+            }
+
+            // Fragmentation Quadrupole 2 Voltage
+            // Fragmentation Conductance 2 Voltage
+            if (Math.Abs(frameParameters.voltQuad2) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltCond2) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltQuad2, UIMFDataUtilities.FloatToString(frameParameters.voltQuad2));
+                frameParams.Add(FrameParamKeyType.VoltCond2, UIMFDataUtilities.FloatToString(frameParameters.voltCond2));
+            }
+
+            // IMS Out Voltage
+            // HPF In Voltage
+            // HPF Out Voltage
+            if (Math.Abs(frameParameters.voltIMSOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltExitHPFIn) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltExitHPFOut) > Single.Epsilon ||
+                Math.Abs(frameParameters.voltExitCondLmt) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.VoltIMSOut, UIMFDataUtilities.FloatToString(frameParameters.voltIMSOut));
+                frameParams.Add(FrameParamKeyType.VoltExitHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFIn));
+                frameParams.Add(FrameParamKeyType.VoltExitHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFOut));
+                frameParams.Add(FrameParamKeyType.VoltExitCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltExitCondLmt));
+            }
+
+            // Pressure at front of Drift Tube
+            // Pressure at back of Drift Tube
+            if (Math.Abs(frameParameters.PressureFront) > Single.Epsilon ||
+                Math.Abs(frameParameters.PressureBack) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.PressureFront, UIMFDataUtilities.FloatToString(frameParameters.PressureFront));
+                frameParams.Add(FrameParamKeyType.PressureBack, UIMFDataUtilities.FloatToString(frameParameters.PressureBack));
+            }
+
+            // High pressure funnel pressure
+            // Ion funnel trap pressure
+            // Rear ion funnel pressure
+            // Quadruple pressure
+            if (Math.Abs(frameParameters.HighPressureFunnelPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.IonFunnelTrapPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.RearIonFunnelPressure) > Single.Epsilon ||
+                Math.Abs(frameParameters.QuadrupolePressure) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.HighPressureFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.HighPressureFunnelPressure));
+                frameParams.Add(FrameParamKeyType.IonFunnelTrapPressure, UIMFDataUtilities.FloatToString(frameParameters.IonFunnelTrapPressure));
+                frameParams.Add(FrameParamKeyType.RearIonFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.RearIonFunnelPressure));
+                frameParams.Add(FrameParamKeyType.QuadrupolePressure, UIMFDataUtilities.FloatToString(frameParameters.QuadrupolePressure));
+            }
+
+            // ESI Voltage
+            if (Math.Abs(frameParameters.ESIVoltage) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.ESIVoltage, UIMFDataUtilities.FloatToString(frameParameters.ESIVoltage));
+            }
+
+            // Float Voltage
+            if (Math.Abs(frameParameters.FloatVoltage) > Single.Epsilon)
+            {
+                frameParams.Add(FrameParamKeyType.FloatVoltage, UIMFDataUtilities.FloatToString(frameParameters.FloatVoltage));
+            }
+
+
+            // Voltage profile used in fragmentation
+            // Legacy parameter, likely never used
+            if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
+            {
+                var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
+                string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+                frameParams.Add(FrameParamKeyType.FragmentationProfile, base64String);
+            }
+
+            return frameParams;
+        }
+
+        public static Dictionary<FrameParamKeyType, FrameParam> ConvertStringParamsToParamDefs(Dictionary<FrameParamKeyType, string> frameParamsByType)
+        {
+            var frameParams = new Dictionary<FrameParamKeyType, FrameParam>();
+
+            foreach (var paramItem in frameParamsByType)
+            {
+                var paramDef = GetParamDefByType(paramItem.Key);
+                frameParams.Add(paramItem.Key, new FrameParam(paramDef, paramItem.Value));
+            }
+
+            return frameParams;
+        }
+
+        public static string GetDataTypeFromAlias(string alias)
+        {
+            string systemDataType;
+            if (mDataTypeAliasMap.TryGetValue(alias, out systemDataType))
+                return systemDataType;
+
+            Console.WriteLine("Warning: data type alias not recognized: " + alias);
+            return "System.Object";
+        }
+
+        public static FrameParameters GetLegacyFrameParameters(Dictionary<FrameParamKeyType, FrameParam> frameParams)
+        {
+            var frametype = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.FrameType, 0);
+
+            // Populate legacyFrameParams using dictionary frameParams
+            var legacyFrameParams = new FrameParameters
+            {
+                StartTime = GetFrameParamOrDefault(frameParams, FrameParamKeyType.StartTimeMinutes, 0),
+                Duration = GetFrameParamOrDefault(frameParams, FrameParamKeyType.DurationSeconds, 0),
+                Accumulations = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Accumulations, 0),
+                FrameType = (DataReader.FrameType)frametype,
+                Decoded = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Decoded, 0),
+                CalibrationDone = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.CalibrationDone, 0),
+                Scans = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Scans, 0),
+                IMFProfile = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
+                MPBitOrder = (short)GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.MPBitOrder, 0),
+                TOFLosses = GetFrameParamOrDefault(frameParams, FrameParamKeyType.TOFLosses, 0),
+                AverageTOFLength = GetFrameParamOrDefault(frameParams, FrameParamKeyType.AverageTOFLength, 0),
+                CalibrationSlope = GetFrameParamOrDefault(frameParams, FrameParamKeyType.CalibrationSlope, 0),
+                CalibrationIntercept = GetFrameParamOrDefault(frameParams, FrameParamKeyType.CalibrationIntercept, 0),
+                a2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficienta2, 0),
+                b2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientb2, 0),
+                c2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientc2, 0),
+                d2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientd2, 0),
+                e2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficiente2, 0),
+                f2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientf2, 0),
+                Temperature = GetFrameParamOrDefault(frameParams, FrameParamKeyType.AmbientTemperature, 0),
+                voltHVRack1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack1, 0),
+                voltHVRack2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack2, 0),
+                voltHVRack3 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack3, 0),
+                voltHVRack4 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack4, 0),
+                voltCapInlet = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCapInlet, 0),
+                voltEntranceHPFIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceHPFIn, 0),
+                voltEntranceHPFOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceHPFOut, 0),
+                voltEntranceCondLmt = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceCondLmt, 0),
+                voltTrapOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltTrapOut, 0),
+                voltTrapIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltTrapIn, 0),
+                voltJetDist = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltJetDist, 0),
+                voltQuad1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltQuad1, 0),
+                voltCond1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCond1, 0),
+                voltQuad2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltQuad2, 0),
+                voltCond2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCond2, 0),
+                voltIMSOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltIMSOut, 0),
+                voltExitHPFIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitHPFIn, 0),
+                voltExitHPFOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitHPFOut, 0),
+                voltExitCondLmt = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitCondLmt, 0),
+                PressureFront = GetFrameParamOrDefault(frameParams, FrameParamKeyType.PressureFront, 0),
+                PressureBack = GetFrameParamOrDefault(frameParams, FrameParamKeyType.PressureBack, 0),
+                HighPressureFunnelPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.HighPressureFunnelPressure, 0),
+                IonFunnelTrapPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.IonFunnelTrapPressure, 0),
+                RearIonFunnelPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.RearIonFunnelPressure, 0),
+                QuadrupolePressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.QuadrupolePressure, 0),
+                ESIVoltage = GetFrameParamOrDefault(frameParams, FrameParamKeyType.ESIVoltage, 0),
+                FloatVoltage = GetFrameParamOrDefault(frameParams, FrameParamKeyType.FloatVoltage, 0)
+            };
+
+            var fragmentationProfile = GetFrameParamOrDefault(frameParams, FrameParamKeyType.FragmentationProfile, String.Empty);
+
+            // ToDo: xxx implement this conversion xxx
+            //legacyFrameParams.FragmentationProfile = Byte
+
+            return legacyFrameParams;
         }
 
         /// <summary>
@@ -48,8 +340,8 @@ namespace UIMFLibrary
                     // Note that this conversion works for both the names in the FrameParamKeyType enum and for the integer values
                     // See MSDN's "Enum.Parse Method" page at http://msdn.microsoft.com/en-us/library/essfb559.aspx
                     bool ignoreCase = iteration > 0;
-                    var paramType = (FrameParamKeyType)Enum.Parse(typeof (FrameParamKeyType), paramName, ignoreCase);
-                    if (Enum.IsDefined(typeof (FrameParamKeyType), paramType) | paramType.ToString().Contains(","))
+                    var paramType = (FrameParamKeyType)Enum.Parse(typeof(FrameParamKeyType), paramName, ignoreCase);
+                    if (Enum.IsDefined(typeof(FrameParamKeyType), paramType) | paramType.ToString().Contains(","))
                     {
                         // Match found
                         return paramType;
@@ -376,80 +668,116 @@ namespace UIMFLibrary
 
         }
 
+        public static string GetFrameParamOrDefault(
+            Dictionary<FrameParamKeyType, FrameParam> frameParams,
+            FrameParamKeyType paramType,
+            string defaultValue)
+        {
+            bool paramNotDefined;
+            return GetFrameParamOrDefault(frameParams, paramType, defaultValue, out paramNotDefined);
+        }
 
+        public static string GetFrameParamOrDefault(
+            Dictionary<FrameParamKeyType, FrameParam> frameParams,
+            FrameParamKeyType paramType,
+            string defaultValue,
+            out bool paramNotDefined)
+        {
+            paramNotDefined = true;
 
-        public static double TryGetFrameParam(
-            Dictionary<FrameParamDef, string> frameParams,
+            FrameParam paramEntry;
+            if (frameParams.TryGetValue(paramType, out paramEntry))
+            {
+                paramNotDefined = false;
+                return paramEntry.Value;
+            }
+
+            return defaultValue;
+        }
+
+        public static double GetFrameParamOrDefault(
+            Dictionary<FrameParamKeyType, FrameParam> frameParams,
             FrameParamKeyType paramType,
             double defaultValue)
         {
             bool paramNotDefined;
-            return TryGetFrameParam(frameParams, paramType, defaultValue, out paramNotDefined);
+            return GetFrameParamOrDefault(frameParams, paramType, defaultValue, out paramNotDefined);
         }
 
-        public static double TryGetFrameParam(
-            Dictionary<FrameParamDef, string> frameParams,
+        public static double GetFrameParamOrDefault(
+            Dictionary<FrameParamKeyType, FrameParam> frameParams,
             FrameParamKeyType paramType,
             double defaultValue,
             out bool paramNotDefined)
         {
-            string paramValue = string.Empty;
             paramNotDefined = true;
 
-            foreach (var item in frameParams.Where(item => item.Key.ParamType == paramType))
+            FrameParam paramEntry;
+            if (frameParams.TryGetValue(paramType, out paramEntry))
             {
-                paramValue = item.Value;
                 paramNotDefined = false;
-                break;
+
+                double result;
+                if (Double.TryParse(paramEntry.Value, out result))
+                    return result;
             }
 
-            if (paramNotDefined)
-                return defaultValue;
-
-            double result;
-            if (double.TryParse(paramValue, out result))
-                return result;
-
             return defaultValue;
-
         }
 
-        public static int TryGetFrameParamInt32(
-                    Dictionary<FrameParamDef, string> frameParams,
-                    FrameParamKeyType paramType,
-                    int defaultValue)
+        public static int GetFrameParamOrDefaultInt32(
+            Dictionary<FrameParamKeyType, FrameParam> frameParams,
+            FrameParamKeyType paramType,
+            int defaultValue)
         {
             bool paramNotDefined;
-            return TryGetFrameParamInt32(frameParams, paramType, defaultValue, out paramNotDefined);
+            return GetFrameParamOrDefaultInt32(frameParams, paramType, defaultValue, out paramNotDefined);
         }
 
-        public static int TryGetFrameParamInt32(
-           Dictionary<FrameParamDef, string> frameParams,
+        public static int GetFrameParamOrDefaultInt32(
+           Dictionary<FrameParamKeyType, FrameParam> frameParams,
            FrameParamKeyType paramType,
            int defaultValue,
            out bool paramNotDefined)
         {
-            string paramValue = string.Empty;
             paramNotDefined = true;
 
-            foreach (var item in frameParams.Where(item => item.Key.ParamType == paramType))
+            FrameParam paramEntry;
+            if (frameParams.TryGetValue(paramType, out paramEntry))
             {
-                paramValue = item.Value;
                 paramNotDefined = false;
-                break;
+
+                int result;
+                if (Int32.TryParse(paramEntry.Value, out result))
+                    return result;
             }
-
-            if (paramNotDefined)
-                return defaultValue;
-
-            int result;
-            if (int.TryParse(paramValue, out result))
-                return result;
 
             return defaultValue;
 
         }
 
+        #region "Private methods"
+
+        /// <summary>
+        /// </summary>
+        /// <param name="frag">
+        /// </param>
+        /// <returns>
+        /// Byte array
+        /// </returns>
+        private static byte[] ConvertToBlob(double[] frag)
+        {
+            // convert the fragmentation profile into an array of bytes
+            int length_blob = frag.Length;
+            var blob_values = new byte[length_blob * 8];
+
+            Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
+
+            return blob_values;
+        }
+
+        #endregion
+   
     }
 
 }

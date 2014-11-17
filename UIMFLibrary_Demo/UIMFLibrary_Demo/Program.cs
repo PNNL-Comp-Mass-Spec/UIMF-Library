@@ -124,7 +124,7 @@ namespace UIMFLibrary_Demo
 
                     var randGenerator = new Random();
 
-                    for (int frameNum = 1; frameNum < 300; frameNum++)
+                    for (int frameNum = 1; frameNum < 10; frameNum++)
                     {
                         var fp = new UIMFLibrary.FrameParameters
                         {
@@ -159,9 +159,11 @@ namespace UIMFLibrary_Demo
                             writer.InsertScan(fp, scanNumber, intensities, globalParams.BinWidth);
                         }
 
-                        if (frameNum % 10 == 0)
+                        if (frameNum % 2 == 0)
                             writer.FlushUimf();
                     }
+
+                    writer.FlushUimf();
                 }
             }
             catch (Exception ex)
