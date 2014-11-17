@@ -106,7 +106,7 @@ namespace UIMFLibrary
 	/// <summary>
 	/// The frame parameters.
 	/// </summary>
-	public class FrameParameters
+	public class FrameParameters : ICloneable
 	{
 		#region Fields
 
@@ -485,77 +485,77 @@ namespace UIMFLibrary
 
 		#endregion
 
-		#region Public Methods and Operators
+        #region ICloneable Members
 
-		/// <summary>
-		/// Copy the frame parameters to a target
-		/// </summary>
-		/// <param name="Target">
-		/// Output: target object
-		/// </param>
-		public void CopyTo(out FrameParameters Target)
-		{
-			Target = new FrameParameters();
+        /// <summary>
+        /// Performs a deep copy of the entire object.
+        /// </summary>
+        /// <returns>New Frame Parameter</returns>
+        public object Clone()
+        {
+            var target = new FrameParameters();
 
-			Target.FrameNum = this.FrameNum;
-			Target.StartTime = this.StartTime;
-			Target.Duration = this.Duration;
-			Target.Accumulations = this.Accumulations;
-			Target.FrameType = this.FrameType;
-			Target.Scans = this.Scans;
-			Target.IMFProfile = this.IMFProfile;
-			Target.TOFLosses = this.TOFLosses;
-			Target.AverageTOFLength = this.AverageTOFLength;
-			Target.CalibrationSlope = this.CalibrationSlope;
-			Target.CalibrationIntercept = this.CalibrationIntercept;
-			Target.a2 = this.a2;
-			Target.b2 = this.b2;
-			Target.c2 = this.c2;
-			Target.d2 = this.d2;
-			Target.e2 = this.e2;
-			Target.f2 = this.f2;
-			Target.Temperature = this.Temperature;
-			Target.voltHVRack1 = this.voltHVRack1;
-			Target.voltHVRack2 = this.voltHVRack2;
-			Target.voltHVRack3 = this.voltHVRack3;
-			Target.voltHVRack4 = this.voltHVRack4;
-			Target.voltCapInlet = this.voltCapInlet;
-			Target.voltEntranceHPFIn = this.voltEntranceHPFIn;
-			Target.voltEntranceHPFOut = this.voltEntranceHPFOut;
-			Target.voltEntranceCondLmt = this.voltEntranceCondLmt;
-			Target.voltTrapOut = this.voltTrapOut;
-			Target.voltTrapIn = this.voltTrapIn;
-			Target.voltJetDist = this.voltJetDist;
-			Target.voltQuad1 = this.voltQuad1;
-			Target.voltCond1 = this.voltCond1;
-			Target.voltQuad2 = this.voltQuad2;
-			Target.voltCond2 = this.voltCond2;
-			Target.voltIMSOut = this.voltIMSOut;
-			Target.voltExitHPFIn = this.voltExitHPFIn;
-			Target.voltExitHPFOut = this.voltExitHPFOut;
-			Target.voltExitCondLmt = this.voltExitCondLmt;
-			Target.PressureFront = this.PressureFront;
-			Target.PressureBack = this.PressureBack;
-			Target.MPBitOrder = this.MPBitOrder;
+            target.FrameNum = this.FrameNum;
+            target.StartTime = this.StartTime;
+            target.Duration = this.Duration;
+            target.Accumulations = this.Accumulations;
+            target.FrameType = this.FrameType;
+            target.Scans = this.Scans;
+            target.IMFProfile = this.IMFProfile;
+            target.TOFLosses = this.TOFLosses;
+            target.AverageTOFLength = this.AverageTOFLength;
+            target.CalibrationSlope = this.CalibrationSlope;
+            target.CalibrationIntercept = this.CalibrationIntercept;
+            target.a2 = this.a2;
+            target.b2 = this.b2;
+            target.c2 = this.c2;
+            target.d2 = this.d2;
+            target.e2 = this.e2;
+            target.f2 = this.f2;
+            target.Temperature = this.Temperature;
+            target.voltHVRack1 = this.voltHVRack1;
+            target.voltHVRack2 = this.voltHVRack2;
+            target.voltHVRack3 = this.voltHVRack3;
+            target.voltHVRack4 = this.voltHVRack4;
+            target.voltCapInlet = this.voltCapInlet;
+            target.voltEntranceHPFIn = this.voltEntranceHPFIn;
+            target.voltEntranceHPFOut = this.voltEntranceHPFOut;
+            target.voltEntranceCondLmt = this.voltEntranceCondLmt;
+            target.voltTrapOut = this.voltTrapOut;
+            target.voltTrapIn = this.voltTrapIn;
+            target.voltJetDist = this.voltJetDist;
+            target.voltQuad1 = this.voltQuad1;
+            target.voltCond1 = this.voltCond1;
+            target.voltQuad2 = this.voltQuad2;
+            target.voltCond2 = this.voltCond2;
+            target.voltIMSOut = this.voltIMSOut;
+            target.voltExitHPFIn = this.voltExitHPFIn;
+            target.voltExitHPFOut = this.voltExitHPFOut;
+            target.voltExitCondLmt = this.voltExitCondLmt;
+            target.PressureFront = this.PressureFront;
+            target.PressureBack = this.PressureBack;
+            target.MPBitOrder = this.MPBitOrder;
 
-			if (this.FragmentationProfile != null)
-			{
-				Target.FragmentationProfile = new double[this.FragmentationProfile.Length];
-				Array.Copy(this.FragmentationProfile, Target.FragmentationProfile, this.FragmentationProfile.Length);
-			}
+            if (this.FragmentationProfile != null)
+            {
+                target.FragmentationProfile = new double[this.FragmentationProfile.Length];
+                Array.Copy(this.FragmentationProfile, target.FragmentationProfile, this.FragmentationProfile.Length);
+            }
 
-			Target.HighPressureFunnelPressure = this.HighPressureFunnelPressure;
-			Target.IonFunnelTrapPressure = this.IonFunnelTrapPressure;
-			Target.RearIonFunnelPressure = this.RearIonFunnelPressure;
-			Target.QuadrupolePressure = this.QuadrupolePressure;
-			Target.ESIVoltage = this.ESIVoltage;
-			Target.FloatVoltage = this.FloatVoltage;
-			Target.CalibrationDone = this.CalibrationDone;
-			Target.Decoded = this.Decoded;
-		}
+            target.HighPressureFunnelPressure = this.HighPressureFunnelPressure;
+            target.IonFunnelTrapPressure = this.IonFunnelTrapPressure;
+            target.RearIonFunnelPressure = this.RearIonFunnelPressure;
+            target.QuadrupolePressure = this.QuadrupolePressure;
+            target.ESIVoltage = this.ESIVoltage;
+            target.FloatVoltage = this.FloatVoltage;
+            target.CalibrationDone = this.CalibrationDone;
+            target.Decoded = this.Decoded;
 
-		#endregion
-	}
+            return target;
+        }
+
+        #endregion
+    }
 
 	/// <summary>
 	/// The m z_ calibrator.
