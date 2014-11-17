@@ -41,7 +41,9 @@ namespace UIMFLibrary
 
 		#endregion
 
-		#region Delegates
+		#region Public Events
+
+        public event EventHandler<MessageEventArgs> OnError;
 
 		/// <summary>
 		/// Message event handler.
@@ -52,7 +54,7 @@ namespace UIMFLibrary
 		/// <param name="e">
 		/// Message event args
 		/// </param>
-		public delegate void MessageEventHandler(object sender, MessageEventArgs e);
+        public event EventHandler<MessageEventArgs> Message;
 
 		/// <summary>
 		/// Progress event handler.
@@ -63,26 +65,7 @@ namespace UIMFLibrary
 		/// <param name="e">
 		/// Progress event args
 		/// </param>
-		public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
-
-		#endregion
-
-		#region Public Events
-
-		/// <summary>
-		/// Error event.
-		/// </summary>
-		public event MessageEventHandler ErrorEvent;
-
-		/// <summary>
-		/// Message event.
-		/// </summary>
-		public event MessageEventHandler MessageEvent;
-
-		/// <summary>
-		/// Progress event.
-		/// </summary>
-		public event ProgressEventHandler ProgressEvent;
+        public event EventHandler<ProgressEventArgs> OnProgress;
 
 		#endregion
 
@@ -151,9 +134,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnErrorMessage(MessageEventArgs e)
 		{
-			if (this.ErrorEvent != null)
+            var errorEvent = this.OnError;
+            if (errorEvent != null)
 			{
-				this.ErrorEvent(this, e);
+                errorEvent(this, e);
 			}
 		}
 
@@ -165,9 +149,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnMessage(MessageEventArgs e)
 		{
-			if (this.MessageEvent != null)
+            var messageEvent = this.Message;
+            if (messageEvent != null)
 			{
-				this.MessageEvent(this, e);
+                messageEvent(this, e);
 			}
 		}
 
@@ -179,9 +164,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnProgressUpdate(ProgressEventArgs e)
 		{
-			if (this.ProgressEvent != null)
+            var progressUpdate = this.OnProgress;
+            if (progressUpdate != null)
 			{
-				this.ProgressEvent(this, e);
+                progressUpdate(this, e);
 			}
 		}
 
