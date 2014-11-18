@@ -15,5 +15,10 @@ namespace UIMFLibrary
             Definition = paramDef;
             Value = value;
         }
+
+        public override string ToString()
+        {
+            return Value ?? Definition.ToString();
+        }
     }
 }

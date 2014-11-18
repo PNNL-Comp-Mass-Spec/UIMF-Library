@@ -158,7 +158,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public override string ToString()
         {
-            return ParamType + ": " + ParamType + " (" + DataType + ")";
+            return ParamType + " (" + DataType + ")";
         }
 
     }

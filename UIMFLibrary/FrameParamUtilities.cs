@@ -223,14 +223,13 @@ namespace UIMFLibrary
             return frameParams;
         }
 
-        public static Dictionary<FrameParamKeyType, FrameParam> ConvertStringParamsToParamDefs(Dictionary<FrameParamKeyType, string> frameParamsByType)
+        public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
         {
-            var frameParams = new Dictionary<FrameParamKeyType, FrameParam>();
+            var frameParams = new FrameParams();
 
             foreach (var paramItem in frameParamsByType)
             {
-                var paramDef = GetParamDefByType(paramItem.Key);
-                frameParams.Add(paramItem.Key, new FrameParam(paramDef, paramItem.Value));
+                frameParams.AddUpdateValue(paramItem.Key, paramItem.Value);
             }
 
             return frameParams;
@@ -246,63 +245,63 @@ namespace UIMFLibrary
             return "System.Object";
         }
 
-        public static FrameParameters GetLegacyFrameParameters(Dictionary<FrameParamKeyType, FrameParam> frameParams)
+        public static FrameParameters GetLegacyFrameParameters(FrameParams frameParams)
         {
-            var frametype = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.FrameType, 0);
+            var frametype = frameParams.FrameType;
 
             // Populate legacyFrameParams using dictionary frameParams
             var legacyFrameParams = new FrameParameters
             {
-                StartTime = GetFrameParamOrDefault(frameParams, FrameParamKeyType.StartTimeMinutes, 0),
-                Duration = GetFrameParamOrDefault(frameParams, FrameParamKeyType.DurationSeconds, 0),
-                Accumulations = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Accumulations, 0),
+                StartTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
+                Duration = frameParams.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
+                Accumulations = frameParams.GetValueInt32(FrameParamKeyType.Accumulations, 0),
                 FrameType = (DataReader.FrameType)frametype,
-                Decoded = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Decoded, 0),
-                CalibrationDone = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.CalibrationDone, 0),
-                Scans = GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.Scans, 0),
-                IMFProfile = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
-                MPBitOrder = (short)GetFrameParamOrDefaultInt32(frameParams, FrameParamKeyType.MPBitOrder, 0),
-                TOFLosses = GetFrameParamOrDefault(frameParams, FrameParamKeyType.TOFLosses, 0),
-                AverageTOFLength = GetFrameParamOrDefault(frameParams, FrameParamKeyType.AverageTOFLength, 0),
-                CalibrationSlope = GetFrameParamOrDefault(frameParams, FrameParamKeyType.CalibrationSlope, 0),
-                CalibrationIntercept = GetFrameParamOrDefault(frameParams, FrameParamKeyType.CalibrationIntercept, 0),
-                a2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficienta2, 0),
-                b2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientb2, 0),
-                c2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientc2, 0),
-                d2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientd2, 0),
-                e2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficiente2, 0),
-                f2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.MassErrorCoefficientf2, 0),
-                Temperature = GetFrameParamOrDefault(frameParams, FrameParamKeyType.AmbientTemperature, 0),
-                voltHVRack1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack1, 0),
-                voltHVRack2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack2, 0),
-                voltHVRack3 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack3, 0),
-                voltHVRack4 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltHVRack4, 0),
-                voltCapInlet = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCapInlet, 0),
-                voltEntranceHPFIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceHPFIn, 0),
-                voltEntranceHPFOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceHPFOut, 0),
-                voltEntranceCondLmt = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltEntranceCondLmt, 0),
-                voltTrapOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltTrapOut, 0),
-                voltTrapIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltTrapIn, 0),
-                voltJetDist = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltJetDist, 0),
-                voltQuad1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltQuad1, 0),
-                voltCond1 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCond1, 0),
-                voltQuad2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltQuad2, 0),
-                voltCond2 = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltCond2, 0),
-                voltIMSOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltIMSOut, 0),
-                voltExitHPFIn = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitHPFIn, 0),
-                voltExitHPFOut = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitHPFOut, 0),
-                voltExitCondLmt = GetFrameParamOrDefault(frameParams, FrameParamKeyType.VoltExitCondLmt, 0),
-                PressureFront = GetFrameParamOrDefault(frameParams, FrameParamKeyType.PressureFront, 0),
-                PressureBack = GetFrameParamOrDefault(frameParams, FrameParamKeyType.PressureBack, 0),
-                HighPressureFunnelPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.HighPressureFunnelPressure, 0),
-                IonFunnelTrapPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.IonFunnelTrapPressure, 0),
-                RearIonFunnelPressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.RearIonFunnelPressure, 0),
-                QuadrupolePressure = GetFrameParamOrDefault(frameParams, FrameParamKeyType.QuadrupolePressure, 0),
-                ESIVoltage = GetFrameParamOrDefault(frameParams, FrameParamKeyType.ESIVoltage, 0),
-                FloatVoltage = GetFrameParamOrDefault(frameParams, FrameParamKeyType.FloatVoltage, 0)
+                Decoded = frameParams.GetValueInt32(FrameParamKeyType.Decoded, 0),
+                CalibrationDone = frameParams.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
+                Scans = frameParams.Scans,
+                IMFProfile = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
+                MPBitOrder = (short)frameParams.GetValueInt32(FrameParamKeyType.MPBitOrder, 0),
+                TOFLosses = frameParams.GetValueDouble(FrameParamKeyType.TOFLosses, 0),
+                AverageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0),
+                CalibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope, 0),
+                CalibrationIntercept = frameParams.GetValueDouble(FrameParamKeyType.CalibrationIntercept, 0),
+                a2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficienta2, 0),
+                b2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientb2, 0),
+                c2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientc2, 0),
+                d2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientd2, 0),
+                e2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficiente2, 0),
+                f2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientf2, 0),
+                Temperature = frameParams.GetValueDouble(FrameParamKeyType.AmbientTemperature, 0),
+                voltHVRack1 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack1, 0),
+                voltHVRack2 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack2, 0),
+                voltHVRack3 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack3, 0),
+                voltHVRack4 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack4, 0),
+                voltCapInlet = frameParams.GetValueDouble(FrameParamKeyType.VoltCapInlet, 0),
+                voltEntranceHPFIn = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceHPFIn, 0),
+                voltEntranceHPFOut = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceHPFOut, 0),
+                voltEntranceCondLmt = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceCondLmt, 0),
+                voltTrapOut = frameParams.GetValueDouble(FrameParamKeyType.VoltTrapOut, 0),
+                voltTrapIn = frameParams.GetValueDouble(FrameParamKeyType.VoltTrapIn, 0),
+                voltJetDist = frameParams.GetValueDouble(FrameParamKeyType.VoltJetDist, 0),
+                voltQuad1 = frameParams.GetValueDouble(FrameParamKeyType.VoltQuad1, 0),
+                voltCond1 = frameParams.GetValueDouble(FrameParamKeyType.VoltCond1, 0),
+                voltQuad2 = frameParams.GetValueDouble(FrameParamKeyType.VoltQuad2, 0),
+                voltCond2 = frameParams.GetValueDouble(FrameParamKeyType.VoltCond2, 0),
+                voltIMSOut = frameParams.GetValueDouble(FrameParamKeyType.VoltIMSOut, 0),
+                voltExitHPFIn = frameParams.GetValueDouble(FrameParamKeyType.VoltExitHPFIn, 0),
+                voltExitHPFOut = frameParams.GetValueDouble(FrameParamKeyType.VoltExitHPFOut, 0),
+                voltExitCondLmt = frameParams.GetValueDouble(FrameParamKeyType.VoltExitCondLmt, 0),
+                PressureFront = frameParams.GetValueDouble(FrameParamKeyType.PressureFront, 0),
+                PressureBack = frameParams.GetValueDouble(FrameParamKeyType.PressureBack, 0),
+                HighPressureFunnelPressure = frameParams.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0),
+                IonFunnelTrapPressure = frameParams.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0),
+                RearIonFunnelPressure = frameParams.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0),
+                QuadrupolePressure = frameParams.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0),
+                ESIVoltage = frameParams.GetValueDouble(FrameParamKeyType.ESIVoltage, 0),
+                FloatVoltage = frameParams.GetValueDouble(FrameParamKeyType.FloatVoltage, 0)
             };
 
-            var fragmentationProfile = GetFrameParamOrDefault(frameParams, FrameParamKeyType.FragmentationProfile, String.Empty);
+            var fragmentationProfile = frameParams.GetValue(FrameParamKeyType.FragmentationProfile, String.Empty);
 
             // ToDo: xxx implement this conversion xxx
             //legacyFrameParams.FragmentationProfile = Byte
@@ -666,95 +665,7 @@ namespace UIMFLibrary
                     throw new ArgumentOutOfRangeException("paramType", "Unrecognized enum for paramType: " + (int)paramType);
             }
 
-        }
-
-        public static string GetFrameParamOrDefault(
-            Dictionary<FrameParamKeyType, FrameParam> frameParams,
-            FrameParamKeyType paramType,
-            string defaultValue)
-        {
-            bool paramNotDefined;
-            return GetFrameParamOrDefault(frameParams, paramType, defaultValue, out paramNotDefined);
-        }
-
-        public static string GetFrameParamOrDefault(
-            Dictionary<FrameParamKeyType, FrameParam> frameParams,
-            FrameParamKeyType paramType,
-            string defaultValue,
-            out bool paramNotDefined)
-        {
-            paramNotDefined = true;
-
-            FrameParam paramEntry;
-            if (frameParams.TryGetValue(paramType, out paramEntry))
-            {
-                paramNotDefined = false;
-                return paramEntry.Value;
-            }
-
-            return defaultValue;
-        }
-
-        public static double GetFrameParamOrDefault(
-            Dictionary<FrameParamKeyType, FrameParam> frameParams,
-            FrameParamKeyType paramType,
-            double defaultValue)
-        {
-            bool paramNotDefined;
-            return GetFrameParamOrDefault(frameParams, paramType, defaultValue, out paramNotDefined);
-        }
-
-        public static double GetFrameParamOrDefault(
-            Dictionary<FrameParamKeyType, FrameParam> frameParams,
-            FrameParamKeyType paramType,
-            double defaultValue,
-            out bool paramNotDefined)
-        {
-            paramNotDefined = true;
-
-            FrameParam paramEntry;
-            if (frameParams.TryGetValue(paramType, out paramEntry))
-            {
-                paramNotDefined = false;
-
-                double result;
-                if (Double.TryParse(paramEntry.Value, out result))
-                    return result;
-            }
-
-            return defaultValue;
-        }
-
-        public static int GetFrameParamOrDefaultInt32(
-            Dictionary<FrameParamKeyType, FrameParam> frameParams,
-            FrameParamKeyType paramType,
-            int defaultValue)
-        {
-            bool paramNotDefined;
-            return GetFrameParamOrDefaultInt32(frameParams, paramType, defaultValue, out paramNotDefined);
-        }
-
-        public static int GetFrameParamOrDefaultInt32(
-           Dictionary<FrameParamKeyType, FrameParam> frameParams,
-           FrameParamKeyType paramType,
-           int defaultValue,
-           out bool paramNotDefined)
-        {
-            paramNotDefined = true;
-
-            FrameParam paramEntry;
-            if (frameParams.TryGetValue(paramType, out paramEntry))
-            {
-                paramNotDefined = false;
-
-                int result;
-                if (Int32.TryParse(paramEntry.Value, out result))
-                    return result;
-            }
-
-            return defaultValue;
-
-        }
+        }        
 
         #region "Private methods"
 

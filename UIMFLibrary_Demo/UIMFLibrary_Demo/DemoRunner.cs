@@ -46,12 +46,12 @@ namespace UIMFLibrary_Demo
             //--------------------------------------------------------------------------Get Frame parameters
 
             const int testFrame = 500;
-            FrameParameters fp = datareader.GetFrameParameters(testFrame);
+            FrameParams frameParams = datareader.GetFrameParams(testFrame);
 
             reportProgress();
             reportProgress();
             reportProgress("Displaying frame parameters for frame " + testFrame);
-            reportProgress(TestUtilities.FrameParametersToString(fp));
+            reportProgress(TestUtilities.FrameParametersToString(frameParams));
 
             //--------------------------------------------------------------------------Get mass spectrum
             const int frameLower = 500;

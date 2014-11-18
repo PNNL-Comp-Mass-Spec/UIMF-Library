@@ -143,7 +143,7 @@ namespace UIMFLibrary_Demo
 
         public static string FrameParametersToString(FrameParameters fp)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             string separator = Environment.NewLine;
 
@@ -174,9 +174,43 @@ namespace UIMFLibrary_Demo
             sb.Append("IMF profile = \t" + fp.IMFProfile);
 
             return sb.ToString();
-
         }
 
+        public static string FrameParametersToString(FrameParams frameParams)
+        {
+            var sb = new StringBuilder();
+
+            string separator = Environment.NewLine;
+
+            sb.Append("avg TOF length = \t" + frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength));
+            sb.Append(separator);
+            sb.Append("cal intercept = \t" + frameParams.GetValueDouble(FrameParamKeyType.CalibrationIntercept));
+            sb.Append(separator);
+            sb.Append("cal slope = \t" + frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope));
+            sb.Append(separator);
+            sb.Append("frame type = \t" + frameParams.GetValueDouble(FrameParamKeyType.FrameType));
+            sb.Append(separator);
+            sb.Append("pressure back = \t" + frameParams.GetValueDouble(FrameParamKeyType.PressureBack));
+            sb.Append(separator);
+            sb.Append("pressure front = \t" + frameParams.GetValueDouble(FrameParamKeyType.PressureFront));
+            sb.Append(separator);
+            sb.Append("high pressure funnel pressure= \t" + frameParams.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure));
+            sb.Append(separator);
+            sb.Append("ion funnel trap pressure= \t" + frameParams.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure));
+            sb.Append(separator);
+            sb.Append("quadrupole pressure = \t" + frameParams.GetValueDouble(FrameParamKeyType.QuadrupolePressure));
+            sb.Append(separator);
+            sb.Append("rear ion funnel pressure = \t" + frameParams.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure));
+            sb.Append(separator);
+            sb.Append("start time = \t" + frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes));
+            sb.Append(separator);
+            sb.Append("num scans = \t" + frameParams.GetValueInt32(FrameParamKeyType.Scans));
+            sb.Append(separator);
+            sb.Append("IMF profile = \t" + frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
+
+            return sb.ToString();
+
+        }
 
 
 

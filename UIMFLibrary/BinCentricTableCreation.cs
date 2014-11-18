@@ -41,48 +41,19 @@ namespace UIMFLibrary
 
 		#endregion
 
-		#region Delegates
+		#region Public Events
+
+        public event EventHandler<MessageEventArgs> OnError;
 
 		/// <summary>
 		/// Message event handler.
 		/// </summary>
-		/// <param name="sender">
-		/// Message sender
-		/// </param>
-		/// <param name="e">
-		/// Message event args
-		/// </param>
-		public delegate void MessageEventHandler(object sender, MessageEventArgs e);
+        public event EventHandler<MessageEventArgs> Message;
 
 		/// <summary>
 		/// Progress event handler.
 		/// </summary>
-		/// <param name="sender">
-		/// Progress sender
-		/// </param>
-		/// <param name="e">
-		/// Progress event args
-		/// </param>
-		public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
-
-		#endregion
-
-		#region Public Events
-
-		/// <summary>
-		/// Error event.
-		/// </summary>
-		public event MessageEventHandler ErrorEvent;
-
-		/// <summary>
-		/// Message event.
-		/// </summary>
-		public event MessageEventHandler MessageEvent;
-
-		/// <summary>
-		/// Progress event.
-		/// </summary>
-		public event ProgressEventHandler ProgressEvent;
+        public event EventHandler<ProgressEventArgs> OnProgress;
 
 		#endregion
 
@@ -137,6 +108,7 @@ namespace UIMFLibrary
 			{
 				File.Delete(temporaryDatabaseLocation);
 			}
+			// ReSharper disable once EmptyGeneralCatchClause
 			catch
 			{
 				// Ignore deletion errors
@@ -151,9 +123,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnErrorMessage(MessageEventArgs e)
 		{
-			if (this.ErrorEvent != null)
+            var errorEvent = this.OnError;
+            if (errorEvent != null)
 			{
-				this.ErrorEvent(this, e);
+                errorEvent(this, e);
 			}
 		}
 
@@ -165,9 +138,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnMessage(MessageEventArgs e)
 		{
-			if (this.MessageEvent != null)
+            var messageEvent = this.Message;
+            if (messageEvent != null)
 			{
-				this.MessageEvent(this, e);
+                messageEvent(this, e);
 			}
 		}
 
@@ -179,9 +153,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void OnProgressUpdate(ProgressEventArgs e)
 		{
-			if (this.ProgressEvent != null)
+            var progressUpdate = this.OnProgress;
+            if (progressUpdate != null)
 			{
-				this.ProgressEvent(this, e);
+                progressUpdate(this, e);
 			}
 		}
 
@@ -197,7 +172,7 @@ namespace UIMFLibrary
 		/// </param>
 		private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
 		{
-			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
+			using (var command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
 			{
 				command.ExecuteNonQuery();
 			}
@@ -211,7 +186,7 @@ namespace UIMFLibrary
 		/// </param>
 		private void CreateBinIntensitiesTable(SQLiteConnection uimfWriterConnection)
 		{
-			using (SQLiteCommand command = new SQLiteCommand(CREATE_BINS_TABLE, uimfWriterConnection))
+			using (var command = new SQLiteCommand(CREATE_BINS_TABLE, uimfWriterConnection))
 			{
 				command.ExecuteNonQuery();
 			}
@@ -313,13 +288,13 @@ namespace UIMFLibrary
 		/// </exception>
 		private string CreateTemporaryDatabase(DataReader uimfReader, string workingDirectory)
 		{
-			FileInfo uimfFileInfo = new FileInfo(uimfReader.UimfFilePath);
+			var uimfFileInfo = new FileInfo(uimfReader.UimfFilePath);
 
 			// Get location of new SQLite file
 			string sqliteFileName = uimfFileInfo.Name.Replace(".UIMF", "_temporary.db3").Replace(".uimf", "_temporary.db3");
-			FileInfo sqliteFile = new FileInfo(Path.Combine(workingDirectory, sqliteFileName));
+			var sqliteFile = new FileInfo(Path.Combine(workingDirectory, sqliteFileName));
 
-			if (uimfFileInfo.FullName.ToLower() == sqliteFile.FullName.ToLower())
+			if (String.Equals(uimfFileInfo.FullName, sqliteFile.FullName, StringComparison.CurrentCultureIgnoreCase))
 			{
 				throw new IOException(
 					"Cannot add bin-centric tables, temporary SqLite file has the same name as the source SqLite file: "
@@ -364,8 +339,8 @@ namespace UIMFLibrary
 						string progressMessage = "Processing Frame: " + frameNumber + " / " + numFrames;
 						Console.WriteLine(DateTime.Now + " - " + progressMessage);
 
-						FrameParameters frameParameters = uimfReader.GetFrameParameters(frameNumber);
-						int numScans = frameParameters.Scans;
+                        var frameParams = uimfReader.GetFrameParams(frameNumber);
+                        int numScans = frameParams.Scans;
 
 						// Get data from UIMF file
 						Dictionary<int, int>[] frameBinData = uimfReader.GetIntensityBlockOfFrame(frameNumber);
@@ -519,7 +494,9 @@ namespace UIMFLibrary
 			DataReader uimfReader)
 		{
 			int numBins = uimfReader.GetGlobalParameters().Bins;
-			int numImsScans = uimfReader.GetFrameParameters(1).Scans;
+
+            var frameParams = uimfReader.GetFrameParams(1);
+            int numImsScans = frameParams.Scans;
 
 			string targetFile = uimfWriterConnection.ConnectionString;
 			int charIndex = targetFile.IndexOf(";");
@@ -534,7 +511,7 @@ namespace UIMFLibrary
 			// Create new table in the UIMF file that will be used to store bin-centric data
 			this.CreateBinIntensitiesTable(uimfWriterConnection);
 
-			using (SQLiteCommand insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
+			using (var insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
 			{
 				insertCommand.Prepare();
 
@@ -581,12 +558,12 @@ namespace UIMFLibrary
 			int binNumber, 
 			int numImsScans)
 		{
-			List<int> runLengthZeroEncodedData = new List<int>();
+			var runLengthZeroEncodedData = new List<int>();
 			insertCommand.Parameters.Clear();
 
 			string query = this.GetReadSingleBinQuery(binNumber);
 
-			using (SQLiteCommand readCommand = new SQLiteCommand(query, inConnection))
+			using (var readCommand = new SQLiteCommand(query, inConnection))
 			{
 				using (SQLiteDataReader reader = readCommand.ExecuteReader())
 				{
@@ -620,7 +597,7 @@ namespace UIMFLibrary
 			if (dataCount > 0)
 			{
 				// byte[] compressedRecord = new byte[dataCount * 4 * 5];
-				byte[] byteBuffer = new byte[dataCount * 4];
+				var byteBuffer = new byte[dataCount * 4];
 				Buffer.BlockCopy(runLengthZeroEncodedData.ToArray(), 0, byteBuffer, 0, dataCount * 4);
 
 				// int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, dataCount * 4, ref compressedRecord, compressedRecord.Length);

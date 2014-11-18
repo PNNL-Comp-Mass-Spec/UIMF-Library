@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using UIMFLibrary;
 
 namespace UIMFLibrary_Demo
 {
     static class Program
     {
-        private const bool TEST_READER = false;
+        private const bool TEST_READER = true;
 
         private static void Main(string[] args)
         {
@@ -136,6 +137,8 @@ namespace UIMFLibrary_Demo
                             AverageTOFLength = 163366.6666666667,
                             StartTime = frameNum * SECONDS_PER_FRAME
                         };
+
+                        var fpTarget = fp.Copy();
 
                         writer.InsertFrame(fp);
 
