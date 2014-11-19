@@ -2,10 +2,10 @@
 
 namespace UIMFLibrary
 {
-    #region Parameter Name Enums
+    #region Frame Parameter Enum
 
     /// <summary>
-    /// Known param key types
+    /// Known frame parameters
     /// </summary>
     public enum FrameParamKeyType
     {
@@ -63,7 +63,7 @@ namespace UIMFLibrary
     #endregion
 
     /// <summary>
-    /// Frame parameter metadata class
+    /// Frame parameter definition
     /// </summary>
     public class FrameParamDef
     {
@@ -93,7 +93,7 @@ namespace UIMFLibrary
         #endregion
      
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameParamDef"/> class. 
+        /// Constructor
         /// </summary>
         /// <param name="paramType">Strongly typed enum of the new parameter</param>
         public FrameParamDef(FrameParamKeyType paramType)
@@ -107,11 +107,11 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameParamDef"/> class. 
+        /// Constructor
         /// </summary>
         /// <param name="paramType">Strongly typed enum of the new parameter</param>
         /// <param name="name">Parameter name</param>
-        /// <param name="dataType">Parameter .NET data type</param>
+        /// <param name="dataType">Parameter .NET data type (as a string)</param>
         /// <param name="description">Parameter description</param>
         /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         public FrameParamDef(FrameParamKeyType paramType, string name, string dataType, string description = "")
@@ -125,7 +125,7 @@ namespace UIMFLibrary
 
                 if (DataType == null)
                 {
-                    dataType = FrameParamUtilities.GetDataTypeFromAlias(dataType);
+                    dataType = GlobalParamUtilities.GetDataTypeFromAlias(dataType);
 
                     DataType = Type.GetType(dataType) ?? typeof(object);
                 }
@@ -138,6 +138,14 @@ namespace UIMFLibrary
             Description = description;
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="paramType">Strongly typed enum of the new parameter</param>
+        /// <param name="name">Parameter name</param>
+        /// <param name="dataType">Parameter .NET data type (as a Type)</param>
+        /// <param name="description">Parameter description</param>
+        /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         public FrameParamDef(FrameParamKeyType paramType, string name, Type dataType, string description = "")
         {
             ParamType = paramType;
@@ -146,6 +154,10 @@ namespace UIMFLibrary
             Description = description;
         }
 
+        /// <summary>
+        /// Clone this frame parameter definition (deep copy)
+        /// </summary>
+        /// <returns></returns>
         public FrameParamDef CopyTo()
         {
             var paramDefCopy = new FrameParamDef(ParamType, Name, DataType, Description);
@@ -153,7 +165,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Override ToString()
+        /// Customized ToString()
         /// </summary>
         /// <returns></returns>
         public override string ToString()

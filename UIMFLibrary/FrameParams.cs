@@ -10,17 +10,34 @@ namespace UIMFLibrary
     public class FrameParams
     {
         #region Member Variables
+
+        /// <summary>
+        /// Frame parameters dictionary
+        /// </summary>
+        /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
         private readonly Dictionary<FrameParamKeyType, FrameParam> mFrameParameters;
-#endregion
+
+        #endregion
 
         #region Properties
-        public Dictionary<FrameParamKeyType, FrameParam> Values 
+
+        /// <summary>
+        /// Frame parameters dictionary
+        /// </summary>
+        /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
+        public Dictionary<FrameParamKeyType, FrameParam> Values
         {
             get { return mFrameParameters; }
         }
 
-        public double CalibrationSlope {
-            get {
+        /// <summary>
+        /// Calibration slope
+        /// </summary>
+        /// <remarks>Returns 0 if not defined</remarks>
+        public double CalibrationSlope
+        {
+            get
+            {
                 if (!HasParameter(FrameParamKeyType.CalibrationSlope))
                     return 0;
 
@@ -28,6 +45,10 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Calibration intercept
+        /// </summary>
+        /// <remarks>Returns 0 if not defined</remarks>
         public double CalibrationIntercept
         {
             get
@@ -38,6 +59,11 @@ namespace UIMFLibrary
                 return GetValueDouble(FrameParamKeyType.CalibrationIntercept);
             }
         }
+
+        /// <summary>
+        /// Frame type
+        /// </summary>
+        /// <remarks>Returns MS1 if not defined</remarks>
         public DataReader.FrameType FrameType
         {
             get
@@ -56,6 +82,10 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Scans per frame
+        /// </summary>
+        /// <remarks>Returns 0 if not defined</remarks>
         public int Scans
         {
             get
@@ -77,16 +107,31 @@ namespace UIMFLibrary
             mFrameParameters = new Dictionary<FrameParamKeyType, FrameParam>();
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (double)</param>
         public void AddUpdateValue(FrameParamKeyType paramType, double value)
         {
             AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (int)</param>
         public void AddUpdateValue(FrameParamKeyType paramType, int value)
         {
             AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (string)</param>
         public void AddUpdateValue(FrameParamKeyType paramType, string value)
         {
             FrameParam paramEntry;
@@ -101,16 +146,31 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
+        /// <param name="value">Value (double)</param>
         public void AddUpdateValue(FrameParamDef paramDef, double value)
         {
             AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
+        /// <param name="value">Value (int)</param>
         public void AddUpdateValue(FrameParamDef paramDef, int value)
         {
             AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
+        /// <param name="value">Value (string)</param>
         public void AddUpdateValue(FrameParamDef paramDef, string value)
         {
             FrameParam paramEntry;
@@ -124,12 +184,24 @@ namespace UIMFLibrary
                 mFrameParameters.Add(paramDef.ParamType, paramEntry);
             }
         }
-        
+
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <returns>Value (string)</returns>
+        /// <remarks>Returns an empty string if not defined</remarks>
         public string GetValue(FrameParamKeyType paramType)
         {
             return GetValue(paramType, string.Empty);
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (string)</returns>
         public string GetValue(FrameParamKeyType paramType, string valueIfMissing)
         {
             FrameParam paramEntry;
@@ -141,11 +213,23 @@ namespace UIMFLibrary
             return valueIfMissing;
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <returns>Value (double)</returns>
+        /// <remarks>Returns 0 if not defined</remarks>
         public double GetValueDouble(FrameParamKeyType paramType)
         {
             return GetValueDouble(paramType, 0.0);
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (double)</returns>
         public double GetValueDouble(FrameParamKeyType paramType, double valueIfMissing)
         {
             FrameParam paramEntry;
@@ -159,11 +243,23 @@ namespace UIMFLibrary
             return valueIfMissing;
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <returns>Value (int)</returns>
+        /// <remarks>Returns 0 if not defined</remarks>
         public int GetValueInt32(FrameParamKeyType paramType)
         {
             return GetValueInt32(paramType, 0);
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (int)</returns>
         public int GetValueInt32(FrameParamKeyType paramType, int valueIfMissing)
         {
             FrameParam paramEntry;
@@ -177,6 +273,11 @@ namespace UIMFLibrary
             return valueIfMissing;
         }
 
+        /// <summary>
+        /// Lookup whether or not a frame parameter is defined
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <returns>True if defined, otherwise false</returns>
         public bool HasParameter(FrameParamKeyType paramType)
         {
             return mFrameParameters.ContainsKey(paramType);

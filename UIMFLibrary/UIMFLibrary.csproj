@@ -140,6 +140,9 @@
     <Compile Include="FrameParamDef.cs" />
     <Compile Include="FrameParams.cs" />
     <Compile Include="FrameParamUtilities.cs" />
+    <Compile Include="GlobalParam.cs" />
+    <Compile Include="GlobalParams.cs" />
+    <Compile Include="GlobalParamUtilities.cs" />
     <Compile Include="IntensityBinConverterInt32.cs" />
     <Compile Include="ClassDefinitions.cs">
       <SubType>Code</SubType>
@@ -153,6 +156,7 @@
     <Compile Include="IntensityPoint.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="LZFCompressionUtil.cs" />
+    <Compile Include="MzCalibrator.cs" />
     <Compile Include="SpectrumCache.cs" />
     <Compile Include="UIMFDataReader.cs">
       <SubType>Code</SubType>

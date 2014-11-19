@@ -7,19 +7,19 @@
 namespace UIMFLibrary
 {
 	/// <summary>
-	/// Defines the frame type info.
+	/// Class for tracking frame index of each frame number defined in a .UIMF file
 	/// </summary>
-	internal class FrameTypeInfo
+	internal class FrameSetContainer
 	{
 		#region Constructors and Destructors
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="FrameTypeInfo"/> class.
+		/// Constructor
 		/// </summary>
 		/// <param name="numFramesInFile">
 		/// Number of frames in the file.
 		/// </param>
-		public FrameTypeInfo(int numFramesInFile)
+		public FrameSetContainer(int numFramesInFile)
 		{
 			this.NumFrames = 0;
 			this.FrameIndexes = new int[numFramesInFile + 1];
@@ -30,7 +30,7 @@ namespace UIMFLibrary
 		#region Public Properties
 
 		/// <summary>
-		/// Gets the frame indexes.
+		/// Mapping between frame number and frame index
 		/// </summary>
 		public int[] FrameIndexes { get; private set; }
 

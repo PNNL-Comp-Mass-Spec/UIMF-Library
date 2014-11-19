@@ -44,10 +44,16 @@ namespace UIMFLibrary
         private SQLiteCommand m_dbCommandInsertFrameParamValue;
 
         /// <summary>
+        /// Command to insert a global parameter value
+        /// </summary>
+        private SQLiteCommand m_dbCommandInsertGlobalParamValue;
+
+
+        /// <summary>
         /// Command to insert a scan
         /// </summary>
         private SQLiteCommand m_dbCommandInsertScan;
-    
+
         /// <summary>
         /// Connection to the database
         /// </summary>
@@ -61,7 +67,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Global parameters object
         /// </summary>
-        private GlobalParameters m_globalParameters;
+        // Obsolete: private GlobalParameters m_globalParameters;
+        private readonly GlobalParams m_globalParameters;
 
         #endregion
 
@@ -91,9 +98,14 @@ namespace UIMFLibrary
 
                 PrepareInsertFrameParamKey();
                 PrepareInsertFrameParamValue();
+                PrepareInsertGlobalParamValue();
                 PrepareInsertScan();
 
                 m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
+                m_globalParameters = new GlobalParams();
+
+                // If table Global_Parameters exists and table Global_Params does not exist, then create Global_Params using Global_Parameters
+                ConvertLegacyGlobalParameters();
 
                 // If table Frame_Parameters exists and table Frame_Params does not exist, then create Frame_Params using Frame_Parameters
                 ConvertLegacyFrameParameters();
@@ -113,7 +125,7 @@ namespace UIMFLibrary
             {
                 if (DataReader.TableExists(m_dbConnection, "Frame_Params"))
                 {
-                    // Assume that the parameters have already been converted
+                    // Assume that the frame parameters have already been converted
                     // Nothing to do
                     return;
                 }
@@ -123,8 +135,6 @@ namespace UIMFLibrary
                     // Nothing to do
                     return;
                 }
-
-                // TODO xxx Need to Code This
 
                 // Keys in this array are frame number, values are the frame parameters
                 var cachedFrameParams = new Dictionary<int, FrameParams>();
@@ -142,7 +152,10 @@ namespace UIMFLibrary
 
                 }
 
+                // Create the Frame_Param_Keys and Frame_Params tables
                 CreateFrameParamsTables();
+
+                // Store the frame parameters
                 foreach (var frameParamsEntry in cachedFrameParams)
                 {
                     var frameParams = frameParamsEntry.Value;
@@ -155,6 +168,56 @@ namespace UIMFLibrary
 
                     InsertFrame(frameParamsEntry.Key, frameParamsLite);
                 }
+
+                FlushUimf();
+
+            }
+            catch (Exception ex)
+            {
+                ReportError("Exception creating the Frame_Params table using existing table Frame_Parameters: " + ex.Message, ex);
+                throw;
+            }
+
+        }
+
+        private void ConvertLegacyGlobalParameters()
+        {
+            try
+            {
+                if (DataReader.TableExists(m_dbConnection, "Global_Params"))
+                {
+                    // Assume that the global parameters have already been converted
+                    // Nothing to do
+                    return;
+                }
+
+                if (!DataReader.TableExists(m_dbConnection, "Global_Parameters"))
+                {
+                    // Nothing to do
+                    return;
+                }
+
+                // Keys in this array are frame number, values are the frame parameters
+                GlobalParams cachedGlobalParams = null;
+
+                // Read and cache the legacy global parameters
+                using (var reader = new UIMFLibrary.DataReader(m_FilePath))
+                {
+                    cachedGlobalParams = reader.GetGlobalParams();                 
+                }
+
+                // Create the Global_Params table
+                CreateGlobalParamsTable();
+
+                // Store the global parameters
+                foreach (var globalParam in cachedGlobalParams.Values)
+                {
+                    var currentParam = globalParam.Value;
+
+                    AddUpdateGlobalParameter(currentParam.ParamType, currentParam.Value);                   
+                }
+
+                FlushUimf();
 
             }
             catch (Exception ex)
@@ -229,41 +292,14 @@ namespace UIMFLibrary
                 cmdPostLogEntry.ExecuteNonQuery();
             }
         }
-
-        /// <summary>
-        /// Add a column to the Frame_Parameters table
-        /// </summary>
-        /// <param name="parameterName">
-        /// </param>
-        /// <param name="parameterType">
-        /// </param>
-        /// <remarks>
-        /// The new column will have Null values for all existing rows
-        /// </remarks>
-        public void AddFrameParameter(string parameterName, string parameterType)
-        {
-            try
-            {
-                using (var dbCommand = m_dbConnection.CreateCommand())
-                {
-                    dbCommand.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " +
-                                                  parameterType;
-                    dbCommand.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error adding parameter " + parameterName + " to the Frame_Parameters table:" +
-                                  ex.Message);
-            }
-        }
+        
 
         /// <summary>
         /// Add or update a frame parameter entry in the Frame_Params table
         /// </summary>
         /// <param name="frameNum">Frame number</param>
-        /// <param name="paramKeyType">Frame number</param>
-        /// <param name="paramValue">Frame number</param>
+        /// <param name="paramKeyType">Parameter type</param>
+        /// <param name="paramValue">Parameter value</param>
         public void AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
         {
             // Make sure the Frame_Param_Keys table contains key paramKeyType
@@ -279,8 +315,9 @@ namespace UIMFLibrary
 
                 using (var dbCommand = m_dbConnection.CreateCommand())
                 {
-                    dbCommand.CommandText = "UPDATE Frame_Params SET ParamValue = '" + paramValue + "' " +
-                                                  "WHERE FrameNum = " + frameNum + " AND ParamID = " + (int)paramKeyType;
+                    dbCommand.CommandText = "UPDATE Frame_Params " +
+                                            "SET ParamValue = '" + paramValue + "' " +
+                                            "WHERE FrameNum = " + frameNum + " AND ParamID = " + (int)paramKeyType;
                     updateCount = dbCommand.ExecuteNonQuery();
 
                 }
@@ -302,6 +339,47 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Add or update a global parameter
+        /// </summary>
+        /// <param name="paramKeyType">Parameter type</param>
+        /// <param name="paramValue">Parameter value</param>
+        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string paramValue)
+        {
+            try
+            {
+                // SQLite does not have a merge statement
+                // We therefore must first try an Update query
+                // If no rows are matched, then run an insert query
+
+                int updateCount;
+
+                using (var dbCommand = m_dbConnection.CreateCommand())
+                {
+                    dbCommand.CommandText = "UPDATE Global_Params " +
+                                            "SET ParamValue = '" + paramValue + "' " +
+                                            "WHERE ParamID = " + (int)paramKeyType;
+                    updateCount = dbCommand.ExecuteNonQuery();
+
+                }
+
+                if (updateCount == 0)
+                {
+                    m_dbCommandInsertGlobalParamValue.Parameters.Clear();
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+                    m_dbCommandInsertGlobalParamValue.ExecuteNonQuery();
+                }
+
+                m_globalParameters.AddUpdateValue(paramKeyType, paramValue);
+            }
+            catch (Exception ex)
+            {
+                ReportError("Error adding/updating global parameter " + paramKeyType + ": " + ex.Message, ex);
+                throw;
+            }
+        }
+        
         /// <summary>
         /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
         /// Bin centric data is important for data access speed in informed workflows.
@@ -327,6 +405,9 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Create the Frame_Param_Keys and Frame_Params tables
+        /// </summary>
         private void CreateFrameParamsTables()
         {
             // Create the Frame_Param_Keys Table
@@ -342,6 +423,21 @@ namespace UIMFLibrary
                 dbCommand.CommandText = GetCreateTableSql("Frame_Params", lstFields);
                 dbCommand.ExecuteNonQuery();
             }
+        }
+
+        /// <summary>
+        /// Create the Global_Params table
+        /// </summary>
+        private void CreateGlobalParamsTable()
+        {
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+                // Create the Global_Params Table
+                var lstFields = GetGlobalParamsFields();
+                dbCommand.CommandText = GetCreateTableSql("Global_Params", lstFields);
+                dbCommand.ExecuteNonQuery();
+            }
+
         }
 
         /// <summary>
@@ -374,21 +470,24 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                // Create the Global_Parameters Table  
-                var lstFields = GetGlobalParametersFields();
-                dbCommand.CommandText = GetCreateTableSql("Global_Parameters", lstFields);
-                dbCommand.ExecuteNonQuery();
+                // Create the Global_Params Table  
+                CreateGlobalParamsTable();
 
+                // Create the Frame_Params tables
                 CreateFrameParamsTables();
 
                 // Create the Frame_Scans Table
-                lstFields = GetFrameScansFields(dataType);
+                var lstFields = GetFrameScansFields(dataType);
                 dbCommand.CommandText = GetCreateTableSql("Frame_Scans", lstFields);
                 dbCommand.ExecuteNonQuery();
 
                 // Create the unique constraint indices
                 // Although SQLite supports multi-column (compound) primary keys, the SQLite Manager plugin does not fully support them
                 // thus, we'll use unique constraint indices to prevent duplicates
+
+                // Create the unique index index on Global_Params
+                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on Global_Params(ParamID);";
+                dbCommand.ExecuteNonQuery();
 
                 // Create the unique index index on Frame_Param_Keys
                 dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on Frame_Param_Keys(ParamID);";
@@ -399,17 +498,50 @@ namespace UIMFLibrary
                 dbCommand.ExecuteNonQuery();
 
                 // Create a second index on Frame_Params, to allow for lookups by ParamID
-                dbCommand.CommandText =
-                    "CREATE INDEX ix_index_FrameParams_By_ParamID on Frame_Params(ParamID, FrameNum);";
+                dbCommand.CommandText = "CREATE INDEX ix_index_FrameParams_By_ParamID on Frame_Params(ParamID, FrameNum);";
                 dbCommand.ExecuteNonQuery();
 
                 // Create the unique index on Frame_Scans
                 dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on Frame_Scans(FrameNum, ScanNum);";
                 dbCommand.ExecuteNonQuery();
 
+                // Create the views
+
+                dbCommand.CommandText =
+                    "CREATE VIEW V_Frame_Params AS " +
+                    "SELECT FP.FrameNum, FPK.ParamName, FP.ParamID, FP.ParamValue, FPK.ParamDescription, FPK.ParamDataType " +
+                    "FROM Frame_Params FP INNER JOIN " +
+                         "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
+                dbCommand.ExecuteNonQuery();
+
             }
 
             FlushUimf();
+        }
+
+        private void DecrementFrameCount(SQLiteCommand dbCommand, int frameCountToRemove = 1)
+        {
+            if (frameCountToRemove < 1)
+                return;
+
+            int numFrames = 0;
+
+            dbCommand.CommandText = "SELECT ParamValue AS NumFrames From Global_Params WHERE ParamID=" + (int)GlobalParamKeyType.NumFrames;
+            using (SQLiteDataReader reader = dbCommand.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    string value = reader.GetString(0);
+                    if (int.TryParse(value, out numFrames))
+                    {
+                        numFrames -= frameCountToRemove;
+                        if (numFrames < 0)
+                            numFrames = 0;
+                    }
+                }
+            }
+
+            AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, numFrames.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -473,7 +605,7 @@ namespace UIMFLibrary
         /// <param name="frameNum">
         /// </param>
         /// <param name="updateGlobalParameters">
-        /// If true, then decrements the NumFrames value in the Global_Parameters table
+        /// If true, then decrements the NumFrames value in the Global_Params table
         /// </param>
         public void DeleteFrame(int frameNum, bool updateGlobalParameters)
         {
@@ -488,12 +620,9 @@ namespace UIMFLibrary
 
                 if (updateGlobalParameters)
                 {
-                    dbCommand.CommandText =
-                        "UPDATE Global_Parameters SET NumFrames = NumFrames - 1 WHERE NumFrames > 0; ";
-                    dbCommand.ExecuteNonQuery();
+                    DecrementFrameCount(dbCommand);
                 }
-
-            }
+            }            
 
             FlushUimf();
         }
@@ -519,7 +648,7 @@ namespace UIMFLibrary
                 {
                     dbCommand.CommandText = "UPDATE Frame_Params " +
                                             "SET Value = '0' " +
-                                            "WHERE FrameNum = " + frameNum + 
+                                            "WHERE FrameNum = " + frameNum +
                                              " AND ParamID = " + (int)FrameParamKeyType.Scans + ";";
                     dbCommand.ExecuteNonQuery();
                 }
@@ -560,19 +689,7 @@ namespace UIMFLibrary
 
                 if (updateGlobalParameters)
                 {
-                    dbCommand.CommandText = "UPDATE Global_Parameters SET NumFrames = NumFrames - " + frameNums.Count +
-                                            "; ";
-                    dbCommand.ExecuteNonQuery();
-
-                    // Make sure NumFrames is >= 0
-                    dbCommand.CommandText = "SELECT NumFrames FROM Global_Parameters; ";
-                    object objResult = dbCommand.ExecuteScalar();
-
-                    if (Convert.ToInt32(objResult) < 0)
-                    {
-                        dbCommand.CommandText = "UPDATE Global_Parameters SET NumFrames 0; ";
-                        dbCommand.ExecuteNonQuery();
-                    }
+                    DecrementFrameCount(dbCommand, frameNums.Count);
                 }
 
             }
@@ -613,6 +730,7 @@ namespace UIMFLibrary
 
                     DisposeCommand(m_dbCommandInsertFrameParamKey);
                     DisposeCommand(m_dbCommandInsertFrameParamValue);
+                    DisposeCommand(m_dbCommandInsertGlobalParamValue);
                     DisposeCommand(m_dbCommandInsertScan);
 
                     m_dbConnection.Close();
@@ -648,9 +766,24 @@ namespace UIMFLibrary
         /// <returns>
         /// Global parameters class<see cref="GlobalParameters"/>.
         /// </returns>
+        [Obsolete("Use GetGlobalParams")]
         public GlobalParameters GetGlobalParameters()
         {
-            return DataReader.GetGlobalParametersFromTable(m_dbConnection);
+            return GlobalParamUtilities.GetLegacyGlobalParameters(m_globalParameters);
+        }
+
+        /// <summary>
+        /// Return the global parameters <see cref="GlobalParams"/>
+        /// </summary>
+        /// <returns></returns>
+        public GlobalParams GetGlobalParams()
+        {
+            if (m_globalParameters != null)
+            {
+                return m_globalParameters;
+            }
+
+            return m_globalParameters;
         }
 
         public async Task InsertFrameAsync(FrameParameters frameParameters)
@@ -671,6 +804,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameParameters">
         /// </param>
+        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with Dictionary<FrameParamKeyType, string> frameParameters")]
         public void InsertFrame(FrameParameters frameParameters)
         {
             var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
@@ -708,44 +842,16 @@ namespace UIMFLibrary
         /// <summary>
         /// Method to enter the details of the global parameters for the experiment
         /// </summary>
-        /// <param name="header">
+        /// <param name="globalParameters">
         /// </param>
-        public void InsertGlobal(GlobalParameters header)
+        [Obsolete("Use AddUpdateGlobalParameter")]
+        public void InsertGlobal(GlobalParameters globalParameters)
         {
-            m_globalParameters = header;
-
-            using (var dbCommand = m_dbConnection.CreateCommand())
+            var globalParams = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
+            foreach (var globalParam in globalParams)
             {
-                dbCommand.CommandText = "INSERT INTO Global_Parameters "
-                                        +
-                                        "(DateStarted, NumFrames, TimeOffset, BinWidth, Bins, TOFCorrectionTime, FrameDataBlobVersion, ScanDataBlobVersion, "
-                                        +
-                                        "TOFIntensityType, DatasetType, Prescan_TOFPulses, Prescan_Accumulations, Prescan_TICThreshold, Prescan_Continuous, Prescan_Profile, Instrument_name) "
-                                        +
-                                        "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, "
-                                        +
-                                        ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
-
-                dbCommand.Parameters.Add(new SQLiteParameter(":DateStarted", header.DateStarted));
-                dbCommand.Parameters.Add(new SQLiteParameter(":NumFrames", header.NumFrames));
-                dbCommand.Parameters.Add(new SQLiteParameter(":TimeOffset", header.TimeOffset));
-                dbCommand.Parameters.Add(new SQLiteParameter(":BinWidth", header.BinWidth));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Bins", header.Bins));
-                dbCommand.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", header.TOFCorrectionTime));
-                dbCommand.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", header.FrameDataBlobVersion));
-                dbCommand.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", header.ScanDataBlobVersion));
-                dbCommand.Parameters.Add(new SQLiteParameter(":TOFIntensityType", header.TOFIntensityType));
-                dbCommand.Parameters.Add(new SQLiteParameter(":DatasetType", header.DatasetType));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", header.Prescan_TOFPulses));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", header.Prescan_Accumulations));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", header.Prescan_TICThreshold));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", header.Prescan_Continuous));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Profile", header.Prescan_Profile));
-                dbCommand.Parameters.Add(new SQLiteParameter(":Instrument_name", header.InstrumentName));
-
-                dbCommand.ExecuteNonQuery();
-                dbCommand.Parameters.Clear();
-            }
+                AddUpdateGlobalParameter(globalParam.Key, globalParam.Value);
+            }           
         }
 
         /// <summary>
@@ -771,18 +877,13 @@ namespace UIMFLibrary
         {
             if (nonZeroCount <= 0)
                 return;
-
-            if (m_globalParameters == null)
-            {
-                m_globalParameters = DataReader.GetGlobalParametersFromTable(m_dbConnection);
-            }
-
+            
             var bpiMz = ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
 
             // Insert records.
             InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
             m_dbCommandInsertScan.ExecuteNonQuery();
-            
+
         }
 
         /// <summary>
@@ -1253,7 +1354,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Assures that NumFrames in the Global_Parameters table matches the number of frames in the Frame_Params table
+        /// Assures that NumFrames in the Global_Params table matches the number of frames in the Frame_Params table
         /// </summary>
         public void UpdateGlobalFrameCount()
         {
@@ -1261,50 +1362,15 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "Select Count (Distinct FrameNum) from Frame_Params";
+                dbCommand.CommandText = "SELECT Count (Distinct FrameNum) FROM Frame_Params";
                 frameCount = dbCommand.ExecuteScalar();
             }
 
             if (frameCount != null)
             {
-                UpdateGlobalParameter("NumFrames", frameCount.ToString());
-            }            
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="parameterName">
-        /// </param>
-        /// <param name="parameterValue">
-        /// </param>
-        public void UpdateGlobalParameter(string parameterName, string parameterValue)
-        {
-            var lstFields = GetGlobalParametersFields();
-
-            // Validate the field name
-            Tuple<string, string, string> fieldMatch = null;
-            foreach (var fieldInfo in lstFields)
-            {
-                if (fieldInfo.Item1 == parameterName)
-                {
-                    fieldMatch = fieldInfo;
-                    break;
-                }
+                AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, frameCount.ToString());
             }
-
-            if (fieldMatch == null)
-                throw new Exception("Invalid global parameter name, " + parameterName);
-
-            if (fieldMatch.Item3 == "string")
-                parameterValue = "'" + parameterValue + "'";
-
-            using (var dbCommand = m_dbConnection.CreateCommand())
-            {
-                dbCommand.CommandText = "UPDATE Global_Parameters SET " + parameterName + " = "
-                                        + parameterValue;
-                dbCommand.ExecuteNonQuery();
-            }
-        }
+        }      
 
         /// <summary>
         /// </summary>
@@ -1318,7 +1384,7 @@ namespace UIMFLibrary
         public bool WriteFileToTable(string tableName, byte[] fileBytesAsBuffer)
         {
             using (var dbCommand = m_dbConnection.CreateCommand())
-            {            
+            {
                 if (!DataReader.TableExists(m_dbConnection, tableName))
                 {
                     // Create the table
@@ -1339,7 +1405,7 @@ namespace UIMFLibrary
 
                 dbCommand.ExecuteNonQuery();
             }
-           
+
             return true;
         }
 
@@ -1455,7 +1521,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets the field names for the Frame_Parameters table
+        /// Gets the field names for the Frame_Params table
         /// </summary>
         /// <returns>
         /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
@@ -1475,6 +1541,27 @@ namespace UIMFLibrary
 
         }
 
+        /// <summary>
+        /// Gets the field names for the Global_Params table
+        /// </summary>
+        /// <returns>
+        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// </returns>
+        private List<Tuple<string, string, string>> GetGlobalParamsFields()
+        {
+
+            var lstFields = new List<Tuple<string, string, string>>
+			{
+				Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+                Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
+				Tuple.Create("ParamValue", "TEXT", "string"),
+				Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
+                Tuple.Create("ParamDescription", "TEXT NULL", "string"),
+			};
+
+            return lstFields;
+
+        }
         /// <summary>
         /// Gets the field names for the Frame_Scans table
         /// </summary>
@@ -1525,35 +1612,36 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets the field names for the Global_Parameters table
+        /// Gets the mapping between legacy global_parameters strings and GlobalParamKeyType enum type
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// Dictionary mapping string text to enum
         /// </returns>
-        private List<Tuple<string, string, string>> GetGlobalParametersFields()
+        [Obsolete("This function is not used")]
+        private Dictionary<string, GlobalParamKeyType> GetGlobalParametersFields()
         {
 
-            var lstFields = new List<Tuple<string, string, string>>
+            var fieldMapping = new Dictionary<string, GlobalParamKeyType>
 			{
-				Tuple.Create("DateStarted", "TEXT", "string"),
-				Tuple.Create("NumFrames", "INTEGER NOT NULL", "int"),
-				Tuple.Create("TimeOffset", "INTEGER NOT NULL", "int"),
-				Tuple.Create("BinWidth", "DOUBLE NOT NULL", "double"),
-				Tuple.Create("Bins", "INTEGER NOT NULL", "int"),
-				Tuple.Create("TOFCorrectionTime", "FLOAT NOT NULL", "float"),
-				Tuple.Create("FrameDataBlobVersion", "FLOAT NOT NULL", "float"),
-				Tuple.Create("ScanDataBlobVersion", "FLOAT NOT NULL", "float"),
-				Tuple.Create("TOFIntensityType", "TEXT NOT NULL", "string"),
-				Tuple.Create("DatasetType", "TEXT", "string"),
-				Tuple.Create("Prescan_TOFPulses", "INTEGER", "int"),
-				Tuple.Create("Prescan_Accumulations", "INTEGER", "int"),
-				Tuple.Create("Prescan_TICThreshold", "INTEGER", "int"),
-				Tuple.Create("Prescan_Continuous", "BOOLEAN", "bool"),
-				Tuple.Create("Prescan_Profile", "TEXT", "string"),
-				Tuple.Create("Instrument_Name", "TEXT", "string")
+				{"DateStarted", GlobalParamKeyType.DatasetType},
+				{"NumFrames", GlobalParamKeyType.NumFrames},
+				{"TimeOffset", GlobalParamKeyType.TimeOffset},
+				{"BinWidth", GlobalParamKeyType.BinWidth},
+				{"Bins", GlobalParamKeyType.Bins},
+				{"TOFCorrectionTime", GlobalParamKeyType.TOFCorrectionTime},
+				// Legacy, not supported: {"FrameDataBlobVersion", GlobalParamKeyType.FrameDataBlobVersion},
+				// Legacy, not supported: {"ScanDataBlobVersion", GlobalParamKeyType.ScanDataBlobVersion},
+				{"TOFIntensityType", GlobalParamKeyType.TOFIntensityType},
+				{"DatasetType", GlobalParamKeyType.DatasetType},
+				{"Prescan_TOFPulses", GlobalParamKeyType.PrescanTOFPulses},
+				{"Prescan_Accumulations", GlobalParamKeyType.PrescanAccumulations},
+				{"Prescan_TICThreshold", GlobalParamKeyType.PrescanTICThreshold},
+				{"Prescan_Continuous", GlobalParamKeyType.PrescanContinuous},
+				{"Prescan_Profile", GlobalParamKeyType.PrescanProfile},
+				{"Instrument_Name", GlobalParamKeyType.InstrumentName}
 			};
 
-            return lstFields;
+            return fieldMapping;
         }
 
         /// <summary>
@@ -1613,6 +1701,18 @@ namespace UIMFLibrary
             m_dbCommandInsertFrameParamValue.CommandText = "INSERT INTO Frame_Params (FrameNum, ParamID, ParamValue) " +
                                                            "VALUES (:FrameNum, :ParamID, :ParamValue);";
             m_dbCommandInsertFrameParamValue.Prepare();
+        }
+
+        /// <summary>
+        /// Create command for inserting global parameters
+        /// </summary>
+        private void PrepareInsertGlobalParamValue()
+        {
+            m_dbCommandInsertGlobalParamValue = m_dbConnection.CreateCommand();
+
+            m_dbCommandInsertGlobalParamValue.CommandText = "INSERT INTO Global_Params (ParamID, ParamValue) " +
+                                                            "VALUES (:ParamID, :ParamValue);";
+            m_dbCommandInsertGlobalParamValue.Prepare();
         }
 
         /// <summary>

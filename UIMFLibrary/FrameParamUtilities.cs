@@ -4,42 +4,20 @@ using System.Linq;
 
 namespace UIMFLibrary
 {
+    /// <summary>
+    /// Utility functions for working with frame parameters
+    /// </summary>
     public static class FrameParamUtilities
     {
-        private static readonly Dictionary<string, string> mDataTypeAliasMap = 
-            new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase)
-        { 
-            {"bool", "System.Boolean"},
-            {"byte", "System.Byte"},
-            {"sbyte", "System.SByte"},
-            {"char", "System.Char"},
-            {"decimal", "System.Decimal"},
-            {"double", "System.Double"},
-            {"float", "System.Single"},
-            {"int", "System.Int32"},
-            {"uint", "System.UInt32"},
-            {"long", "System.Int64"},
-            {"ulong", "System.UInt64"},
-            {"object", "System.Object"},
-            {"short", "System.Int16"},
-            {"ushort", "System.UInt16"},
-            {"string", "System.String"},
-            {"Boolean", "System.Boolean"},
-            {"Single", "System.Single"},
-            {"Int32", "System.Int32"},
-            {"UInt32", "System.UInt32"},
-            {"Int64", "System.Int64"},
-            {"UInt64", "System.UInt64"},
-            {"Int16", "System.Int16"},
-            {"UInt16", "System.UInt16"}
-        };
-
+       
         /// <summary>
         /// Create a frame parameter dictionary using a FrameParameters class instance
         /// </summary>
         /// <param name="frameParameters"></param>
-        /// <returns></returns>
+        /// <returns>Frame parameter dictionary</returns>
+#pragma warning disable 612, 618
         public static Dictionary<FrameParamKeyType, string> ConvertFrameParameters(FrameParameters frameParameters)
+#pragma warning restore 612, 618
         {
             var frameParams = new Dictionary<FrameParamKeyType, string>
             {
@@ -215,6 +193,7 @@ namespace UIMFLibrary
             // Legacy parameter, likely never used
             if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
             {
+                // Convert the fragmentation profile into an array of bytes
                 var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
                 string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
                 frameParams.Add(FrameParamKeyType.FragmentationProfile, base64String);
@@ -223,6 +202,11 @@ namespace UIMFLibrary
             return frameParams;
         }
 
+        /// <summary>
+        /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
+        /// </summary>
+        /// <param name="frameParamsByType"></param>
+        /// <returns></returns>
         public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
         {
             var frameParams = new FrameParams();
@@ -234,19 +218,18 @@ namespace UIMFLibrary
 
             return frameParams;
         }
-
-        public static string GetDataTypeFromAlias(string alias)
-        {
-            string systemDataType;
-            if (mDataTypeAliasMap.TryGetValue(alias, out systemDataType))
-                return systemDataType;
-
-            Console.WriteLine("Warning: data type alias not recognized: " + alias);
-            return "System.Object";
-        }
-
+    
+#pragma warning disable 612, 618
+        /// <summary>
+        /// Obtain a FrameParameters instance from a FrameParams instance
+        /// </summary>
+        /// <param name="frameParams"><see cref="FrameParams"/> instance</param>
+        /// <returns>A new <see cref="FrameParameters"/> instance</returns>
         public static FrameParameters GetLegacyFrameParameters(FrameParams frameParams)
         {
+            if (frameParams == null)
+                return new FrameParameters();
+
             var frametype = frameParams.FrameType;
 
             // Populate legacyFrameParams using dictionary frameParams
@@ -308,6 +291,7 @@ namespace UIMFLibrary
 
             return legacyFrameParams;
         }
+#pragma warning restore 612, 618
 
         /// <summary>
         /// Resolve FrameParam Key Type using the parameter id integer value
@@ -331,6 +315,8 @@ namespace UIMFLibrary
         {
             int iteration = 0;
 
+            // On the first iteration of the while loop, we require a case-sensitive match
+            // If no match is found, then on the second iteration we use a case-insensitive match
             while (iteration < 2)
             {
 
@@ -406,7 +392,7 @@ namespace UIMFLibrary
         /// Obtain a frame parameter definition instance given a parameter name
         /// </summary>
         /// <param name="paramName">Param key name</param>
-        /// <returns>FrameParam instance</returns>
+        /// <returns><see cref="FrameParamDef"/> instance</returns>
         public static FrameParamDef GetParamDefByName(string paramName)
         {
             if (String.IsNullOrWhiteSpace(paramName))
@@ -424,7 +410,7 @@ namespace UIMFLibrary
         /// Obtain a frame parameter definition instance given a parameter key type enum value
         /// </summary>
         /// <param name="paramType">Param key type enum</param>
-        /// <returns>FrameParam instance</returns>
+        /// <returns><see cref="FrameParamDef"/> instance</returns>
         /// <remarks>Will include the official parameter name, description, and data type for the given param key</remarks>
         public static FrameParamDef GetParamDefByType(FrameParamKeyType paramType)
         {
@@ -662,7 +648,7 @@ namespace UIMFLibrary
                                           "Voltage profile used in fragmentation (Base 64 encoded array of doubles)");
 
                 default:
-                    throw new ArgumentOutOfRangeException("paramType", "Unrecognized enum for paramType: " + (int)paramType);
+                    throw new ArgumentOutOfRangeException("paramType", "Unrecognized frame param enum for paramType: " + (int)paramType);
             }
 
         }        
@@ -670,6 +656,7 @@ namespace UIMFLibrary
         #region "Private methods"
 
         /// <summary>
+        /// Convert an array of doubles to an array of bytes
         /// </summary>
         /// <param name="frag">
         /// </param>
@@ -678,7 +665,7 @@ namespace UIMFLibrary
         /// </returns>
         private static byte[] ConvertToBlob(double[] frag)
         {
-            // convert the fragmentation profile into an array of bytes
+            
             int length_blob = frag.Length;
             var blob_values = new byte[length_blob * 8];
 

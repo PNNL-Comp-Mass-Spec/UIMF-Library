@@ -312,7 +312,7 @@ namespace UIMFLibrary
 			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
 			// Get global UIMF information
-			GlobalParameters globalParameters = uimfReader.GetGlobalParameters();
+			var globalParameters = uimfReader.GetGlobalParams();
 			int numFrames = globalParameters.NumFrames;
 			int numBins = globalParameters.Bins;
 

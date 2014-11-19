@@ -115,9 +115,9 @@ namespace UIMFLibrary_Demo
                     writer.InsertGlobal(globalParams);
 
                     globalParams = writer.GetGlobalParameters();
-                    writer.UpdateGlobalParameter("TimeOffset", "1");
+                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, "1");
 
-                    writer.UpdateGlobalParameter("Instrument_Name", "IMS_Test");
+                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
 
                     Console.WriteLine("Adding frame 1");
 
@@ -137,8 +137,6 @@ namespace UIMFLibrary_Demo
                             AverageTOFLength = 163366.6666666667,
                             StartTime = frameNum * SECONDS_PER_FRAME
                         };
-
-                        var fpTarget = fp.Copy();
 
                         writer.InsertFrame(fp);
 
