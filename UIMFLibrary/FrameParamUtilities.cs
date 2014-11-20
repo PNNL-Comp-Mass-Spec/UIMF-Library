@@ -22,10 +22,10 @@ namespace UIMFLibrary
             var frameParams = new Dictionary<FrameParamKeyType, string>
             {
 	            // Start time of frame, in minutes
-	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.FloatToString(frameParameters.StartTime)},
+	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.DoubleToString(frameParameters.StartTime)},
                 
 	            // Duration of frame, in seconds
-	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.FloatToString(frameParameters.Duration)},
+	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.DoubleToString(frameParameters.Duration)},
                 
 	            // Number of collected and summed acquisitions in a frame 
 	            {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
@@ -52,7 +52,7 @@ namespace UIMFLibrary
 	            {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
 	        
                 // Average time between TOF trigger pulses
-                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.FloatToString(frameParameters.AverageTOFLength)},
+                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.DoubleToString(frameParameters.AverageTOFLength)},
 
                 // Calibration slope, k0
 	            {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
@@ -418,12 +418,12 @@ namespace UIMFLibrary
             {
 
                 case FrameParamKeyType.StartTimeMinutes:
-                    return new FrameParamDef(FrameParamKeyType.StartTimeMinutes, "StartTime", "float",
+                    return new FrameParamDef(FrameParamKeyType.StartTimeMinutes, "StartTime", "double",
                                           "Start time of frame, in minutes");
 
                 case FrameParamKeyType.DurationSeconds:
                     return new FrameParamDef(FrameParamKeyType.DurationSeconds,
-                                          FrameParamKeyType.DurationSeconds.ToString(), "float",
+                                          FrameParamKeyType.DurationSeconds.ToString(), "double",
                                           "Frame duration, in seconds");
 
                 case FrameParamKeyType.Accumulations:
@@ -466,7 +466,7 @@ namespace UIMFLibrary
 
                 case FrameParamKeyType.AverageTOFLength:
                     return new FrameParamDef(FrameParamKeyType.AverageTOFLength,
-                                          FrameParamKeyType.AverageTOFLength.ToString(), "float",
+                                          FrameParamKeyType.AverageTOFLength.ToString(), "double",
                                           "Average time between TOF trigger pulses, in nanoseconds");
 
                 case FrameParamKeyType.CalibrationSlope:

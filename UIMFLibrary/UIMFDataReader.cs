@@ -106,6 +106,8 @@ namespace UIMFLibrary
         /// </summary>
         private readonly bool m_UsingLegacyFrameParameters;
 
+        private readonly SortedSet<string> m_LegacyFrameParametersMissingColumns;
+
         /// <summary>
         /// Dictionary tracking the frames by frame type
         /// </summary>
@@ -211,16 +213,15 @@ namespace UIMFLibrary
                 // Initialize the frame parameters cache
                 m_CachedFrameParameters = new Dictionary<int, FrameParams>();
 
+                // Initialize the variable used to track missing columns when reading legacy parameters
+                m_LegacyFrameParametersMissingColumns = new SortedSet<string>();
+
                 LoadPrepStmts();
 
                 // Update the frame parameter keys
                 GetFrameParameterKeys(true);
 
-                if (TableExists("Frame_Parameters"))
-                    m_UsingLegacyFrameParameters = true;
-
-                if (TableExists("Frame_Params"))
-                    m_UsingLegacyFrameParameters = false;
+                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_uimfDatabaseConnection);
 
                 // Lookup whether the pressure columns are in torr or mTorr
                 DeterminePressureUnits();
@@ -494,13 +495,15 @@ namespace UIMFLibrary
         /// UIMF database connection.
         /// </param>
         /// <returns>
-        /// Global parameters object<see cref="GlobalParameters"/>.
+        /// Global parameters object
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
+#pragma warning disable 612, 618
         private GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
         {
             var oGlobalParameters = new GlobalParameters();
+#pragma warning restore 612, 618
 
             using (var dbCommand = oUimfDatabaseConnection.CreateCommand())
             {
@@ -545,7 +548,8 @@ namespace UIMFLibrary
                             // ReSharper disable once EmptyGeneralCatchClause
                             catch
                             {
-                                // ignore since it may not be present in all previous versions
+                                // Likely an old .UIMF file that does not have column Instrument_Name
+                                oGlobalParameters.InstrumentName = string.Empty;
                             }
                         }
                         catch (Exception ex)
@@ -574,13 +578,44 @@ namespace UIMFLibrary
         {
             bool hasRows;
 
+            using (var cmd = new SQLiteCommand(oConnection)
+            {
+                CommandText = "SELECT name " +
+                              "FROM sqlite_master " +
+                              "WHERE type='table' And tbl_name = '" + tableName + "'"
+            })
+            {
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                {
+                    hasRows = reader.HasRows;
+                }
+            }
+
+            return hasRows;
+        }
+
+        /// <summary>
+        /// Looks for the given index in the SqLite database
+        /// Note that index names are case sensitive
+        /// </summary>
+        /// <param name="uimfWriterConnection">
+        /// </param>
+        /// <param name="indexName">
+        /// </param>
+        /// <returns>
+        /// True if the index exists<see cref="bool"/>.
+        /// </returns>
+        public static bool IndexExists(SQLiteConnection uimfWriterConnection, string indexName)
+        {
+            bool hasRows;
+
             using (
-                var cmd = new SQLiteCommand(oConnection)
-                                        {
-                                            CommandText =
-                                                "SELECT name FROM sqlite_master WHERE type='table' And tbl_name = '"
-                                                + tableName + "'"
-                                        })
+                var cmd = new SQLiteCommand(uimfWriterConnection)
+                {
+                    CommandText = "SELECT name FROM " +
+                                  "sqlite_master " +
+                                  "WHERE type='index' AND " + "name = '" + indexName + "'"
+                })
             {
                 using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
@@ -869,9 +904,6 @@ namespace UIMFLibrary
         {
             string sCurrentTable = string.Empty;
 
-            // ToDo xxx Update this to support Frame_Params xxx
-            // ToDo xxx implement    if (m_UsingLegacyFrameParameters) ...
-
             try
             {
                 // Get list of tables in source DB
@@ -951,8 +983,23 @@ namespace UIMFLibrary
                                         {
                                             string sSql = "INSERT INTO main." + sCurrentTable +
                                                           " SELECT * FROM SourceDB." + sCurrentTable
-                                                          + " WHERE FrameNum IN (SELECT FrameNum FROM Frame_Parameters " +
-                                                          "WHERE FrameType = " + GetFrameTypeInt(frameType) + ");";
+                                                          + " WHERE FrameNum IN (";
+
+                                            if (m_UsingLegacyFrameParameters)
+                                            {
+                                                sSql += "SELECT FrameNum " +
+                                                        "FROM Frame_Parameters " +
+                                                        "WHERE FrameType = " + GetFrameTypeInt(frameType);
+                                            }
+                                            else
+                                            {
+                                                sSql += "SELECT FrameNum " +
+                                                        "FROM Frame_Params " +
+                                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
+                                                         " AND ParamValue = " + GetFrameTypeInt(frameType);
+                                            }
+
+                                            sSql += ");";
 
                                             cmdTargetDB.CommandText = sSql;
                                             cmdTargetDB.ExecuteNonQuery();
@@ -1510,7 +1557,7 @@ namespace UIMFLibrary
                 {
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
                     dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
-                    dbCommand.Prepare();
+
                     using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                     {
                         while (reader.Read())
@@ -1526,7 +1573,7 @@ namespace UIMFLibrary
                                             "ORDER BY FrameNum";
                     dbCommand.Parameters.Add(new SQLiteParameter("ParamID", (int)FrameParamKeyType.FrameType));
                     dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
-                    dbCommand.Prepare();
+
                     using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                     {
                         while (reader.Read())
@@ -1693,7 +1740,7 @@ namespace UIMFLibrary
             FrameParams frameParams;
             if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParams))
             {
-                return GetFrameParameters(frameParams);
+                return FrameParamUtilities.GetLegacyFrameParameters(frameParams);
             }
 
             frameParams = GetFrameParams(frameNumber);
@@ -1706,15 +1753,8 @@ namespace UIMFLibrary
                 }
             }
 
-            var legacyFrameParams = GetFrameParameters(frameParams);
-            return legacyFrameParams;
-        }
-
-        private FrameParameters GetFrameParameters(FrameParams frameParams)
-        {
             var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameParams);
             return legacyFrameParams;
-
         }
 
         /// <summary>
@@ -1748,10 +1788,12 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
+#pragma warning disable 612, 618
                         var legacyFrameParams = new FrameParameters();
+#pragma warning restore 612, 618
+
                         PopulateLegacyFrameParameters(legacyFrameParams, reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-
                         frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
                     }
                 }
@@ -2503,9 +2545,8 @@ namespace UIMFLibrary
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
                 else
-                    dbCommand.CommandText = "SELECT FrameNum, ParamValue AS FrameType From Frame_Params WHERE ParamID=" + (int)FrameParamKeyType.FrameType;
+                    dbCommand.CommandText = "SELECT FrameNum, ParamValue AS FrameType From Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
 
-                dbCommand.Prepare();
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
                     while (reader.Read())
@@ -2565,16 +2606,16 @@ namespace UIMFLibrary
 
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
-                                        "FROM Frame_Parameters " +
-                                        "WHERE FrameType IN (:FrameType)";
+                                            "FROM Frame_Parameters " +
+                                            "WHERE FrameType IN (:FrameType)";
                 else
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
-                                        "FROM Frame_Params " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
-                                         " AND ParamValue IN (:FrameType)";
+                                            "FROM Frame_Params " +
+                                            "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
+                                             " AND ParamValue IN (:FrameType)";
 
                 dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeList));
-                dbCommand.Prepare();
+
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
                     if (reader.Read())
@@ -3011,8 +3052,6 @@ namespace UIMFLibrary
             }
 
             StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
-
-            m_getSpectrumCommand.Parameters.Clear();
 
             return nonZeroCount;
         }
@@ -3954,16 +3993,16 @@ namespace UIMFLibrary
             {
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
-                                        "FROM Frame_Parameters " +
-                                        "WHERE FrameType = :FrameType";
+                                            "FROM Frame_Parameters " +
+                                            "WHERE FrameType = :FrameType";
                 else
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
-                                        "FROM Frame_Params " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
-                                         " AND ParamValue = :FrameType";
+                                            "FROM Frame_Params " +
+                                            "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
+                                             " AND ParamValue = :FrameType";
 
                 dbCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)FrameType.MS2));
-                dbCommand.Prepare();
+
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
                     if (reader.Read())
@@ -4039,7 +4078,7 @@ namespace UIMFLibrary
                                                 "FROM Frame_Params " +
                                                 "WHERE FrameNum IN (SELECT FrameNum " +
                                                                    "FROM Frame_Params " +
-                                                                   "WHERE ParamID = " + (int)FrameParamKeyType.FrameType + 
+                                                                   "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
                                                                     " AND ParamValue = " + currentFrameType + ") " +
                                                   "AND ParamID = " + (int)FrameParamKeyType.CalibrationDone +
                                                  " AND IFNULL(ParamValue, 0) > 0 ";
@@ -4198,14 +4237,32 @@ namespace UIMFLibrary
         {
             using (var dbCommand = m_uimfDatabaseConnection.CreateCommand())
             {
-                dbCommand.CommandText = "UPDATE Frame_Parameters " + "SET CalibrationSlope = " + slope + ", "
-                                                  + "CalibrationIntercept = " + intercept;
-                if (isAutoCalibrating)
+                if (m_UsingLegacyFrameParameters)
                 {
-                    dbCommand.CommandText += ", CalibrationDone = 1";
-                }
+                    dbCommand.CommandText = "UPDATE Frame_Parameters " +
+                                            "SET CalibrationSlope = " + slope +
+                                              ", CalibrationIntercept = " + intercept;
+                    if (isAutoCalibrating)
+                    {
+                        dbCommand.CommandText += ", CalibrationDone = 1";
+                    }
 
-                dbCommand.ExecuteNonQuery();
+                    dbCommand.ExecuteNonQuery();
+                }
+                else
+                {
+                    dbCommand.CommandText = "UPDATE Frame_Params SET ParamValue = " + slope + " WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope;
+                    dbCommand.ExecuteNonQuery();
+
+                    dbCommand.CommandText = "UPDATE Frame_Params SET ParamValue = " + intercept + " WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept;
+                    dbCommand.ExecuteNonQuery();
+
+                    if (isAutoCalibrating)
+                    {
+                        dbCommand.CommandText = "UPDATE Frame_Params SET ParamValue = 1 WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone;
+                        dbCommand.ExecuteNonQuery();
+                    }
+                }
             }
 
             var framesToUpdate = m_CachedFrameParameters.Keys.ToList();
@@ -4316,10 +4373,7 @@ namespace UIMFLibrary
 
         private void CacheGlobalParameters()
         {
-            bool usingLegacyGlobalParameters = TableExists("Global_Parameters");
-
-            if (TableExists("Global_Params"))
-                usingLegacyGlobalParameters = false;
+            bool usingLegacyGlobalParameters = UsingLegacyGlobalParams(m_uimfDatabaseConnection);
 
             if (usingLegacyGlobalParameters)
             {
@@ -4594,7 +4648,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static double GetLegacyFrameParamOrDefault(SQLiteDataReader reader, string columnName, double defaultValue)
+        private double GetLegacyFrameParamOrDefault(SQLiteDataReader reader, string columnName, double defaultValue)
         {
             bool columnMissing;
             return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out columnMissing);
@@ -4618,7 +4672,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static double GetLegacyFrameParamOrDefault(
+        private double GetLegacyFrameParamOrDefault(
             SQLiteDataReader reader,
             string columnName,
             double defaultValue,
@@ -4634,6 +4688,10 @@ namespace UIMFLibrary
             catch (IndexOutOfRangeException)
             {
                 columnMissing = true;
+
+                if (!m_LegacyFrameParametersMissingColumns.Contains(columnName))
+                    m_LegacyFrameParametersMissingColumns.Add(columnName);
+
             }
 
             return result;
@@ -4654,7 +4712,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static int GetLegacyFrameParamOrDefaultInt32(SQLiteDataReader reader, string columnName, int defaultValue)
+        private int GetLegacyFrameParamOrDefaultInt32(SQLiteDataReader reader, string columnName, int defaultValue)
         {
             bool columnMissing;
             return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out columnMissing);
@@ -4678,7 +4736,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private static int GetLegacyFrameParamOrDefaultInt32(
+        private int GetLegacyFrameParamOrDefaultInt32(
             SQLiteDataReader reader,
             string columnName,
             int defaultValue,
@@ -4694,6 +4752,9 @@ namespace UIMFLibrary
             catch (IndexOutOfRangeException)
             {
                 columnMissing = true;
+
+                if (!m_LegacyFrameParametersMissingColumns.Contains(columnName))
+                    m_LegacyFrameParametersMissingColumns.Add(columnName);
             }
 
             return result;
@@ -4771,25 +4832,17 @@ namespace UIMFLibrary
                 if (m_UsingLegacyFrameParameters)
                 {
                     dbCommand.CommandText = "SELECT DISTINCT(FrameType) FROM Frame_Parameters";
-                    dbCommand.Prepare();
-                    using (SQLiteDataReader reader = dbCommand.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            frameTypeList.Add(Convert.ToInt32(reader["FrameType"]));
-                        }
-                    }
                 }
                 else
                 {
-                    dbCommand.CommandText = "SELECT DISTINCT(ParamValue) FROM Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
-                    dbCommand.Prepare();
-                    using (SQLiteDataReader reader = dbCommand.ExecuteReader())
+                    dbCommand.CommandText = "SELECT DISTINCT(ParamValue) AS FrameType FROM Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
+                }
+
+                using (SQLiteDataReader reader = dbCommand.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            frameTypeList.Add(Convert.ToInt32(reader["Value"]));
-                        }
+                        frameTypeList.Add(Convert.ToInt32(reader["FrameType"]));
                     }
                 }
 
@@ -5044,6 +5097,8 @@ namespace UIMFLibrary
 
             var dctTicOrBPI = new Dictionary<int, double>();
 
+            // TODO: xxx Add support for m_LegacyFrameParametersMissingColumns xxx
+
             // Construct the SQL
             string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value "
                          + " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum ";
@@ -5168,36 +5223,55 @@ namespace UIMFLibrary
 
             m_getFrameParametersCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getFrameParametersCommand.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = :FrameNum";
-            m_getFrameParametersCommand.Prepare();
 
             m_getFrameParamsCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getFrameParamsCommand.CommandText = "SELECT FrameNum, ParamID, ParamValue FROM Frame_Params WHERE FrameNum = :FrameNum";
-            m_getFrameParamsCommand.Prepare();
 
             m_getFramesAndScanByDescendingIntensityCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand.CommandText =
                 "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
-            m_getFramesAndScanByDescendingIntensityCommand.Prepare();
 
             m_getSpectrumCommand = m_uimfDatabaseConnection.CreateCommand();
-            m_getSpectrumCommand.CommandText =
-                "SELECT FS.ScanNum, FS.FrameNum, FS.Intensities FROM Frame_Scans FS JOIN Frame_Parameters FP ON (FS.FrameNum = FP.FrameNum) WHERE FS.FrameNum >= :FrameNum1 AND FS.FrameNum <= :FrameNum2 AND FS.ScanNum >= :ScanNum1 AND FS.ScanNum <= :ScanNum2 AND FP.FrameType = :FrameType";
-            m_getSpectrumCommand.Prepare();
+
+            if (m_UsingLegacyFrameParameters)
+            {
+                m_getSpectrumCommand.CommandText = "SELECT FS.ScanNum, FS.FrameNum, FS.Intensities " +
+                                                   "FROM Frame_Scans FS JOIN " +
+                                                        "Frame_Parameters FP ON (FS.FrameNum = FP.FrameNum) " +
+                                                   "WHERE FS.FrameNum >= :FrameNum1 AND " +
+                                                         "FS.FrameNum <= :FrameNum2 AND " +
+                                                         "FS.ScanNum >= :ScanNum1 AND " +
+                                                         "FS.ScanNum <= :ScanNum2 AND " +
+                                                         "FP.FrameType = :FrameType";
+            }
+            else
+            {
+                m_getSpectrumCommand.CommandText = "SELECT ScanNum, FrameNum, Intensities " +
+                                                   "FROM Frame_Scans " +
+                                                   "WHERE FrameNum >= :FrameNum1 AND " +
+                                                         "FrameNum <= :FrameNum2 AND " +
+                                                         "ScanNum >= :ScanNum1 AND " +
+                                                         "ScanNum <= :ScanNum2 AND " +
+                                                         "FrameNum IN (" +
+                                                              "SELECT FrameNum " +
+                                                              "FROM Frame_Params " +
+                                                              "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
+                                                               " AND ParamValue = :FrameType " +
+                                                                "AND FrameNum >= :FrameNum1 " +
+                                                                "AND FrameNum <= :FrameNum2)";
+            }
 
             m_getCountPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getCountPerFrameCommand.CommandText =
                 "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum AND NOT NonZeroCount IS NULL";
-            m_getCountPerFrameCommand.Prepare();
 
             m_checkForBinCentricTableCommand = m_uimfDatabaseConnection.CreateCommand();
             m_checkForBinCentricTableCommand.CommandText =
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='Bin_Intensities';";
-            m_checkForBinCentricTableCommand.Prepare();
 
             m_getBinDataCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getBinDataCommand.CommandText =
                 "SELECT MZ_BIN, INTENSITIES FROM Bin_Intensities WHERE MZ_BIN >= :BinMin AND MZ_BIN <= :BinMax;";
-            m_getBinDataCommand.Prepare();
         }
 
         /// <summary>
@@ -5211,7 +5285,9 @@ namespace UIMFLibrary
         /// </param>
         /// <exception cref="Exception">
         /// </exception>
+#pragma warning disable 612, 618
         private void PopulateLegacyFrameParameters(FrameParameters fp, SQLiteDataReader reader)
+#pragma warning restore 612, 618
         {
             try
             {
@@ -5264,7 +5340,11 @@ namespace UIMFLibrary
                 fp.voltHVRack4 = Convert.ToDouble(reader["voltHVRack4"]);
                 fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"]); // 14, Capillary Inlet Voltage
 
-                fp.voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
+                if (m_LegacyFrameParametersMissingColumns.Contains("voltEntranceHPFIn"))
+                    columnMissing = true;
+                else
+                    fp.voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
+
                 if (columnMissing)
                 {
                     // Legacy column names are present
@@ -5286,7 +5366,11 @@ namespace UIMFLibrary
                 fp.voltCond2 = Convert.ToDouble(reader["voltCond2"]); // 24, Fragmentation Conductance Voltage
                 fp.voltIMSOut = Convert.ToDouble(reader["voltIMSOut"]); // 25, IMS Out Voltage
 
-                fp.voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
+                if (m_LegacyFrameParametersMissingColumns.Contains("voltExitHPFIn"))
+                    columnMissing = true;
+                else
+                    fp.voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
+
                 if (columnMissing)
                 {
                     // Legacy column names are present
@@ -5304,7 +5388,11 @@ namespace UIMFLibrary
                 fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"]);
                 fp.FragmentationProfile = ArrayFragmentationSequence((byte[])reader["FragmentationProfile"]);
 
-                fp.HighPressureFunnelPressure = GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing);
+                if (m_LegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
+                    columnMissing = true;
+                else
+                    fp.HighPressureFunnelPressure = GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing);
+
                 if (columnMissing)
                 {
                     if (m_errMessageCounter < 5)
@@ -5334,7 +5422,11 @@ namespace UIMFLibrary
                     }
                 }
 
-                fp.a2 = GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing);
+                if (m_LegacyFrameParametersMissingColumns.Contains("a2"))
+                    columnMissing = true;
+                else
+                    fp.a2 = GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing);
+
                 if (columnMissing)
                 {
                     fp.b2 = 0;
@@ -5390,6 +5482,26 @@ namespace UIMFLibrary
 
         }
 
+        private bool UsingLegacyFrameParams(SQLiteConnection sqLiteConnection)
+        {
+            bool usingLegacyParams = TableExists(sqLiteConnection, "Frame_Parameters");
+
+            if (TableExists(sqLiteConnection, "Frame_Params"))
+                usingLegacyParams = false;
+
+            return usingLegacyParams;
+        }
+
+        private bool UsingLegacyGlobalParams(SQLiteConnection sqLiteConnection)
+        {
+            bool usingLegacyParams = TableExists(sqLiteConnection, "Global_Parameters");
+
+            if (TableExists(sqLiteConnection, "Global_Params"))
+                usingLegacyParams = false;
+
+            return usingLegacyParams;
+        }
+
         private static void WarnUnrecognizedFrameParamID(int paramID, string paramName)
         {
             if (!m_UnrecognizedFrameParamTypes.Contains(paramID))
@@ -5402,5 +5514,6 @@ namespace UIMFLibrary
         }
 
         #endregion
+
     }
 }

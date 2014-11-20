@@ -154,7 +154,7 @@ namespace UIMFLibrary
 
         }
 
-        private void InitializeByType(string name, string description, string dataType)
+        private void InitializeByType(string name, string dataType, string description)
         {
             Name = name;
             DataType = GetDataTypeFromAlias(dataType);

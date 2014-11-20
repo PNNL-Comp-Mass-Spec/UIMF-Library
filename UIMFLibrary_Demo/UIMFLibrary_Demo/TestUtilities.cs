@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using UIMFLibrary;
 
@@ -9,7 +10,7 @@ namespace UIMFLibrary_Demo
 
         public static string displayRawMassSpectrum(double[] mzValues, int[] intensities)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             for (int i = 0; i < mzValues.Length; i++)
             {
                 sb.Append(mzValues[i]);
@@ -26,7 +27,7 @@ namespace UIMFLibrary_Demo
 
         public static string display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             for (int i = 0; i < frameORScanVals.Length; i++)
             {
                 sb.Append(frameORScanVals[i]);
@@ -43,15 +44,7 @@ namespace UIMFLibrary_Demo
 
         public static int getMax(int[] values)
         {
-            int max = 0;
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (values[i] > max)
-                {
-                    max = values[i];
-                }
-
-            }
+            int max = (from item in values select item).ToList().Max();            
             return max;
         }
 
@@ -80,7 +73,7 @@ namespace UIMFLibrary_Demo
 
         public static void printAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             int frameValue = frameVals[0];
             for (int i = 0; i < frameVals.Length; i++)
             {
@@ -111,7 +104,7 @@ namespace UIMFLibrary_Demo
 
         public static void printAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             int frameValue = frameVals[0];
             for (int i = 0; i < frameVals.Length; i++)
             {
@@ -140,7 +133,7 @@ namespace UIMFLibrary_Demo
 
         }
 
-
+        [Obsolete("Displays values from the legacy FrameParameters object")]
         public static string FrameParametersToString(FrameParameters fp)
         {
             var sb = new StringBuilder();
@@ -216,7 +209,7 @@ namespace UIMFLibrary_Demo
 
         public static string Display3DChromatogram(int[] frameVals, int[] scanVals, int[] intensityVals)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             for (int i = 0; i < frameVals.Length; i++)
             {
                 sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);

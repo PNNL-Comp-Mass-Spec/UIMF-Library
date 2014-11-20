@@ -48,7 +48,6 @@ namespace UIMFLibrary
         /// </summary>
         private SQLiteCommand m_dbCommandInsertGlobalParamValue;
 
-
         /// <summary>
         /// Command to insert a scan
         /// </summary>
@@ -354,6 +353,8 @@ namespace UIMFLibrary
 
                 int updateCount;
 
+                var globalParam = new GlobalParam(paramKeyType, paramValue);
+
                 using (var dbCommand = m_dbConnection.CreateCommand())
                 {
                     dbCommand.CommandText = "UPDATE Global_Params " +
@@ -366,8 +367,14 @@ namespace UIMFLibrary
                 if (updateCount == 0)
                 {
                     m_dbCommandInsertGlobalParamValue.Parameters.Clear();
-                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
-                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+                    // "VALUES (:ParamID, :ParamName, :ParamValue, :ParamDataType, :ParamDescription);";
+
+
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)globalParam.ParamType));
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamName", globalParam.Name));
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", globalParam.Value));
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDataType", globalParam.DataType));
+                    m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDescription", globalParam.Description));
                     m_dbCommandInsertGlobalParamValue.ExecuteNonQuery();
                 }
 
@@ -391,7 +398,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
-        /// Bin centric data is important for data access speed in informed workflows.
+        /// Bin centric data is important for data access speed in informed quantitation workflows.
         /// </summary>
         /// <param name="workingDirectory">
         /// Path to the working directory in which a temporary SqLite database file should be created
@@ -410,19 +417,40 @@ namespace UIMFLibrary
         /// </summary>
         private void CreateFrameParamsTables()
         {
-            // Create the Frame_Param_Keys Table
-            var lstFields = GetFrameParamKeysFields();
 
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
+                // Create table Frame_Param_Keys
+                var lstFields = GetFrameParamKeysFields();
                 dbCommand.CommandText = GetCreateTableSql("Frame_Param_Keys", lstFields);
                 dbCommand.ExecuteNonQuery();
 
-                // Create the Frame_Params Table
+                // Create table Frame_Params
                 lstFields = GetFrameParamsFields();
                 dbCommand.CommandText = GetCreateTableSql("Frame_Params", lstFields);
                 dbCommand.ExecuteNonQuery();
+
+                // Create the unique index index on Frame_Param_Keys
+                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on Frame_Param_Keys(ParamID);";
+                dbCommand.ExecuteNonQuery();
+
+                // Create the unique index index on Frame_Params
+                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParams on Frame_Params(FrameNum, ParamID);";
+                dbCommand.ExecuteNonQuery();
+
+                // Create a second index on Frame_Params, to allow for lookups by ParamID
+                dbCommand.CommandText = "CREATE INDEX ix_index_FrameParams_By_ParamID on Frame_Params(ParamID, FrameNum);";
+                dbCommand.ExecuteNonQuery();
+
+                // Create view V_Frame_Params
+                dbCommand.CommandText =
+                    "CREATE VIEW V_Frame_Params AS " +
+                    "SELECT FP.FrameNum, FPK.ParamName, FP.ParamID, FP.ParamValue, FPK.ParamDescription, FPK.ParamDataType " +
+                    "FROM Frame_Params FP INNER JOIN " +
+                         "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
+                dbCommand.ExecuteNonQuery();
             }
+
         }
 
         /// <summary>
@@ -436,6 +464,11 @@ namespace UIMFLibrary
                 var lstFields = GetGlobalParamsFields();
                 dbCommand.CommandText = GetCreateTableSql("Global_Params", lstFields);
                 dbCommand.ExecuteNonQuery();
+
+                // Create the unique index index on Global_Params
+                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on Global_Params(ParamID);";
+                dbCommand.ExecuteNonQuery();
+
             }
 
         }
@@ -485,33 +518,8 @@ namespace UIMFLibrary
                 // Although SQLite supports multi-column (compound) primary keys, the SQLite Manager plugin does not fully support them
                 // thus, we'll use unique constraint indices to prevent duplicates
 
-                // Create the unique index index on Global_Params
-                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on Global_Params(ParamID);";
-                dbCommand.ExecuteNonQuery();
-
-                // Create the unique index index on Frame_Param_Keys
-                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on Frame_Param_Keys(ParamID);";
-                dbCommand.ExecuteNonQuery();
-
-                // Create the unique index index on Frame_Params
-                dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParams on Frame_Params(FrameNum, ParamID);";
-                dbCommand.ExecuteNonQuery();
-
-                // Create a second index on Frame_Params, to allow for lookups by ParamID
-                dbCommand.CommandText = "CREATE INDEX ix_index_FrameParams_By_ParamID on Frame_Params(ParamID, FrameNum);";
-                dbCommand.ExecuteNonQuery();
-
                 // Create the unique index on Frame_Scans
                 dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on Frame_Scans(FrameNum, ScanNum);";
-                dbCommand.ExecuteNonQuery();
-
-                // Create the views
-
-                dbCommand.CommandText =
-                    "CREATE VIEW V_Frame_Params AS " +
-                    "SELECT FP.FrameNum, FPK.ParamName, FP.ParamID, FP.ParamValue, FPK.ParamDescription, FPK.ParamDataType " +
-                    "FROM Frame_Params FP INNER JOIN " +
-                         "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
                 dbCommand.ExecuteNonQuery();
 
             }
@@ -784,20 +792,7 @@ namespace UIMFLibrary
             }
 
             return m_globalParameters;
-        }
-
-        public async Task InsertFrameAsync(FrameParameters frameParameters)
-        {
-            try
-            {
-                await Task.Run(() => InsertFrame(frameParameters));
-            }
-            catch (Exception ex)
-            {
-                ReportError("InsertFrame error: " + ex.Message, ex);
-                throw;
-            }
-        }
+        }    
 
         /// <summary>
         /// Method to insert details related to each IMS frame
@@ -810,6 +805,17 @@ namespace UIMFLibrary
             var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
 
             InsertFrame(frameParameters.FrameNum, frameParams);
+        }
+
+        /// <summary>
+        /// Method to insert details related to each IMS frame
+        /// </summary>
+        /// <param name="frameNum">Frame number</param>
+        /// <param name="frameParams">FrameParams object</param>
+        public void InsertFrame(int frameNum, FrameParams frameParams)
+        {
+            var frameParamsLite = frameParams.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
+            InsertFrame(frameNum, frameParamsLite);
         }
 
         /// <summary>
@@ -844,7 +850,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="globalParameters">
         /// </param>
-        [Obsolete("Use AddUpdateGlobalParameter")]
+        [Obsolete("Use InsertGlobal or AddUpdateGlobalParameter")]
         public void InsertGlobal(GlobalParameters globalParameters)
         {
             var globalParams = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
@@ -852,6 +858,20 @@ namespace UIMFLibrary
             {
                 AddUpdateGlobalParameter(globalParam.Key, globalParam.Value);
             }           
+        }
+
+        /// <summary>
+        /// Method to enter the details of the global parameters for the experiment
+        /// </summary>
+        /// <param name="globalParameters">
+        /// </param>
+        public void InsertGlobal(GlobalParams globalParameters)
+        {
+            foreach (var globalParam in globalParameters.Values)
+            {
+                var paramEntry = globalParam.Value;
+                AddUpdateGlobalParameter(paramEntry.ParamType, paramEntry.Value);
+            }
         }
 
         /// <summary>
@@ -875,6 +895,8 @@ namespace UIMFLibrary
             Int64 tic,
             byte[] spectra)
         {
+            // ToDo: xxx Create a version of this function that accepts a frame number and a MassCalibrationFactors struct
+
             if (nonZeroCount <= 0)
                 return;
             
@@ -1399,7 +1421,6 @@ namespace UIMFLibrary
                 }
 
                 dbCommand.CommandText = "INSERT INTO " + tableName + " VALUES (:Buffer);";
-                dbCommand.Prepare();
 
                 dbCommand.Parameters.Add(new SQLiteParameter(":Buffer", fileBytesAsBuffer));
 
@@ -1688,7 +1709,6 @@ namespace UIMFLibrary
 
             m_dbCommandInsertFrameParamKey.CommandText = "INSERT INTO Frame_Param_Keys (ParamID, ParamName, ParamDataType, ParamDescription) " +
                                                          "VALUES (:ParamID, :ParamName, :ParamDataType, :ParamDescription);";
-            m_dbCommandInsertFrameParamKey.Prepare();
         }
 
         /// <summary>
@@ -1700,7 +1720,6 @@ namespace UIMFLibrary
 
             m_dbCommandInsertFrameParamValue.CommandText = "INSERT INTO Frame_Params (FrameNum, ParamID, ParamValue) " +
                                                            "VALUES (:FrameNum, :ParamID, :ParamValue);";
-            m_dbCommandInsertFrameParamValue.Prepare();
         }
 
         /// <summary>
@@ -1710,9 +1729,8 @@ namespace UIMFLibrary
         {
             m_dbCommandInsertGlobalParamValue = m_dbConnection.CreateCommand();
 
-            m_dbCommandInsertGlobalParamValue.CommandText = "INSERT INTO Global_Params (ParamID, ParamValue) " +
-                                                            "VALUES (:ParamID, :ParamValue);";
-            m_dbCommandInsertGlobalParamValue.Prepare();
+            m_dbCommandInsertGlobalParamValue.CommandText = "INSERT INTO Global_Params (ParamID, ParamName, ParamValue, ParamDataType, ParamDescription) " +
+                                                            "VALUES (:ParamID, :ParamName, :ParamValue, :ParamDataType, :ParamDescription);";
         }
 
         /// <summary>
@@ -1725,7 +1743,6 @@ namespace UIMFLibrary
             m_dbCommandInsertScan.CommandText =
                 "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
                 + "VALUES(:FrameNum, :ScanNum, :NonZeroCount, :BPI, :BPI_MZ, :TIC, :Intensities);";
-            m_dbCommandInsertScan.Prepare();
 
         }
 
@@ -1734,7 +1751,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="errorMessage"></param>
         /// <param name="ex"></param>
-        private void ReportError(string errorMessage, Exception ex)
+        protected void ReportError(string errorMessage, Exception ex)
         {
             Console.WriteLine(errorMessage);
             throw new Exception(errorMessage, ex);
@@ -1776,16 +1793,54 @@ namespace UIMFLibrary
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
+        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object")]
         public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
         {
+            // ToDo: xxx Create a version of this function that accepts a MassCalibrationFactors struct
+
             // mz = (k * (t-t0))^2
             double t = binNumber * binWidth / 1000;
+
             double resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3)
                                 + frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7)
                                 + frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
             var mz =
                 frameParameters.CalibrationSlope *
                 ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+            mz = (mz * mz) + resMassErr;
+            return mz;
+        }
+
+        /// <summary>
+        /// Convert bin number to m/z value
+        /// </summary>
+        /// <param name="binNumber">
+        /// </param>
+        /// <param name="binWidth">
+        /// </param>
+        /// <param name="frameParams">
+        /// </param>		
+        /// <returns>
+        /// m/z<see cref="double"/>.
+        /// </returns>
+        public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParams)
+        {
+            // mz = (k * (t-t0))^2
+            double t = binNumber * binWidth / 1000;
+
+            var a2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficienta2, 0);
+            var b2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientb2, 0);
+            var c2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientc2, 0);
+            var d2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientd2, 0);
+            var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficiente2, 0);
+            var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientf2, 0);
+
+            double resMassErr = a2 * t + b2 * Math.Pow(t, 3)
+                                + c2 * Math.Pow(t, 5) + d2 * Math.Pow(t, 7)
+                                + e2 * Math.Pow(t, 9) + f2 * Math.Pow(t, 11);
+            var mz =
+                frameParams.CalibrationSlope *
+                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParams.CalibrationIntercept));
             mz = (mz * mz) + resMassErr;
             return mz;
         }

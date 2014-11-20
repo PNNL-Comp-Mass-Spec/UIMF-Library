@@ -54,7 +54,7 @@ namespace UIMFLibrary
             if (globalParameters.Prescan_Continuous)
                 prescanContinuous = 1;
 
-            var GlobalParams = new Dictionary<GlobalParamKeyType, string>
+            var globalParams = new Dictionary<GlobalParamKeyType, string>
             { 
                 {GlobalParamKeyType.InstrumentName, globalParameters.InstrumentName},
                 {GlobalParamKeyType.DateStarted, globalParameters.DateStarted},
@@ -74,7 +74,7 @@ namespace UIMFLibrary
                 {GlobalParamKeyType.PrescanProfile, globalParameters.Prescan_Profile}
 	        };
 
-            return GlobalParams;
+            return globalParams;
         }
 
         /// <summary>
@@ -84,14 +84,14 @@ namespace UIMFLibrary
         /// <returns></returns>
         public static GlobalParams ConvertStringParamsToGlobalParams(Dictionary<GlobalParamKeyType, string> GlobalParamsByType)
         {
-            var GlobalParams = new GlobalParams();
+            var globalParams = new GlobalParams();
 
             foreach (var paramItem in GlobalParamsByType)
             {
-                GlobalParams.AddUpdateValue(paramItem.Key, paramItem.Value);
+                globalParams.AddUpdateValue(paramItem.Key, paramItem.Value);
             }
 
-            return GlobalParams;
+            return globalParams;
         }
 
         /// <summary>

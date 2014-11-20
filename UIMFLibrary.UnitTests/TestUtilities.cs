@@ -4,6 +4,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Linq;
+
 namespace UIMFLibrary.UnitTests
 {
 	using System;
@@ -25,9 +27,9 @@ namespace UIMFLibrary.UnitTests
 		/// <param name="intensityVals">
 		/// The intensity vals.
 		/// </param>
-		public static void display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
+		public static void Display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			for (int i = 0; i < frameORScanVals.Length; i++)
 			{
 				sb.Append(frameORScanVals[i]);
@@ -45,13 +47,13 @@ namespace UIMFLibrary.UnitTests
 		/// <param name="fp">
 		/// The fp.
 		/// </param>
-		public static void displayFrameParameters(FrameParameters fp)
+		public static void DisplayFrameParameters(FrameParams fp)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 
 			string separator = Environment.NewLine;
 
-			sb.Append("avg TOF length = \t" + fp.AverageTOFLength);
+            sb.Append("avg TOF length = \t" + fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
 			sb.Append(separator);
 			sb.Append("cal intercept = \t" + fp.CalibrationIntercept);
 			sb.Append(separator);
@@ -59,23 +61,23 @@ namespace UIMFLibrary.UnitTests
 			sb.Append(separator);
 			sb.Append("frame type = \t" + fp.FrameType);
 			sb.Append(separator);
-			sb.Append("pressure back = \t" + fp.PressureBack);
+            sb.Append("pressure back = \t" + fp.GetValueDouble(FrameParamKeyType.PressureBack, 0));
 			sb.Append(separator);
-			sb.Append("pressure front = \t" + fp.PressureFront);
+            sb.Append("pressure front = \t" + fp.GetValueDouble(FrameParamKeyType.PressureFront, 0));
 			sb.Append(separator);
-			sb.Append("high pressure funnel pressure= \t" + fp.HighPressureFunnelPressure);
+            sb.Append("high pressure funnel pressure= \t" + fp.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0));
 			sb.Append(separator);
-			sb.Append("ion funnel trap pressure= \t" + fp.IonFunnelTrapPressure);
+            sb.Append("ion funnel trap pressure= \t" + fp.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0));
 			sb.Append(separator);
-			sb.Append("quadrupole pressure = \t" + fp.QuadrupolePressure);
+            sb.Append("quadrupole pressure = \t" + fp.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0));
 			sb.Append(separator);
-			sb.Append("rear ion funnel pressure = \t" + fp.RearIonFunnelPressure);
+            sb.Append("rear ion funnel pressure = \t" + fp.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0));
 			sb.Append(separator);
-			sb.Append("start time = \t" + fp.StartTime);
+            sb.Append("start time = \t" + fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0));
 			sb.Append(separator);
 			sb.Append("num scans = \t" + fp.Scans);
 			sb.Append(separator);
-			sb.Append("IMF profile = \t" + fp.IMFProfile);
+            sb.Append("IMF profile = \t" + fp.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
 
 			Console.WriteLine(sb.ToString());
 		}
@@ -89,9 +91,9 @@ namespace UIMFLibrary.UnitTests
 		/// <param name="intensities">
 		/// The intensities.
 		/// </param>
-		public static void displayRawMassSpectrum(double[] mzValues, int[] intensities)
+		public static void DisplayRawMassSpectrum(double[] mzValues, int[] intensities)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			for (int i = 0; i < mzValues.Length; i++)
 			{
 				sb.Append(mzValues[i]);
@@ -112,17 +114,9 @@ namespace UIMFLibrary.UnitTests
 		/// <returns>
 		/// Maximum value<see cref="int"/>.
 		/// </returns>
-		public static int getMax(int[] values)
+		public static int GetMax(int[] values)
 		{
-			int max = 0;
-			for (int i = 0; i < values.Length; i++)
-			{
-				if (values[i] > max)
-				{
-					max = values[i];
-				}
-			}
-
+		    var max = (from item in values select item).ToList().Max();
 			return max;
 		}
 
@@ -141,7 +135,7 @@ namespace UIMFLibrary.UnitTests
 		/// <returns>
 		/// Maximum value<see cref="int"/>.
 		/// </returns>
-		public static int getMax(int[][] values, out int xcoord, out int ycoord)
+		public static int GetMax(int[][] values, out int xcoord, out int ycoord)
 		{
 			int max = 0;
 			xcoord = 0;
@@ -175,9 +169,9 @@ namespace UIMFLibrary.UnitTests
 		/// <param name="cutoff">
 		/// The cutoff.
 		/// </param>
-		public static void printAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
+		public static void PrintAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			int frameValue = frameVals[0];
 			for (int i = 0; i < frameVals.Length; i++)
 			{
@@ -214,9 +208,9 @@ namespace UIMFLibrary.UnitTests
 		/// <param name="cutoff">
 		/// The cutoff.
 		/// </param>
-		public static void printAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
+		public static void PrintAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			int frameValue = frameVals[0];
 			for (int i = 0; i < frameVals.Length; i++)
 			{

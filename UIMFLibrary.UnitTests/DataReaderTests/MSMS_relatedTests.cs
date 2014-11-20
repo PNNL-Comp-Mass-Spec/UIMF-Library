@@ -25,7 +25,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		{
 			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
 			{
-				GlobalParameters gp = reader.GetGlobalParameters();
+				var gp = reader.GetGlobalParams();
 
 				int checkSum = 0;
 
@@ -46,9 +46,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		{
 			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
 			{
-				int testFrame = 2;
-				int startScan = 1;
-				int stopScan = 300;
+				const int testFrame = 2;
+				const int startScan = 1;
+				const int stopScan = 300;
 
 				int[] intensityArray;
 				double[] mzArray;
@@ -61,7 +61,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 					out mzArray, 
 					out intensityArray);
 
-				StringBuilder sb = new StringBuilder();
+				var sb = new StringBuilder();
 				for (int i = 0; i < mzArray.Length; i++)
 				{
 					sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
@@ -90,7 +90,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void containsMSMSData_test1()
 		{
-			using (DataReader reader = new DataReader(FileRefs.uimfStandardFile1))
+			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				Assert.AreEqual(false, reader.HasMSMSData());
 			}

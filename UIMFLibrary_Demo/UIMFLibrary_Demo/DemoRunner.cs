@@ -35,7 +35,7 @@ namespace UIMFLibrary_Demo
 
             //--------------------------------------------------------------------------Get Global parameters
 
-            GlobalParameters gp = datareader.GetGlobalParameters();
+            var gp = datareader.GetGlobalParams();
 
             reportProgress();
             reportProgress();
@@ -87,8 +87,8 @@ namespace UIMFLibrary_Demo
             double toleranceInPPM = 25;
 
             double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-            int[] frameVals = null;
-            int[] intensityVals = null;
+            int[] frameVals;
+            int[] intensityVals;
 
 			datareader.GetLCProfile(frameTarget - 25, frameTarget + 25, frameType, imsScanTarget - 2, imsScanTarget + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
             reportProgress();

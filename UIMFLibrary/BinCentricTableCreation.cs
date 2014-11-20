@@ -24,9 +24,14 @@ namespace UIMFLibrary
 		public const string CREATE_BINS_INDEX = "CREATE INDEX Bin_Intensities_MZ_BIN_IDX ON Bin_Intensities(MZ_BIN);";
 
 		/// <summary>
-		/// Command for creating the Bin_intensities table
+        /// Command for creating the Bin_Intensities table
 		/// </summary>
 		public const string CREATE_BINS_TABLE = "CREATE TABLE Bin_Intensities (MZ_BIN int(11), INTENSITIES BLOB);";
+
+        /// <summary>
+        /// Command for clearing the Bin_Intensities table (so that we can re-populate it)
+        /// </summary>
+        public const string TRUNCATE_BINS_TABLE = "DELETE FROM Bin_Intensities;";
 
 		/// <summary>
 		/// Command for adding a row to the Bin_Intensities table
@@ -164,6 +169,19 @@ namespace UIMFLibrary
 
 		#region Methods
 
+        /// <summary>
+        /// Delete all rows from the Bin_Intensities table
+        /// </summary>
+        /// <param name="uimfWriterConnection"></param>
+        private void ClearBinIntensitiesTable(SQLiteConnection uimfWriterConnection)
+        {
+            // Delete the data in the Bin_Intensities table
+            using (var command = new SQLiteCommand(TRUNCATE_BINS_TABLE, uimfWriterConnection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+
 		/// <summary>
 		/// Create the bin intensities index.
 		/// </summary>
@@ -172,10 +190,14 @@ namespace UIMFLibrary
 		/// </param>
 		private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
 		{
-			using (var command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
-			{
-				command.ExecuteNonQuery();
-			}
+		    if (!DataReader.IndexExists(uimfWriterConnection, "Bin_Intensities_MZ_BIN_IDX"))
+		    {
+                using (var command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
+                {
+                    command.ExecuteNonQuery();
+                }
+		    }
+		    
 		}
 
 		/// <summary>
@@ -328,8 +350,8 @@ namespace UIMFLibrary
 				{
 					string query = this.GetInsertIntensityQuery(i);
 					var sqlCommand = new SQLiteCommand(query, connection);
-					sqlCommand.Prepare();
-					commandDictionary.Add(i, sqlCommand);
+
+                    commandDictionary.Add(i, sqlCommand);
 				}
 
 				using (SQLiteTransaction transaction = connection.BeginTransaction())
@@ -493,7 +515,7 @@ namespace UIMFLibrary
 			SQLiteConnection temporaryDatabaseConnection, 
 			DataReader uimfReader)
 		{
-			int numBins = uimfReader.GetGlobalParameters().Bins;
+			int numBins = uimfReader.GetGlobalParams().Bins;
 
             var frameParams = uimfReader.GetFrameParams(1);
             int numImsScans = frameParams.Scans;
@@ -508,13 +530,20 @@ namespace UIMFLibrary
 			Console.WriteLine(DateTime.Now + " - Adding bin-centric data to " + targetFile);
 			DateTime dtLastProgress = DateTime.UtcNow;
 
-			// Create new table in the UIMF file that will be used to store bin-centric data
-			this.CreateBinIntensitiesTable(uimfWriterConnection);
+		    if (DataReader.TableExists(uimfWriterConnection, "Bin_Intensities"))
+		    {
+                // Clear data from the existing table
+		        this.ClearBinIntensitiesTable(uimfWriterConnection);
+		    }
+		    else
+		    {
+		        // Create new table in the UIMF file that will be used to store bin-centric data
+		        this.CreateBinIntensitiesTable(uimfWriterConnection);
+		    }
 
-			using (var insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
+
+		    using (var insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
 			{
-				insertCommand.Prepare();
-
 				for (int i = 0; i <= numBins; i++)
 				{
 					this.SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
@@ -535,9 +564,9 @@ namespace UIMFLibrary
 			this.CreateBinIntensitiesIndex(uimfWriterConnection);
 
 			Console.WriteLine(DateTime.Now + " - Done");
-		}
+		}	   
 
-		/// <summary>
+	    /// <summary>
 		/// Sort data for bin.
 		/// </summary>
 		/// <param name="inConnection">

@@ -6,80 +6,73 @@
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
-	using System;
-	using System.IO;
+    using System.IO;
 
-	using NUnit.Framework;
+    using NUnit.Framework;
 
-	/// <summary>
-	/// The bin centric tests.
-	/// </summary>
-	public class BinCentricTests
-	{
-		#region Public Methods and Operators
+    /// <summary>
+    /// The bin centric tests.
+    /// </summary>
+    public class BinCentricTests
+    {
+        #region Public Methods and Operators
 
-		/// <summary>
-		/// The test create bin centric tables.
-		/// </summary>
-		[Test]
-		public void TestCreateBinCentricTables()
-		{
-			try
-			{
-				string fileLocation =
-					@"..\..\..\TestFiles\SarcCtrl_P21_1mgml_IMS6_AgTOF07_210min_CID_01_05Oct12_Frodo_Precursors_Removed_Collision_Energy_Collapsed.UIMF";
-				FileInfo uimfFile = new FileInfo(fileLocation);
+        /// <summary>
+        /// The test create bin centric tables.
+        /// </summary>
+        [Test]
+        public void TestCreateBinCentricTables()
+        {
+            const string fileLocation = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\BinCentric\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.UIMF";
+            var uimfFile = new FileInfo(fileLocation);
 
-				using (DataWriter uimfWriter = new DataWriter(uimfFile.FullName))
-				{
-					uimfWriter.CreateBinCentricTables();
-				}
-			}
-			catch (Exception)
-			{
-			}
-		}
+            if (uimfFile.Exists)
+            {
+                using (var uimfWriter = new DataWriter(uimfFile.FullName))
+                {
+                    uimfWriter.CreateBinCentricTables();
+                }
+            }           
 
-		/// <summary>
-		/// The test create bin centric tables small file.
-		/// </summary>
-		[Test]
-		public void TestCreateBinCentricTablesSmallFile()
-		{
-			try
-			{
-				string fileLocation = @"..\..\..\TestFiles\PepMix_MSMS_4msSA.UIMF";
-				FileInfo uimfFile = new FileInfo(fileLocation);
+        }
 
-				using (DataWriter uimfWriter = new DataWriter(uimfFile.FullName))
-				{
-					uimfWriter.CreateBinCentricTables();
-				}
-			}
-			catch (Exception)
-			{
-			}
-		}
+        /// <summary>
+        /// The test create bin centric tables small file.
+        /// </summary>
+        [Test]
+        public void TestCreateBinCentricTablesSmallFile()
+        {
+            const string fileLocation = @"..\..\..\TestFiles\PepMix_MSMS_4msSA.UIMF";
+            var uimfFile = new FileInfo(fileLocation);
 
-		/// <summary>
-		/// The test encode decode functionality.
-		/// </summary>
-		[Test]
-		public void TestEncodeDecodeFunctionality()
-		{
-			int scanLc = 183;
-			int scanIms = 217;
-			int numImsScans = 360;
+            if (uimfFile.Exists)
+            {
+                using (var uimfWriter = new DataWriter(uimfFile.FullName))
+                {
+                    uimfWriter.CreateBinCentricTables();
+                }
+            }
+        }
 
-			int calculatedIndex = (scanLc * numImsScans) + scanIms;
+        /// <summary>
+        /// The test encode decode functionality.
+        /// </summary>
+        [Test]
+        public void TestEncodeDecodeFunctionality()
+        {
+            const int scanLc = 183;
+            const int scanIms = 217;
+            const int numImsScans = 360;
 
-			int calculatedScanLc = calculatedIndex / numImsScans;
-			int calculatedScanIms = calculatedIndex % numImsScans;
+            const int calculatedIndex = (scanLc * numImsScans) + scanIms;
 
-			Assert.AreEqual(calculatedScanLc, scanLc);
-			Assert.AreEqual(calculatedScanIms, scanIms);
-		}
+            const int calculatedScanLc = calculatedIndex / numImsScans;
+            const int calculatedScanIms = calculatedIndex % numImsScans;
 
-		#endregion
-	}
+            Assert.AreEqual(calculatedScanLc, scanLc);
+            Assert.AreEqual(calculatedScanIms, scanIms);
+        }
+
+        #endregion
+    }
 }
