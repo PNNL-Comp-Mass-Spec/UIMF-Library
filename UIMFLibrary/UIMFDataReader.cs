@@ -106,6 +106,9 @@ namespace UIMFLibrary
         /// </summary>
         private readonly bool m_UsingLegacyFrameParameters;
 
+        /// <summary>
+        /// List of column names that are not present in the legacy Frame_Parameters table
+        /// </summary>
         private readonly SortedSet<string> m_LegacyFrameParametersMissingColumns;
 
         /// <summary>
@@ -216,12 +219,22 @@ namespace UIMFLibrary
                 // Initialize the variable used to track missing columns when reading legacy parameters
                 m_LegacyFrameParametersMissingColumns = new SortedSet<string>();
 
+                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_uimfDatabaseConnection);
+
                 LoadPrepStmts();
 
                 // Update the frame parameter keys
                 GetFrameParameterKeys(true);
 
-                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_uimfDatabaseConnection);
+                if (m_UsingLegacyFrameParameters)
+                {
+                    // Read the parameters for the first frame so that m_LegacyFrameParametersMissingColumns will be up to date
+                    var frameList = GetMasterFrameList();
+                    if (frameList.Count > 0 )
+                    {
+                        GetFrameParams(frameList.First().Key);
+                    }                    
+                }
 
                 // Lookup whether the pressure columns are in torr or mTorr
                 DeterminePressureUnits();
@@ -1678,12 +1691,12 @@ namespace UIMFLibrary
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.AverageTOFLength);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.CalibrationSlope);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.CalibrationIntercept);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficienta2);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficientb2);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficientc2);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficientd2);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficiente2);
-            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassErrorCoefficientf2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficienta2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientb2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientc2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientd2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficiente2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientf2);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.AmbientTemperature);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack1);
             AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack2);
@@ -4431,32 +4444,47 @@ namespace UIMFLibrary
 
                 if (m_UsingLegacyFrameParameters)
                 {
-                    isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
-                    if (isMilliTorr)
+                    if (!m_LegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
                     {
-                        PressureIsMilliTorr = true;
-                        return;
+                        isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "HighPressureFunnelPressure");
+                        if (isMilliTorr)
+                        {
+                            PressureIsMilliTorr = true;
+                            return;
+                        }
                     }
 
-                    isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "PressureBack");
-                    if (isMilliTorr)
+                    if (!m_LegacyFrameParametersMissingColumns.Contains("PressureBack"))
                     {
-                        PressureIsMilliTorr = true;
-                        return;
+                        isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "PressureBack");
+                        if (isMilliTorr)
+                        {
+                            PressureIsMilliTorr = true;
+                            return;
+                        }
                     }
 
-                    isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "IonFunnelTrapPressure");
-                    if (isMilliTorr)
+
+                    if (!m_LegacyFrameParametersMissingColumns.Contains("IonFunnelTrapPressure"))
                     {
-                        PressureIsMilliTorr = true;
-                        return;
+                        isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "IonFunnelTrapPressure");
+                        if (isMilliTorr)
+                        {
+                            PressureIsMilliTorr = true;
+                            return;
+                        }
                     }
 
-                    isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "RearIonFunnelPressure");
-                    if (isMilliTorr)
+
+                    if (!m_LegacyFrameParametersMissingColumns.Contains("RearIonFunnelPressure"))
                     {
-                        PressureIsMilliTorr = true;
+                        isMilliTorr = ColumnIsMilliTorr(cmd, "Frame_Parameters", "RearIonFunnelPressure");
+                        if (isMilliTorr)
+                        {
+                            PressureIsMilliTorr = true;
+                        }
                     }
+                   
                 }
                 else
                 {
@@ -4691,7 +4719,6 @@ namespace UIMFLibrary
 
                 if (!m_LegacyFrameParametersMissingColumns.Contains(columnName))
                     m_LegacyFrameParametersMissingColumns.Add(columnName);
-
             }
 
             return result;
@@ -5179,12 +5206,12 @@ namespace UIMFLibrary
 
             var frameParams = GetFrameParams(frameNumber);
 
-            var a2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficienta2);
-            var b2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientb2);
-            var c2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientc2);
-            var d2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientd2);
-            var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficiente2);
-            var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientf2);
+            var a2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficienta2);
+            var b2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientb2);
+            var c2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientc2);
+            var d2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientd2);
+            var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2);
+            var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2);
 
             bool polynomialCalibrantsAreUsed = Math.Abs(a2) > float.Epsilon || Math.Abs(b2) > float.Epsilon
                                                 || Math.Abs(c2) > float.Epsilon || Math.Abs(d2) > float.Epsilon

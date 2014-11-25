@@ -4,6 +4,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
     using System.IO;
@@ -21,14 +23,29 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         /// The test create bin centric tables.
         /// </summary>
         [Test]
+        [Ignore]
         public void TestCreateBinCentricTables()
         {
-            const string fileLocation = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\BinCentric\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.UIMF";
-            var uimfFile = new FileInfo(fileLocation);
+            const string fileLocationSource = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\BinCentric\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000_Excerpt.uimf";
+            var fiSource = new FileInfo(fileLocationSource);
 
-            if (uimfFile.Exists)
+            if (fiSource.Exists && fiSource.Directory != null)
             {
-                using (var uimfWriter = new DataWriter(uimfFile.FullName))
+                var fiTarget =
+                    new FileInfo(Path.Combine(fiSource.Directory.FullName,
+                                              Path.GetFileNameWithoutExtension(fileLocationSource) + "_BinCentric.uimf"));
+
+                try
+                {
+                    fiSource.CopyTo(fiTarget.FullName, true);
+                }
+                catch (Exception ex)
+                {
+                    // File copy error; probably in use by another process
+                    return;
+                }
+
+                using (var uimfWriter = new DataWriter(fiTarget.FullName))
                 {
                     uimfWriter.CreateBinCentricTables();
                 }

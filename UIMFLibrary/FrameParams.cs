@@ -9,6 +9,20 @@ namespace UIMFLibrary
     /// </summary>
     public class FrameParams
     {
+        #region Structures
+
+        public struct MassCalibrationCoefficientsType
+        {
+            public double a2;
+            public double b2;
+            public double c2;
+            public double d2;
+            public double e2;
+            public double f2;
+        }
+
+        #endregion
+
         #region Member Variables
 
         /// <summary>
@@ -16,6 +30,8 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
         private readonly Dictionary<FrameParamKeyType, FrameParam> mFrameParameters;
+
+        private MassCalibrationCoefficientsType mCachedMassCalibrationCoefficients;
 
         #endregion
 
@@ -83,6 +99,18 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Mass calibration coefficients
+        /// </summary>
+        /// <remarks>Provided for quick reference to avoid having to access the dictionary and convert from string to double</remarks>
+        public MassCalibrationCoefficientsType MassCalibrationCoefficients
+        {
+            get
+            {
+                return mCachedMassCalibrationCoefficients;
+            }
+        }
+
+        /// <summary>
         /// Scans per frame
         /// </summary>
         /// <remarks>Returns 0 if not defined</remarks>
@@ -124,7 +152,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (int)</param>
         public void AddUpdateValue(FrameParamKeyType paramType, int value)
         {
-            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));            
         }
 
         /// <summary>
@@ -144,6 +172,8 @@ namespace UIMFLibrary
                 paramEntry = new FrameParam(FrameParamUtilities.GetParamDefByType(paramType), value);
                 mFrameParameters.Add(paramType, paramEntry);
             }
+
+            UpdateCachedParam(paramType, value);
         }
 
         /// <summary>
@@ -281,6 +311,38 @@ namespace UIMFLibrary
         public bool HasParameter(FrameParamKeyType paramType)
         {
             return mFrameParameters.ContainsKey(paramType);
+        }
+
+        private void UpdateCachedParam(FrameParamKeyType paramType, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            double numericValue;
+            if (!double.TryParse(value, out numericValue))
+                return;
+
+            switch (paramType)
+            {
+                case FrameParamKeyType.MassCalibrationCoefficienta2:
+                    mCachedMassCalibrationCoefficients.a2 = numericValue;
+                    break;
+                case FrameParamKeyType.MassCalibrationCoefficientb2:
+                    mCachedMassCalibrationCoefficients.b2 = numericValue;
+                    break;
+                case FrameParamKeyType.MassCalibrationCoefficientc2:
+                    mCachedMassCalibrationCoefficients.c2 = numericValue;
+                    break;
+                case FrameParamKeyType.MassCalibrationCoefficientd2:
+                    mCachedMassCalibrationCoefficients.d2 = numericValue;
+                    break;
+                case FrameParamKeyType.MassCalibrationCoefficiente2:
+                    mCachedMassCalibrationCoefficients.e2 = numericValue;
+                    break;
+                case FrameParamKeyType.MassCalibrationCoefficientf2:
+                    mCachedMassCalibrationCoefficients.f2 = numericValue;
+                    break;
+            }
         }
     }
 }

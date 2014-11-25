@@ -12,7 +12,6 @@
 
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace UIMFLibrary
 {
@@ -765,6 +764,8 @@ namespace UIMFLibrary
         public void FlushUimf()
         {
             TransactionCommit();
+            // Without this sleep, we randomly get error "database disk image is malformed"
+            System.Threading.Thread.Sleep(100);
             TransactionBegin();
         }
 
@@ -827,7 +828,7 @@ namespace UIMFLibrary
         {
             // Make sure the previous frame's data is committed to the database
 
-            FlushUimf();
+            // FlushUimf();
 
             // Make sure the Frame_Param_Keys table has the required keys
             ValidateFrameParameterKeys(frameParameters.Keys.ToList());
@@ -895,8 +896,6 @@ namespace UIMFLibrary
             Int64 tic,
             byte[] spectra)
         {
-            // ToDo: xxx Create a version of this function that accepts a frame number and a MassCalibrationFactors struct
-
             if (nonZeroCount <= 0)
                 return;
             
@@ -1796,18 +1795,19 @@ namespace UIMFLibrary
         [Obsolete("Use ConvertBinToMz that accepts a FrameParams object")]
         public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
         {
-            // ToDo: xxx Create a version of this function that accepts a MassCalibrationFactors struct
-
             // mz = (k * (t-t0))^2
             double t = binNumber * binWidth / 1000;
 
             double resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3)
                                 + frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7)
                                 + frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
+            
             var mz =
                 frameParameters.CalibrationSlope *
                 ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+            
             mz = (mz * mz) + resMassErr;
+            
             return mz;
         }
 
@@ -1828,20 +1828,18 @@ namespace UIMFLibrary
             // mz = (k * (t-t0))^2
             double t = binNumber * binWidth / 1000;
 
-            var a2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficienta2, 0);
-            var b2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientb2, 0);
-            var c2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientc2, 0);
-            var d2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientd2, 0);
-            var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficiente2, 0);
-            var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientf2, 0);
+            var massCalCoefficients = frameParams.MassCalibrationCoefficients;
 
-            double resMassErr = a2 * t + b2 * Math.Pow(t, 3)
-                                + c2 * Math.Pow(t, 5) + d2 * Math.Pow(t, 7)
-                                + e2 * Math.Pow(t, 9) + f2 * Math.Pow(t, 11);
+            double resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3)
+                                + massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7)
+                                + massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
+            
             var mz =
                 frameParams.CalibrationSlope *
                 ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParams.CalibrationIntercept));
+
             mz = (mz * mz) + resMassErr;
+
             return mz;
         }
 

@@ -1,5 +1,12 @@
 UIMFLibrary Revision History
 
+Verison 3.0.5441; November 24, 2014
+	- Refactored the global parameters and frame parameters into key-value pairs
+		- New tables: Global_Params, Frame_Params, and Frame_Param_Keys
+		- The reader supports both v2.0 and v3.0 .UIMF files
+	- Added .NET 4.5.1 project with an asynchronous InsertFrame function
+	- Extensive code and unit test cleanup
+
 Version 2.1.5288; June 24, 2014
 	- Standardized data type names for database fields to conform to standard SqLite types
 	- Refactored shared code in UIMFWriter.CreateTables

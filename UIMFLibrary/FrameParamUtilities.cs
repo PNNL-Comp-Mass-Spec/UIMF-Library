@@ -70,12 +70,12 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.e2) > Single.Epsilon ||
                 Math.Abs(frameParameters.f2) > Single.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
-                frameParams.Add(FrameParamKeyType.MassErrorCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
             }
 
             // Ambient temperature
@@ -248,12 +248,12 @@ namespace UIMFLibrary
                 AverageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0),
                 CalibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope, 0),
                 CalibrationIntercept = frameParams.GetValueDouble(FrameParamKeyType.CalibrationIntercept, 0),
-                a2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficienta2, 0),
-                b2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientb2, 0),
-                c2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientc2, 0),
-                d2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientd2, 0),
-                e2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficiente2, 0),
-                f2 = frameParams.GetValueDouble(FrameParamKeyType.MassErrorCoefficientf2, 0),
+                a2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficienta2, 0),
+                b2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientb2, 0),
+                c2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientc2, 0),
+                d2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientd2, 0),
+                e2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2, 0),
+                f2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2, 0),
                 Temperature = frameParams.GetValueDouble(FrameParamKeyType.AmbientTemperature, 0),
                 voltHVRack1 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack1, 0),
                 voltHVRack2 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack2, 0),
@@ -357,17 +357,17 @@ namespace UIMFLibrary
                     return FrameParamKeyType.MultiplexingEncodingSequence;
 
                 case "a2":
-                    return FrameParamKeyType.MassErrorCoefficienta2;
+                    return FrameParamKeyType.MassCalibrationCoefficienta2;
                 case "b2":
-                    return FrameParamKeyType.MassErrorCoefficientb2;
+                    return FrameParamKeyType.MassCalibrationCoefficientb2;
                 case "c2":
-                    return FrameParamKeyType.MassErrorCoefficientc2;
+                    return FrameParamKeyType.MassCalibrationCoefficientc2;
                 case "d2":
-                    return FrameParamKeyType.MassErrorCoefficientd2;
+                    return FrameParamKeyType.MassCalibrationCoefficientd2;
                 case "e2":
-                    return FrameParamKeyType.MassErrorCoefficiente2;
+                    return FrameParamKeyType.MassCalibrationCoefficiente2;
                 case "f2":
-                    return FrameParamKeyType.MassErrorCoefficientf2;
+                    return FrameParamKeyType.MassCalibrationCoefficientf2;
 
                 case "Temperature":
                     return FrameParamKeyType.AmbientTemperature;
@@ -479,34 +479,34 @@ namespace UIMFLibrary
                                           FrameParamKeyType.CalibrationIntercept.ToString(), "double",
                                           "Calibration intercept, t0");
 
-                case FrameParamKeyType.MassErrorCoefficienta2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficienta2,
-                                          FrameParamKeyType.MassErrorCoefficienta2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficienta2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficienta2,
+                                          FrameParamKeyType.MassCalibrationCoefficienta2.ToString(), "double",
                                           "a2 parameter for residual mass error correction; ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11");
 
-                case FrameParamKeyType.MassErrorCoefficientb2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficientb2,
-                                          FrameParamKeyType.MassErrorCoefficientb2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficientb2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientb2,
+                                          FrameParamKeyType.MassCalibrationCoefficientb2.ToString(), "double",
                                           "b2 parameter for residual mass error correction");
 
-                case FrameParamKeyType.MassErrorCoefficientc2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficientc2,
-                                          FrameParamKeyType.MassErrorCoefficientc2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficientc2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientc2,
+                                          FrameParamKeyType.MassCalibrationCoefficientc2.ToString(), "double",
                                           "c2 parameter for residual mass error correction");
 
-                case FrameParamKeyType.MassErrorCoefficientd2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficientd2,
-                                          FrameParamKeyType.MassErrorCoefficientd2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficientd2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientd2,
+                                          FrameParamKeyType.MassCalibrationCoefficientd2.ToString(), "double",
                                           "db2 parameter for residual mass error correction");
 
-                case FrameParamKeyType.MassErrorCoefficiente2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficiente2,
-                                          FrameParamKeyType.MassErrorCoefficiente2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficiente2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficiente2,
+                                          FrameParamKeyType.MassCalibrationCoefficiente2.ToString(), "double",
                                           "e2 parameter for residual mass error correction");
 
-                case FrameParamKeyType.MassErrorCoefficientf2:
-                    return new FrameParamDef(FrameParamKeyType.MassErrorCoefficientf2,
-                                          FrameParamKeyType.MassErrorCoefficientf2.ToString(), "double",
+                case FrameParamKeyType.MassCalibrationCoefficientf2:
+                    return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientf2,
+                                          FrameParamKeyType.MassCalibrationCoefficientf2.ToString(), "double",
                                           "f2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.AmbientTemperature:
