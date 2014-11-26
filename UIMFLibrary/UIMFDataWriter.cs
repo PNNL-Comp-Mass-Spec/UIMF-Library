@@ -25,6 +25,15 @@ namespace UIMFLibrary
     /// </summary>
     public class DataWriter : IDisposable
     {
+        #region Constants
+
+        /// <summary>
+        /// Minimum interval between flushing (commit transaction / create new transaction)
+        /// </summary>
+        private const int MINIMUM_FLUSH_INTERVAL_SECONDS = 5;
+
+        #endregion
+
         #region Fields
 
         /// <summary>
@@ -57,6 +66,8 @@ namespace UIMFLibrary
         /// </summary>
         private SQLiteConnection m_dbConnection;
 
+        private DateTime m_LastFlush;
+
         /// <summary>
         /// Full path to the UIMF file
         /// </summary>
@@ -86,6 +97,7 @@ namespace UIMFLibrary
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
+            m_LastFlush = DateTime.UtcNow;
 
             try
             {
@@ -134,6 +146,10 @@ namespace UIMFLibrary
                     return;
                 }
 
+                Console.WriteLine("\nCreating the Frame_Params table using the legacy frame parameters");
+                var lastUpdate = DateTime.UtcNow;
+                int framesProcessed = 0;
+                
                 // Keys in this array are frame number, values are the frame parameters
                 var cachedFrameParams = new Dictionary<int, FrameParams>();
 
@@ -146,12 +162,24 @@ namespace UIMFLibrary
                     {
                         var frameParams = reader.GetFrameParams(frameInfo.Key);
                         cachedFrameParams.Add(frameInfo.Key, frameParams);
+
+                        framesProcessed++;
+
+                        if (DateTime.UtcNow.Subtract(lastUpdate).TotalSeconds >= 5)
+                        {
+                            Console.WriteLine(" ... caching frame parameters, " + framesProcessed + " / " + frameList.Count);
+                            lastUpdate = DateTime.UtcNow;
+                        }
                     }
 
                 }
 
+                Console.WriteLine();
+
                 // Create the Frame_Param_Keys and Frame_Params tables
                 CreateFrameParamsTables();
+
+                framesProcessed = 0;
 
                 // Store the frame parameters
                 foreach (var frameParamsEntry in cachedFrameParams)
@@ -165,10 +193,19 @@ namespace UIMFLibrary
                     }
 
                     InsertFrame(frameParamsEntry.Key, frameParamsLite);
+
+                    framesProcessed++;
+                    if (DateTime.UtcNow.Subtract(lastUpdate).TotalSeconds >= 5)
+                    {
+                        Console.WriteLine(" ... storing frame parameters, " + framesProcessed + " / " + cachedFrameParams.Count);
+                        lastUpdate = DateTime.UtcNow;
+                    }
+
                 }
 
-                FlushUimf();
+                Console.WriteLine("Conversion complete\n");
 
+                FlushUimf(true);
             }
             catch (Exception ex)
             {
@@ -215,7 +252,7 @@ namespace UIMFLibrary
                     AddUpdateGlobalParameter(currentParam.ParamType, currentParam.Value);                   
                 }
 
-                FlushUimf();
+                FlushUimf(false);
 
             }
             catch (Exception ex)
@@ -329,6 +366,8 @@ namespace UIMFLibrary
                     m_dbCommandInsertFrameParamValue.ExecuteNonQuery();
                 }
 
+                FlushUimf(false);
+
             }
             catch (Exception ex)
             {
@@ -341,8 +380,39 @@ namespace UIMFLibrary
         /// Add or update a global parameter
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
-        /// <param name="paramValue">Parameter value</param>
-        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string paramValue)
+        /// <param name="value">Parameter value (integer)</param>
+        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, int value)
+        {
+            AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Add or update a global parameter
+        /// </summary>
+        /// <param name="paramKeyType">Parameter type</param>
+        /// <param name="value">Parameter value (double)</param>
+        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, double value)
+        {
+            AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Add or update a global parameter
+        /// </summary>
+        /// <param name="paramKeyType">Parameter type</param>
+        /// <param name="value">Parameter value (date)</param>
+        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, DateTime value)
+        {
+            AddUpdateGlobalParameter(paramKeyType, UIMFDataUtilities.StandardizeDate(value));
+        }
+        
+
+        /// <summary>
+        /// Add or update a global parameter
+        /// </summary>
+        /// <param name="paramKeyType">Parameter type</param>
+        /// <param name="value">Parameter value (string)</param>
+        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string value)
         {
             try
             {
@@ -352,12 +422,12 @@ namespace UIMFLibrary
 
                 int updateCount;
 
-                var globalParam = new GlobalParam(paramKeyType, paramValue);
+                var globalParam = new GlobalParam(paramKeyType, value);
 
                 using (var dbCommand = m_dbConnection.CreateCommand())
                 {
                     dbCommand.CommandText = "UPDATE Global_Params " +
-                                            "SET ParamValue = '" + paramValue + "' " +
+                                            "SET ParamValue = '" + value + "' " +
                                             "WHERE ParamID = " + (int)paramKeyType;
                     updateCount = dbCommand.ExecuteNonQuery();
 
@@ -366,8 +436,6 @@ namespace UIMFLibrary
                 if (updateCount == 0)
                 {
                     m_dbCommandInsertGlobalParamValue.Parameters.Clear();
-                    // "VALUES (:ParamID, :ParamName, :ParamValue, :ParamDataType, :ParamDescription);";
-
 
                     m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)globalParam.ParamType));
                     m_dbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamName", globalParam.Name));
@@ -377,7 +445,7 @@ namespace UIMFLibrary
                     m_dbCommandInsertGlobalParamValue.ExecuteNonQuery();
                 }
 
-                m_globalParameters.AddUpdateValue(paramKeyType, paramValue);
+                m_globalParameters.AddUpdateValue(paramKeyType, value);
             }
             catch (Exception ex)
             {
@@ -631,7 +699,7 @@ namespace UIMFLibrary
                 }
             }            
 
-            FlushUimf();
+            FlushUimf(false);
         }
 
         /// <summary>
@@ -662,7 +730,7 @@ namespace UIMFLibrary
 
             }
 
-            FlushUimf();
+            FlushUimf(false);
         }
 
         /// <summary>
@@ -701,7 +769,7 @@ namespace UIMFLibrary
 
             }
 
-            FlushUimf();
+            FlushUimf(true);
         }
 
         /// <summary>
@@ -763,10 +831,30 @@ namespace UIMFLibrary
         /// </remarks>
         public void FlushUimf()
         {
-            TransactionCommit();
-            // Without this sleep, we randomly get error "database disk image is malformed"
-            System.Threading.Thread.Sleep(100);
-            TransactionBegin();
+            FlushUimf(true);
+        }
+
+        /// <summary>
+        /// Commits the currently open transaction, then starts a new one
+        /// </summary>
+        /// <param name="forceFlush">True to force a flush; otherwise, will only flush if the last one was 5 or more seconds ago</param>
+        /// <remarks>
+        /// Note that a transaction is started when the UIMF file is opened, then commited when the class is disposed
+        /// </remarks>
+        public void FlushUimf(bool forceFlush)
+        {
+            if (forceFlush | DateTime.UtcNow.Subtract(m_LastFlush).TotalSeconds >= MINIMUM_FLUSH_INTERVAL_SECONDS)
+            {
+                m_LastFlush = DateTime.UtcNow;
+
+                TransactionCommit();
+
+                // We were randomly getting error "database disk image is malformed"
+                // This sleep appears to have fixed the problem
+                System.Threading.Thread.Sleep(100);
+
+                TransactionBegin();
+            }           
         }
 
         /// <summary>
@@ -812,10 +900,10 @@ namespace UIMFLibrary
         /// Method to insert details related to each IMS frame
         /// </summary>
         /// <param name="frameNum">Frame number</param>
-        /// <param name="frameParams">FrameParams object</param>
-        public void InsertFrame(int frameNum, FrameParams frameParams)
+        /// <param name="frameParameters">FrameParams object</param>
+        public void InsertFrame(int frameNum, FrameParams frameParameters)
         {
-            var frameParamsLite = frameParams.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
+            var frameParamsLite = frameParameters.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
             InsertFrame(frameNum, frameParamsLite);
         }
 
@@ -827,8 +915,8 @@ namespace UIMFLibrary
         public void InsertFrame(int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
         {
             // Make sure the previous frame's data is committed to the database
-
-            // FlushUimf();
+            // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
+            FlushUimf(false);
 
             // Make sure the Frame_Param_Keys table has the required keys
             ValidateFrameParameterKeys(frameParameters.Keys.ToList());
@@ -878,14 +966,15 @@ namespace UIMFLibrary
         /// <summary>
         /// Write out the compressed intensity data to the UIMF file
         /// </summary>
-        /// <param name="frameParameters"></param>
-        /// <param name="scanNum"></param>
-        /// <param name="binWidth"></param>
-        /// <param name="indexOfMaxIntensity"></param>
-        /// <param name="nonZeroCount"></param>
-        /// <param name="bpi"></param>
-        /// <param name="tic"></param>
-        /// <param name="spectra"></param>
+        /// <param name="frameParameters">Legacy frame parameters</param>
+        /// <param name="scanNum">scan number</param>
+        /// <param name="binWidth">bin width</param>
+        /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
+        /// <param name="nonZeroCount">Count of non-zero values</param>
+        /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
+        /// <param name="tic">Total ion intensity</param>
+        /// <param name="spectra">Mass spectra intensities</param>
+        [Obsolete("Use InsertScanStoreBytes that accepts a FrameParams object")]
         private void InsertScanStoreBytes(
             FrameParameters frameParameters,
             int scanNum,
@@ -908,28 +997,50 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Insert a new scan using an array of intensities (as ints) along with binWidth
+        /// Write out the compressed intensity data to the UIMF file
         /// </summary>
-        /// <param name="frameParameters">
-        /// Frame parameters
-        /// </param>
-        /// <param name="scanNum">
-        /// Scan number
-        /// </param>
-        /// <param name="intensities">
-        /// Array of intensities, including all zeros
-        /// </param>
-        /// <param name="binWidth">
-        /// Bin width (used to compute m/z value of the BPI data point)
-        /// </param>
-        /// <returns>
-        /// Number of non-zero data points
-        /// </returns>
-        /// <remarks>
-        /// The intensities array should contain an intensity for every bin, including all of the zeroes
-        /// </remarks>
+        /// <param name="frameNumber">Frame number</param>
+        /// <param name="frameParameters">FrameParams</param>
+        /// <param name="scanNum">scan number</param>
+        /// <param name="binWidth">bin width</param>
+        /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
+        /// <param name="nonZeroCount">Count of non-zero values</param>
+        /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
+        /// <param name="tic">Total ion intensity</param>
+        /// <param name="spectra">Mass spectra intensities</param>
+        private void InsertScanStoreBytes(
+            int frameNumber,
+            FrameParams frameParameters,
+            int scanNum,
+            double binWidth,
+            int indexOfMaxIntensity,
+            int nonZeroCount,
+            double bpi,
+            Int64 tic,
+            byte[] spectra)
+        {
+            if (nonZeroCount <= 0)
+                return;
+
+            var bpiMz = ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
+
+            // Insert records.
+            InsertScanAddParameters(frameNumber, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
+            m_dbCommandInsertScan.ExecuteNonQuery();
+
+        }
+
+        /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
+        /// <param name="frameNumber">Frame Number</param>
+        /// <param name="frameParameters">Frame parameters</param>
+        /// <param name="scanNum">Scan number</param>
+        /// <param name="intensities">Array of intensities, including all zeros</param>
+        /// <param name="binWidth">Bin width (used to compute m/z value of the BPI data point)</param>
+        /// <returns>Number of non-zero data points</returns>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
         public int InsertScan(
-            FrameParameters frameParameters,
+            int frameNumber,
+            FrameParams frameParameters,
             int scanNum,
             int[] intensities,
             double binWidth)
@@ -944,156 +1055,26 @@ namespace UIMFLibrary
 
             int nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
             return nonZeroCount;
         }
-
-        /// <summary>
-        /// Insert a new scan using an array of intensities (as shorts) and binWidth
-        /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <param name="scanNum">
-        /// </param>
-        /// <param name="intensities">
-        /// </param>
-        /// <param name="binWidth">
-        /// </param>
-        /// <returns>
-        /// The size of the compressed archive in the output buffer<see cref="int"/>.
-        /// </returns>
-        /// <remarks>
-        /// The intensities array should contain an intensity for every bin, including all of the zeroes
-        /// </remarks>
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            short[] intensities,
-            double binWidth)
-        {
-            byte[] spectra;
-            double tic;
-            double bpi;
-            int indexOfMaxIntensity;
-
-            if (frameParameters == null)
-                return -1;
-
-            int nonZeroCount = IntensityConverterInt16.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
-
-            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
-
-            return nonZeroCount;
-        }
-
-        /// <summary>
-        /// Insert a new scan using an array of intensities (as floats) and binWidth
-        /// </summary>
-        /// <param name="frameParameters">
-        /// Frame parameters.
-        /// </param>
-        /// <param name="scanNum">
-        /// Scan num.
-        /// </param>
-        /// <param name="intensities">
-        /// Intensities array
-        /// </param>
-        /// <param name="binWidth">
-        /// Bin width
-        /// </param>
-        /// <returns>
-        /// The size of the compressed archive in the output buffer<see cref="int"/>.
-        /// </returns>
-        /// <remarks>
-        /// The intensities array should contain an intensity for every bin, including all of the zeroes
-        /// </remarks>
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            float[] intensities,
-            double binWidth)
-        {
-            byte[] spectra;
-            double tic;
-            double bpi;
-            int indexOfMaxIntensity;
-
-            if (frameParameters == null)
-                return -1;
-
-            int nonZeroCount = IntensityConverterFloat.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
-
-            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
-
-            return nonZeroCount;
-        }
-
-        /// <summary>
-        /// Insert a new scan using an array of intensities (as doubles) and binWidth
-        /// </summary>
-        /// <param name="frameParameters">
-        /// Frame parameters.
-        /// </param>
-        /// <param name="scanNum">
-        /// Scan num.
-        /// </param>
-        /// <param name="intensities">
-        /// Intensities array
-        /// </param>
-        /// <param name="binWidth">
-        /// Bin width
-        /// </param>
-        /// <returns>
-        /// The size of the compressed archive in the output buffer<see cref="int"/>.
-        /// </returns>
-        /// <remarks>
-        /// The intensities array should contain an intensity for every bin, including all of the zeroes
-        /// </remarks>
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            double[] intensities,
-            double binWidth)
-        {
-            byte[] spectra;
-            double tic;
-            double bpi;
-            int indexOfMaxIntensity;
-
-            if (frameParameters == null)
-                return -1;
-
-            int nonZeroCount = IntensityConverterDouble.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
-
-            InsertScanStoreBytes(frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
-
-            return nonZeroCount;
-        }
-
+      
         /// <summary>
         /// This method takes in a list of intensity information by bin and converts the data to a run length encoded array
         /// which is later compressed at the byte level for reduced size
         /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <param name="scanNum">
-        /// </param>
-        /// <param name="binToIntensityMap">
-        /// Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero
-        /// </param>
-        /// <param name="binWidth">
-        /// </param>
-        /// <param name="timeOffset">
-        /// </param>
-        /// <returns>
-        /// Non-zero data count<see cref="int"/>.
-        /// </returns>
-        /// <remarks>
-        /// Assumes that all data in binToIntensityMap has positive (non-zero) intensities
-        /// </remarks>
+        /// <param name="frameNumber">Frame number</param>
+        /// <param name="frameParameters">FrameParams</param>
+        /// <param name="scanNum">Scan number</param>
+        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
+        /// <param name="binWidth">Bin width </param>
+        /// <param name="timeOffset">Time offset</param>
+        /// <returns>Non-zero data count<see cref="int"/></returns>
+        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
         public int InsertScan(
-            FrameParameters frameParameters,
+            int frameNumber,
+            FrameParams frameParameters,
             int scanNum,
             List<KeyValuePair<int, int>> binToIntensityMap,
             double binWidth,
@@ -1114,142 +1095,11 @@ namespace UIMFLibrary
 
             int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
-            InsertScanStoreBytes(frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
             return nonZeroCount;
 
-        }
-
-        /// <summary>
-        /// This method takes in a list of bin numbers and intensities and converts them to a run length encoded array
-        /// which is later compressed at the byte level for reduced size
-        ///   Used by the IonMobility data acquisition software in ADC_Acqiris_AP240.cs
-        ///   Used by the UIMF_DataViewer in DataViewer.cs
-        /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <param name="scanNum">
-        /// </param>
-        /// <param name="bins">
-        /// </param>
-        /// <param name="intensities">
-        /// </param>
-        /// <param name="binWidth">
-        /// </param>
-        /// <param name="timeOffset">
-        /// </param>
-        /// <returns>
-        /// Non-zero data count<see cref="int"/>.
-        /// </returns>
-        /// <remarks>
-        /// Assumes that all data in intensities[] has positive (non-zero) intensities
-        /// </remarks>
-        [Obsolete("Superseded by InsertScan with: List<KeyValuePair<int, int>> binToIntensityMap, double binWidth")]
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            int[] bins,
-            int[] intensities,
-            double binWidth,
-            int timeOffset)
-        {
-            if (bins == null || intensities == null || bins.Length == 0 || intensities.Length == 0 ||
-                bins.Length != intensities.Length)
-            {
-                return 0;
-            }
-
-            var binToIntensityMap = new List<KeyValuePair<int, int>>();
-
-            for (int i = 0; i < intensities.Length; i++)
-            {
-                binToIntensityMap.Add(new KeyValuePair<int, int>(bins[i], intensities[i]));
-            }
-
-            int nonZeroCount = InsertScan(frameParameters, scanNum, binToIntensityMap, binWidth, timeOffset);
-
-            return nonZeroCount;
-
-        }
-
-        /// <summary>
-        /// Insert a scan using a list of bins and a list of intensities
-        /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <param name="scanNum">
-        /// </param>
-        /// <param name="bins">
-        /// </param>
-        /// <param name="intensities">
-        /// </param>
-        /// <param name="binWidth">
-        /// </param>
-        /// <param name="timeOffset">
-        /// </param>
-        /// <returns>
-        /// Non-zero data count<see cref="int"/>.
-        /// </returns>
-        [Obsolete("Superseded by InsertScan with: int[] intensities, double binWidth; alternatively use InsertScan with: List<KeyValuePair<int, int>> binToIntensityMap")]
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            List<int> bins,
-            List<int> intensities,
-            double binWidth,
-            int timeOffset)
-        {
-            if (bins == null || intensities == null || bins.Count == 0 || intensities.Count == 0 ||
-                bins.Count != intensities.Count)
-            {
-                return 0;
-            }
-
-            var binToIntensityMap = new List<KeyValuePair<int, int>>();
-
-            for (int i = 0; i < intensities.Count; i++)
-            {
-                binToIntensityMap.Add(new KeyValuePair<int, int>(bins[i], intensities[i]));
-            }
-
-            int nonZeroCount = InsertScan(frameParameters, scanNum, binToIntensityMap, binWidth, timeOffset);
-
-            return nonZeroCount;
-        }
-
-        /// <summary>
-        /// Insert a new scan using an array of intensities (as ints) and binWidth
-        /// </summary>		
-        /// <returns>
-        /// The size of the compressed archive in the output buffer<see cref="int"/>.
-        /// </returns>
-        [Obsolete("Use InsertScan with: frameParameters, scanNum, intensities, and binWidth")]
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            int nonZeroCountIgnored,			 // Ignored, since LZFCompressionUtil.Compress reports this
-            int[] intensities,
-            double binWidth)
-        {
-            return InsertScan(frameParameters, scanNum, intensities, binWidth);
-        }
-
-        /// <summary>
-        /// Insert a new scan using an array of intensities (as doubles) and binWidth
-        /// </summary>		
-        /// <returns>
-        /// The size of the compressed archive in the output buffer<see cref="int"/>.
-        /// </returns>		
-        [Obsolete("Use InsertScan with: frameParameters, scanNum, intensities, and binWidth")]
-        public int InsertScan(
-            FrameParameters frameParameters,
-            int scanNum,
-            int nonZeroCountIgnored,			 // Ignored, since LZFCompressionUtil.Compress reports this
-            double[] intensities,
-            double binWidth)
-        {
-            return InsertScan(frameParameters, scanNum, intensities, binWidth);
-        }
+        }     
 
         /// <summary>
         /// Post a new log entry to table Log_Entries
@@ -1387,11 +1237,11 @@ namespace UIMFLibrary
                 frameCount = dbCommand.ExecuteScalar();
             }
 
-            if (frameCount != null)
+            if (frameCount != null && frameCount != DBNull.Value)
             {
-                AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, frameCount.ToString());
+                AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, Convert.ToInt32(frameCount));
             }
-        }      
+        }
 
         /// <summary>
         /// </summary>
@@ -1483,7 +1333,6 @@ namespace UIMFLibrary
                 }
             }
 
-            FlushUimf();
         }
 
         /// <summary>
@@ -1818,25 +1667,25 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="binWidth">
         /// </param>
-        /// <param name="frameParams">
+        /// <param name="frameParameters">
         /// </param>		
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
-        public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParams)
+        public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParameters)
         {
             // mz = (k * (t-t0))^2
             double t = binNumber * binWidth / 1000;
 
-            var massCalCoefficients = frameParams.MassCalibrationCoefficients;
+            var massCalCoefficients = frameParameters.MassCalibrationCoefficients;
 
             double resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3)
                                 + massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7)
                                 + massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
             
             var mz =
-                frameParams.CalibrationSlope *
-                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParams.CalibrationIntercept));
+                frameParameters.CalibrationSlope *
+                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
 
             mz = (mz * mz) + resMassErr;
 
@@ -1844,5 +1693,6 @@ namespace UIMFLibrary
         }
 
         #endregion
+       
     }
 }

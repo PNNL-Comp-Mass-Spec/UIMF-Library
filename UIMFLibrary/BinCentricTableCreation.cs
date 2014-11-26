@@ -339,6 +339,7 @@ namespace UIMFLibrary
 			int numBins = globalParameters.Bins;
 
 			int tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
+            System.Threading.Thread.Sleep(150);
 
 			using (var connection = new SQLiteConnection(connectionString, true))
 			{
@@ -397,6 +398,8 @@ namespace UIMFLibrary
 					transaction.Commit();
 				}
 			}
+
+            System.Threading.Thread.Sleep(150);
 
 			Console.WriteLine(DateTime.Now + " - Indexing " + tablesCreated + " tables");
 

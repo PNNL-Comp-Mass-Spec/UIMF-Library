@@ -8,12 +8,12 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Convert a list of intensity information by bin to a zero length encoded byte array
 		/// </summary>
-		/// <param name="binToIntensityMap"></param>
-		/// <param name="timeOffset"></param>
-		/// <param name="spectra"></param>
-		/// <param name="tic"></param>
-		/// <param name="bpi"></param>
-		/// <param name="binNumberMaxIntensity"></param>
+        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
+        /// <param name="timeOffset">Time offset</param>
+		/// <param name="spectra">Spectra intensity bytes (output)</param>
+		/// <param name="tic">TIC (output)</param>
+		/// <param name="bpi">Base peak intensity (output)</param>
+		/// <param name="binNumberMaxIntensity">Bin number of the BPI</param>
 		/// <returns>
 		/// Number of non-zero data points
 		/// </returns>

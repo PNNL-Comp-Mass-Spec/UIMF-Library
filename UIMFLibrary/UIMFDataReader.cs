@@ -230,10 +230,10 @@ namespace UIMFLibrary
                 {
                     // Read the parameters for the first frame so that m_LegacyFrameParametersMissingColumns will be up to date
                     var frameList = GetMasterFrameList();
-                    if (frameList.Count > 0 )
+                    if (frameList.Count > 0)
                     {
                         GetFrameParams(frameList.First().Key);
-                    }                    
+                    }
                 }
 
                 // Lookup whether the pressure columns are in torr or mTorr
@@ -515,7 +515,7 @@ namespace UIMFLibrary
 #pragma warning disable 612, 618
         private GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
         {
-            var oGlobalParameters = new GlobalParameters();
+            var globalParameters = new GlobalParameters();
 #pragma warning restore 612, 618
 
             using (var dbCommand = oUimfDatabaseConnection.CreateCommand())
@@ -528,15 +528,15 @@ namespace UIMFLibrary
                     {
                         try
                         {
-                            oGlobalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"]);
-                            oGlobalParameters.DateStarted = Convert.ToString(reader["DateStarted"]);
-                            oGlobalParameters.NumFrames = Convert.ToInt32(reader["NumFrames"]);
-                            oGlobalParameters.TimeOffset = Convert.ToInt32(reader["TimeOffset"]);
-                            oGlobalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"]);
-                            oGlobalParameters.Bins = Convert.ToInt32(reader["Bins"]);
+                            globalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"]);
+                            globalParameters.DateStarted = Convert.ToString(reader["DateStarted"]);
+                            globalParameters.NumFrames = Convert.ToInt32(reader["NumFrames"]);
+                            globalParameters.TimeOffset = Convert.ToInt32(reader["TimeOffset"]);
+                            globalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"]);
+                            globalParameters.Bins = Convert.ToInt32(reader["Bins"]);
                             try
                             {
-                                oGlobalParameters.TOFCorrectionTime = Convert.ToSingle(reader["TOFCorrectionTime"]);
+                                globalParameters.TOFCorrectionTime = Convert.ToSingle(reader["TOFCorrectionTime"]);
                             }
                             catch
                             {
@@ -545,24 +545,24 @@ namespace UIMFLibrary
                                     "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                             }
 
-                            oGlobalParameters.Prescan_TOFPulses = Convert.ToInt32(reader["Prescan_TOFPulses"]);
-                            oGlobalParameters.Prescan_Accumulations = Convert.ToInt32(reader["Prescan_Accumulations"]);
-                            oGlobalParameters.Prescan_TICThreshold = Convert.ToInt32(reader["Prescan_TICThreshold"]);
-                            oGlobalParameters.Prescan_Continuous = Convert.ToBoolean(reader["Prescan_Continuous"]);
-                            oGlobalParameters.Prescan_Profile = Convert.ToString(reader["Prescan_Profile"]);
-                            oGlobalParameters.FrameDataBlobVersion = (float)Convert.ToDouble(reader["FrameDataBlobVersion"]);
-                            oGlobalParameters.ScanDataBlobVersion = (float)Convert.ToDouble(reader["ScanDataBlobVersion"]);
-                            oGlobalParameters.TOFIntensityType = Convert.ToString(reader["TOFIntensityType"]);
-                            oGlobalParameters.DatasetType = Convert.ToString(reader["DatasetType"]);
+                            globalParameters.Prescan_TOFPulses = Convert.ToInt32(reader["Prescan_TOFPulses"]);
+                            globalParameters.Prescan_Accumulations = Convert.ToInt32(reader["Prescan_Accumulations"]);
+                            globalParameters.Prescan_TICThreshold = Convert.ToInt32(reader["Prescan_TICThreshold"]);
+                            globalParameters.Prescan_Continuous = Convert.ToBoolean(reader["Prescan_Continuous"]);
+                            globalParameters.Prescan_Profile = Convert.ToString(reader["Prescan_Profile"]);
+                            globalParameters.FrameDataBlobVersion = (float)Convert.ToDouble(reader["FrameDataBlobVersion"]);
+                            globalParameters.ScanDataBlobVersion = (float)Convert.ToDouble(reader["ScanDataBlobVersion"]);
+                            globalParameters.TOFIntensityType = Convert.ToString(reader["TOFIntensityType"]);
+                            globalParameters.DatasetType = Convert.ToString(reader["DatasetType"]);
                             try
                             {
-                                oGlobalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"]);
+                                globalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"]);
                             }
                             // ReSharper disable once EmptyGeneralCatchClause
                             catch
                             {
                                 // Likely an old .UIMF file that does not have column Instrument_Name
-                                oGlobalParameters.InstrumentName = string.Empty;
+                                globalParameters.InstrumentName = string.Empty;
                             }
                         }
                         catch (Exception ex)
@@ -571,9 +571,42 @@ namespace UIMFLibrary
                         }
                     }
                 }
+
+                // Examine globalParameters.DateStarted; it should be one of these forms:
+                //   A text-based date, like "5/2/2011 4:26:59 PM"; example: Sarc_MS2_26_2Apr11_Cheetah_11-02-18_inverse.uimf
+                //   A text-based date (no time info), like "Thursday, January 13, 2011"; example: QC_Shew_11_01_pt5_c2_030311_earth_4ms_0001
+                //   A tick-based date, like 129272890050787740 (number of ticks since January 1, 1601); example: BATs_TS_01_c4_Eagle_10-02-06_0000
+
+                try
+                {
+                    var reportedDateStarted = globalParameters.DateStarted;
+                    DateTime dtReportedDateStarted;
+
+                    if (DateTime.TryParse(reportedDateStarted, out dtReportedDateStarted))
+                    {
+                        if (dtReportedDateStarted.Year < 450)
+                        {
+                            // Some .UIMF files have DateStarted values represented by huge integers, e.g. 127805472000000000 or 129145004045937500; example: BATs_TS_01_c4_Eagle_10-02-06_0000
+                            //  These numbers are the number of ticks since 1 January 1601 (where each tick is 100 ns)
+                            //  This value is returned by function GetSystemTimeAsFileTime (see http://en.wikipedia.org/wiki/System_time)
+
+                            //  When SQLite parses these numbers, it converts them to years around 0410
+                            //  To get the correct year, simply add 1600
+
+                            dtReportedDateStarted = dtReportedDateStarted.AddYears(1600);
+                            globalParameters.DateStarted = UIMFDataUtilities.StandardizeDate(dtReportedDateStarted);
+                        }
+                    }
+
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                    // Ignore errors here
+                }
             }
 
-            return oGlobalParameters;
+            return globalParameters;
         }
 
         /// <summary>
@@ -1750,15 +1783,15 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            FrameParams frameParams;
-            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParams))
+            FrameParams frameParameters;
+            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParameters))
             {
-                return FrameParamUtilities.GetLegacyFrameParameters(frameParams);
+                return FrameParamUtilities.GetLegacyFrameParameters(frameParameters);
             }
 
-            frameParams = GetFrameParams(frameNumber);
+            frameParameters = GetFrameParams(frameNumber);
 
-            if (frameParams == null)
+            if (frameParameters == null)
             {
                 if (frameNumber < 0)
                 {
@@ -1766,7 +1799,7 @@ namespace UIMFLibrary
                 }
             }
 
-            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameParams);
+            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameParameters);
             return legacyFrameParams;
         }
 
@@ -1783,10 +1816,10 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            FrameParams frameParams;
-            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParams))
+            FrameParams frameParameters;
+            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParameters))
             {
-                return frameParams;
+                return frameParameters;
             }
 
             if (m_uimfDatabaseConnection == null)
@@ -1807,14 +1840,14 @@ namespace UIMFLibrary
 
                         PopulateLegacyFrameParameters(legacyFrameParams, reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-                        frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
+                        frameParameters = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
                     }
                 }
             }
             else
             {
                 var frameParamKeys = GetFrameParameterKeys(false);
-                frameParams = new FrameParams();
+                frameParameters = new FrameParams();
 
                 m_getFrameParamsCommand.Parameters.Clear();
                 m_getFrameParamsCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -1832,7 +1865,7 @@ namespace UIMFLibrary
                         FrameParamDef paramDef;
                         if (frameParamKeys.TryGetValue(paramType, out paramDef))
                         {
-                            frameParams.AddUpdateValue(paramDef, paramValue);
+                            frameParameters.AddUpdateValue(paramDef, paramValue);
                             continue;
                         }
 
@@ -1845,10 +1878,10 @@ namespace UIMFLibrary
             }
 
             // Add to the cached parameters
-            if (frameParams != null)
-                m_CachedFrameParameters.Add(frameNumber, frameParams);
+            if (frameParameters != null)
+                m_CachedFrameParameters.Add(frameNumber, frameParameters);
 
-            return frameParams;
+            return frameParameters;
 
         }
 
@@ -1866,7 +1899,7 @@ namespace UIMFLibrary
             return GetFramePressureForCalculationOfDriftTime(frameParams);
         }
 
-        private double GetFramePressureForCalculationOfDriftTime(FrameParams frameParams)
+        private double GetFramePressureForCalculationOfDriftTime(FrameParams frameParameters)
         {
 
             /*
@@ -1879,16 +1912,16 @@ namespace UIMFLibrary
              * look for newer columns and use these values. 
              */
 
-            double pressure = frameParams.GetValueDouble(FrameParamKeyType.PressureBack);
+            double pressure = frameParameters.GetValueDouble(FrameParamKeyType.PressureBack);
 
             if (Math.Abs(pressure) < float.Epsilon)
             {
-                pressure = frameParams.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure);
+                pressure = frameParameters.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure);
             }
 
             if (Math.Abs(pressure) < float.Epsilon)
             {
-                pressure = frameParams.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure);
+                pressure = frameParameters.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure);
             }
 
             return pressure;
@@ -2584,16 +2617,16 @@ namespace UIMFLibrary
         /// <summary>
         /// Get mz calibrator.
         /// </summary>
-        /// <param name="frameParams">
+        /// <param name="frameParameters">
         /// Frame parameters.
         /// </param>
         /// <returns>
         /// MZ calibrator object<see cref="MzCalibrator"/>.
         /// </returns>
-        public MzCalibrator GetMzCalibrator(FrameParams frameParams)
+        public MzCalibrator GetMzCalibrator(FrameParams frameParameters)
         {
-            var calibrationSlope = frameParams.CalibrationSlope;
-            var calibrationIntercept = frameParams.CalibrationIntercept;
+            var calibrationSlope = frameParameters.CalibrationSlope;
+            var calibrationIntercept = frameParameters.CalibrationIntercept;
 
             return new MzCalibrator(calibrationSlope / 10000.0, calibrationIntercept * 10000.0);
         }
@@ -3938,8 +3971,8 @@ namespace UIMFLibrary
         /// </returns>
         public double[,] GetXicAsArray(int targetBin, FrameType frameType)
         {
-            FrameParams frameParams = GetFrameParams(1);
-            int numScans = frameParams.Scans;
+            FrameParams frameParameters = GetFrameParams(1);
+            int numScans = frameParameters.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             int numFrames = frameSet.NumFrames;
@@ -4484,7 +4517,7 @@ namespace UIMFLibrary
                             PressureIsMilliTorr = true;
                         }
                     }
-                   
+
                 }
                 else
                 {
@@ -4576,8 +4609,9 @@ namespace UIMFLibrary
             }
             catch (Exception ex)
             {
-                Console.WriteLine(
-                    "Exception examining pressure column " + columnName + " in table " + tableName + ": " + ex.Message);
+                if (!ex.Message.StartsWith("SQL logic error or missing database"))
+                    Console.WriteLine(
+                        "Exception examining pressure column " + columnName + " in table " + tableName + ": " + ex.Message);
             }
 
             return isMillitorr;
@@ -4774,6 +4808,12 @@ namespace UIMFLibrary
 
             try
             {
+                if (m_LegacyFrameParametersMissingColumns.Contains(columnName))
+                {
+                    columnMissing = true;
+                    return defaultValue;
+                }
+
                 result = !DBNull.Value.Equals(reader[columnName]) ? Convert.ToInt32(reader[columnName]) : defaultValue;
             }
             catch (IndexOutOfRangeException)
@@ -5124,19 +5164,32 @@ namespace UIMFLibrary
 
             var dctTicOrBPI = new Dictionary<int, double>();
 
-            // TODO: xxx Add support for m_LegacyFrameParametersMissingColumns xxx
 
             // Construct the SQL
             string sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value "
-                         + " FROM Frame_Scans INNER JOIN Frame_Parameters ON Frame_Scans.FrameNum = Frame_Parameters.FrameNum ";
+                       + " FROM Frame_Scans";
 
             string whereClause = string.Empty;
+
+            if (filterByFrameType)
+            {
+                // Need to tie in the Frame_Params or Frame_Parameters tabe
+
+                if (m_UsingLegacyFrameParameters)
+                {
+                    sql += " INNER JOIN Frame_Parameters AS FP ON Frame_Scans.FrameNum = FP.FrameNum ";
+                }
+                else
+                {
+                    sql += " INNER JOIN Frame_Params AS FP ON Frame_Scans.FrameNum = FP.FrameNum AND FP.ParamID = 4";
+                }
+            }
 
             if (!(startFrameNumber == 0 && endFrameNumber == 0))
             {
                 // Filter by frame number
-                whereClause = "Frame_Parameters.FrameNum >= " + startFrameNumber + " AND " + "Frame_Parameters.FrameNum <= "
-                              + endFrameNumber;
+                whereClause = "Frame_Scans.FrameNum >= " + startFrameNumber + " AND " +
+                              "Frame_Scans.FrameNum <= " + endFrameNumber;
             }
 
             if (filterByFrameType)
@@ -5147,7 +5200,14 @@ namespace UIMFLibrary
                     whereClause += " AND ";
                 }
 
-                whereClause += "Frame_Parameters.FrameType = " + GetFrameTypeInt(frameType);
+                if (m_UsingLegacyFrameParameters)
+                {
+                    whereClause += "FP.FrameType = " + GetFrameTypeInt(frameType);
+                }
+                else
+                {
+                    whereClause += "FP.ParamValue = " + GetFrameTypeInt(frameType);
+                }
             }
 
             if (!(startScan == 0 && endScan == 0))
@@ -5166,6 +5226,8 @@ namespace UIMFLibrary
                 sql += " WHERE " + whereClause;
             }
 
+
+            // Finalize the Sql command
             sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
             using (SQLiteCommand dbcmdUIMF = m_uimfDatabaseConnection.CreateCommand())
@@ -5422,7 +5484,7 @@ namespace UIMFLibrary
 
                 if (columnMissing)
                 {
-                    if (m_errMessageCounter < 5)
+                    if (m_errMessageCounter < 2)
                     {
                         Console.WriteLine(
                             "Warning: this UIMF file is created with an old version of IMF2UIMF (HighPressureFunnelPressure is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");
@@ -5461,7 +5523,7 @@ namespace UIMFLibrary
                     fp.d2 = 0;
                     fp.e2 = 0;
                     fp.f2 = 0;
-                    if (m_errMessageCounter < 5)
+                    if (m_errMessageCounter < 2)
                     {
                         Console.WriteLine(
                             "Warning: this UIMF file is created with an old version of IMF2UIMF (b2 calibration column is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");

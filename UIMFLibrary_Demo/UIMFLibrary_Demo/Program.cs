@@ -8,6 +8,7 @@ namespace UIMFLibrary_Demo
     static class Program
     {
         private const bool TEST_READER = true;
+        private const bool UPDATE_PARAM_TABLES = false;
 
         private static void Main(string[] args)
         {
@@ -61,6 +62,12 @@ namespace UIMFLibrary_Demo
                 runner.Execute();
             }
 
+            if (UPDATE_PARAM_TABLES)
+            {
+                const string legacyFilePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3_Format.uimf";
+                UpdateParamTables(legacyFilePath);
+            }
+
             WriterTest();
 
             System.Threading.Thread.Sleep(1000);
@@ -75,6 +82,22 @@ namespace UIMFLibrary_Demo
         private static string GetAppPath()
         {
             return Assembly.GetExecutingAssembly().Location;
+        }
+
+        private static void UpdateParamTables(string uimfFilePath)
+        {
+            try
+            {
+                // Simply opening the file with the writer will update the tables
+                using (var writer = new DataWriter(uimfFilePath))
+                {
+                    writer.UpdateGlobalFrameCount();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in UpdateParamTables: " + ex.Message);
+            }
         }
 
         private static void WriterTest()
@@ -105,43 +128,25 @@ namespace UIMFLibrary_Demo
                 {
                     writer.CreateTables();
 
-                    var globalParams = new GlobalParams();
-                    globalParams.AddUpdateValue(GlobalParamKeyType.BinWidth, 1);
-                    globalParams.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "int");
-                    globalParams.AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now.ToString());
+                    var globalParameters = new GlobalParams();
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, 1);
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "int");
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now);
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
 
-                    globalParams.AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
+                    writer.InsertGlobal(globalParameters);
 
-                    writer.InsertGlobal(globalParams);
-
-                    globalParams = writer.GetGlobalParams();
-                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, "1");
+                    globalParameters = writer.GetGlobalParams();
+                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1);
                     writer.AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
-
-                    Console.WriteLine("Adding frame 1");
 
                     const float SECONDS_PER_FRAME = 1.25f;
 
                     var randGenerator = new Random();
 
-                    for (int frameNum = 1; frameNum < 10; frameNum++)
+                    for (int frameNum = 1; frameNum <= 10; frameNum++)
                     {
-                        /*
-                        var fp = new UIMFLibrary.FrameParameters
-                        {
-                            FragmentationProfile = new double[2],
-                            FrameNum = frameNum,
-                            FrameType = UIMFLibrary.DataReader.FrameType.MS1,
-                            CalibrationSlope = 0.3476349957054481,
-                            CalibrationIntercept = 0.034341488647460935,
-                            AverageTOFLength = 163366.6666666667,
-                            StartTime = frameNum * SECONDS_PER_FRAME
-                        };
-
-                        writer.InsertFrame(fp);
-                        */
-
-                        var fp = new UIMFLibrary.FrameParams();
+                        var fp = new FrameParams();
 
                         fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFLibrary.DataReader.FrameType.MS1);
                         fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481);
@@ -153,7 +158,7 @@ namespace UIMFLibrary_Demo
 
                         for (int scanNumber = 1; scanNumber < 600; scanNumber++)
                         {
-                            if (scanNumber % 100 == 0)
+                            if (scanNumber == 1 | scanNumber % 100 == 0)
                                 Console.WriteLine("Adding frame " + frameNum + ", scan " + scanNumber);
 
                             var intensities = new int[148000];
@@ -168,15 +173,14 @@ namespace UIMFLibrary_Demo
 
                             }
 
-                            writer.InsertScan(FrameParamUtilities.GetLegacyFrameParameters(fp), scanNumber, intensities, globalParams.BinWidth);
+                            writer.InsertScan(frameNum, fp, scanNumber, intensities, globalParameters.BinWidth);
                         }
 
-                        if (frameNum % 2 == 0)
-                            writer.FlushUimf();
                     }
-
-                    writer.FlushUimf();
                 }
+
+                Console.WriteLine("Wrote 10 frames of data to " + fiTestFile.Name);
+                
             }
             catch (Exception ex)
             {

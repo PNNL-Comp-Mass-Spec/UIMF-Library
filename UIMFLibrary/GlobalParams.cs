@@ -116,6 +116,11 @@ namespace UIMFLibrary
             AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        public void AddUpdateValue(GlobalParamKeyType paramType, DateTime value)
+        {
+            AddUpdateValue(paramType, UIMFDataUtilities.StandardizeDate(value));
+        }
+
         /// <summary>
         /// Add or update a parameter's value
         /// </summary>

@@ -114,36 +114,36 @@ namespace UIMFLibrary
         /// <summary>
         /// Obtain a GlobalParameters instance from a GlobalParams instance
         /// </summary>
-        /// <param name="globalParams"><see cref="GlobalParams"/> instance</param>
+        /// <param name="globalParameters"><see cref="GlobalParams"/> instance</param>
         /// <returns>A new <see cref="GlobalParameters"/> instance</returns>
-        public static GlobalParameters GetLegacyGlobalParameters(GlobalParams globalParams)
+        public static GlobalParameters GetLegacyGlobalParameters(GlobalParams globalParameters)
         {
-            if (globalParams == null)
+            if (globalParameters == null)
                 return new GlobalParameters();
 
             // PrescanContinuous is a boolean value stored as a 0 or 1
-            int result = globalParams.GetValueInt32(GlobalParamKeyType.PrescanContinuous, 0);
+            int result = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanContinuous, 0);
             bool prescanContinuous = (result != 0);
 
             // Populate legacyGlobalParams using dictionary GlobalParams
             var legacyGlobalParams = new GlobalParameters
             {
-                InstrumentName = globalParams.GetValue(GlobalParamKeyType.InstrumentName),
-                DateStarted = globalParams.GetValue(GlobalParamKeyType.DateStarted),
-                NumFrames = globalParams.GetValueInt32(GlobalParamKeyType.NumFrames, 0),
-                TimeOffset = globalParams.GetValueInt32(GlobalParamKeyType.TimeOffset, 0),
-                BinWidth = globalParams.GetValueDouble(GlobalParamKeyType.BinWidth, 0),
-                Bins = globalParams.GetValueInt32(GlobalParamKeyType.Bins, 0),
-                TOFCorrectionTime = (float)globalParams.GetValueDouble(GlobalParamKeyType.TOFCorrectionTime, 0),
+                InstrumentName = globalParameters.GetValue(GlobalParamKeyType.InstrumentName),
+                DateStarted = globalParameters.GetValue(GlobalParamKeyType.DateStarted),
+                NumFrames = globalParameters.GetValueInt32(GlobalParamKeyType.NumFrames, 0),
+                TimeOffset = globalParameters.GetValueInt32(GlobalParamKeyType.TimeOffset, 0),
+                BinWidth = globalParameters.GetValueDouble(GlobalParamKeyType.BinWidth, 0),
+                Bins = globalParameters.GetValueInt32(GlobalParamKeyType.Bins, 0),
+                TOFCorrectionTime = (float)globalParameters.GetValueDouble(GlobalParamKeyType.TOFCorrectionTime, 0),
                 FrameDataBlobVersion = 0.1f,      // Legacy parameter that was always 0.1
                 ScanDataBlobVersion = 0.1f,       // Legacy parameter that was always 0.1
-                TOFIntensityType = globalParams.GetValue(GlobalParamKeyType.TOFIntensityType),
-                DatasetType = globalParams.GetValue(GlobalParamKeyType.DatasetType),
-                Prescan_TOFPulses = globalParams.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, 0),
-                Prescan_Accumulations = globalParams.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0),
-                Prescan_TICThreshold = globalParams.GetValueInt32(GlobalParamKeyType.PrescanTICThreshold, 0),
+                TOFIntensityType = globalParameters.GetValue(GlobalParamKeyType.TOFIntensityType),
+                DatasetType = globalParameters.GetValue(GlobalParamKeyType.DatasetType),
+                Prescan_TOFPulses = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, 0),
+                Prescan_Accumulations = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0),
+                Prescan_TICThreshold = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanTICThreshold, 0),
                 Prescan_Continuous = prescanContinuous,
-                Prescan_Profile = globalParams.GetValue(GlobalParamKeyType.PrescanProfile)
+                Prescan_Profile = globalParameters.GetValue(GlobalParamKeyType.PrescanProfile)
             };
 
             return legacyGlobalParams;

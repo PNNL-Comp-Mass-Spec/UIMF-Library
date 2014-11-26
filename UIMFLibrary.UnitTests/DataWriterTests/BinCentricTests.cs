@@ -26,31 +26,44 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Ignore]
         public void TestCreateBinCentricTables()
         {
-            const string fileLocationSource = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\BinCentric\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000_Excerpt.uimf";
-            var fiSource = new FileInfo(fileLocationSource);
+            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
 
-            if (fiSource.Exists && fiSource.Directory != null)
+            if (fiSource.Exists)
             {
-                var fiTarget =
-                    new FileInfo(Path.Combine(fiSource.Directory.FullName,
-                                              Path.GetFileNameWithoutExtension(fileLocationSource) + "_BinCentric.uimf"));
-
-                try
-                {
-                    fiSource.CopyTo(fiTarget.FullName, true);
-                }
-                catch (Exception ex)
-                {
-                    // File copy error; probably in use by another process
+                var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
+                if (fiTarget == null)
                     return;
-                }
 
                 using (var uimfWriter = new DataWriter(fiTarget.FullName))
                 {
                     uimfWriter.CreateBinCentricTables();
                 }
-            }           
+            }
 
+        }
+
+        private FileInfo DuplicateUIMF(FileInfo fiSource, string suffixAddon)
+        {
+            if (fiSource.Directory != null)
+            {
+                var fiTarget =
+                    new FileInfo(Path.Combine(fiSource.Directory.FullName,
+                                              Path.GetFileNameWithoutExtension(fiSource.Name) + suffixAddon +
+                                              Path.GetExtension(fiSource.Name)));
+
+                try
+                {
+                    fiSource.CopyTo(fiTarget.FullName, true);
+                    return fiTarget;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception duplication " + fiSource.FullName + ": " + ex.Message);
+                    // File copy error; probably in use by another process                    
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -59,12 +72,15 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Test]
         public void TestCreateBinCentricTablesSmallFile()
         {
-            const string fileLocation = @"..\..\..\TestFiles\PepMix_MSMS_4msSA.UIMF";
-            var uimfFile = new FileInfo(fileLocation);
+            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest2);
 
-            if (uimfFile.Exists)
+            if (fiSource.Exists)
             {
-                using (var uimfWriter = new DataWriter(uimfFile.FullName))
+                var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
+                if (fiTarget == null)
+                    return;
+
+                using (var uimfWriter = new DataWriter(fiTarget.FullName))
                 {
                     uimfWriter.CreateBinCentricTables();
                 }

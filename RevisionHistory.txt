@@ -1,6 +1,11 @@
 UIMFLibrary Revision History
 
-Verison 3.0.5441; November 24, 2014
+Version 3.0.5442; November 25, 2014
+	- Removed legacy InsertScan functions
+	- Updated GetTicOrBpiByFrame to support the Frame_Params table
+	- Added version of FlushUimf that supports closing/reopening the active transaction a minimum of 5 seconds apart
+
+Version 3.0.5441; November 24, 2014
 	- Refactored the global parameters and frame parameters into key-value pairs
 		- New tables: Global_Params, Frame_Params, and Frame_Param_Keys
 		- The reader supports both v2.0 and v3.0 .UIMF files

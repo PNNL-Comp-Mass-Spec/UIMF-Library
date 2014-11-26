@@ -8,11 +8,11 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Convert an array of intensities to a zero length encoded byte array
 		/// </summary>
-		/// <param name="intensities"></param>
-		/// <param name="spectra"></param>
-		/// <param name="tic"></param>
-		/// <param name="bpi"></param>
-		/// <param name="indexOfMaxIntensity"></param>
+        /// <param name="intensities">Array of intensities, including all zeros</param>
+        /// <param name="spectra">Spectra intensity bytes (output)</param>
+        /// <param name="tic">TIC (output)</param>
+        /// <param name="bpi">Base peak intensity (output)</param>
+        /// <param name="indexOfMaxIntensity">Index number of the BPI</param>
 		/// <returns>
 		/// Number of non-zero data points
 		/// </returns>

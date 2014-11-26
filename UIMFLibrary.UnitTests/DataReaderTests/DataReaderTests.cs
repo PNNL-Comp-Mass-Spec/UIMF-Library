@@ -328,7 +328,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 {
                     sb.Append(i);
                     sb.Append('\t');
-                    var mz = convertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
+                    var mz = ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
 
                     sb.Append(mz);
 
@@ -359,8 +359,89 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(138000, gp.Bins);
 
                 var tofLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
-                Assert.AreEqual(162555.56, tofLength);                
+                Assert.AreEqual(162555.56, tofLength);
             }
+        }
+
+        [Test]
+        public void GetBPITest()
+        {
+            // File with legacy parameter tables
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            {
+                double difference;
+                Dictionary<int, double> bpi;
+
+                bpi = reader.GetBPIByFrame(20, 20, 0, 0);
+                difference = 91235 - bpi[20];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                bpi = reader.GetBPIByFrame(20, 20, 1, 100);
+                difference = 7406 - bpi[20];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                bpi = reader.GetBPIByFrame(20, 30, 50, 200);
+                difference = 42828 - bpi[25];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                bpi = reader.GetBPIByFrame(0, 0, 0, 0);
+                difference = 83524 - bpi[100];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                difference = 2028 - bpiList[70];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+            }
+
+            // File with updated parameter tables
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
+            {
+                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                double difference = 2028 - bpiList[70];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+            }
+
+        }
+
+        [Test]
+        public void GetTICTest()
+        {
+            // File with legacy parameter tables
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            {
+                double difference;
+                Dictionary<int, double> tic;
+
+                tic = reader.GetTICByFrame(20, 20, 0, 0);
+                difference = 2195378 - tic[20];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                tic = reader.GetTICByFrame(20, 20, 1, 100);
+                difference = 13703 - tic[20];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                tic = reader.GetTICByFrame(20, 30, 50, 200);
+                difference = 1081201 - tic[25];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                tic = reader.GetTICByFrame(0, 0, 0, 0);
+                difference = 2026072 - tic[100];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                difference = 3649 - ticList[70];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+
+            }
+
+            // File with updated parameter tables
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
+            {
+                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                double difference = 3649 - ticList[70];
+                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+            }
+
         }
 
         #endregion
@@ -540,7 +621,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// <returns>
         /// mz<see cref="double"/>.
         /// </returns>
-        private double convertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
+        private double ConvertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
         {
             double t = bin * binWidth / 1000;
 

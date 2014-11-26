@@ -223,68 +223,68 @@ namespace UIMFLibrary
         /// <summary>
         /// Obtain a FrameParameters instance from a FrameParams instance
         /// </summary>
-        /// <param name="frameParams"><see cref="FrameParams"/> instance</param>
+        /// <param name="frameParameters"><see cref="FrameParams"/> instance</param>
         /// <returns>A new <see cref="FrameParameters"/> instance</returns>
-        public static FrameParameters GetLegacyFrameParameters(FrameParams frameParams)
+        public static FrameParameters GetLegacyFrameParameters(FrameParams frameParameters)
         {
-            if (frameParams == null)
+            if (frameParameters == null)
                 return new FrameParameters();
 
-            var frametype = frameParams.FrameType;
+            var frametype = frameParameters.FrameType;
 
             // Populate legacyFrameParams using dictionary frameParams
             var legacyFrameParams = new FrameParameters
             {
-                StartTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
-                Duration = frameParams.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
-                Accumulations = frameParams.GetValueInt32(FrameParamKeyType.Accumulations, 0),
+                StartTime = frameParameters.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
+                Duration = frameParameters.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
+                Accumulations = frameParameters.GetValueInt32(FrameParamKeyType.Accumulations, 0),
                 FrameType = (DataReader.FrameType)frametype,
-                Decoded = frameParams.GetValueInt32(FrameParamKeyType.Decoded, 0),
-                CalibrationDone = frameParams.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
-                Scans = frameParams.Scans,
-                IMFProfile = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
-                MPBitOrder = (short)frameParams.GetValueInt32(FrameParamKeyType.MPBitOrder, 0),
-                TOFLosses = frameParams.GetValueDouble(FrameParamKeyType.TOFLosses, 0),
-                AverageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0),
-                CalibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope, 0),
-                CalibrationIntercept = frameParams.GetValueDouble(FrameParamKeyType.CalibrationIntercept, 0),
-                a2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficienta2, 0),
-                b2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientb2, 0),
-                c2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientc2, 0),
-                d2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientd2, 0),
-                e2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2, 0),
-                f2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2, 0),
-                Temperature = frameParams.GetValueDouble(FrameParamKeyType.AmbientTemperature, 0),
-                voltHVRack1 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack1, 0),
-                voltHVRack2 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack2, 0),
-                voltHVRack3 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack3, 0),
-                voltHVRack4 = frameParams.GetValueDouble(FrameParamKeyType.VoltHVRack4, 0),
-                voltCapInlet = frameParams.GetValueDouble(FrameParamKeyType.VoltCapInlet, 0),
-                voltEntranceHPFIn = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceHPFIn, 0),
-                voltEntranceHPFOut = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceHPFOut, 0),
-                voltEntranceCondLmt = frameParams.GetValueDouble(FrameParamKeyType.VoltEntranceCondLmt, 0),
-                voltTrapOut = frameParams.GetValueDouble(FrameParamKeyType.VoltTrapOut, 0),
-                voltTrapIn = frameParams.GetValueDouble(FrameParamKeyType.VoltTrapIn, 0),
-                voltJetDist = frameParams.GetValueDouble(FrameParamKeyType.VoltJetDist, 0),
-                voltQuad1 = frameParams.GetValueDouble(FrameParamKeyType.VoltQuad1, 0),
-                voltCond1 = frameParams.GetValueDouble(FrameParamKeyType.VoltCond1, 0),
-                voltQuad2 = frameParams.GetValueDouble(FrameParamKeyType.VoltQuad2, 0),
-                voltCond2 = frameParams.GetValueDouble(FrameParamKeyType.VoltCond2, 0),
-                voltIMSOut = frameParams.GetValueDouble(FrameParamKeyType.VoltIMSOut, 0),
-                voltExitHPFIn = frameParams.GetValueDouble(FrameParamKeyType.VoltExitHPFIn, 0),
-                voltExitHPFOut = frameParams.GetValueDouble(FrameParamKeyType.VoltExitHPFOut, 0),
-                voltExitCondLmt = frameParams.GetValueDouble(FrameParamKeyType.VoltExitCondLmt, 0),
-                PressureFront = frameParams.GetValueDouble(FrameParamKeyType.PressureFront, 0),
-                PressureBack = frameParams.GetValueDouble(FrameParamKeyType.PressureBack, 0),
-                HighPressureFunnelPressure = frameParams.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0),
-                IonFunnelTrapPressure = frameParams.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0),
-                RearIonFunnelPressure = frameParams.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0),
-                QuadrupolePressure = frameParams.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0),
-                ESIVoltage = frameParams.GetValueDouble(FrameParamKeyType.ESIVoltage, 0),
-                FloatVoltage = frameParams.GetValueDouble(FrameParamKeyType.FloatVoltage, 0)
+                Decoded = frameParameters.GetValueInt32(FrameParamKeyType.Decoded, 0),
+                CalibrationDone = frameParameters.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
+                Scans = frameParameters.Scans,
+                IMFProfile = frameParameters.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
+                MPBitOrder = (short)frameParameters.GetValueInt32(FrameParamKeyType.MPBitOrder, 0),
+                TOFLosses = frameParameters.GetValueDouble(FrameParamKeyType.TOFLosses, 0),
+                AverageTOFLength = frameParameters.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0),
+                CalibrationSlope = frameParameters.GetValueDouble(FrameParamKeyType.CalibrationSlope, 0),
+                CalibrationIntercept = frameParameters.GetValueDouble(FrameParamKeyType.CalibrationIntercept, 0),
+                a2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficienta2, 0),
+                b2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientb2, 0),
+                c2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientc2, 0),
+                d2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientd2, 0),
+                e2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2, 0),
+                f2 = frameParameters.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2, 0),
+                Temperature = frameParameters.GetValueDouble(FrameParamKeyType.AmbientTemperature, 0),
+                voltHVRack1 = frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack1, 0),
+                voltHVRack2 = frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack2, 0),
+                voltHVRack3 = frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack3, 0),
+                voltHVRack4 = frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack4, 0),
+                voltCapInlet = frameParameters.GetValueDouble(FrameParamKeyType.VoltCapInlet, 0),
+                voltEntranceHPFIn = frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceHPFIn, 0),
+                voltEntranceHPFOut = frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceHPFOut, 0),
+                voltEntranceCondLmt = frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceCondLmt, 0),
+                voltTrapOut = frameParameters.GetValueDouble(FrameParamKeyType.VoltTrapOut, 0),
+                voltTrapIn = frameParameters.GetValueDouble(FrameParamKeyType.VoltTrapIn, 0),
+                voltJetDist = frameParameters.GetValueDouble(FrameParamKeyType.VoltJetDist, 0),
+                voltQuad1 = frameParameters.GetValueDouble(FrameParamKeyType.VoltQuad1, 0),
+                voltCond1 = frameParameters.GetValueDouble(FrameParamKeyType.VoltCond1, 0),
+                voltQuad2 = frameParameters.GetValueDouble(FrameParamKeyType.VoltQuad2, 0),
+                voltCond2 = frameParameters.GetValueDouble(FrameParamKeyType.VoltCond2, 0),
+                voltIMSOut = frameParameters.GetValueDouble(FrameParamKeyType.VoltIMSOut, 0),
+                voltExitHPFIn = frameParameters.GetValueDouble(FrameParamKeyType.VoltExitHPFIn, 0),
+                voltExitHPFOut = frameParameters.GetValueDouble(FrameParamKeyType.VoltExitHPFOut, 0),
+                voltExitCondLmt = frameParameters.GetValueDouble(FrameParamKeyType.VoltExitCondLmt, 0),
+                PressureFront = frameParameters.GetValueDouble(FrameParamKeyType.PressureFront, 0),
+                PressureBack = frameParameters.GetValueDouble(FrameParamKeyType.PressureBack, 0),
+                HighPressureFunnelPressure = frameParameters.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0),
+                IonFunnelTrapPressure = frameParameters.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0),
+                RearIonFunnelPressure = frameParameters.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0),
+                QuadrupolePressure = frameParameters.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0),
+                ESIVoltage = frameParameters.GetValueDouble(FrameParamKeyType.ESIVoltage, 0),
+                FloatVoltage = frameParameters.GetValueDouble(FrameParamKeyType.FloatVoltage, 0)
             };
 
-            var fragmentationProfile = frameParams.GetValue(FrameParamKeyType.FragmentationProfile, String.Empty);
+            var fragmentationProfile = frameParameters.GetValue(FrameParamKeyType.FragmentationProfile, String.Empty);
 
             // ToDo: xxx implement this conversion xxx
             //legacyFrameParams.FragmentationProfile = Byte
