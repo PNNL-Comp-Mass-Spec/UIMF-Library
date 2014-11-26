@@ -14,17 +14,17 @@ namespace UIMFLibrary.UnitTests
 	/// <summary>
 	/// The speed tests.
 	/// </summary>
+    [TestFixture]
 	public class SpeedTests
 	{
 		#region Fields
 
-		/// <summary>
-		/// Standard non-multiplexed file
-		/// </summary>
-		private string uimfStandardFile1 =
-			@"C:\Users\maji301\Desktop\LDRD\SlowerMethod\ImsInformedTests\testFiles\uimf_files\peptide\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+	    /// <summary>
+	    /// Standard non-multiplexed file
+	    /// </summary>
+	    private const string uimfStandardFile1 = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
-		#endregion
+	    #endregion
 
 		#region Public Methods and Operators
 
@@ -70,7 +70,7 @@ namespace UIMFLibrary.UnitTests
 			// int numFramesToSum = 1;
 			int numIMSScansToSum = 7;
 
-			using (DataReader dr = new DataReader(this.uimfStandardFile1))
+			using (DataReader dr = new DataReader(uimfStandardFile1))
 			{
 				GlobalParameters gp = dr.GetGlobalParameters();
 
@@ -111,7 +111,7 @@ namespace UIMFLibrary.UnitTests
 		{
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			DataReader dr = new DataReader(this.uimfStandardFile1);
+			DataReader dr = new DataReader(uimfStandardFile1);
 			GlobalParameters gp = dr.GetGlobalParameters();
 
 			int[] intensities = new int[gp.Bins];

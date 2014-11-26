@@ -79,7 +79,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		/// <summary>
 		/// The test frame scan info 1.
 		/// </summary>
-		private readonly FrameAndScanInfo testFrameScanInfo1 = new FrameAndScanInfo(0, 0, 110, 150);
+		private readonly FrameAndScanInfo testFrameScanInfo1 = new FrameAndScanInfo(1, 1, 110, 150);
 
 		#endregion
 
@@ -218,7 +218,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 				int nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
 				Console.WriteLine("Num xy datapoints = " + nonZeroCount);
 
-				// Assert.AreEqual(0, nonZeros);
+				Assert.AreEqual(1137, nonZeros);
 			}
 		}
 
