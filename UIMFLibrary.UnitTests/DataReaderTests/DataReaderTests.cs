@@ -32,12 +32,42 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         #region Public Methods and Operators
 
+        public static void PrintMethodName(System.Reflection.MethodBase methodInfo)
+        {
+            // Call with PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var nameSpace = "?";
+            var className = "?";
+
+            if (methodInfo.ReflectedType != null)
+            {
+                nameSpace = methodInfo.ReflectedType.Namespace;
+                className = methodInfo.ReflectedType.Name;
+            }
+
+            var methodDescriptor = nameSpace + ".";
+
+            if (nameSpace.EndsWith("." + className))
+            {
+                methodDescriptor += methodInfo.Name;
+            }
+            else
+            {
+                methodDescriptor += className + "." + methodInfo.Name;
+            }
+
+            Console.WriteLine("\n\n===== " + methodDescriptor + " =====");
+
+        }
+
         /// <summary>
         /// The get frames and scan intensities for a given mz test.
         /// </summary>
         [Test]
         public void GetFramesAndScanIntensitiesForAGivenMzTest()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
             const int startFrame = 306;
@@ -45,7 +75,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double bpimz = 173.289545940302;
             const double toleranceInMZ = 25 / 1e6 * bpimz;
 
-            Console.WriteLine("Tolerance in mz  is " + toleranceInMZ);
+            Console.WriteLine("Tolerance in mz is " + toleranceInMZ);
             using (this.m_reader = new DataReader(filePath))
             {
                 int[][] intensityMap = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
@@ -67,12 +97,18 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 foreach (int[] scanIntensities in intensityMap)
                 {
+                    bool addLinefeed = false;
+                  
                     foreach (int value in scanIntensities)
                     {
                         if (value > 0)
+                        {
                             Console.Write(value + ",");
+                            addLinefeed = true;
+                        }
                     }
-                    Console.WriteLine(";");
+                    if (addLinefeed)
+                        Console.WriteLine(";");
                 }
 
                 Console.WriteLine();
@@ -87,6 +123,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestBinValueGreaterThanMax()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string uimfFile = @"\\proto-2\unitTest_Files\DeconTools_TestFiles\UIMF\LSDF2_10-0457-03_A_26May11_Roc_11-02-26.uimf";
             using (var reader = new DataReader(uimfFile))
             {
@@ -119,6 +157,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestGetSpectrum()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string filePath =
                 @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
             const int frameNumber = 6;
@@ -149,6 +189,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestGetSpectrumAsBins()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string filePath =
                 @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
             const int frameNumber = 6;
@@ -169,6 +211,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestGetSpectrumAsBins2()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string filePath =
                 @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
             const int startFrame = 162;
@@ -228,6 +272,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestGetSpectrumSummed1()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string filePath =
                 @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
             const int frameStart = 6;
@@ -266,6 +312,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestPressureDetermination1()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const string uimfFilePressureInTorr1 = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
             const string uimfFilePressureInTorr2 = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
@@ -313,6 +361,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void DisplayMZValueForEachBin_Test1()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const int testFrame = 1000;
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
@@ -350,6 +400,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void GetFrameParametersTest()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
                 var gp = reader.GetGlobalParams();
@@ -366,6 +418,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void GetBPITest()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
@@ -406,6 +460,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void GetTICTest()
         {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
@@ -450,6 +506,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // [Test]
         // public void GetBPISortedList()
         // {
+        // PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
         // string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
         // m_reader = new DataReader();
@@ -472,6 +529,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // [Test]
         // public void getBPIListTest()
         // {
+        // PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
         // UIMFLibrary.DataReader reader = new DataReader();
         // reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
@@ -489,6 +547,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // [Test]
         // public void variableSummingTest()
         // {
+        // PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
         // UIMFLibrary.DataReader reader = new DataReader();
         // reader.OpenUIMF(FileRefs.uimfStandardFile1);
 
@@ -548,6 +607,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // [Test]
         // public void IMSConverterTest_WriteFileTest1()
         // {
+        // PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
         // string filePath = "C:\\proteomicssoftwaretools\\Imf2uimf\\IMSConverterTestfile\\8pepMix_200nM_0001.uimf";
         // UIMFLibrary.DataReader reader = null;
 
@@ -572,6 +632,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // [Test]
         // public void getSpectrumTest()
         // {
+        // PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
         // string filePath = @"\\proto-10\IMS_TOF2_DMS1\Dey_KO_8721_02_17Nov10_10-09-23_0000\Dey_KO_8721_02_17Nov10_10-09-23_0000.UIMF";
         // UIMFLibrary.DataReader reader = new UIMFLibrary.DataReader();
         // reader.OpenUIMF(filePath);

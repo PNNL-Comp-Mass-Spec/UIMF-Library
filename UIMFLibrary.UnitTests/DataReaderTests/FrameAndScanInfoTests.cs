@@ -26,6 +26,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getAvgTOFLengthTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 			    var fp = reader.GetFrameParams(1);
@@ -41,7 +43,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getFrameInfo_demultiplexed_firstFrame_Test1()
 		{
-			using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 			    const int firstFrame = 1;
 
@@ -62,6 +66,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getFrameInfo_demultiplexed_lastFrame_Test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				int numFrames = reader.GetGlobalParams().NumFrames;
@@ -86,6 +92,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getFramePressure_lastFrame()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				const int lastFrame = 3219;
@@ -108,6 +116,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getGlobalParams_test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				var gp = reader.GetGlobalParams();
@@ -123,6 +133,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getNumberOfFramesTest()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				int numFrames = reader.GetGlobalParams().NumFrames;

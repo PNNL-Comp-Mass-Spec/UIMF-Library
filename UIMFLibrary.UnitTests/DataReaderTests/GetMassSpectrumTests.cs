@@ -91,6 +91,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getFrame0_MS_Test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				var gp = dr.GetGlobalParams();
@@ -115,6 +117,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getFrame0_MS_demultiplexedData_Test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var dr = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
 			{
 				var gp = dr.GetGlobalParams();
@@ -143,6 +147,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getMultipleSummedMassSpectrumsTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				var testFrameScanInfo2 = new FrameAndScanInfo(500, 550, 250, 256);
@@ -192,6 +198,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void getSingleSummedMassSpectrumTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var dr = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				var gp = dr.GetGlobalParams();

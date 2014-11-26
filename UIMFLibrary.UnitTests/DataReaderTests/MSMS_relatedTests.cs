@@ -23,6 +23,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void GetFrameTypeTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
 			{
 				var gp = reader.GetGlobalParams();
@@ -44,6 +46,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void GetMSMSTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
 			{
 				const int testFrame = 2;
@@ -78,6 +82,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void containsMSMSDataTest3()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
 			{
 				Assert.AreEqual(true, reader.HasMSMSData());
@@ -90,6 +96,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void containsMSMSData_test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				Assert.AreEqual(false, reader.HasMSMSData());
@@ -102,6 +110,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void containsMSMSData_test2()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
 			{
 				Assert.AreEqual(false, reader.HasMSMSData());

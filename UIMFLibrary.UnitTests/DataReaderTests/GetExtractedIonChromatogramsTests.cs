@@ -35,6 +35,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void Get3DElutionProfile_test1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 1280;
 			const int startScan = 163;
 			const double targetMZ = 464.25486;
@@ -85,6 +87,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void Get3DElutionProfile_test2()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 524;
 			const int startScan = 128;
 
@@ -131,6 +135,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void Get3DElutionProfile_test3()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 400;
 			const int stopFrame = 600;
 
@@ -183,6 +189,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void GetDriftTimeProfileTest1()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 1280;
 			const int startScan = 150;
 			const double targetMZ = 451.55;
@@ -224,7 +232,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void GetLCChromatogramTest2()
 		{
-			
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 600;
 			const int endFrame = 800;
 
@@ -279,6 +288,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 		[Test]
 		public void GetLCChromatogramTest3()
 		{
+            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			const int startFrame = 1280;
 			const int startScan = 163;
 			const double targetMZ = 464.25486;

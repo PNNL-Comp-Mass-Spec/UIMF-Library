@@ -18,6 +18,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 		// [Test]
 		// public void updateFrameType()
 		// {
+        // DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 		// dw.OpenUIMF(FileName);
 		// dw.UpdateFrameType(0, 1200);
 		// dw.CloseUIMF();

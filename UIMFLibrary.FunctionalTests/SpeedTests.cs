@@ -28,13 +28,44 @@ namespace UIMFLibrary.UnitTests
 
 		#region Public Methods and Operators
 
+
+        public static void PrintMethodName(System.Reflection.MethodBase methodInfo)
+        {
+            // Call with PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var nameSpace = "?";
+            var className = "?";
+
+            if (methodInfo.ReflectedType != null)
+            {
+                nameSpace = methodInfo.ReflectedType.Namespace;
+                className = methodInfo.ReflectedType.Name;
+            }
+
+            var methodDescriptor = nameSpace + ".";
+
+            if (nameSpace.EndsWith("." + className))
+            {
+                methodDescriptor += methodInfo.Name;
+            }
+            else
+            {
+                methodDescriptor += className + "." + methodInfo.Name;
+            }
+
+            Console.WriteLine("\n\n===== " + methodDescriptor + " =====");
+
+        }
+
 		/// <summary>
 		/// Summed mass spectrum speed tests.
 		/// </summary>
 		[Test]
 		public void GetSummedMassspectrumSpeedTests()
 		{
-			int numIterations = 100;
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            int numIterations = 100;
 
 			// int numFramesToSum = 1;
 			int numIMSScansToSum = 7;
@@ -78,6 +109,8 @@ namespace UIMFLibrary.UnitTests
 		[Test]
 		public void getSingleSummedMassSpectrumTest1()
 		{
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
 			DataReader dr = new DataReader(this.uimfStandardFile1);
 			GlobalParameters gp = dr.GetGlobalParameters();
 

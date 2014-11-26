@@ -26,6 +26,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Ignore]
         public void TestCreateBinCentricTables()
         {
+            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
 
             if (fiSource.Exists)
@@ -72,6 +74,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Test]
         public void TestCreateBinCentricTablesSmallFile()
         {
+            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest2);
 
             if (fiSource.Exists)
@@ -93,6 +97,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Test]
         public void TestEncodeDecodeFunctionality()
         {
+            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             const int scanLc = 183;
             const int scanIms = 217;
             const int numImsScans = 360;

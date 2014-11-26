@@ -20,6 +20,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Test]
         public void createDB_test1()
         {
+            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
             var fiTarget = new FileInfo(FileRefs.uimfWriterTest10Frames);
 
             if (fiTarget.Exists)
