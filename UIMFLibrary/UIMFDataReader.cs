@@ -2874,6 +2874,7 @@ namespace UIMFLibrary
             }
 
             StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
+            nonZeroCount = mzArray.Length;
 
             return nonZeroCount;
         }
@@ -3102,6 +3103,7 @@ namespace UIMFLibrary
             }
 
             StripZerosFromArrays(nonZeroCount, ref mzArray, ref intensityArray);
+            nonZeroCount = mzArray.Length;
 
             return nonZeroCount;
         }
