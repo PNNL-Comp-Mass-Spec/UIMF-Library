@@ -144,7 +144,7 @@ namespace UIMFLibrary_Demo
 
                     var randGenerator = new Random();
 
-                    for (int frameNum = 1; frameNum <= 10; frameNum++)
+                    for (int frameNum = 1; frameNum <= 5; frameNum++)
                     {
                         var fp = new FrameParams();
 
@@ -179,7 +179,7 @@ namespace UIMFLibrary_Demo
                     }
                 }
 
-                Console.WriteLine("Wrote 10 frames of data to " + fiTestFile.Name);
+                Console.WriteLine("Wrote 5 frames of data to " + fiTestFile.Name);
                 
             }
             catch (Exception ex)

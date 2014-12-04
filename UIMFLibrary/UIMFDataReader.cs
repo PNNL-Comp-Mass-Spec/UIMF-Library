@@ -167,6 +167,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Spectrum cache list
         /// </summary>
+        /// <remarks>Holds the mass spectra for the 10 most recently accessed frames (or frame ranges if frames were summed)</remarks>       
         private readonly List<SpectrumCache> m_spectrumCacheList;
 
         /// <summary>
@@ -446,7 +447,7 @@ namespace UIMFLibrary
         /// Intercept.
         /// </param>
         /// <param name="binWidth">
-        /// Bin width
+        /// Bin width (in ns)
         /// </param>
         /// <param name="correctionTimeForTOF">
         /// Correction time for tof.
@@ -477,7 +478,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="intercept">
         /// </param>
-        /// <param name="binWidth">
+        /// <param name="binWidth">Bin width (in ns)
         /// </param>
         /// <param name="correctionTimeForTOF">
         /// </param>
@@ -1258,7 +1259,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Extracts BPI from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
+        /// Extracts BPI (base peak intensity, aka the largest intensity) from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
         /// </summary>
         /// <param name="startFrameNumber">
         /// If startFrameNumber and endFrameNumber are 0, then returns all frames
@@ -2795,6 +2796,9 @@ namespace UIMFLibrary
 
             var frameParams = GetFrameParams(startFrameNumber);
 
+            frameParams.AddUpdateValue(FrameParamKeyType.ScanNumFirst, spectrumCache.FirstScan);
+            frameParams.AddUpdateValue(FrameParamKeyType.ScanNumLast, spectrumCache.LastScan);
+
             // Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
             // Adding 1 to the size to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
             mzArray = new double[m_globalParameters.Bins + 1];
@@ -2812,9 +2816,9 @@ namespace UIMFLibrary
             var calibrationSlope = frameParams.CalibrationSlope;
             var calibrationIntercept = frameParams.CalibrationIntercept;
 
-            if (endScanNumber >= scans)
+            if (endScanNumber >= cachedListOfIntensityDictionaries.Count)
             {
-                endScanNumber = scans - 1;
+                endScanNumber = cachedListOfIntensityDictionaries.Count - 1;
             }
 
             // If we are summing all scans together, then we can use the summed version of the spectrum cache
@@ -3247,6 +3251,11 @@ namespace UIMFLibrary
             out double[] mzArray,
             out int[] intensityArray)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             // Console.WriteLine("LC " + startFrameNumber + " - " + endFrameNumber + "\t IMS " + startScanNumber + " - " + endScanNumber + "\t Bin " + startBin + " - " + endBin);
             var mzList = new List<double>();
             var intensityList = new List<int>();
@@ -3464,6 +3473,11 @@ namespace UIMFLibrary
         /// </returns>
         public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             var frameParams = GetFrameParams(1);
             int numScans = frameParams.Scans;
 
@@ -3543,6 +3557,11 @@ namespace UIMFLibrary
             FrameType frameType,
             ToleranceType toleranceType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             var frameParams = GetFrameParams(1);
             double slope = frameParams.CalibrationSlope;
             double intercept = frameParams.CalibrationIntercept;
@@ -3659,6 +3678,11 @@ namespace UIMFLibrary
             FrameType frameType,
             ToleranceType toleranceType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             var frameParams = GetFrameParams(1);
             double slope = frameParams.CalibrationSlope;
             double intercept = frameParams.CalibrationIntercept;
@@ -3768,6 +3792,11 @@ namespace UIMFLibrary
         /// </returns>
         public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType, ToleranceType toleranceType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             var frameParams = GetFrameParams(1);
             double slope = frameParams.CalibrationSlope;
             double intercept = frameParams.CalibrationIntercept;
@@ -3875,6 +3904,11 @@ namespace UIMFLibrary
             FrameType frameType,
             ToleranceType toleranceType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             var frameParams = GetFrameParams(frameIndexMin);
             double slope = frameParams.CalibrationSlope;
             double intercept = frameParams.CalibrationIntercept;
@@ -3955,7 +3989,7 @@ namespace UIMFLibrary
             }
 
             return result;
-        }
+        }     
 
         /// <summary>
         /// Get the extracted ion chromatogram for a given bin for the specified frame type
@@ -3971,6 +4005,11 @@ namespace UIMFLibrary
         /// </returns>
         public double[,] GetXicAsArray(int targetBin, FrameType frameType)
         {
+            if (!m_doesContainBinCentricData)
+            {
+                ThrowMissingBinCentricTablesException();
+            }
+
             FrameParams frameParameters = GetFrameParams(1);
             int numScans = frameParameters.Scans;
 
@@ -4977,8 +5016,8 @@ namespace UIMFLibrary
         {
             foreach (SpectrumCache possibleSpectrumCache in m_spectrumCacheList)
             {
-                if (possibleSpectrumCache.StartFrameNumber == startFrameNumber
-                    && possibleSpectrumCache.EndFrameNumber == endFrameNumber)
+                if (possibleSpectrumCache.StartFrameNumber == startFrameNumber && 
+                    possibleSpectrumCache.EndFrameNumber == endFrameNumber)
                 {
                     return possibleSpectrumCache;
                 }
@@ -4990,6 +5029,10 @@ namespace UIMFLibrary
             var summedIntensityDictionary = new Dictionary<int, int>();
 
             // Initialize each array that will be used for the cache
+            // In UIMF files from IMS04, if Frame_Parameters.Scans = 360 then Frame_Scans will have scans 0 through 359
+            // In UIMF files from IMS08, prior to December 1, 2014, if Frame_Parameters.Scans = 374 then Frame_Scans will have scans 0 through 373
+            // in UIMF files from IMS08, after December 1, 2014     if Frame_Parameters.Scans = 374 then Frame_Scans will have scans 1 through 374
+
             for (int i = 0; i < numScansInFrame; i++)
             {
                 listOfIntensityDictionaries.Add(new Dictionary<int, int>());
@@ -5001,6 +5044,10 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 1));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
+
+            // Keep track of the actual minimum and maximum scan values
+            int minScan = numScansInFrame;
+            int maxScan = -1;
 
             using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
@@ -5014,12 +5061,24 @@ namespace UIMFLibrary
                     {
                         int scanNum = Convert.ToInt32(reader["ScanNum"]);
 
+                        minScan = Math.Min(minScan, scanNum);
+                        maxScan = Math.Max(maxScan, scanNum);
+
                         int outputLength = LZFCompressionUtil.Decompress(
                             ref spectraRecord,
                             spectraRecord.Length,
                             ref decompSpectraRecord,
                             m_globalParameters.Bins * DATASIZE);
                         int numBins = outputLength / DATASIZE;
+
+                        while (true)
+                        {
+                            // Possibly add one or more additional items to listOfIntensityDictionaries
+                            if (scanNum >= listOfIntensityDictionaries.Count)
+                                listOfIntensityDictionaries.Add(new Dictionary<int, int>());
+                            else
+                                break;
+                        }
 
                         IDictionary<int, int> currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
 
@@ -5060,12 +5119,20 @@ namespace UIMFLibrary
                 }
             }
 
+            if (maxScan < 0)
+            {
+                minScan = 0;
+                maxScan = 0;
+            }
+
             // Create the new spectrum cache
             var spectrumCache = new SpectrumCache(
                 startFrameNumber,
                 endFrameNumber,
                 listOfIntensityDictionaries,
-                summedIntensityDictionary);
+                summedIntensityDictionary, 
+                minScan, 
+                maxScan);
 
             if (m_spectrumCacheList.Count >= 10)
             {
@@ -5569,6 +5636,12 @@ namespace UIMFLibrary
             if (m_getSpectrumCommand != null)
                 m_getSpectrumCommand.Dispose();
 
+        }
+
+        private static void ThrowMissingBinCentricTablesException()
+        {
+            throw new Exception("UIMF File is missing the Bin_Intensities table; " +
+                                "use the DataWriter class to add it by calling function CreateBinCentricTables");
         }
 
         private bool UsingLegacyFrameParams(SQLiteConnection sqLiteConnection)

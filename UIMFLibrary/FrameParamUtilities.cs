@@ -647,6 +647,16 @@ namespace UIMFLibrary
                                           FrameParamKeyType.FragmentationProfile.ToString(), "string",
                                           "Voltage profile used in fragmentation (Base 64 encoded array of doubles)");
 
+                case FrameParamKeyType.ScanNumFirst:
+                    return new FrameParamDef(FrameParamKeyType.ScanNumFirst, FrameParamKeyType.ScanNumFirst.ToString(),
+                                          "int",
+                                          "First scan");
+
+                case FrameParamKeyType.ScanNumLast:
+                    return new FrameParamDef(FrameParamKeyType.ScanNumLast, FrameParamKeyType.ScanNumLast.ToString(),
+                                          "int",
+                                          "Last scan");
+
                 default:
                     throw new ArgumentOutOfRangeException("paramType", "Unrecognized frame param enum for paramType: " + (int)paramType);
             }

@@ -57,7 +57,9 @@ namespace UIMFLibrary
         QuadrupolePressure = 45,
         ESIVoltage = 46,
         FloatVoltage = 47,
-        FragmentationProfile = 48
+        FragmentationProfile = 48,
+        ScanNumFirst= 49,
+        ScanNumLast = 50
     }
 
     #endregion

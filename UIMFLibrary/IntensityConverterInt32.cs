@@ -17,7 +17,7 @@ namespace UIMFLibrary
 		/// Number of non-zero data points
 		/// </returns>
 		public static int Encode(
-			int[] intensities,
+            IEnumerable<int> intensities,
 			out byte[] spectra,
 			out double tic,
 			out double bpi,
@@ -37,9 +37,10 @@ namespace UIMFLibrary
 			const int dataTypeSize = 4;
 
 			// Calculate TIC and BPI while run length zero encoding
-			for (int i = 0; i < intensities.Length; i++)
-			{
-				int intensity = intensities[i];
+		    int i = -1;
+            foreach (int intensity in intensities)
+            {
+                i++;
 				if (intensity > 0)
 				{
 					// TIC is just the sum of all intensities

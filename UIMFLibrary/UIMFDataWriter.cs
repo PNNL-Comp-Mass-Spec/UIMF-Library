@@ -968,7 +968,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameParameters">Legacy frame parameters</param>
         /// <param name="scanNum">scan number</param>
-        /// <param name="binWidth">bin width</param>
+        /// <param name="binWidth">Bin width (in ns)</param>
         /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
         /// <param name="nonZeroCount">Count of non-zero values</param>
         /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
@@ -1002,7 +1002,7 @@ namespace UIMFLibrary
         /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">scan number</param>
-        /// <param name="binWidth">bin width</param>
+        /// <param name="binWidth">Bin width (in ns)</param>
         /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
         /// <param name="nonZeroCount">Count of non-zero values</param>
         /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
@@ -1035,14 +1035,14 @@ namespace UIMFLibrary
         /// <param name="frameParameters">Frame parameters</param>
         /// <param name="scanNum">Scan number</param>
         /// <param name="intensities">Array of intensities, including all zeros</param>
-        /// <param name="binWidth">Bin width (used to compute m/z value of the BPI data point)</param>
+        /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <returns>Number of non-zero data points</returns>
         /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
         public int InsertScan(
             int frameNumber,
             FrameParams frameParameters,
             int scanNum,
-            int[] intensities,
+            IEnumerable<int> intensities,
             double binWidth)
         {
             byte[] spectra;
@@ -1068,7 +1068,7 @@ namespace UIMFLibrary
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">Scan number</param>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
-        /// <param name="binWidth">Bin width </param>
+        /// <param name="binWidth">Bin width (in ns)</param>
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
         /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
@@ -1634,7 +1634,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="binNumber">
         /// </param>
-        /// <param name="binWidth">
+        /// <param name="binWidth">Bin width (in ns)
         /// </param>
         /// <param name="frameParameters">
         /// </param>		
@@ -1665,7 +1665,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="binNumber">
         /// </param>
-        /// <param name="binWidth">
+        /// <param name="binWidth">Bin width (in ns)
         /// </param>
         /// <param name="frameParameters">
         /// </param>		
