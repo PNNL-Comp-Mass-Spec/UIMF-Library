@@ -170,6 +170,26 @@ namespace UIMFLibrary
         /// <remarks>Holds the mass spectra for the 10 most recently accessed frames (or frame ranges if frames were summed)</remarks>       
         private readonly List<SpectrumCache> m_spectrumCacheList;
 
+        private int m_spectraToCache;
+
+        /// <summary>
+        /// Number of spectra to cache (defaults to 10)
+        /// </summary>
+        /// <remarks>Set this to a smaller value if you are encountering OutOfMemory exceptions</remarks>
+        public int SpectraToCache
+        {
+            get
+            {
+                return m_spectraToCache;
+            }
+            set
+            {
+                if (value < 2)
+                    value = 2;
+                m_spectraToCache = value;
+            }
+        }
+
         /// <summary>
         /// UIMF file path
         /// </summary>
@@ -192,6 +212,8 @@ namespace UIMFLibrary
         public DataReader(string fileName)
         {
             m_errMessageCounter = 0;
+            m_spectraToCache = 10;
+
             m_calibrationTable = new double[0];
             m_spectrumCacheList = new List<SpectrumCache>();
             m_frameTypeInfo = new Dictionary<FrameType, FrameSetContainer>();
@@ -2804,7 +2826,7 @@ namespace UIMFLibrary
             mzArray = new double[m_globalParameters.Bins + 1];
             intensityArray = new int[m_globalParameters.Bins + 1];
 
-            IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
+            IList<SortedList<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
             // Validate the scan number range
             if (startScanNumber < 0)
@@ -2850,7 +2872,10 @@ namespace UIMFLibrary
                 // Get the data out of the cache, making sure to sum across scans if necessary
                 for (int scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
                 {
-                    IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+                    // Prior to January 2015 we used a Dictionary<int, int>, which gives faster lookups for .TryGetValue
+                    // However, a Dictionary uses roughly 2x more memory vs. a SortedList, which can cause problems for rich UIMF files
+                    // Thus, we're now using a SortedList
+                    SortedList<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
 
                     foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
                     {
@@ -3036,7 +3061,7 @@ namespace UIMFLibrary
 
             SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
             var frameParams = GetFrameParams(startFrameNumber);
-            IList<IDictionary<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
+            IList<SortedList<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
             // If we are summing all scans together, then we can use the summed version of the spectrum cache
             if (endScanNumber - startScanNumber + 1 == frameParams.Scans)
@@ -5027,7 +5052,10 @@ namespace UIMFLibrary
 
             // Initialize List of arrays that will be used for the cache
             int numScansInFrame = GetFrameParams(startFrameNumber).Scans;
-            IList<IDictionary<int, int>> listOfIntensityDictionaries = new List<IDictionary<int, int>>(numScansInFrame);
+
+            // Previously a list of dictionaries, now a list of SortedList objects
+            IList<SortedList<int, int>> listOfIntensityDictionaries = new List<SortedList<int, int>>(numScansInFrame);
+
             var summedIntensityDictionary = new Dictionary<int, int>();
 
             // Initialize each array that will be used for the cache
@@ -5037,7 +5065,7 @@ namespace UIMFLibrary
 
             for (int i = 0; i < numScansInFrame; i++)
             {
-                listOfIntensityDictionaries.Add(new Dictionary<int, int>());
+                listOfIntensityDictionaries.Add(new SortedList<int, int>());
             }
 
             m_getSpectrumCommand.Parameters.Clear();
@@ -5077,12 +5105,12 @@ namespace UIMFLibrary
                         {
                             // Possibly add one or more additional items to listOfIntensityDictionaries
                             if (scanNum >= listOfIntensityDictionaries.Count)
-                                listOfIntensityDictionaries.Add(new Dictionary<int, int>());
+                                listOfIntensityDictionaries.Add(new SortedList<int, int>());
                             else
                                 break;
                         }
 
-                        IDictionary<int, int> currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
+                        SortedList<int, int> currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
 
                         for (int i = 0; i < numBins; i++)
                         {
@@ -5136,7 +5164,7 @@ namespace UIMFLibrary
                 minScan, 
                 maxScan);
 
-            if (m_spectrumCacheList.Count >= 10)
+            if (m_spectrumCacheList.Count >= m_spectraToCache)
             {
                 m_spectrumCacheList.RemoveAt(0);
             }

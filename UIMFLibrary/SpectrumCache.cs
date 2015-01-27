@@ -28,7 +28,7 @@ namespace UIMFLibrary
 		/// The end frame number.
 		/// </param>
 		/// <param name="listOfIntensityDictionaries">
-		/// The list of intensity dictionaries.
+        /// The list of intensity dictionaries (previously a list of dictionaries, now a list of SortedList objects)
 		/// </param>
 		/// <param name="summedIntensityDictionary">
 		/// The summed intensity dictionary.
@@ -36,7 +36,7 @@ namespace UIMFLibrary
 	    public SpectrumCache(
 	        int startFrameNumber,
 	        int endFrameNumber,
-	        IList<IDictionary<int, int>> listOfIntensityDictionaries,
+            IList<SortedList<int, int>> listOfIntensityDictionaries, 
 	        IDictionary<int, int> summedIntensityDictionary)
 	    {
             this.StartFrameNumber = startFrameNumber;
@@ -51,6 +51,8 @@ namespace UIMFLibrary
 
             this.FirstScan = firstScan;
             this.LastScan = lastScan;
+            
+            UpdateMemoryUsageEstimate();
 	    }
 
 	    /// <summary>
@@ -73,7 +75,7 @@ namespace UIMFLibrary
 		public SpectrumCache(
 			int startFrameNumber, 
 			int endFrameNumber, 
-			IList<IDictionary<int, int>> listOfIntensityDictionaries, 
+			IList<SortedList<int, int>> listOfIntensityDictionaries, 
 			IDictionary<int, int> summedIntensityDictionary,
             int firstScan,
             int lastScan)
@@ -99,6 +101,7 @@ namespace UIMFLibrary
                     this.LastScan = lastScanComputed;
 	        }
 
+			UpdateMemoryUsageEstimate();
 		}
     
 	    #endregion
@@ -117,7 +120,18 @@ namespace UIMFLibrary
         /// List of dictionaries tracking the intensity information for scans 0 through NumScans-1 (older .UIMF files) or 1 through NumScans (newer .UIMF files)
         /// Keys in each dictionary are bin number; values are the intensity for the bin
         /// </remarks>
-		public IList<IDictionary<int, int>> ListOfIntensityDictionaries { get; private set; }
+        /// 
+        /// 
+        /// <summary>
+        /// Gets the list of intensity Lists
+        /// </summary>
+        /// <remarks>
+        /// List of SortedLists tracking the intensity information for scans 0 through NumScans-1 (older .UIMF files) or 1 through NumScans (newer .UIMF files)
+        /// Keys in each SortedList are bin number; values are the intensity for the bin
+        /// Prior to January 2015 we used a Dictionary<int, int>, which gives faster lookups for .TryGetValue
+        /// However, a Dictionary uses roughly 2x more memory vs. a SortedList, which can cause problems for rich UIMF files
+        /// </remarks>
+        public IList<SortedList<int, int>> ListOfIntensityDictionaries { get; private set; }
 
 		/// <summary>
 		/// Gets the start frame number.
@@ -139,11 +153,16 @@ namespace UIMFLibrary
 		/// </summary>
 		public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
 
+        /// <summary>
+        /// Estimated MB of data tracked by this cached spectrum
+        /// </summary>
+        public int MemoryUsageEstimateMB { get; private set; }
+
 		#endregion
 
         #region Member Functions
 
-        private void FindFirstLastScan(IList<IDictionary<int, int>> listOfIntensityDictionaries, out int firstScan, out int lastScan)
+        private void FindFirstLastScan(IList<SortedList<int, int>> listOfIntensityDictionaries, out int firstScan, out int lastScan)
         {
 
             firstScan = int.MaxValue;
@@ -163,6 +182,17 @@ namespace UIMFLibrary
                 firstScan = 0;
                 lastScan = 0;
             }
+        }
+        
+        private void UpdateMemoryUsageEstimate()
+        {
+	        System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8;
+            foreach (var item in ListOfIntensityDictionaries)
+            {
+                byteEstimate += item.Count * 8;
+            }
+
+            this.MemoryUsageEstimateMB = (int)(byteEstimate / 1024.0 / 1024.0);
         }
 
         #endregion
