@@ -113,22 +113,13 @@ namespace UIMFLibrary
 		/// </summary>
 		public int EndFrameNumber { get; private set; }
 
-		/// <summary>
-		/// Gets the list of intensity dictionaries.
-		/// </summary>
-        /// <remarks>
-        /// List of dictionaries tracking the intensity information for scans 0 through NumScans-1 (older .UIMF files) or 1 through NumScans (newer .UIMF files)
-        /// Keys in each dictionary are bin number; values are the intensity for the bin
-        /// </remarks>
-        /// 
-        /// 
         /// <summary>
         /// Gets the list of intensity Lists
         /// </summary>
         /// <remarks>
         /// List of SortedLists tracking the intensity information for scans 0 through NumScans-1 (older .UIMF files) or 1 through NumScans (newer .UIMF files)
         /// Keys in each SortedList are bin number; values are the intensity for the bin
-        /// Prior to January 2015 we used a Dictionary<int, int>, which gives faster lookups for .TryGetValue
+        /// Prior to January 2015 we used a Dictionary(int, int), which gives faster lookups for .TryGetValue
         /// However, a Dictionary uses roughly 2x more memory vs. a SortedList, which can cause problems for rich UIMF files
         /// </remarks>
         public IList<SortedList<int, int>> ListOfIntensityDictionaries { get; private set; }
@@ -184,12 +175,20 @@ namespace UIMFLibrary
             }
         }
         
+        /// <summary>
+        /// Estimates the amount of memory used by SummedIntensityDictionary and ListOfIntensityDictionaries
+        /// </summary>
+        /// <remarks>
+        /// SummedIntensityDictionary is an int,int dictionary, so each entry takes up 8 bytes.  
+        /// However, given the overhead inerhent in a dictionary, we need to multiply by 5 to get a realistic estimate of the size.
+        /// ListOfIntensityDictionaries used to be a list of dictionaries, but it is now a list of SortedList objects.
+        /// Each entry nominally takes up 8 bytes, but in reality each entry takes up 16 bytes.</remarks>
         private void UpdateMemoryUsageEstimate()
         {
-	        System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8;
+	        System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8 * 5;
             foreach (var item in ListOfIntensityDictionaries)
             {
-                byteEstimate += item.Count * 8;
+                byteEstimate += item.Count * 8 * 2;
             }
 
             this.MemoryUsageEstimateMB = (int)(byteEstimate / 1024.0 / 1024.0);

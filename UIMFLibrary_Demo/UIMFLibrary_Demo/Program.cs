@@ -8,6 +8,7 @@ namespace UIMFLibrary_Demo
     static class Program
     {
         private const bool TEST_READER = true;
+        private const bool TEST_WRITER = false;
         private const bool UPDATE_PARAM_TABLES = false;
 
         private static void Main(string[] args)
@@ -59,6 +60,8 @@ namespace UIMFLibrary_Demo
             if (TEST_READER)
             {
                 var runner = new DemoRunner(dataFilePathForReader);
+
+                runner.ReadAllFramesAndScans();
                 runner.Execute();
             }
 
@@ -68,7 +71,10 @@ namespace UIMFLibrary_Demo
                 UpdateParamTables(legacyFilePath);
             }
 
-            WriterTest();
+            if (TEST_WRITER)
+            {
+                WriterTest();
+            }
 
             System.Threading.Thread.Sleep(1000);
 

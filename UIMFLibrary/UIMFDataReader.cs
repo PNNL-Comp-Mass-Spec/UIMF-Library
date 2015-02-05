@@ -167,8 +167,32 @@ namespace UIMFLibrary
         /// <summary>
         /// Spectrum cache list
         /// </summary>
-        /// <remarks>Holds the mass spectra for the 10 most recently accessed frames (or frame ranges if frames were summed)</remarks>       
+        /// <remarks>
+        /// Holds the mass spectra for the 10 most recently accessed frames (or frame ranges if frames were summed)
+        /// Can adjust the number of spectra to cache using SpectraToCache
+        /// Spectra are removed from the cache if the memory usage exceeds MaxSpectrumCacheMemoryMB
+        /// </remarks>
         private readonly List<SpectrumCache> m_spectrumCacheList;
+
+        private int m_maxSpectrumCacheMemoryMB;
+
+        /// <summary>
+        /// Maximum memory to allow the spectrum cache to utilize (defaults to 750 MB)
+        /// </summary>
+        public int MaxSpectrumCacheMemoryMB
+        {
+            get
+            {
+                return m_maxSpectrumCacheMemoryMB;
+            }
+            set
+            {
+                if (value < 25)
+                    value = 25;
+                m_maxSpectrumCacheMemoryMB = value;
+            }
+        }
+
 
         private int m_spectraToCache;
 
@@ -213,6 +237,7 @@ namespace UIMFLibrary
         {
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
+            m_maxSpectrumCacheMemoryMB = 750;
 
             m_calibrationTable = new double[0];
             m_spectrumCacheList = new List<SpectrumCache>();
@@ -788,6 +813,9 @@ namespace UIMFLibrary
                     var frameParams = GetFrameParams(currentFrameNumber);
                     var mzCalibrator = GetMzCalibrator(frameParams);
 
+                    if (Math.Abs(frameParams.CalibrationSlope) < Single.Epsilon)
+                        Console.WriteLine(" ... Warning, CalibrationSlope is 0 for frame " + currentFrameNumber);
+
                     double mzMin = mzCalibrator.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
                     double mzMax = mzCalibrator.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
 
@@ -852,11 +880,11 @@ namespace UIMFLibrary
                     ref compressedBinIntensity,
                     compressedBinIntensity.Length,
                     ref streamBinIntensity,
-                    m_globalParameters.Bins * 4);
+                    m_globalParameters.Bins * DATASIZE);
 
                 for (int binValue = 0;
-                    (binValue < decompressLength) && (indexCurrentBin <= endBin);
-                     binValue += 4)
+                     (binValue < decompressLength) && (indexCurrentBin <= endBin);
+                     binValue += DATASIZE)
                 {
                     int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
 
@@ -896,8 +924,6 @@ namespace UIMFLibrary
             {
                 int currentScan = Convert.ToInt32(reader["ScanNum"]) - startScan;
 
-                // if (current_scan >= data_width)
-                // break;
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
                 if (compressedBinIntensity.Length == 0)
@@ -910,13 +936,13 @@ namespace UIMFLibrary
                     ref compressedBinIntensity,
                     compressedBinIntensity.Length,
                     ref streamBinIntensity,
-                    m_globalParameters.Bins * 4);
+                    m_globalParameters.Bins * DATASIZE);
 
                 int pixelY = 1;
 
                 for (int binValue = 0;
-                    (binValue < decompressLength) && (indexCurrentBin < endBin);
-                    binValue += 4)
+                     (binValue < decompressLength) && (indexCurrentBin < endBin);
+                     binValue += DATASIZE)
                 {
                     int intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
 
@@ -2174,6 +2200,7 @@ namespace UIMFLibrary
                         spectra.Length,
                         ref decompSpectraRecord,
                         m_globalParameters.Bins * DATASIZE);
+
                     int numBins = outputLength / DATASIZE;
                     for (int i = 0; i < numBins; i++)
                     {
@@ -2332,6 +2359,7 @@ namespace UIMFLibrary
                             spectra.Length,
                             ref decompSpectraRecord,
                             m_globalParameters.Bins * DATASIZE);
+
                         int numReturnedBins = outputLength / DATASIZE;
                         for (int i = 0; i < numReturnedBins; i++)
                         {
@@ -2411,6 +2439,7 @@ namespace UIMFLibrary
                             spectra.Length,
                             ref decompSpectraRecord,
                             m_globalParameters.Bins * DATASIZE);
+
                         int numBins = outputLength / DATASIZE;
                         for (int i = 0; i < numBins; i++)
                         {
@@ -3209,8 +3238,8 @@ namespace UIMFLibrary
                             spectraRecord.Length,
                             ref decompSpectraRecord,
                             m_globalParameters.Bins * DATASIZE);
-                        int numBins = outputLength / DATASIZE;
 
+                        int numBins = outputLength / DATASIZE;
                         for (int i = 0; i < numBins; i++)
                         {
                             int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
@@ -5149,6 +5178,28 @@ namespace UIMFLibrary
                 }
             }
 
+            // Remove the oldest spectrum in the cache
+            if (m_spectrumCacheList.Count >= m_spectraToCache)
+            {
+                m_spectrumCacheList.RemoveAt(0);
+            }
+
+            // Possibly remove additional spectra if the spectrum cache is using a lot of memory
+            while (m_spectrumCacheList.Count > 2)
+            {
+                var memoryUsageMB = m_spectrumCacheList.Sum(item => item.MemoryUsageEstimateMB);
+
+                if (memoryUsageMB > m_maxSpectrumCacheMemoryMB)
+                {
+                    m_spectrumCacheList.RemoveAt(0);
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+
             if (maxScan < 0)
             {
                 minScan = 0;
@@ -5160,14 +5211,9 @@ namespace UIMFLibrary
                 startFrameNumber,
                 endFrameNumber,
                 listOfIntensityDictionaries,
-                summedIntensityDictionary, 
-                minScan, 
+                summedIntensityDictionary,
+                minScan,
                 maxScan);
-
-            if (m_spectrumCacheList.Count >= m_spectraToCache)
-            {
-                m_spectrumCacheList.RemoveAt(0);
-            }
 
             m_spectrumCacheList.Add(spectrumCache);
 

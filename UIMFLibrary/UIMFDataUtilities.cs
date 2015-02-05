@@ -47,7 +47,7 @@ namespace UIMFLibrary
 
 
 	    /// <summary>
-		/// The parse out zero values.
+        /// Filters xvals and yvals to only contain data with mass between 1 and 100000 m/z, and with intensity > 0
 		/// </summary>
 		/// <param name="xvals">
 		/// The xvals.
@@ -61,7 +61,7 @@ namespace UIMFLibrary
 		}
 
 		/// <summary>
-		/// The parse out zero values.
+		/// Filters xvals and yvals to only contain data with mass between minMZ and maxMZ, and with intensity > 0
 		/// </summary>
 		/// <param name="xvals">
 		/// The xvals.
@@ -79,24 +79,21 @@ namespace UIMFLibrary
 		{
 			int intensityArrLength = yvals.Length;
 			int[] tempIntensities = yvals;
-			int zeros = 0;
+            int targetIndex = 0;
 
 			for (int k = 0; k < intensityArrLength; k++)
 			{
-				if (tempIntensities[k] != 0 && (minMZ <= xvals[k] && maxMZ >= xvals[k]))
+				if (tempIntensities[k] > 0 && (minMZ <= xvals[k] && maxMZ >= xvals[k]))
 				{
-					xvals[k - zeros] = xvals[k];
-					yvals[k - zeros] = tempIntensities[k];
-				}
-				else
-				{
-					zeros++;
+                    xvals[targetIndex] = xvals[k];
+                    yvals[targetIndex] = tempIntensities[k];
+				    targetIndex++;
 				}
 			}
 
 			// resize arrays cutting off the zeroes at the end.
-			Array.Resize(ref xvals, intensityArrLength - zeros);
-			Array.Resize(ref yvals, intensityArrLength - zeros);
+            Array.Resize(ref xvals, targetIndex);
+            Array.Resize(ref yvals, targetIndex);
 		}
 
         public static string StandardizeDate(string dateString)
