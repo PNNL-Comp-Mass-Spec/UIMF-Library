@@ -89,6 +89,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Calibration table
         /// </summary>
+        /// <remarks>Lists the TOF arrival time bin minimum for each pixel</remarks>
         private double[] m_calibrationTable;
 
         /// <summary>
@@ -775,6 +776,9 @@ namespace UIMFLibrary
         /// <returns>
         /// Frame data to be utilized in visualization as a multidimensional array
         /// </returns>
+        /// <remarks>
+        /// This function is used by the UIMF Viewer and by Atreyu
+        /// </remarks>
         public double[,] AccumulateFrameData(
             int startFrameNumber,
             int endFrameNumber,
@@ -2727,14 +2731,15 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Get the intensity value for the given bin in the calibration table
+        /// Get the minimum TOF bin arrival time value for the given pixel bin
         /// </summary>
         /// <param name="bin">
         /// Bin number
         /// </param>
         /// <returns>
-        /// Intensity<see cref="double"/>.
+        /// TOF bin arrive time<see cref="double"/>.
         /// </returns>
+        /// <remarks>The function name is misleading; does not return an m/z</remarks>
         public double GetPixelMZ(int bin)
         {
             if ((m_calibrationTable != null) && (bin < m_calibrationTable.Length))
