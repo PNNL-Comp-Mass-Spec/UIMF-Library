@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
-	static class IntensityBinConverterInt32
+	static internal class IntensityBinConverterInt32
 	{
 		/// <summary>
 		/// Convert a list of intensity information by bin to a zero length encoded byte array
@@ -21,7 +21,7 @@ namespace UIMFLibrary
 		/// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
 		/// </remarks>
 		public static int Encode(
-			List<KeyValuePair<int, int>> binToIntensityMap,
+            List<KeyValuePair<int, int>> binToIntensityMap,
 			int timeOffset,
 			out byte[] spectra,
 			out double tic,
@@ -49,28 +49,28 @@ namespace UIMFLibrary
 				int intensity = binToIntensityMap[i].Value;
 				int currentBin = binToIntensityMap[i].Key;
 
-				// the intensities will always be positive integers
-				tic += intensity;
-				if (bpi < intensity)
-				{
-					bpi = intensity;
-					binNumberMaxIntensity = currentBin;
-				}
+                // the intensities will always be positive integers
+                tic += intensity;
+                if (bpi < intensity)
+                {
+                    bpi = intensity;
+                    binNumberMaxIntensity = currentBin;
+                }
 
-				if (i != 0 && currentBin != previousBin + 1)
-				{
-					// since the bin numbers are not continuous, add a negative index to the array
-					// and in some cases we have to add the offset from the previous index
-					rlzeDataList.Add(previousBin - currentBin + 1);
-				}
+                if (i != 0 && currentBin != previousBin + 1)
+                {
+                    // since the bin numbers are not continuous, add a negative index to the array
+                    // and in some cases we have to add the offset from the previous index
+                    rlzeDataList.Add(previousBin - currentBin + 1);
+                }
 
-				rlzeDataList.Add(intensity);
-				nonZeroCount++;
+                rlzeDataList.Add(intensity);
+                nonZeroCount++;
 
-				previousBin = currentBin;
-			}
+                previousBin = currentBin;
+		    }
 
-			// Compress intensities
+            // Compress intensities
 			int nlzf = 0;
 			var nrlze = rlzeDataList.Count;
 			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();

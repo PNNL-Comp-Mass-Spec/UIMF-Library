@@ -764,7 +764,7 @@ namespace UIMFLibrary
 
                 if (updateGlobalParameters)
                 {
-                    DecrementFrameCount(dbCommand, frameNums.Count);
+                    DecrementFrameCount(dbCommand, frameNums.Count());
                 }
 
             }
@@ -1001,7 +1001,10 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">FrameParams</param>
-        /// <param name="scanNum">scan number</param>
+        /// <param name="scanNum">
+        /// Scan number
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
         /// <param name="binWidth">Bin width (in ns)</param>
         /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
         /// <param name="nonZeroCount">Count of non-zero values</param>
@@ -1033,7 +1036,10 @@ namespace UIMFLibrary
         /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters">Frame parameters</param>
-        /// <param name="scanNum">Scan number</param>
+        /// <param name="scanNum">
+        /// Scan number
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
         /// <param name="intensities">Array of intensities, including all zeros</param>
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <returns>Number of non-zero data points</returns>
@@ -1076,7 +1082,7 @@ namespace UIMFLibrary
             int frameNumber,
             FrameParams frameParameters,
             int scanNum,
-            List<KeyValuePair<int, int>> binToIntensityMap,
+            IEnumerable<KeyValuePair<int, int>> binToIntensityMap,
             double binWidth,
             int timeOffset)
         {
@@ -1088,12 +1094,14 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 return -1;
 
-            if (binToIntensityMap == null || binToIntensityMap.Count == 0)
+            var binToIntensityMapList = binToIntensityMap.ToList();
+
+            if (binToIntensityMap == null || !binToIntensityMapList.Any())
             {
                 return 0;
             }
 
-            int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
+            int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMapList, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 

@@ -1454,8 +1454,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns the drift time for the given frame and IMS scan
         /// </summary>
-        /// <param name="frameNum">Frame number (1-based)</param>
-        /// <param name="scanNum">IMS scan number (1-based)</param>
+        /// <param name="frameNum">
+        /// Frame number (1-based)
+        /// </param>
+        /// <param name="scanNum">
+        /// IMS scan number
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
         /// <returns>Drift time (milliseconds)</returns>
         public double GetDriftTime(int frameNum, int scanNum)
         {
@@ -2638,6 +2643,7 @@ namespace UIMFLibrary
         /// Constructs a dictionary that has the frame numbers as the key and the frame type as the value.
         /// </summary>
         /// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
+        /// <remarks>The first frame should be Frame Number 1</remarks>
         public Dictionary<int, FrameType> GetMasterFrameList()
         {
             var masterFrameDictionary = new Dictionary<int, FrameType>();
@@ -2780,13 +2786,45 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="frameNumber">
+        /// The frame number of the desired spectrum; must be an MS1 frame
+        /// </param>
+        /// <param name="scanNumber">
+        /// The scan number of the desired spectrum.  
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
+        /// <param name="mzArray">
+        /// The m/z values that contained non-zero intensity values.
+        /// </param>
+        /// <param name="intensityArray">
+        /// The corresponding intensity values of the non-zero m/z value.
+        /// </param>
+        /// <returns>
+        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// </returns>
+        public int GetSpectrum(
+           int frameNumber,          
+           int scanNumber,
+           out double[] mzArray,
+           out int[] intensityArray)
+        {
+            return GetSpectrum(frameNumber, frameNumber, FrameType.MS1, scanNumber, scanNumber, out mzArray, out intensityArray);
+        }
+
+
+        /// <summary>
+        /// Extracts m/z values and intensities from given frame number and scan number.
+        /// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
+        /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
+        /// </summary>
+        /// <param name="frameNumber">
         /// The frame number of the desired spectrum.
         /// </param>
         /// <param name="frameType">
         /// The frame type to consider.
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.
+        /// The scan number of the desired spectrum.  
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="mzArray">
         /// The m/z values that contained non-zero intensity values.
@@ -2824,6 +2862,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="startScanNumber">
         /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
         /// The end scan number of the desired spectrum.
@@ -2863,6 +2902,7 @@ namespace UIMFLibrary
             IList<SortedList<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
             // Validate the scan number range
+            // Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015
             if (startScanNumber < 0)
             {
                 startScanNumber = 0;
@@ -2955,6 +2995,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="startScanNumber">
         /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
         /// The end scan number of the desired spectrum.
@@ -3055,6 +3096,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="startScanNumber">
         /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
         /// The end scan number of the desired spectrum.
@@ -3179,6 +3221,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="scanNumber">
         /// The scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <returns>
         /// The number of non-zero bins found in the resulting spectrum.
@@ -3203,6 +3246,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="startScanNumber">
         /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
         /// The end scan number of the desired spectrum.
@@ -3282,6 +3326,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="startScanNumber">
         /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
         /// The end scan number of the desired spectrum.
@@ -4162,7 +4207,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns True if all frames with frame types 0 through 3 have CalibrationDone &gt; 0 in frame_parameters
+        /// Returns True if all frames with frame types 0 through 3 have CalibrationDone greater than 0 in frame_parameters
         /// </summary>
         /// <returns>
         /// True if all frames in the UIMF file have been calibrated<see cref="bool"/>.
@@ -4173,7 +4218,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns True if all frames with frame types 0 through iMaxFrameTypeToExamine have CalibrationDone &gt; 0 in frame_parameters
+        /// Returns True if all frames with frame types 0 through iMaxFrameTypeToExamine have CalibrationDone greater than 0 in frame_parameters
         /// </summary>
         /// <param name="iMaxFrameTypeToExamine">Maximum frame type to consider</param>
         /// <returns>
@@ -4258,7 +4303,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns True if all frames with frame types 0 through iMaxFrameTypeToExamine have CalibrationDone &gt; 0 in frame_parameters
+        /// Returns True if all frames with frame types 0 through iMaxFrameTypeToExamine have CalibrationDone greater than 0 in frame_parameters
         /// </summary>
         /// <param name="iMaxFrameTypeToExamine">Maximum frame type to consider</param>
         /// <returns>
