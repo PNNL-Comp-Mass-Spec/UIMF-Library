@@ -59,7 +59,8 @@ namespace UIMFLibrary
         FloatVoltage = 47,
         FragmentationProfile = 48,
         ScanNumFirst= 49,
-        ScanNumLast = 50
+        ScanNumLast = 50,
+        PressureUnits = 51
     }
 
     #endregion

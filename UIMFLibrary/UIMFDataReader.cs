@@ -275,18 +275,22 @@ namespace UIMFLibrary
                 // Update the frame parameter keys
                 GetFrameParameterKeys(true);
 
+                var frameList = GetMasterFrameList();
+                int firstFrameNumber = -1;
+
+                if (frameList.Count >= 0)
+                {
+                    firstFrameNumber = frameList.First().Key;
+                }
+
                 if (m_UsingLegacyFrameParameters)
                 {
                     // Read the parameters for the first frame so that m_LegacyFrameParametersMissingColumns will be up to date
-                    var frameList = GetMasterFrameList();
-                    if (frameList.Count > 0)
-                    {
-                        GetFrameParams(frameList.First().Key);
-                    }
+                    GetFrameParams(firstFrameNumber);
                 }
 
                 // Lookup whether the pressure columns are in torr or mTorr
-                DeterminePressureUnits();
+                DeterminePressureUnits(firstFrameNumber);
 
                 // Find out if the MS1 Frames are labeled as 0 or 1.
                 DetermineFrameTypes();
@@ -1452,7 +1456,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns the drift time for the given frame and IMS scan
+        /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
         /// </summary>
         /// <param name="frameNum">
         /// Frame number (1-based)
@@ -1461,13 +1465,21 @@ namespace UIMFLibrary
         /// IMS scan number
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
+        /// <param name="normalizeByPressure">
+        /// If true, then this function will normalize the drift time using 'drift time * STANDARD_PRESSURE / framePressure' where STANDARD_PRESSURE = 4
+        /// </param>
         /// <returns>Drift time (milliseconds)</returns>
-        public double GetDriftTime(int frameNum, int scanNum)
+        public double GetDriftTime(int frameNum, int scanNum, bool normalizeByPressure)
         {
             var frameParams = GetFrameParams(frameNum);
 
             double averageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
             double driftTime = averageTOFLength * scanNum / 1e6;
+
+            if (!normalizeByPressure)
+            {
+                return driftTime;
+            }
 
             // Get the frame pressure (in torr)
             var framePressure = GetFramePressureForCalculationOfDriftTime(frameParams);
@@ -1957,6 +1969,11 @@ namespace UIMFLibrary
             return GetFramePressureForCalculationOfDriftTime(frameParams);
         }
 
+        /// <summary>
+        /// Gets the frame pressure, which is used when computing normalized drift time
+        /// </summary>
+        /// <param name="frameParameters"></param>
+        /// <returns>Frame pressure, in torr</returns>
         private double GetFramePressureForCalculationOfDriftTime(FrameParams frameParameters)
         {
 
@@ -1980,6 +1997,11 @@ namespace UIMFLibrary
             if (Math.Abs(pressure) < float.Epsilon)
             {
                 pressure = frameParameters.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure);
+            }
+            
+            if (frameParameters.HasParameter(FrameParamKeyType.PressureUnits))
+            {
+                pressure = ConvertPressureToTorr(pressure, (PressureUnits)frameParameters.GetValueInt32(FrameParamKeyType.PressureUnits));              
             }
 
             return pressure;
@@ -4610,10 +4632,12 @@ namespace UIMFLibrary
         /// <summary>
         /// Examines the pressure columns to determine whether they are in torr or mTorr
         /// </summary>
-        internal void DeterminePressureUnits()
+        /// <param name="firstFrameNumber">Frame number of the first frame</param>
+        internal void DeterminePressureUnits(int firstFrameNumber)
         {
             try
             {
+                // Initially assume that pressure are stored using Torr values
                 PressureIsMilliTorr = false;
 
                 var cmd = new SQLiteCommand(m_uimfDatabaseConnection);
@@ -4665,7 +4689,23 @@ namespace UIMFLibrary
 
                 }
                 else
-                {
+                {                   
+                    if (firstFrameNumber >= 0)
+                    {
+                        var frameParams = GetFrameParams(firstFrameNumber);
+
+                        if (frameParams.HasParameter(FrameParamKeyType.PressureUnits))
+                        {
+                            var pressureUnits = (PressureUnits)frameParams.GetValueInt32(FrameParamKeyType.PressureUnits);
+
+                            PressureIsMilliTorr = (pressureUnits == PressureUnits.MilliTorr);
+                            return;
+                        }
+                    }
+                    
+                    // Frame parameter PressureUnits is not present in the first frame
+                    // Infer the units based on the average value
+
                     isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.HighPressureFunnelPressure);
                     if (isMilliTorr)
                     {
@@ -4774,9 +4814,14 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the pressure column in the given table is in millitorr<see cref="bool"/>.
         /// </returns>
+        /// <remarks>
+        /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
+        /// If the average is greater than 100, then we assume the values are milliTorr
+        /// </remarks>
         private static bool ColumnIsMilliTorr(SQLiteCommand cmd, FrameParamKeyType paramType)
         {
             bool isMillitorr = false;
+
             try
             {
                 cmd.CommandText = "SELECT Avg(Pressure) AS AvgPressure " +
@@ -5027,6 +5072,27 @@ namespace UIMFLibrary
 
             return sObjects;
         }
+
+        /// <summary>
+        /// Converts the specified pressure value to Torr
+        /// </summary>
+        /// <param name="pressure">Pressure value, in Torr or milliTorr</param>
+        /// <param name="pressureUnits">Current units for pressure</param>
+        /// <returns>Pressure value, in Torr</returns>
+        public double ConvertPressureToTorr(double pressure, PressureUnits pressureUnits)
+        {
+            switch (pressureUnits)
+            {
+                case PressureUnits.Torr:
+                    // Conversion not needed
+                    return pressure;
+                case PressureUnits.MilliTorr:
+                    return pressure / 1000.0;
+                default:
+                    throw new Exception("Unsupported units " + pressureUnits + "; unable to convert to Torr");
+            }
+        }
+
 
         /// <summary>
         /// Determines if the MS1 Frames of this file are labeled as 0 or 1. 

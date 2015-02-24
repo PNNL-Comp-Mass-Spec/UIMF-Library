@@ -657,6 +657,12 @@ namespace UIMFLibrary
                                           typeof(int),
                                           "Last scan");
 
+                case FrameParamKeyType.PressureUnits:
+                    return new FrameParamDef(FrameParamKeyType.PressureUnits, FrameParamKeyType.PressureUnits.ToString(),
+                                          typeof(PressureUnits),
+                                          "Units for pressure");
+
+
                 default:
                     throw new ArgumentOutOfRangeException("paramType", "Unrecognized frame param enum for paramType: " + (int)paramType);
             }
