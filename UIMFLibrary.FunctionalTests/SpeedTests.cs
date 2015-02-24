@@ -65,26 +65,25 @@ namespace UIMFLibrary.UnitTests
 		{
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            int numIterations = 100;
+            const int numIterations = 100;
 
 			// int numFramesToSum = 1;
-			int numIMSScansToSum = 7;
+			const int numIMSScansToSum = 7;
 
-			using (DataReader dr = new DataReader(uimfStandardFile1))
+			using (var dr = new DataReader(uimfStandardFile1))
 			{
-				GlobalParameters gp = dr.GetGlobalParameters();
 
-				int frameStart = 500;
-				int frameStop = frameStart + numIterations;
-				int scanStart = 250;
-				int scanStop = scanStart + numIMSScansToSum - 1;
+				const int frameStart = 500;
+				const int frameStop = frameStart + numIterations;
+				const int scanStart = 250;
+				const int scanStop = scanStart + numIMSScansToSum - 1;
 
-				Stopwatch sw = new Stopwatch();
+				var sw = new Stopwatch();
 				sw.Start();
 				for (int frame = frameStart; frame < frameStop; frame++)
 				{
-					int[] intensities = null;
-					double[] mzValues = null;
+					int[] intensities;
+					double[] mzValues;
 
 					int nonZeros = dr.GetSpectrum(
 						frame, 
@@ -99,7 +98,7 @@ namespace UIMFLibrary.UnitTests
 				sw.Stop();
 
 				Console.WriteLine("Total time to read " + numIterations + " scans = " + sw.ElapsedMilliseconds);
-				Console.WriteLine("Average time (milliseconds) = " + (double)sw.ElapsedMilliseconds / (double)numIterations);
+				Console.WriteLine("Average time (milliseconds) = " + sw.ElapsedMilliseconds / (double)numIterations);
 			}
 		}
 
@@ -111,11 +110,11 @@ namespace UIMFLibrary.UnitTests
 		{
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			DataReader dr = new DataReader(uimfStandardFile1);
-			GlobalParameters gp = dr.GetGlobalParameters();
+			var dr = new DataReader(uimfStandardFile1);
+			var gp = dr.GetGlobalParams();
 
-			int[] intensities = new int[gp.Bins];
-			double[] mzValues = new double[gp.Bins];
+			var intensities = new int[gp.Bins];
+			var mzValues = new double[gp.Bins];
 
 			// int startFrame = 500;
 			// int stopFrame = 502;

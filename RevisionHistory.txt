@@ -1,5 +1,16 @@
 UIMFLibrary Revision History
 
+Version 3.0.5532; February 23, 2015
+	- Updated GetDriftTime to have required parameter normalizeByPressure
+	- Added PressureUnits frameter parameter
+
+Version 3.0.5504; January 26, 2015
+	- Recuded memory footprint by updating SpectrumCache to use a SortedList instead of a Dictionary
+
+Version 3.0.5450; December 3, 2014
+	- Added support for Agilent .D folders where the first scan is 1 instead of 0
+	- Added frame parameters ScanNumFirst and ScanNumLast
+
 Version 3.0.5442; November 25, 2014
 	- Removed legacy InsertScan functions
 	- Updated GetTicOrBpiByFrame to support the Frame_Params table

@@ -1457,6 +1457,24 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
+        /// The drift time is normalized using 'drift time * STANDARD_PRESSURE / framePressure' where STANDARD_PRESSURE = 4
+        /// </summary>
+        /// <param name="frameNum">
+        /// Frame number (1-based)
+        /// </param>
+        /// <param name="scanNum">
+        /// IMS scan number
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
+        /// <returns>Drift time (milliseconds)</returns>
+        [Obsolete("For clarity, use GetDriftTime with parameter normalizeByPressure")]
+        public double GetDriftTime(int frameNum, int scanNum)
+        {
+            return GetDriftTime(frameNum, scanNum, normalizeByPressure:true);
+        }
+
+        /// <summary>
+        /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
         /// </summary>
         /// <param name="frameNum">
         /// Frame number (1-based)
