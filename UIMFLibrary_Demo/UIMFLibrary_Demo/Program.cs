@@ -7,8 +7,8 @@ namespace UIMFLibrary_Demo
 {
     static class Program
     {
-        private const bool TEST_READER = true;
-        private const bool TEST_WRITER = false;
+        private const bool TEST_READER = false;
+        private const bool TEST_WRITER = true;
         private const bool UPDATE_PARAM_TABLES = false;
 
         private static void Main(string[] args)
@@ -67,7 +67,7 @@ namespace UIMFLibrary_Demo
 
             if (UPDATE_PARAM_TABLES)
             {
-                const string legacyFilePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3_Format.uimf";
+                const string legacyFilePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v2.uimf";
                 UpdateParamTables(legacyFilePath);
             }
 
@@ -94,8 +94,23 @@ namespace UIMFLibrary_Demo
         {
             try
             {
-                // Simply opening the file with the writer will update the tables
-                using (var writer = new DataWriter(uimfFilePath))
+                var fiLegacyFile = new FileInfo(uimfFilePath);
+                if (!fiLegacyFile.Exists)
+                    return;
+
+                if (fiLegacyFile.Directory == null)
+                    return;
+
+                var targetPath = Path.Combine(fiLegacyFile.Directory.FullName,
+                                              Path.GetFileNameWithoutExtension(fiLegacyFile.Name) + "_updated.uimf");
+
+                Console.WriteLine("Duplicating " + fiLegacyFile.FullName + Environment.NewLine + " to create " +Path.GetFileName(targetPath));
+
+                fiLegacyFile.CopyTo(targetPath, true);
+                System.Threading.Thread.Sleep(100);
+
+                // For an exising .UIMF file, simply opening the file with the writer will update the tables
+                using (var writer = new DataWriter(targetPath))
                 {
                     writer.UpdateGlobalFrameCount();
                 }
@@ -185,7 +200,7 @@ namespace UIMFLibrary_Demo
                     }
                 }
 
-                Console.WriteLine("Wrote 5 frames of data to " + fiTestFile.Name);
+                Console.WriteLine("Wrote 5 frames of data to \n" + fiTestFile.FullName);
                 
             }
             catch (Exception ex)

@@ -43,7 +43,7 @@ namespace UIMFLibrary_Demo
             reportProgress("NumBins= " + gp.Bins);
             reportProgress("NumFrames= " + gp.NumFrames);
 
-            //--------------------------------------------------------------------------Get Frame parameters
+            // Get Frame parameters
 
             int testFrame = 500;
             if (testFrame > gp.NumFrames)
@@ -60,13 +60,14 @@ namespace UIMFLibrary_Demo
             double[] xvals;
             int[] yvals;
 
-            //--------------------------------------------------------------------------Get a series of mass spectra (all from the same frame, summing 5 scans)
+            // Step through 50 frames
             for (var currentFrame = testFrame / 2; currentFrame < testFrame + 50; currentFrame++)
             {
+                // Get a series of mass spectra (all from the same frame, summing 3 scans)
                 for (var imsScan = 125; imsScan < 135; imsScan += 1)
                 {
                     var imsScanEnd = imsScan + 3;
-
+                    
                     datareader.GetSpectrum(currentFrame, currentFrame, frameType, imsScan, imsScanEnd, out xvals, out yvals);
 
                     UIMFDataUtilities.ParseOutZeroValues(ref xvals, ref yvals, 639, 640);    //note - this utility is for parsing out the zeros or filtering on m/z
@@ -85,16 +86,11 @@ namespace UIMFLibrary_Demo
                 }
             }
 
-            //--------------------------------------------------------------------------Get mass spectrum (summing frames for a given scan range)
+            // Get mass spectrum (summing frames for a given scan range)
             int frameLower = testFrame;
             int frameUpper = testFrame + 2;
-            int imsScanLower = 125;
-            int imsScanUpper = 131;
-
-			// Old method:
-            // double[] xvals = new double[gp.Bins];
-            // int[] yvals = new int[gp.Bins];            
-			// datareader.SumScansNonCached(xvals, yvals, frameType, frameLower, frameUpper, imsScanLower, imsScanUpper);
+            const int imsScanLower = 125;
+            const int imsScanUpper = 131;
 
             datareader.GetSpectrum(frameLower, frameUpper, frameType, imsScanLower, imsScanUpper, out xvals, out yvals);
 
@@ -107,7 +103,7 @@ namespace UIMFLibrary_Demo
             reportProgress(TestUtilities.displayRawMassSpectrum(xvals, yvals));
 
 
-            //-------------------------------------------------------------------------Get LC profile
+            // Get LC profile
             int frameTarget = testFrame;
             int imsScanTarget = 126;
             double targetMZ = 639.32;
@@ -125,7 +121,7 @@ namespace UIMFLibrary_Demo
             reportProgress(TestUtilities.display2DChromatogram(frameVals,intensityVals));
 
 
-            //-----------------------------------------------------------------------Get Drift time profile
+            // Get Drift time profile
             frameTarget = testFrame;
             imsScanTarget = 126;
             targetMZ = 639.32;
@@ -141,7 +137,7 @@ namespace UIMFLibrary_Demo
             reportProgress(TestUtilities.display2DChromatogram(scanVals, intensityVals));
 
 
-            //------------------------------------------------------------------------------------Get 3D elution profile
+            // Get 3D elution profile
             datareader.Get3DElutionProfile(frameTarget - 5, frameTarget + 5, 0, imsScanTarget - 5, imsScanTarget + 5, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
             reportProgress();
 
@@ -198,6 +194,7 @@ namespace UIMFLibrary_Demo
                 var valuesPerPixelX = 100;
                 var valuesPerPixelY = 100;
 
+                // Note that AccumulateFrameData is used by the UimfViewer and by Atreyu
                 var frameData = datareader.AccumulateFrameData(frameNum, frameNum, false, startScan, endScan, startBin, endBin, valuesPerPixelX, valuesPerPixelY);
 
                 var topIndex1 = frameData.GetUpperBound(0);

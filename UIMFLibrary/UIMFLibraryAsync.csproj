@@ -91,6 +91,7 @@
     <Compile Include="UIMFDataReader.cs" />
     <Compile Include="UIMFDataUtilities.cs" />
     <Compile Include="UIMFDataWriter.cs" />
+    <Compile Include="Units.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

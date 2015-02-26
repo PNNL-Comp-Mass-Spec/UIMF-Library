@@ -93,11 +93,6 @@ namespace UIMFLibrary
         private double[] m_calibrationTable;
 
         /// <summary>
-        /// Command to check for bin centric tables
-        /// </summary>
-        private SQLiteCommand m_checkForBinCentricTableCommand;
-
-        /// <summary>
         /// True if the file has bin-centric data
         /// </summary>
         private readonly bool m_doesContainBinCentricData;
@@ -278,7 +273,7 @@ namespace UIMFLibrary
                 var frameList = GetMasterFrameList();
                 int firstFrameNumber = -1;
 
-                if (frameList.Count >= 0)
+                if (frameList.Count > 0)
                 {
                     firstFrameNumber = frameList.First().Key;
                 }
@@ -1174,10 +1169,7 @@ namespace UIMFLibrary
         /// <returns>true if the bin centric data exists, false otherwise</returns>
         public bool DoesContainBinCentricData()
         {
-            using (SQLiteDataReader reader = m_checkForBinCentricTableCommand.ExecuteReader())
-            {
-                return reader.HasRows;
-            }
+            return TableExists("Bin_Intensities");
         }
 
         /// <summary>
@@ -1922,11 +1914,7 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-#pragma warning disable 612, 618
-                        var legacyFrameParams = new FrameParameters();
-#pragma warning restore 612, 618
-
-                        PopulateLegacyFrameParameters(legacyFrameParams, reader);
+                        var legacyFrameParams= GetLegacyFrameParameters(reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
                         frameParameters = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
                     }
@@ -2150,12 +2138,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <returns></returns>
         public GlobalParams GetGlobalParams()
-        {
-            if (m_globalParameters != null)
-            {
-                return m_globalParameters;
-            }
-
+        {           
             return m_globalParameters;
         }
 
@@ -2693,7 +2676,7 @@ namespace UIMFLibrary
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
                 else
-                    dbCommand.CommandText = "SELECT FrameNum, ParamValue AS FrameType From Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
+                    dbCommand.CommandText = "SELECT FrameNum, ParamValue AS FrameType FROM Frame_Params WHERE ParamID = " + (int)FrameParamKeyType.FrameType;
 
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
@@ -4704,53 +4687,52 @@ namespace UIMFLibrary
                             PressureIsMilliTorr = true;
                         }
                     }
-
+                    return;
                 }
-                else
-                {                   
-                    if (firstFrameNumber >= 0)
+
+                if (firstFrameNumber >= 0)
+                {
+                    var frameParams = GetFrameParams(firstFrameNumber);
+
+                    if (frameParams.HasParameter(FrameParamKeyType.PressureUnits))
                     {
-                        var frameParams = GetFrameParams(firstFrameNumber);
+                        var pressureUnits = (PressureUnits)frameParams.GetValueInt32(FrameParamKeyType.PressureUnits);
 
-                        if (frameParams.HasParameter(FrameParamKeyType.PressureUnits))
-                        {
-                            var pressureUnits = (PressureUnits)frameParams.GetValueInt32(FrameParamKeyType.PressureUnits);
-
-                            PressureIsMilliTorr = (pressureUnits == PressureUnits.MilliTorr);
-                            return;
-                        }
+                        PressureIsMilliTorr = (pressureUnits == PressureUnits.MilliTorr);
+                        return;
                     }
+                }
                     
-                    // Frame parameter PressureUnits is not present in the first frame
-                    // Infer the units based on the average value
+                // Frame parameter PressureUnits is not present in the first frame
+                // Infer the units based on the average value
 
-                    isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.HighPressureFunnelPressure);
-                    if (isMilliTorr)
-                    {
-                        PressureIsMilliTorr = true;
-                        return;
-                    }
-
-                    isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.PressureBack);
-                    if (isMilliTorr)
-                    {
-                        PressureIsMilliTorr = true;
-                        return;
-                    }
-
-                    isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.IonFunnelTrapPressure);
-                    if (isMilliTorr)
-                    {
-                        PressureIsMilliTorr = true;
-                        return;
-                    }
-
-                    isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.RearIonFunnelPressure);
-                    if (isMilliTorr)
-                    {
-                        PressureIsMilliTorr = true;
-                    }
+                isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.HighPressureFunnelPressure);
+                if (isMilliTorr)
+                {
+                    PressureIsMilliTorr = true;
+                    return;
                 }
+
+                isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.PressureBack);
+                if (isMilliTorr)
+                {
+                    PressureIsMilliTorr = true;
+                    return;
+                }
+
+                isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.IonFunnelTrapPressure);
+                if (isMilliTorr)
+                {
+                    PressureIsMilliTorr = true;
+                    return;
+                }
+
+                isMilliTorr = ColumnIsMilliTorr(cmd, FrameParamKeyType.RearIonFunnelPressure);
+                if (isMilliTorr)
+                {
+                    PressureIsMilliTorr = true;
+                }
+
             }
             catch (Exception ex)
             {
@@ -5631,10 +5613,6 @@ namespace UIMFLibrary
             m_getCountPerFrameCommand.CommandText =
                 "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum AND NOT NonZeroCount IS NULL";
 
-            m_checkForBinCentricTableCommand = m_uimfDatabaseConnection.CreateCommand();
-            m_checkForBinCentricTableCommand.CommandText =
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='Bin_Intensities';";
-
             m_getBinDataCommand = m_uimfDatabaseConnection.CreateCommand();
             m_getBinDataCommand.CommandText =
                 "SELECT MZ_BIN, INTENSITIES FROM Bin_Intensities WHERE MZ_BIN >= :BinMin AND MZ_BIN <= :BinMax;";
@@ -5652,15 +5630,20 @@ namespace UIMFLibrary
         /// <exception cref="Exception">
         /// </exception>
 #pragma warning disable 612, 618
-        private void PopulateLegacyFrameParameters(FrameParameters fp, SQLiteDataReader reader)
+        private FrameParameters GetLegacyFrameParameters(SQLiteDataReader reader)
 #pragma warning restore 612, 618
         {
             try
             {
                 bool columnMissing;
 
-                fp.FrameNum = Convert.ToInt32(reader["FrameNum"]);
-                fp.StartTime = Convert.ToDouble(reader["StartTime"]);
+#pragma warning disable 612, 618
+                var fp = new FrameParameters
+#pragma warning restore 612, 618
+                {
+                    FrameNum = Convert.ToInt32(reader["FrameNum"]),
+                    StartTime = Convert.ToDouble(reader["StartTime"])
+                };
 
                 if (fp.StartTime > 1E+17)
                 {
@@ -5815,6 +5798,8 @@ namespace UIMFLibrary
                     fp.e2 = GetLegacyFrameParamOrDefault(reader, "e2", 0);
                     fp.f2 = GetLegacyFrameParamOrDefault(reader, "f2", 0);
                 }
+
+                return fp;
             }
             catch (Exception ex)
             {

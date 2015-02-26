@@ -91,61 +91,61 @@ namespace UIMFLibrary
             {
 
                 case GlobalParamKeyType.InstrumentName:
-                    InitializeByType("InstrumentName", "string", "Instrument name");
+                    InitializeByType("InstrumentName", typeof(string), "Instrument name");
                     break;
 
                 case GlobalParamKeyType.DateStarted:
                     // Format has traditionally been M/d/yyyy hh:mm:ss tt
                     // For example, 6/4/2014 12:56:44 PM
-                    InitializeByType("DateStarted", "string", "Time that the data acquisition started");
+                    InitializeByType("DateStarted", typeof(string), "Time that the data acquisition started");
                     break;
 
                 case GlobalParamKeyType.NumFrames:
-                    InitializeByType("NumFrames", "int", "Number of frames in the dataset");
+                    InitializeByType("NumFrames", typeof(int), "Number of frames in the dataset");
                     break;
 
                 case GlobalParamKeyType.TimeOffset:
-                    InitializeByType("TimeOffset", "int", "Time offset from 0 (in nanoseconds). All bin numbers must be offset by this amount");
+                    InitializeByType("TimeOffset", typeof(int), "Time offset from 0 (in nanoseconds). All bin numbers must be offset by this amount");
                     break;
 
                 case GlobalParamKeyType.BinWidth:
-                    InitializeByType("BinWidth", "double", "Width of TOF bins (in ns)");
+                    InitializeByType("BinWidth", typeof(double), "Width of TOF bins (in ns)");
                     break;
 
                 case GlobalParamKeyType.Bins:
-                    InitializeByType("Bins", "int", "Total number of TOF bins in frame");
+                    InitializeByType("Bins", typeof(int), "Total number of TOF bins in frame");
                     break;
 
                 case GlobalParamKeyType.TOFCorrectionTime:
-                    InitializeByType("TOFCorrectionTime", "float", "TOF correction time");
+                    InitializeByType("TOFCorrectionTime", typeof(float), "TOF correction time");
                     break;
 
                 case GlobalParamKeyType.TOFIntensityType:
-                    InitializeByType("TOFIntensityType", "string", "Data type of intensity in each TOF record (ADC is int, TDC is short, FOLDED is float)");
+                    InitializeByType("TOFIntensityType", typeof(string), "Data type of intensity in each TOF record (ADC is int, TDC is short, FOLDED is float)");
                     break;
 
                 case GlobalParamKeyType.DatasetType:
-                    InitializeByType("DatasetType", "string", "Type of dataset (HMS, HMSn, or HMS-HMSn)");
+                    InitializeByType("DatasetType", typeof(string), "Type of dataset (HMS, HMSn, or HMS-HMSn)");
                     break;
 
                 case GlobalParamKeyType.PrescanTOFPulses:
-                    InitializeByType("PrescanTOFPulses", "string", "Prescan TOF pulses");
+                    InitializeByType("PrescanTOFPulses", typeof(string), "Prescan TOF pulses");
                     break;
 
                 case GlobalParamKeyType.PrescanAccumulations:
-                    InitializeByType("PrescanAccumulations", "string", "Number of prescan accumulations");
+                    InitializeByType("PrescanAccumulations", typeof(string), "Number of prescan accumulations");
                     break;
 
                 case GlobalParamKeyType.PrescanTICThreshold:
-                    InitializeByType("PrescanTICThreshold", "string", "Prescan TIC threshold");
+                    InitializeByType("PrescanTICThreshold", typeof(string), "Prescan TIC threshold");
                     break;
 
                 case GlobalParamKeyType.PrescanContinuous:
-                    InitializeByType("PrescanContinuous", "int", "Prescan Continuous flag (0 is false, 1 is true)");
+                    InitializeByType("PrescanContinuous", typeof(int), "Prescan Continuous flag (0 is false, 1 is true)");
                     break;
 
                 case GlobalParamKeyType.PrescanProfile:
-                    InitializeByType("PrescanProfile", "string", "Profile used when PrescanContinuous is 1");
+                    InitializeByType("PrescanProfile", typeof(string), "Profile used when PrescanContinuous is 1");
                     break;
 
                 default:
@@ -154,18 +154,11 @@ namespace UIMFLibrary
 
         }
 
-        private void InitializeByType(string name, string dataType, string description)
+        private void InitializeByType(string name, Type dataType, string description)
         {
             Name = name;
-            DataType = GetDataTypeFromAlias(dataType);
+            DataType = dataType;
             Description = description;
-        }
-
-        private Type GetDataTypeFromAlias(string dataType)
-        {
-            dataType = GlobalParamUtilities.GetDataTypeFromAlias(dataType);
-
-            return Type.GetType(dataType) ?? typeof(object);
         }
 
     }
