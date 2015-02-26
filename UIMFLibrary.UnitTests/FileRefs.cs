@@ -32,7 +32,7 @@ namespace UIMFLibrary.UnitTests
 			@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
         public static string uimfStandardFile1NewParamTables =
-            @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3_Format.uimf";
+            @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3.uimf";
 
         public static string uimfFileForBinCentricTest1 =
             @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\BinCentric\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000_Excerpt.uimf";
