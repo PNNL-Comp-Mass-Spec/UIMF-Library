@@ -8,8 +8,9 @@ namespace UIMFLibrary_Demo
     static class Program
     {
         private const bool TEST_READER = false;
-        private const bool TEST_WRITER = true;
+        private const bool TEST_WRITER = false;
         private const bool UPDATE_PARAM_TABLES = false;
+        private const bool ADD_LEGACY_PARAM_TABLES = true;
 
         private static void Main(string[] args)
         {
@@ -76,6 +77,13 @@ namespace UIMFLibrary_Demo
                 WriterTest();
             }
 
+            if (ADD_LEGACY_PARAM_TABLES)
+            {
+                const string v3FilePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3.uimf";
+
+                AddLegacyParamTables(v3FilePath);
+
+            }
             System.Threading.Thread.Sleep(1000);
 
         }
@@ -88,6 +96,37 @@ namespace UIMFLibrary_Demo
         private static string GetAppPath()
         {
             return Assembly.GetExecutingAssembly().Location;
+        }
+
+        private static void AddLegacyParamTables(string uimfFilePath)
+        {
+            try
+            {
+                var fiUimfFile = new FileInfo(uimfFilePath);
+                if (!fiUimfFile.Exists)
+                    return;
+
+                if (fiUimfFile.Directory == null)
+                    return;
+
+                var targetPath = Path.Combine(fiUimfFile.Directory.FullName,
+                                              Path.GetFileNameWithoutExtension(fiUimfFile.Name) + "_LegacyTablesAdded.uimf");
+
+                Console.WriteLine("Duplicating " + fiUimfFile.FullName + Environment.NewLine + " to create " + Path.GetFileName(targetPath));
+
+                fiUimfFile.CopyTo(targetPath, true);
+                System.Threading.Thread.Sleep(100);
+
+                using (var writer = new DataWriter(targetPath))
+                {
+                    writer.AddLegacyParameterTablesUsingExistingParamTables();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in AddLegacyParamTables: " + ex.Message);
+            }
         }
 
         private static void UpdateParamTables(string uimfFilePath)
@@ -160,6 +199,7 @@ namespace UIMFLibrary_Demo
                     globalParameters = writer.GetGlobalParams();
                     writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1);
                     writer.AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
+                    writer.FlushUimf();
 
                     const float SECONDS_PER_FRAME = 1.25f;
 
@@ -176,6 +216,9 @@ namespace UIMFLibrary_Demo
                         fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME);
 
                         writer.InsertFrame(frameNum, fp);
+
+                        writer.AddUpdateFrameParameter(frameNum, FrameParamKeyType.Accumulations, "18");
+                        writer.AddUpdateFrameParameter(frameNum, FrameParamKeyType.TOFLosses, randGenerator.Next(0, 150).ToString());
 
                         for (int scanNumber = 1; scanNumber < 600; scanNumber++)
                         {

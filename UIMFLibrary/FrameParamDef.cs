@@ -17,7 +17,7 @@ namespace UIMFLibrary
         Decoded = 5,
         CalibrationDone = 6,
         Scans = 7,
-        MultiplexingEncodingSequence = 8,
+        MultiplexingEncodingSequence = 8,        // Previously called IMFProfile
         MPBitOrder = 9,
         TOFLosses = 10,
         AverageTOFLength = 11,

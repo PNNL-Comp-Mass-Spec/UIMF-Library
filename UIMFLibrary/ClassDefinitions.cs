@@ -499,50 +499,51 @@ namespace UIMFLibrary
 		/// </param>
 		public void CopyTo(out FrameParameters Target)
 		{
-			Target = new FrameParameters();
+			Target = new FrameParameters
+			{
+			    FrameNum = this.FrameNum,
+			    StartTime = this.StartTime,
+			    Duration = this.Duration,
+			    Accumulations = this.Accumulations,
+			    FrameType = this.FrameType,
+			    Scans = this.Scans,
+			    IMFProfile = this.IMFProfile,
+			    TOFLosses = this.TOFLosses,
+			    AverageTOFLength = this.AverageTOFLength,
+			    CalibrationSlope = this.CalibrationSlope,
+			    CalibrationIntercept = this.CalibrationIntercept,
+			    a2 = this.a2,
+			    b2 = this.b2,
+			    c2 = this.c2,
+			    d2 = this.d2,
+			    e2 = this.e2,
+			    f2 = this.f2,
+			    Temperature = this.Temperature,
+			    voltHVRack1 = this.voltHVRack1,
+			    voltHVRack2 = this.voltHVRack2,
+			    voltHVRack3 = this.voltHVRack3,
+			    voltHVRack4 = this.voltHVRack4,
+			    voltCapInlet = this.voltCapInlet,
+			    voltEntranceHPFIn = this.voltEntranceHPFIn,
+			    voltEntranceHPFOut = this.voltEntranceHPFOut,
+			    voltEntranceCondLmt = this.voltEntranceCondLmt,
+			    voltTrapOut = this.voltTrapOut,
+			    voltTrapIn = this.voltTrapIn,
+			    voltJetDist = this.voltJetDist,
+			    voltQuad1 = this.voltQuad1,
+			    voltCond1 = this.voltCond1,
+			    voltQuad2 = this.voltQuad2,
+			    voltCond2 = this.voltCond2,
+			    voltIMSOut = this.voltIMSOut,
+			    voltExitHPFIn = this.voltExitHPFIn,
+			    voltExitHPFOut = this.voltExitHPFOut,
+			    voltExitCondLmt = this.voltExitCondLmt,
+			    PressureFront = this.PressureFront,
+			    PressureBack = this.PressureBack,
+			    MPBitOrder = this.MPBitOrder
+			};
 
-			Target.FrameNum = this.FrameNum;
-			Target.StartTime = this.StartTime;
-			Target.Duration = this.Duration;
-			Target.Accumulations = this.Accumulations;
-			Target.FrameType = this.FrameType;
-			Target.Scans = this.Scans;
-			Target.IMFProfile = this.IMFProfile;
-			Target.TOFLosses = this.TOFLosses;
-			Target.AverageTOFLength = this.AverageTOFLength;
-			Target.CalibrationSlope = this.CalibrationSlope;
-			Target.CalibrationIntercept = this.CalibrationIntercept;
-			Target.a2 = this.a2;
-			Target.b2 = this.b2;
-			Target.c2 = this.c2;
-			Target.d2 = this.d2;
-			Target.e2 = this.e2;
-			Target.f2 = this.f2;
-			Target.Temperature = this.Temperature;
-			Target.voltHVRack1 = this.voltHVRack1;
-			Target.voltHVRack2 = this.voltHVRack2;
-			Target.voltHVRack3 = this.voltHVRack3;
-			Target.voltHVRack4 = this.voltHVRack4;
-			Target.voltCapInlet = this.voltCapInlet;
-			Target.voltEntranceHPFIn = this.voltEntranceHPFIn;
-			Target.voltEntranceHPFOut = this.voltEntranceHPFOut;
-			Target.voltEntranceCondLmt = this.voltEntranceCondLmt;
-			Target.voltTrapOut = this.voltTrapOut;
-			Target.voltTrapIn = this.voltTrapIn;
-			Target.voltJetDist = this.voltJetDist;
-			Target.voltQuad1 = this.voltQuad1;
-			Target.voltCond1 = this.voltCond1;
-			Target.voltQuad2 = this.voltQuad2;
-			Target.voltCond2 = this.voltCond2;
-			Target.voltIMSOut = this.voltIMSOut;
-			Target.voltExitHPFIn = this.voltExitHPFIn;
-			Target.voltExitHPFOut = this.voltExitHPFOut;
-			Target.voltExitCondLmt = this.voltExitCondLmt;
-			Target.PressureFront = this.PressureFront;
-			Target.PressureBack = this.PressureBack;
-			Target.MPBitOrder = this.MPBitOrder;
-
-			if (this.FragmentationProfile != null)
+		    if (this.FragmentationProfile != null)
 			{
 				Target.FragmentationProfile = new double[this.FragmentationProfile.Length];
 				Array.Copy(this.FragmentationProfile, Target.FragmentationProfile, this.FragmentationProfile.Length);
