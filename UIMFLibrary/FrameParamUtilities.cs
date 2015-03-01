@@ -223,9 +223,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Obtain a FrameParameters instance from a FrameParams instance
         /// </summary>
+        /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters"><see cref="FrameParams"/> instance</param>
         /// <returns>A new <see cref="FrameParameters"/> instance</returns>
-        public static FrameParameters GetLegacyFrameParameters(FrameParams frameParameters)
+        public static FrameParameters GetLegacyFrameParameters(int frameNumber, FrameParams frameParameters)
         {
             if (frameParameters == null)
                 return new FrameParameters();
@@ -235,6 +236,7 @@ namespace UIMFLibrary
             // Populate legacyFrameParams using dictionary frameParams
             var legacyFrameParams = new FrameParameters
             {
+                FrameNum = frameNumber,
                 StartTime = frameParameters.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
                 Duration = frameParameters.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
                 Accumulations = frameParameters.GetValueInt32(FrameParamKeyType.Accumulations, 0),

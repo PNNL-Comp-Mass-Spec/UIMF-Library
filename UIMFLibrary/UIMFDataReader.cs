@@ -1866,7 +1866,7 @@ namespace UIMFLibrary
             FrameParams frameParameters;
             if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParameters))
             {
-                return FrameParamUtilities.GetLegacyFrameParameters(frameParameters);
+                return FrameParamUtilities.GetLegacyFrameParameters(frameNumber, frameParameters);
             }
 
             frameParameters = GetFrameParams(frameNumber);
@@ -1879,7 +1879,7 @@ namespace UIMFLibrary
                 }
             }
 
-            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameParameters);
+            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameNumber, frameParameters);
             return legacyFrameParams;
         }
 

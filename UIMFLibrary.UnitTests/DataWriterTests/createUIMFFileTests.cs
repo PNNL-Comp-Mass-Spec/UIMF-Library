@@ -63,10 +63,11 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                     fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093);
                     fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667);
                     fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME);
+                    fp.AddUpdateValue(FrameParamKeyType.Scans, 600);
 
                     writer.InsertFrame(frameNum, fp);
 
-                    for (int scanNumber = 1; scanNumber < 600; scanNumber++)
+                    for (int scanNumber = 1; scanNumber <= 600; scanNumber++)
                     {
                         if (scanNumber == 1 | scanNumber % 100 == 0)
                             Console.WriteLine("Adding frame " + frameNum + ", scan " + scanNumber);
