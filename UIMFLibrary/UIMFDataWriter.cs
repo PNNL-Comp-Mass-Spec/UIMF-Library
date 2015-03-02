@@ -160,6 +160,9 @@ namespace UIMFLibrary
                 // If table Global_Parameters exists and table Global_Params does not exist, then create Global_Params using Global_Parameters
                 ConvertLegacyGlobalParameters();
 
+                // Read the frame numbers in the legacy Frame_Parameters table to make sure that m_FrameNumsInLegacyFrameParametersTable is up to date
+                CacheLegacyFrameNums();
+
                 // If table Frame_Parameters exists and table Frame_Params does not exist, then create Frame_Params using Frame_Parameters
                 ConvertLegacyFrameParameters();
 
@@ -169,6 +172,48 @@ namespace UIMFLibrary
                 ReportError("Exception opening the UIMF file: " + ex.Message, ex);
                 throw;
             }
+        }
+
+        private void CacheLegacyFrameNums()
+        {
+            try
+            {
+                if (!m_HasLegacyParamTables)
+                {
+                    m_HasLegacyParamTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
+                }
+
+                if (!m_HasLegacyParamTables)
+                {
+                    // Nothing to do
+                    return;
+                }
+
+                using (var dbCommand = m_dbConnection.CreateCommand())
+                {
+                    dbCommand.CommandText = "SELECT FrameNum FROM Frame_Parameters;";
+                    var reader = dbCommand.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        var frameNum = Convert.ToInt32(reader[0]);
+
+                        if (!m_FrameNumsInLegacyFrameParametersTable.Contains(frameNum))
+                            m_FrameNumsInLegacyFrameParametersTable.Add(frameNum);
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                CheckExceptionForIntermittentError(ex, "CacheLegacyFrameNums");
+                ReportError(
+                    "Exception caching the frame numbers in the legacy Frame_Parameters table: " + ex.Message, ex);
+                throw;
+            }
+
+
         }
 
         private void ConvertLegacyFrameParameters()
@@ -1258,6 +1303,12 @@ namespace UIMFLibrary
         private void InitializeFrameParametersRow(FrameParameters frameParameters)
 #pragma warning restore 612, 618
         {
+            if (m_FrameNumsInLegacyFrameParametersTable.Contains(frameParameters.FrameNum))
+            {
+                // Row already exists
+                return;
+            }
+
             // ToDo: possibly assure nullable fields in frameParameters are not null
 
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Clear();
@@ -1797,6 +1848,9 @@ namespace UIMFLibrary
         /// </returns>
         private static byte[] ConvertToBlob(double[] frag)
         {
+            if (frag == null)
+                frag = new double[0];
+
             // convert the fragmentation profile into an array of bytes
             int length_blob = frag.Length;
             var blob_values = new byte[length_blob * 8];
@@ -2147,7 +2201,7 @@ namespace UIMFLibrary
 
         private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, string> frameParamsByType)
         {
-           
+
             var frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
 
             InsertLegacyFrameParams(frameNum, frameParams);
