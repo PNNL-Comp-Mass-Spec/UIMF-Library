@@ -168,6 +168,9 @@ namespace UIMFLibrary_Demo
             reportProgress("NumBins= " + gp.Bins);
             reportProgress("NumFrames= " + gp.NumFrames);
 
+            reportProgress("Pre-caching all frame parameters...");
+            datareader.PreCacheAllFrameParams();
+
             int frameCountWithError = 0;
 
             for (var frameNum = 1; frameNum <= gp.NumFrames; frameNum++)

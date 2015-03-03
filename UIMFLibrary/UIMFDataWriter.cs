@@ -81,14 +81,14 @@ namespace UIMFLibrary
         /// <summary>
         /// Whether or not to create the legacy Global_Parameters and Frame_Parameters tables
         /// </summary>
-        private readonly bool m_CreateLegacyParametersTables;
+        private bool m_CreateLegacyParametersTables;
 
         /// <summary>
         /// Global parameters object
         /// </summary>
         private readonly GlobalParams m_globalParameters;
 
-        private bool m_HasLegacyParamTables;
+        private bool m_HasLegacyParameterTables;
         private bool m_LegacyGlobalParametersTableHasData;
 
         /// <summary>
@@ -177,12 +177,8 @@ namespace UIMFLibrary
         {
             try
             {
-                if (!m_HasLegacyParamTables)
-                {
-                    m_HasLegacyParamTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
-                }
-
-                if (!m_HasLegacyParamTables)
+               
+                if (!this.HasLegacyParameterTables())
                 {
                     // Nothing to do
                     return;
@@ -190,12 +186,12 @@ namespace UIMFLibrary
 
                 using (var dbCommand = m_dbConnection.CreateCommand())
                 {
-                    dbCommand.CommandText = "SELECT FrameNum FROM Frame_Parameters;";
+                    dbCommand.CommandText = "SELECT FrameNum FROM Frame_Parameters ORDER BY FrameNum;";
                     var reader = dbCommand.ExecuteReader();
 
                     while (reader.Read())
                     {
-                        var frameNum = Convert.ToInt32(reader[0]);
+                        var frameNum = reader.GetInt32(0);
 
                         if (!m_FrameNumsInLegacyFrameParametersTable.Contains(frameNum))
                             m_FrameNumsInLegacyFrameParametersTable.Add(frameNum);
@@ -223,7 +219,7 @@ namespace UIMFLibrary
 
             try
             {
-                if (DataReader.TableExists(m_dbConnection, "Frame_Params"))
+                if (this.HasFrameParamsTable())
                 {
                     // Assume that the frame parameters have already been converted
                     // Nothing to do
@@ -232,9 +228,13 @@ namespace UIMFLibrary
 
                 if (!DataReader.TableExists(m_dbConnection, "Frame_Parameters"))
                 {
-                    // Nothing to do
+                    // Legacy tables do not exist; nothing to do
                     return;
                 }
+
+                // Make sure writing of legacy parameters is turned off
+                bool createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
+                m_CreateLegacyParametersTables = false;
 
                 Console.WriteLine("\nCreating the Frame_Params table using the legacy frame parameters");
                 var lastUpdate = DateTime.UtcNow;
@@ -244,8 +244,11 @@ namespace UIMFLibrary
 
                 // Read and cache the legacy frame parameters
                 currentTask = "Caching existing parameters";
+
                 using (var reader = new UIMFLibrary.DataReader(m_FilePath))
                 {
+                    reader.PreCacheAllFrameParams();
+
                     var frameList = reader.GetMasterFrameList();
 
                     foreach (var frameInfo in frameList)
@@ -302,6 +305,9 @@ namespace UIMFLibrary
 
                 Console.WriteLine("Conversion complete\n");
 
+                // Possibly turn back on Legacy parameter writing
+                m_CreateLegacyParametersTables = createLegacyParametersTablesSaved;
+
                 FlushUimf(true);
             }
             catch (Exception ex)
@@ -315,27 +321,31 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Create and populate table Global_Params if a file contains legacy table Global_Parameters
+        /// Create and populate table Global_Params using legacy table Global_Parameters
         /// </summary>
         private void ConvertLegacyGlobalParameters()
         {
             try
             {
-                if (DataReader.TableExists(m_dbConnection, "Global_Params"))
+                if (this.HasGlobalParamsTable())
                 {
                     // Assume that the global parameters have already been converted
                     // Nothing to do
                     return;
                 }
 
-                if (!DataReader.TableExists(m_dbConnection, "Global_Parameters"))
+                if (!this.HasLegacyParameterTables())
                 {
                     // Nothing to do
                     return;
                 }
 
+                // Make sure writing of legacy parameters is turned off
+                bool createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
+                m_CreateLegacyParametersTables = false;
+
                 // Keys in this array are frame number, values are the frame parameters
-                GlobalParams cachedGlobalParams = null;
+                GlobalParams cachedGlobalParams;
 
                 // Read and cache the legacy global parameters
                 using (var reader = new UIMFLibrary.DataReader(m_FilePath))
@@ -349,7 +359,6 @@ namespace UIMFLibrary
                     CreateGlobalParamsTable(dbCommand);
                 }
 
-
                 // Store the global parameters
                 foreach (var globalParam in cachedGlobalParams.Values)
                 {
@@ -359,6 +368,9 @@ namespace UIMFLibrary
                 }
 
                 FlushUimf(false);
+
+                // Possibly turn back on Legacy parameter writing
+                m_CreateLegacyParametersTables = createLegacyParametersTablesSaved;
 
             }
             catch (Exception ex)
@@ -444,12 +456,14 @@ namespace UIMFLibrary
         /// <remarks>Does not add any values if the legacy tables already exist</remarks>
         public void AddLegacyParameterTablesUsingExistingParamTables()
         {
-            if (!m_HasLegacyParamTables)
+           
+            if (this.HasLegacyParameterTables())
             {
-                m_HasLegacyParamTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
+                // Nothing to do
+                return;
             }
 
-            if (m_HasFrameParamsTable)
+            if (!this.HasFrameParamsTable())
             {
                 // Nothing to do
                 return;
@@ -465,11 +479,7 @@ namespace UIMFLibrary
                 globalParams = uimfReader.GetGlobalParams();
                 var masterFrameList = uimfReader.GetMasterFrameList();
 
-                // var dtStartTime = DateTime.Now;
-                
                 uimfReader.PreCacheAllFrameParams();
-
-                // Console.WriteLine("Took " + DateTime.Now.Subtract(dtStartTime).TotalSeconds.ToString("0.0") + " seconds to precache the frame parameters");
 
                 foreach (var frame in masterFrameList)
                 {
@@ -622,17 +632,14 @@ namespace UIMFLibrary
             try
             {
 
-                if (!m_HasGlobalParamsTable)
+                if (!this.HasGlobalParamsTable())
                 {
-                    m_HasGlobalParamsTable = DataReader.TableExists(m_dbConnection, "Global_Params");
-                    if (!m_HasGlobalParamsTable)
-                        throw new Exception("The Global_Params table does not exist; call method CreateTables before calling AddUpdateGlobalParameter");
+                    throw new Exception("The Global_Params table does not exist; call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
-                if (m_CreateLegacyParametersTables && !m_HasLegacyParamTables)
+                if (m_CreateLegacyParametersTables)
                 {
-                    m_HasLegacyParamTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
-                    if (!m_HasLegacyParamTables)
+                    if (!this.HasLegacyParameterTables())
                         throw new Exception("The Global_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
@@ -729,7 +736,7 @@ namespace UIMFLibrary
         private void CreateFrameParamsTables(SQLiteCommand dbCommand)
         {
 
-            if (DataReader.TableExists(m_dbConnection, "Frame_Params") &&
+            if (this.HasFrameParamsTable() &&
                 DataReader.TableExists(m_dbConnection, "Frame_Param_Keys"))
             {
                 // The tables already exist
@@ -799,7 +806,7 @@ namespace UIMFLibrary
         /// </summary>
         private void CreateGlobalParamsTable(SQLiteCommand dbCommand)
         {
-            if (DataReader.TableExists(m_dbConnection, "Global_Params"))
+            if (this.HasGlobalParamsTable())
             {
                 // The table already exists
                 return;
@@ -1230,17 +1237,12 @@ namespace UIMFLibrary
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
             FlushUimf(false);
 
-            if (!m_HasFrameParamsTable)
-            {
-                m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, "Frame_Params");
-                if (!m_HasFrameParamsTable)
-                    throw new Exception("The Frame_Params table does not exist; call method CreateTables before calling InsertFrame");
-            }
+            if (!this.HasFrameParamsTable())
+                throw new Exception("The Frame_Params table does not exist; call method CreateTables before calling InsertFrame");
 
-            if (m_CreateLegacyParametersTables && !m_HasLegacyParamTables)
+            if (m_CreateLegacyParametersTables)
             {
-                m_HasLegacyParamTables = DataReader.TableExists(m_dbConnection, "Frame_Parameters");
-                if (!m_HasLegacyParamTables)
+                if (!this.HasLegacyParameterTables())
                     throw new Exception("The Frame_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling InsertFrame");
             }
 
@@ -1312,11 +1314,9 @@ namespace UIMFLibrary
         {
             if (m_FrameNumsInLegacyFrameParametersTable.Contains(frameParameters.FrameNum))
             {
-                // Row already exists
+                // Row already exists; don't try to re-add it
                 return;
             }
-
-            // ToDo: possibly assure nullable fields in frameParameters are not null
 
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Clear();
 
@@ -1789,7 +1789,7 @@ namespace UIMFLibrary
         /// </summary>
         public void UpdateGlobalFrameCount()
         {
-            if (!DataReader.TableExists(m_dbConnection, "Frame_Params"))
+            if (!this.HasFrameParamsTable())
                 throw new Exception("UIMF file does not have table Frame_Params; use method CreateTables to add tables");
 
             object frameCount;
@@ -2212,6 +2212,36 @@ namespace UIMFLibrary
             var frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
 
             InsertLegacyFrameParams(frameNum, frameParams);
+        }
+
+        private bool HasFrameParamsTable()
+        {
+            if (!m_HasFrameParamsTable)
+            {
+                m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, "Frame_Params");
+            }
+
+            return m_HasFrameParamsTable;
+        }
+
+        private bool HasGlobalParamsTable()
+        {
+            if (!m_HasGlobalParamsTable)
+            {
+                m_HasGlobalParamsTable = DataReader.TableExists(m_dbConnection, "Global_Params");
+            }
+
+            return m_HasGlobalParamsTable;
+        }
+
+        private bool HasLegacyParameterTables()
+        {
+            if (!m_HasLegacyParameterTables)
+            {
+                m_HasLegacyParameterTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
+            }
+
+            return m_HasLegacyParameterTables;
         }
 
         /// <summary>
