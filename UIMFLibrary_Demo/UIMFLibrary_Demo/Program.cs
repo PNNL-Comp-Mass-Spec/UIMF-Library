@@ -112,9 +112,18 @@ namespace UIMFLibrary_Demo
                 var targetPath = Path.Combine(fiUimfFile.Directory.FullName,
                                               Path.GetFileNameWithoutExtension(fiUimfFile.Name) + "_LegacyTablesAdded.uimf");
 
-                Console.WriteLine("Duplicating " + fiUimfFile.FullName + Environment.NewLine + " to create " + Path.GetFileName(targetPath));
+                var fiTargetFile = new FileInfo(targetPath);
+                Console.WriteLine("Duplicating " + fiUimfFile.FullName + Environment.NewLine + " to create " + fiTargetFile.FullName);
 
-                fiUimfFile.CopyTo(targetPath, true);
+                fiUimfFile.CopyTo(fiTargetFile.FullName, true);
+                fiTargetFile.Refresh();
+
+                fiTargetFile.LastWriteTimeUtc = DateTime.UtcNow;
+
+                var journalFilePath = targetPath + "-journal";
+                if (File.Exists(journalFilePath))
+                    File.Delete(journalFilePath);
+
                 System.Threading.Thread.Sleep(100);
 
                 using (var writer = new DataWriter(targetPath))

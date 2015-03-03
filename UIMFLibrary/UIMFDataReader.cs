@@ -1462,7 +1462,7 @@ namespace UIMFLibrary
         [Obsolete("For clarity, use GetDriftTime with parameter normalizeByPressure")]
         public double GetDriftTime(int frameNum, int scanNum)
         {
-            return GetDriftTime(frameNum, scanNum, normalizeByPressure:true);
+            return GetDriftTime(frameNum, scanNum, normalizeByPressure: true);
         }
 
         /// <summary>
@@ -1884,6 +1884,85 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Reads and caches the all frame parameters in the UIMF file
+        /// </summary>
+        /// <remarks>Once the parameters are cached, calls to GetFrameParams will be instantaneous</remarks>
+        public void PreCacheAllFrameParams()
+        {
+            int cachedCount = 0;
+            for (var frameNum = 0; frameNum < m_globalParameters.NumFrames; frameNum++)
+            {
+                if (m_CachedFrameParameters.ContainsKey(frameNum))
+                    cachedCount++;
+            }
+
+            if (cachedCount > 0 && cachedCount >= m_globalParameters.NumFrames)
+            {
+                // Nothing to do
+                return;
+            }
+
+            if (m_UsingLegacyFrameParameters)
+            {
+                throw new Exception("Function PreCacheAllFrameParams does not support m_UsingLegacyFrameParameters = false");
+            }
+
+            try
+            {
+                var frameParamKeys = GetFrameParameterKeys(false);
+                var frameParameters = new FrameParams();
+                var currentFrameNum = -1;
+
+                var dbCommand = m_uimfDatabaseConnection.CreateCommand();
+                dbCommand.CommandText = "SELECT FrameNum, ParamID, ParamValue FROM Frame_Params ORDER BY FrameNum";
+
+
+                using (SQLiteDataReader reader = dbCommand.ExecuteReader())
+                {
+                    const int idColIndex = 1;
+                    const int valueColIndex = 2;
+
+                    while (reader.Read())
+                    {
+                        // FrameNum, ParamID, ParamValue
+                        int frameNum = reader.GetInt32(0);
+                       
+                        if (frameNum > currentFrameNum)
+                        {
+                            if (currentFrameNum > -1)
+                            {
+                                if (!m_CachedFrameParameters.ContainsKey(currentFrameNum))
+                                    m_CachedFrameParameters.Add(currentFrameNum, frameParameters);
+                            }
+                            
+                            currentFrameNum = frameNum;
+                            frameParameters = new FrameParams();
+
+                            if (currentFrameNum % 100 == 0)
+                            {
+                                Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " + m_globalParameters.NumFrames);
+                            }
+                        }
+
+                        ReadAndStoreFrameParamValue(reader, idColIndex, valueColIndex, frameParamKeys, frameParameters);
+                      
+                    }
+
+                    if (!m_CachedFrameParameters.ContainsKey(currentFrameNum))
+                        m_CachedFrameParameters.Add(currentFrameNum, frameParameters);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in PreCacheAllFrameParams: " + ex.Message);
+            }
+
+        }
+
+
+        /// <summary>
         /// Get frame parameters
         /// </summary>
         /// <param name="frameNumber"></param>
@@ -1914,7 +1993,7 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-                        var legacyFrameParams= GetLegacyFrameParameters(reader);
+                        var legacyFrameParams = GetLegacyFrameParameters(reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
                         frameParameters = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
                     }
@@ -1930,24 +2009,12 @@ namespace UIMFLibrary
 
                 using (SQLiteDataReader reader = m_getFrameParamsCommand.ExecuteReader())
                 {
+                    int idColIndex = reader.GetOrdinal("ParamID");
+                     int valueColIndex = reader.GetOrdinal("ParamValue");
+
                     while (reader.Read())
                     {
-                        // FrameNum, ParamID, ParamValue
-                        int paramID = Convert.ToInt32(reader["ParamID"]);
-                        string paramValue = Convert.ToString(reader["ParamValue"]);
-
-                        var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
-
-                        FrameParamDef paramDef;
-                        if (frameParamKeys.TryGetValue(paramType, out paramDef))
-                        {
-                            frameParameters.AddUpdateValue(paramDef, paramValue);
-                            continue;
-                        }
-
-                        // Entry not defined in frameParamKeys
-                        // Ignore this parameter
-                        WarnUnrecognizedFrameParamID(paramID, "UnknownParamName");
+                        ReadAndStoreFrameParamValue(reader, idColIndex, valueColIndex, frameParamKeys, frameParameters);
                     }
 
                 }
@@ -2004,10 +2071,10 @@ namespace UIMFLibrary
             {
                 pressure = frameParameters.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure);
             }
-            
+
             if (frameParameters.HasParameter(FrameParamKeyType.PressureUnits))
             {
-                pressure = ConvertPressureToTorr(pressure, (PressureUnits)frameParameters.GetValueInt32(FrameParamKeyType.PressureUnits));              
+                pressure = ConvertPressureToTorr(pressure, (PressureUnits)frameParameters.GetValueInt32(FrameParamKeyType.PressureUnits));
             }
 
             return pressure;
@@ -2138,7 +2205,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <returns></returns>
         public GlobalParams GetGlobalParams()
-        {           
+        {
             return m_globalParameters;
         }
 
@@ -2825,7 +2892,7 @@ namespace UIMFLibrary
         /// The number of non-zero m/z values found in the resulting spectrum.
         /// </returns>
         public int GetSpectrum(
-           int frameNumber,          
+           int frameNumber,
            int scanNumber,
            out double[] mzArray,
            out int[] intensityArray)
@@ -4118,7 +4185,7 @@ namespace UIMFLibrary
             }
 
             return result;
-        }     
+        }
 
         /// <summary>
         /// Get the extracted ion chromatogram for a given bin for the specified frame type
@@ -4702,7 +4769,7 @@ namespace UIMFLibrary
                         return;
                     }
                 }
-                    
+
                 // Frame parameter PressureUnits is not present in the first frame
                 // Infer the units based on the average value
 
@@ -5188,7 +5255,7 @@ namespace UIMFLibrary
         {
             foreach (SpectrumCache possibleSpectrumCache in m_spectrumCacheList)
             {
-                if (possibleSpectrumCache.StartFrameNumber == startFrameNumber && 
+                if (possibleSpectrumCache.StartFrameNumber == startFrameNumber &&
                     possibleSpectrumCache.EndFrameNumber == endFrameNumber)
                 {
                     return possibleSpectrumCache;
@@ -5805,6 +5872,40 @@ namespace UIMFLibrary
             {
                 throw new Exception("Failed to access frame parameters table " + ex);
             }
+        }
+
+        /// <summary>
+        /// Reads the frame parameter ID and value of the given row in the reader, then stores in frameParameters
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="idColIndex"></param>
+        /// <param name="valueColIndex"></param>
+        /// <param name="frameParamKeys"></param>
+        /// <param name="frameParameters"></param>
+        private void ReadAndStoreFrameParamValue(
+            SQLiteDataReader reader, 
+            int idColIndex, 
+            int valueColIndex,
+            Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, FrameParams frameParameters)
+        {
+            // Columns returned by the reader should be
+            // FrameNum, ParamID, ParamValue
+
+            int paramID = reader.GetInt32(idColIndex);
+            string paramValue = reader.GetString(valueColIndex);
+
+            var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+
+            FrameParamDef paramDef;
+            if (frameParamKeys.TryGetValue(paramType, out paramDef))
+            {
+                frameParameters.AddUpdateValue(paramDef, paramValue);
+                return;
+            }
+
+            // Entry not defined in frameParamKeys
+            // Ignore this parameter
+            WarnUnrecognizedFrameParamID(paramID, "UnknownParamName");
         }
 
         /// <summary>

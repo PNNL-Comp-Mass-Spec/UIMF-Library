@@ -145,7 +145,6 @@ namespace UIMFLibrary
             {
                 m_dbConnection.Open();
 
-                // Note that the following call will instantiate dbCommand
                 TransactionBegin();
 
                 PrepareInsertFrameParamKey();
@@ -456,45 +455,53 @@ namespace UIMFLibrary
                 return;
             }
 
+            Console.WriteLine("Caching GlobalParams and FrameParams");
+
+            GlobalParams globalParams;
+            var frameParamsList = new Dictionary<int, FrameParams>();
+
             using (var uimfReader = new DataReader(m_FilePath))
             {
-                var globalParams = uimfReader.GetGlobalParams();
+                globalParams = uimfReader.GetGlobalParams();
                 var masterFrameList = uimfReader.GetMasterFrameList();
 
-                var frameParamsList = new Dictionary<int, FrameParams>();
+                // var dtStartTime = DateTime.Now;
+                
+                uimfReader.PreCacheAllFrameParams();
 
-                foreach (var frameNum in masterFrameList)
+                // Console.WriteLine("Took " + DateTime.Now.Subtract(dtStartTime).TotalSeconds.ToString("0.0") + " seconds to precache the frame parameters");
+
+                foreach (var frame in masterFrameList)
                 {
-                    var frameParams = uimfReader.GetFrameParams(frameNum.Key);
-                    frameParamsList.Add(frameNum.Key, frameParams);
-                }
-
-                using (var dbCommand = m_dbConnection.CreateCommand())
-                {
-                    CreateLegacyParameterTables(dbCommand);
-
-                    foreach (var globalParam in globalParams.Values)
-                    {
-                        var paramEntry = globalParam.Value;
-                        InsertLegacyGlobalParameter(dbCommand, paramEntry.ParamType, paramEntry.Value);
-                    }
-
-                    foreach (var frameParams in frameParamsList)
-                    {
-                        InsertLegacyFrameParams(frameParams.Key, frameParams.Value);
-
-                        if (frameParams.Key % 100 == 0)
-                        {
-                            Console.WriteLine("Storing legacy parameters for frame " + frameParams.Key);
-                        }
-                    }
+                    var frameParams = uimfReader.GetFrameParams(frame.Key);
+                    frameParamsList.Add(frame.Key, frameParams);
                 }
 
             }
 
+            Console.WriteLine("Adding legacy Global_Parameters and Frame_Parameters tables");
 
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+                CreateLegacyParameterTables(dbCommand);
 
-            FlushUimf();
+                Console.WriteLine("Adding the Global_Parameters table");
+
+                foreach (var globalParam in globalParams.Values)
+                {
+                    var paramEntry = globalParam.Value;
+                    InsertLegacyGlobalParameter(dbCommand, paramEntry.ParamType, paramEntry.Value);
+                }
+
+                Console.WriteLine("Adding the Frame_Parameters table");
+
+                foreach (var frameParams in frameParamsList)
+                {
+                    InsertLegacyFrameParams(frameParams.Key, frameParams.Value);
+                }
+            }
+
+            FlushUimf(true);
 
         }
 
