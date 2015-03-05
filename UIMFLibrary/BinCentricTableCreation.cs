@@ -290,6 +290,13 @@ namespace UIMFLibrary
 						double percentComplete = 37 + (i / (double)numBins) * 30;
 						this.UpdateProgress(percentComplete, progressMessage);
 					}
+
+				    if (i > 0 && i % 100 == 0)
+				    {
+				        string progressMessage = "Indexing bin: " + i + " / " + numBins;
+				        Console.WriteLine(DateTime.Now + " - " + progressMessage);
+				    }
+
 				}
 			}
 		}
@@ -553,7 +560,7 @@ namespace UIMFLibrary
 
 					if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
 					{
-						string progressMessage = "Processing Bin: " + i + " / " + numBins;
+                        string progressMessage = "Processing Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 						Console.WriteLine(DateTime.Now + " - " + progressMessage);
 						dtLastProgress = DateTime.UtcNow;
 
