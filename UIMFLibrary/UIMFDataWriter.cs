@@ -91,6 +91,8 @@ namespace UIMFLibrary
         private bool m_HasLegacyParameterTables;
         private bool m_LegacyGlobalParametersTableHasData;
 
+        private bool m_LegacyFrameParameterTableHasDecodedColumn;
+
         /// <summary>
         /// This list tracks the frame numbers that are present in the Frame_Parameters table
         /// </summary>
@@ -489,8 +491,6 @@ namespace UIMFLibrary
 
             }
 
-            Console.WriteLine("Adding legacy Global_Parameters and Frame_Parameters tables");
-
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 CreateLegacyParameterTables(dbCommand);
@@ -524,10 +524,7 @@ namespace UIMFLibrary
         public void AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
         {
             // Make sure the Frame_Param_Keys table contains key paramKeyType
-            ValidateFrameParameterKeys(new List<FrameParamKeyType>
-            {
-                paramKeyType
-            });
+            ValidateFrameParameterKey(paramKeyType);
 
             try
             {
@@ -689,6 +686,80 @@ namespace UIMFLibrary
                 ReportError("Error adding/updating global parameter " + paramKeyType + ": " + ex.Message, ex);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
+        /// </summary>
+        /// <param name="paramKeyType"></param>
+        /// <param name="paramValue"></param>
+        /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
+        public int AssureAllFramesHaveFrameParam(FrameParamKeyType paramKeyType, string paramValue)
+        {
+            // Make sure the Frame_Param_Keys table contains key paramKeyType
+            ValidateFrameParameterKey(paramKeyType);
+
+            int rowsAdded;
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+                rowsAdded = AssureAllFramesHaveFrameParam(dbCommand, paramKeyType, paramValue);
+            }
+
+            return rowsAdded;
+        }
+
+        /// <summary>
+        /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
+        /// </summary>
+        /// <param name="dbCommand"></param>
+        /// <param name="paramKeyType"></param>
+        /// <param name="paramValue"></param>
+        /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
+        internal static int AssureAllFramesHaveFrameParam(
+            SQLiteCommand dbCommand, 
+            FrameParamKeyType paramKeyType,
+            string paramValue)
+        {
+            return AssureAllFramesHaveFrameParam(dbCommand, paramKeyType, paramValue, 0, 0);
+        }
+
+
+        /// <summary>
+        /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
+        /// </summary>
+        /// <param name="dbCommand"></param>
+        /// <param name="paramKeyType"></param>
+        /// <param name="paramValue"></param>
+        /// <param name="frameNumStart">Optional: Starting frame number; ignored if frameNumEnd is 0 or negative</param>
+        /// <param name="frameNumEnd">Optional: Ending frame number; ignored if frameNumEnd is 0 or negative</param>
+        /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
+        internal static int AssureAllFramesHaveFrameParam(
+            SQLiteCommand dbCommand, 
+            FrameParamKeyType paramKeyType, 
+            string paramValue,
+            int frameNumStart,
+            int frameNumEnd)
+        {
+
+            if (string.IsNullOrEmpty(paramValue))
+                paramValue = string.Empty;
+
+            // This query finds the frame numbers that are missing the parameter, then performs the insert, all in one SQL statement
+            dbCommand.CommandText = 
+                "INSERT INTO Frame_Params (FrameNum, ParamID, ParamValue) " +
+                "SELECT Distinct FrameNum, " + (int)paramKeyType + " AS ParamID, '" + paramValue + "' " +
+                "FROM Frame_Params  " +
+                "WHERE Not FrameNum In (SELECT FrameNum FROM Frame_Params WHERE ParamID = " + (int)paramKeyType + ") ";
+
+            if (frameNumEnd > 0)
+            {
+                dbCommand.CommandText += " AND FrameNum >= " + frameNumStart + " AND FrameNum <= " + frameNumEnd;
+            }
+
+            var rowsAdded = dbCommand.ExecuteNonQuery();
+
+            return rowsAdded;
+
         }
 
         /// <summary>
@@ -944,19 +1015,19 @@ namespace UIMFLibrary
                                         "   (SELECT DISTINCT FrameNum " +
                                         "    FROM Frame_Params " +
                                         "    WHERE ParamID = " + (int)FrameParamKeyType.FrameType + " AND" +
-                                        " Value = " + frameType + ");";
+                                        "          ParamValue = " + frameType + ");";
                 dbCommand.ExecuteNonQuery();
 
                 if (updateScanCountInFrameParams)
                 {
                     dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET Value = '0' " +
+                                            "SET ParamValue = '0' " +
                                             "WHERE ParamID = " + (int)FrameParamKeyType.Scans +
                                             "  AND FrameNum IN " +
                                             "   (SELECT DISTINCT FrameNum " +
                                             "    FROM Frame_Params " +
                                             "    WHERE ParamID = " + (int)FrameParamKeyType.FrameType + " AND" +
-                                            " Value = " + frameType + ");";
+                                            "          ParamValue = " + frameType + ");";
                     dbCommand.ExecuteNonQuery();
                 }
 
@@ -1024,7 +1095,7 @@ namespace UIMFLibrary
                 if (updateScanCountInFrameParams)
                 {
                     dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET Value = '0' " +
+                                            "SET ParamValue = '0' " +
                                             "WHERE FrameNum = " + frameNum +
                                              " AND ParamID = " + (int)FrameParamKeyType.Scans + ";";
                     dbCommand.ExecuteNonQuery();
@@ -1318,6 +1389,9 @@ namespace UIMFLibrary
                 return;
             }
 
+            // Make sure the Frame_Parameters table has the Decoded column
+            ValidateLegacyDecodedColumnExists();
+
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Clear();
 
             // Frame number (primary key)     
@@ -1443,8 +1517,9 @@ namespace UIMFLibrary
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));
 
             // Voltage profile used in fragmentation
+            // Convert the array of doubles to an array of bytes
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":FragmentationProfile", ConvertToBlob(frameParameters.FragmentationProfile)));
+                new SQLiteParameter(":FragmentationProfile", FrameParamUtilities.ConvertToBlob(frameParameters.FragmentationProfile)));
 
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
@@ -1691,22 +1766,8 @@ namespace UIMFLibrary
         /// </param>
         public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
         {
-            using (var dbCommand = m_dbConnection.CreateCommand())
-            {
-
-                dbCommand.CommandText = "UPDATE Frame_Params " +
-                                        "SET Value = " + slope + " " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope +
-                                        " AND FrameNum = " + frameNumber;
-                dbCommand.ExecuteNonQuery();
-
-                dbCommand.CommandText = "UPDATE Frame_Params " +
-                                        "SET Value = " + intercept + " " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept +
-                                        " AND FrameNum = " + frameNumber;
-                dbCommand.ExecuteNonQuery();
-
-            }
+            AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
+            AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -1847,24 +1908,58 @@ namespace UIMFLibrary
         #region Methods
 
         /// <summary>
+        /// Add a column to the legacy Frame_Parameters table
         /// </summary>
-        /// <param name="frag">
+        /// <param name="parameterName">
         /// </param>
-        /// <returns>
-        /// Byte array
-        /// </returns>
-        private static byte[] ConvertToBlob(double[] frag)
+        /// <param name="parameterType">
+        /// </param>
+        /// <remarks>
+        /// The new column will have Null values for all existing rows
+        /// </remarks>
+        private void AddFrameParameter(string parameterName, string parameterType)
         {
-            if (frag == null)
-                frag = new double[0];
+            try
+            {
+                var dbCommand = m_dbConnection.CreateCommand();
+                dbCommand.CommandText = "Alter TABLE Frame_Parameters Add " + parameterName + " " + parameterType;
+                dbCommand.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error adding parameter " + parameterName + " to the legacy Frame_Parameters table:" + ex.Message);
+            }
+        }
 
-            // convert the fragmentation profile into an array of bytes
-            int length_blob = frag.Length;
-            var blob_values = new byte[length_blob * 8];
+        /// <summary>
+        /// Add a column to the legacy Frame_Parameters table
+        /// </summary>
+        /// <param name="parameterName">
+        /// Parameter name (aka column name in the database)
+        /// </param>
+        /// <param name="parameterType">
+        /// Parameter type
+        /// </param>
+        /// <param name="defaultValue">
+        /// Value to assign to all rows
+        /// </param>
+        private void AddFrameParameter(string parameterName, string parameterType, int defaultValue)
+        {
+            AddFrameParameter(parameterName, parameterType);
 
-            Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
+            try
+            {
+                var dbCommand = m_dbConnection.CreateCommand();
+                dbCommand.CommandText = " UPDATE Frame_Parameters " +
+                                        " SET " + parameterName + " = " + defaultValue + 
+                                        " WHERE " + parameterName + " IS NULL";
+                dbCommand.ExecuteNonQuery();
 
-            return blob_values;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error setting default value for legacy frame parameter " + parameterName + ": " + ex.Message);
+            }
         }
 
         /// <summary>
@@ -2205,15 +2300,7 @@ namespace UIMFLibrary
 
             return fieldMapping;
         }
-
-        private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, string> frameParamsByType)
-        {
-
-            var frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
-
-            InsertLegacyFrameParams(frameNum, frameParams);
-        }
-
+       
         private bool HasFrameParamsTable()
         {
             if (!m_HasFrameParamsTable)
@@ -2244,6 +2331,7 @@ namespace UIMFLibrary
             return m_HasLegacyParameterTables;
         }
 
+
         /// <summary>
         /// Add entries to the legacy Frame_Parameters table
         /// </summary>
@@ -2258,6 +2346,24 @@ namespace UIMFLibrary
 
         }
 
+        /// <summary>
+        /// Add entries to the legacy Frame_Parameters table
+        /// </summary>
+        /// <param name="frameNum"></param>
+        /// <param name="frameParamsByType"></param>
+        private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, string> frameParamsByType)
+        {
+            var frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
+
+            InsertLegacyFrameParams(frameNum, frameParams);
+        }
+
+        /// <summary>
+        /// Add a parameter to the legacy Global_Parameters table
+        /// </summary>
+        /// <param name="dbCommand"></param>
+        /// <param name="paramKey"></param>
+        /// <param name="paramValue"></param>
         private void InsertLegacyGlobalParameter(SQLiteCommand dbCommand, GlobalParamKeyType paramKey, string paramValue)
         {
             if (!m_LegacyGlobalParametersTableHasData)
@@ -2449,6 +2555,9 @@ namespace UIMFLibrary
         /// <param name="dbCommand">database command object</param>
         private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, SQLiteCommand dbCommand)
         {
+            // Make sure the Frame_Parameters table has the Decoded column
+            ValidateLegacyDecodedColumnExists();
+
             var fieldMapping = GetLegacyFrameParameterMapping();
             var legacyFieldName = (from item in fieldMapping where item.Value == paramKeyType select item.Key).ToList();
             if (legacyFieldName.Count > 0)
@@ -2463,6 +2572,19 @@ namespace UIMFLibrary
                 Console.WriteLine("Skipping unsupported keytype, " + paramKeyType);
             }
 
+        }
+
+        /// <summary>
+        /// Assures that the Frame_Params_Keys table contains an entry for paramKeyType
+        /// </summary>
+        protected void ValidateFrameParameterKey(FrameParamKeyType paramKeyType)
+        {
+            var keyTypeList = new List<FrameParamKeyType>
+            {
+                paramKeyType
+            };
+
+            ValidateFrameParameterKeys(keyTypeList);
         }
 
         /// <summary>
@@ -2525,6 +2647,22 @@ namespace UIMFLibrary
                 if (!m_HasFrameScansTable)
                     throw new Exception(
                         "The Frame_Scans table does not exist; call method CreateTables before calling " + callingMethod);
+            }
+        }
+
+        /// <summary>
+        /// Assures column Decoded exists in the legacy Frame_Parameters table
+        /// </summary>
+        protected void ValidateLegacyDecodedColumnExists()
+        {
+            if (!m_LegacyFrameParameterTableHasDecodedColumn)
+            {
+                if (!DataReader.TableHasColumn(m_dbConnection, "Frame_Parameters", "Decoded"))
+                {
+                    AddFrameParameter("Decoded", "INT", 0);
+                }
+
+                m_LegacyFrameParameterTableHasDecodedColumn = true;
             }
         }
 

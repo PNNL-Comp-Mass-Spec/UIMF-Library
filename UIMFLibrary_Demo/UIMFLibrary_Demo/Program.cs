@@ -7,10 +7,10 @@ namespace UIMFLibrary_Demo
 {
     static class Program
     {
-        private const bool TEST_READER = false;
+        private const bool TEST_READER = true;
         private const bool TEST_WRITER = false;
         private const bool UPDATE_PARAM_TABLES = false;
-        private const bool ADD_LEGACY_PARAM_TABLES = true;
+        private const bool ADD_LEGACY_PARAM_TABLES = false;
 
         private static void Main(string[] args)
         {

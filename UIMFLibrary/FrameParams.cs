@@ -31,6 +31,9 @@ namespace UIMFLibrary
         /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
         private readonly Dictionary<FrameParamKeyType, FrameParam> mFrameParameters;
 
+        /// <summary>
+        /// Mass calibration coefficients are cached to allow for fast lookup via external classes
+        /// </summary>
         private MassCalibrationCoefficientsType mCachedMassCalibrationCoefficients;
 
         #endregion
@@ -321,6 +324,9 @@ namespace UIMFLibrary
             double numericValue;
             if (!double.TryParse(value, out numericValue))
                 return;
+
+            // Update cached member variables
+            // At present, the only cached values are mass calibration coefficients
 
             switch (paramType)
             {

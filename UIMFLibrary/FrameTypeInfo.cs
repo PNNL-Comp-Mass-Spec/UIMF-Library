@@ -4,6 +4,9 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+
 namespace UIMFLibrary
 {
 	/// <summary>
@@ -22,7 +25,7 @@ namespace UIMFLibrary
 		public FrameSetContainer(int numFramesInFile)
 		{
 			this.NumFrames = 0;
-			this.FrameIndexes = new int[numFramesInFile + 1];
+            this.FrameIndexes = new Dictionary<int, int>(numFramesInFile+1);
 		}
 
 		#endregion
@@ -32,7 +35,8 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Mapping between frame number and frame index
 		/// </summary>
-		public int[] FrameIndexes { get; private set; }
+		/// <remarks>Key is frame number, value is frame index</remarks>
+		public Dictionary<int, int> FrameIndexes { get; private set; }
 
 		/// <summary>
 		/// Gets the num frames.
@@ -51,7 +55,10 @@ namespace UIMFLibrary
 		/// </param>
 		public void AddFrame(int frameNumber)
 		{
-			this.FrameIndexes[frameNumber] = this.NumFrames;
+		    if (this.FrameIndexes.ContainsKey(frameNumber))
+		        throw new Exception("Frame " + frameNumber + " was sent to FrameSetContainer.AddFrame more than 1 time; likely a programming bug");
+
+            this.FrameIndexes.Add(frameNumber, this.NumFrames);			
 			this.NumFrames++;
 		}
 

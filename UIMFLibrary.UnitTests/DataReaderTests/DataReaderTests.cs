@@ -438,9 +438,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 difference = 42828 - bpi[25];
                 Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
 
-                bpi = reader.GetBPIByFrame(0, 0, 0, 0);
-                difference = 83524 - bpi[100];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                // Uncomment this to get a BPI across the entire dataset (typically slow)
+                // bpi = reader.GetBPIByFrame(0, 0, 0, 0);
+                // difference = 83524 - bpi[100];
+                // Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
 
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 difference = 2028 - bpiList[70];
@@ -480,9 +481,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 difference = 1081201 - tic[25];
                 Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
 
-                tic = reader.GetTICByFrame(0, 0, 0, 0);
-                difference = 2026072 - tic[100];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                // Uncomment this to get a TIC across the entire dataset (typically slow)
+                //tic = reader.GetTICByFrame(0, 0, 0, 0);
+                //difference = 2026072 - tic[100];
+                //Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
 
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 difference = 3649 - ticList[70];

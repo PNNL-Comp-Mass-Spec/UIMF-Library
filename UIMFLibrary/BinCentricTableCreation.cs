@@ -603,9 +603,9 @@ namespace UIMFLibrary
 
 					while (reader.Read())
 					{
-						int scanLc = Convert.ToInt32(reader[1]);
-						int scanIms = Convert.ToInt32(reader[2]);
-						int intensity = Convert.ToInt32(reader[3]);
+                        int scanLc = reader.GetInt32(1);
+                        int scanIms = reader.GetInt32(2);
+                        int intensity = reader.GetInt32(3);
 
 						int newLocation = (scanLc * numImsScans) + scanIms;
 						int difference = newLocation - previousLocation - 1;

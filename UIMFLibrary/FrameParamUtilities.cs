@@ -9,7 +9,49 @@ namespace UIMFLibrary
     /// </summary>
     public static class FrameParamUtilities
     {
-       
+
+        /// <summary>
+        /// Convert the array of bytes defining a fragmentation sequence to an array of doubles
+        /// </summary>
+        /// <param name="blob">
+        /// </param>
+        /// <returns>
+        /// Array of doubles
+        /// </returns>
+        public static double[] ConvertByteArrayToFragmentationSequence(byte[] blob)
+        {
+            var frag = new double[blob.Length / 8];
+
+            for (int i = 0; i < frag.Length; i++)
+            {
+                frag[i] = BitConverter.ToDouble(blob, i * 8);
+            }
+
+            return frag;
+        }
+
+        /// <summary>
+        /// Convert an array of doubles to an array of bytes
+        /// </summary>
+        /// <param name="frag">
+        /// </param>
+        /// <returns>
+        /// Byte array
+        /// </returns>
+        public static byte[] ConvertToBlob(double[] frag)
+        {
+            if (frag == null)
+                frag = new double[0];
+
+            // convert the fragmentation profile into an array of bytes
+            int length_blob = frag.Length;
+            var blob_values = new byte[length_blob * 8];
+
+            Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
+
+            return blob_values;
+        }
+
         /// <summary>
         /// Create a frame parameter dictionary using a FrameParameters class instance
         /// </summary>
@@ -193,9 +235,13 @@ namespace UIMFLibrary
             // Legacy parameter, likely never used
             if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
             {
-                // Convert the fragmentation profile into an array of bytes
+                // Convert the fragmentation profile (array of doubles) into an array of bytes
                 var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
+
+                // Now convert to a base-64 encoded string
                 string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+
+                // Finally, store in frameParams
                 frameParams.Add(FrameParamKeyType.FragmentationProfile, base64String);
             }
 
@@ -288,8 +334,20 @@ namespace UIMFLibrary
 
             var fragmentationProfile = frameParameters.GetValue(FrameParamKeyType.FragmentationProfile, String.Empty);
 
-            // ToDo: xxx implement this conversion xxx
-            //legacyFrameParams.FragmentationProfile = Byte
+            if (string.IsNullOrEmpty(fragmentationProfile))
+            {
+                legacyFrameParams.FragmentationProfile = new double[0];
+            }
+            else
+            {
+                // The fragmentation profile was stored as an array of bytes, encoded as base 64
+                
+                // Convert back to bytes
+                var byteArray = Convert.FromBase64String(fragmentationProfile);
+                
+                // Now convert from array of bytes to array of doubles
+                legacyFrameParams.FragmentationProfile = ConvertByteArrayToFragmentationSequence(byteArray);
+            }
 
             return legacyFrameParams;
         }
@@ -647,7 +705,7 @@ namespace UIMFLibrary
                 case FrameParamKeyType.FragmentationProfile:
                     return new FrameParamDef(FrameParamKeyType.FragmentationProfile,
                                           FrameParamKeyType.FragmentationProfile.ToString(), typeof(string),
-                                          "Voltage profile used in fragmentation (Base 64 encoded array of doubles)");
+                                          "Voltage profile used in fragmentation (array of doubles, converted to an array of bytes, then stored as a Base 64 encoded string)");
 
                 case FrameParamKeyType.ScanNumFirst:
                     return new FrameParamDef(FrameParamKeyType.ScanNumFirst, FrameParamKeyType.ScanNumFirst.ToString(),
@@ -671,29 +729,6 @@ namespace UIMFLibrary
 
         }        
 
-        #region "Private methods"
-
-        /// <summary>
-        /// Convert an array of doubles to an array of bytes
-        /// </summary>
-        /// <param name="frag">
-        /// </param>
-        /// <returns>
-        /// Byte array
-        /// </returns>
-        private static byte[] ConvertToBlob(double[] frag)
-        {
-            
-            int length_blob = frag.Length;
-            var blob_values = new byte[length_blob * 8];
-
-            Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
-
-            return blob_values;
-        }
-
-        #endregion
-   
     }
 
 }
