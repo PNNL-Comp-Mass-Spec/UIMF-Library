@@ -286,14 +286,14 @@ namespace UIMFLibrary
 					if (numBins > 0)
 					{
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-						string progressMessage = "Creating indices, Bin: " + i + " / " + numBins;
+                        string progressMessage = "Creating indices, Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 						double percentComplete = 37 + (i / (double)numBins) * 30;
 						this.UpdateProgress(percentComplete, progressMessage);
 					}
 
 				    if (i > 0 && i % 100 == 0)
 				    {
-				        string progressMessage = "Indexing bin: " + i + " / " + numBins;
+                        string progressMessage = "Indexing bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 				        Console.WriteLine(DateTime.Now + " - " + progressMessage);
 				    }
 

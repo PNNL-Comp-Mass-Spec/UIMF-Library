@@ -32,6 +32,9 @@ namespace UIMFLibrary
         /// </summary>
         private const int MINIMUM_FLUSH_INTERVAL_SECONDS = 5;
 
+        public const string FRAME_PARAMETERS_TABLE = "Frame_Parameters";
+        public const string FRAME_PARAMS_TABLE = "Frame_Params";
+
         #endregion
 
         #region Fields
@@ -228,7 +231,7 @@ namespace UIMFLibrary
                     return;
                 }
 
-                if (!DataReader.TableExists(m_dbConnection, "Frame_Parameters"))
+                if (!DataReader.TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
                 {
                     // Legacy tables do not exist; nothing to do
                     return;
@@ -821,7 +824,7 @@ namespace UIMFLibrary
 
             // Create table Frame_Params
             lstFields = GetFrameParamsFields();
-            dbCommand.CommandText = GetCreateTableSql("Frame_Params", lstFields);
+            dbCommand.CommandText = GetCreateTableSql(FRAME_PARAMS_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
             // Create the unique index index on Frame_Param_Keys
@@ -909,11 +912,11 @@ namespace UIMFLibrary
 
             }
 
-            if (!DataReader.TableExists(m_dbConnection, "Frame_Parameters"))
+            if (!DataReader.TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
             {
                 // Create the Frame_parameters Table
                 var lstFields = GetFrameParametersFields();
-                dbCommand.CommandText = GetCreateTableSql("Frame_Parameters", lstFields);
+                dbCommand.CommandText = GetCreateTableSql(FRAME_PARAMETERS_TABLE, lstFields);
                 dbCommand.ExecuteNonQuery();
             }
 
@@ -1757,6 +1760,80 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Update the slope and intercept for all frames
+        /// </summary>
+        /// <param name="dBconnection"></param>
+        /// <param name="slope">
+        /// The slope value for the calibration.
+        /// </param>
+        /// <param name="intercept">
+        /// The intercept for the calibration.
+        /// </param>
+        /// <param name="isAutoCalibrating">
+        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// </param>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        public static void UpdateAllCalibrationCoefficients(
+            SQLiteConnection dBconnection, 
+            float slope, 
+            float intercept, 
+            bool isAutoCalibrating = false)
+        {
+            bool hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            bool hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+
+            using (var dbCommand = dBconnection.CreateCommand())
+            {
+                if (hasLegacyFrameParameters)
+                {
+                    dbCommand.CommandText = "UPDATE Frame_Parameters " +
+                                            "SET CalibrationSlope = " + slope + ", " +
+                                            "CalibrationIntercept = " + intercept;
+
+                    if (isAutoCalibrating)
+                    {
+                        dbCommand.CommandText += ", CalibrationDone = 1";
+                    }
+
+                    dbCommand.ExecuteNonQuery();
+                }
+
+                if (!hasFrameParamsTable)
+                {
+                    return;
+                }
+
+                // Update existing values
+                dbCommand.CommandText = "UPDATE Frame_Params " +
+                                        "SET ParamValue = " + slope + " " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope;
+                dbCommand.ExecuteNonQuery();
+
+                dbCommand.CommandText = "UPDATE Frame_Params " +
+                                        "SET ParamValue = " + intercept + " " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept;
+                dbCommand.ExecuteNonQuery();
+
+                // Add new values for any frames that do not have slope or intercept defined as frame params
+                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope,
+                                                         slope.ToString(CultureInfo.InvariantCulture));
+                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept,
+                                                         intercept.ToString(CultureInfo.InvariantCulture));
+
+                if (isAutoCalibrating)
+                {
+                    dbCommand.CommandText = "UPDATE Frame_Params " +
+                                            "SET ParamValue = 1 " +
+                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone;
+                    dbCommand.ExecuteNonQuery();
+
+                    // Add new values for any frames that do not have slope or intercept defined as frame params
+                    AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1");
+                }
+            }
+        }
+
+        /// <summary>
         /// </summary>
         /// <param name="frameNumber">
         /// </param>
@@ -1768,6 +1845,93 @@ namespace UIMFLibrary
         {
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Update the slope and intercept for the given frame
+        /// </summary>
+        /// <param name="dBconnection"></param>
+        /// <param name="frameNumber">
+        /// The frame number to update.
+        /// </param>
+        /// <param name="slope">
+        /// The slope value for the calibration.
+        /// </param>
+        /// <param name="intercept">
+        /// The intercept for the calibration.
+        /// </param>
+        /// <param name="isAutoCalibrating">
+        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// </param>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        public static void UpdateCalibrationCoefficients(
+            SQLiteConnection dBconnection,
+            int frameNumber,
+            float slope,
+            float intercept,
+            bool isAutoCalibrating = false)
+        {
+
+            bool hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            bool hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+
+            using (var dbCommand = dBconnection.CreateCommand())
+            {
+                if (hasLegacyFrameParameters)
+                {
+                    dbCommand.CommandText =
+                        "UPDATE Frame_Parameters " +
+                        "SET CalibrationSlope = " + slope + ", " +
+                        "CalibrationIntercept = " + intercept;
+
+                    if (isAutoCalibrating)
+                    {
+                        dbCommand.CommandText += ", CalibrationDone = 1";
+                    }
+
+                    dbCommand.CommandText += " WHERE FrameNum = " + frameNumber;
+                    dbCommand.ExecuteNonQuery();
+                }
+
+                if (!hasFrameParamsTable)
+                {
+                    return;
+                }
+
+                // Update existing values
+                dbCommand.CommandText = "UPDATE Frame_Params " +
+                                        "SET ParamValue = " + slope + " " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope +
+                                        " AND FrameNum = " + frameNumber;
+                dbCommand.ExecuteNonQuery();
+
+                dbCommand.CommandText = "UPDATE Frame_Params " +
+                                        "SET ParamValue = " + intercept + " " +
+                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept +
+                                        " AND FrameNum = " + frameNumber;
+                dbCommand.ExecuteNonQuery();
+
+                // Add a new value if the frame does not have slope or intercept defined as frame params
+                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope,
+                                              slope.ToString(CultureInfo.InvariantCulture), frameNumber,
+                                              frameNumber);
+                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept,
+                                              intercept.ToString(CultureInfo.InvariantCulture),
+                                              frameNumber, frameNumber);
+
+                if (isAutoCalibrating)
+                {
+                    dbCommand.CommandText = "UPDATE Frame_Params " +
+                                            "SET ParamValue = 1 " +
+                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone +
+                                            " AND FrameNum = " + frameNumber;
+                    dbCommand.ExecuteNonQuery();
+
+                    // Add a new value if the frame does not have CalibrationDone defined as a frame params
+                    AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1",
+                                                  frameNumber, frameNumber);
+                }
+            }
         }
 
         /// <summary>
@@ -2305,7 +2469,7 @@ namespace UIMFLibrary
         {
             if (!m_HasFrameParamsTable)
             {
-                m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, "Frame_Params");
+                m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, FRAME_PARAMS_TABLE);
             }
 
             return m_HasFrameParamsTable;
@@ -2657,7 +2821,7 @@ namespace UIMFLibrary
         {
             if (!m_LegacyFrameParameterTableHasDecodedColumn)
             {
-                if (!DataReader.TableHasColumn(m_dbConnection, "Frame_Parameters", "Decoded"))
+                if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
                 {
                     AddFrameParameter("Decoded", "INT", 0);
                 }

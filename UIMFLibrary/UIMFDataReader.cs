@@ -84,7 +84,7 @@ namespace UIMFLibrary
         /// <summary>
         /// UIMF database connection
         /// </summary>
-        protected readonly SQLiteConnection m_uimfDatabaseConnection;
+        protected readonly SQLiteConnection m_dbConnection;
 
         /// <summary>
         /// Calibration table
@@ -247,11 +247,11 @@ namespace UIMFLibrary
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             string connectionString = "Data Source = " + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
-            m_uimfDatabaseConnection = new SQLiteConnection(connectionString, true);
+            m_dbConnection = new SQLiteConnection(connectionString, true);
 
             try
             {
-                m_uimfDatabaseConnection.Open();
+                m_dbConnection.Open();
                 m_uimfFilePath = uimfFileInfo.FullName;
 
                 CacheGlobalParameters();
@@ -263,7 +263,7 @@ namespace UIMFLibrary
                 m_LegacyFrameParametersMissingColumns = new SortedSet<string>();
 
                 // Look for the Frame_Parameters and Frame_Params tables
-                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_uimfDatabaseConnection, out m_HasLegacyFrameParameters);
+                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_dbConnection, out m_HasLegacyFrameParameters);
 
                 LoadPrepStmts();
 
@@ -350,6 +350,20 @@ namespace UIMFLibrary
         #endregion
 
         #region Public Properties
+
+        public SQLiteConnection DBConnection
+        {
+            get { return m_dbConnection; }
+        }
+
+        public bool HasFrameParamsTable
+        {
+            get { return !m_UsingLegacyFrameParameters; }
+        }
+
+        public bool HasLegacyFrameParameters {
+            get { return m_HasLegacyFrameParameters; }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether pressure is millitorr.
@@ -834,7 +848,7 @@ namespace UIMFLibrary
                 // This function extracts intensities from selected scans and bins in a single frame 
                 // and returns a two-dimensional array intensities[scan][bin]
                 // frameNum is mandatory and all other arguments are optional
-                using (var dbCommand = m_uimfDatabaseConnection.CreateCommand())
+                using (var dbCommand = m_dbConnection.CreateCommand())
                 {
                     dbCommand.CommandText = "SELECT ScanNum, Intensities " +
                                             "FROM Frame_Scans " +
@@ -1149,12 +1163,12 @@ namespace UIMFLibrary
             {
                 UnloadPrepStmts();
 
-                if (m_uimfDatabaseConnection != null)
+                if (m_dbConnection != null)
                 {
-                    m_uimfDatabaseConnection.Close();
-                    if (m_uimfDatabaseConnection != null)
+                    m_dbConnection.Close();
+                    if (m_dbConnection != null)
                     {
-                        m_uimfDatabaseConnection.Dispose();
+                        m_dbConnection.Dispose();
                     }
                 }
             }
@@ -1391,7 +1405,7 @@ namespace UIMFLibrary
         /// </exception>
         public List<string> GetCalibrationTableNames()
         {
-            var cmd = new SQLiteCommand(m_uimfDatabaseConnection)
+            var cmd = new SQLiteCommand(m_dbConnection)
             {
                 CommandText =
                     "SELECT NAME FROM Sqlite_master WHERE type='table' ORDER BY NAME"
@@ -1681,7 +1695,7 @@ namespace UIMFLibrary
         {
             var frameNumberList = new List<int>();
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 var frameTypeValue = m_frameTypeMS1;
 
@@ -1733,7 +1747,7 @@ namespace UIMFLibrary
         /// </exception>
         public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh)
         {
-            if (m_uimfDatabaseConnection == null)
+            if (m_dbConnection == null)
             {
                 return m_frameParameterKeys;
             }
@@ -1746,7 +1760,7 @@ namespace UIMFLibrary
             else
                 m_frameParameterKeys.Clear();
 
-            m_frameParameterKeys = GetFrameParameterKeys(m_uimfDatabaseConnection);
+            m_frameParameterKeys = GetFrameParameterKeys(m_dbConnection);
 
             return m_frameParameterKeys;
         }
@@ -1936,7 +1950,7 @@ namespace UIMFLibrary
                 var frameParameters = new FrameParams();
                 var currentFrameNum = -1;
 
-                var dbCommand = m_uimfDatabaseConnection.CreateCommand();
+                var dbCommand = m_dbConnection.CreateCommand();
                 dbCommand.CommandText = "SELECT FrameNum, ParamID, ParamValue FROM Frame_Params ORDER BY FrameNum";
 
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
@@ -1994,7 +2008,7 @@ namespace UIMFLibrary
         {
             try
             {
-                var dbCommand = m_uimfDatabaseConnection.CreateCommand();
+                var dbCommand = m_dbConnection.CreateCommand();
                 dbCommand.CommandText = "SELECT * FROM Frame_Parameters ORDER BY FrameNum";
 
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
@@ -2052,7 +2066,7 @@ namespace UIMFLibrary
                 return frameParameters;
             }
 
-            if (m_uimfDatabaseConnection == null)
+            if (m_dbConnection == null)
                 throw new Exception("Database connection is null; cannot retrieve frame parameters for frame " +
                                     frameNumber);
 
@@ -2746,7 +2760,7 @@ namespace UIMFLibrary
 
             if (TableExists("Log_Entries"))
             {
-                using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+                using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
                 {
                     string sSql = "SELECT Entry_ID, Posted_By, Posting_Time, Type, Message FROM Log_Entries";
                     string sWhere = string.Empty;
@@ -2821,7 +2835,7 @@ namespace UIMFLibrary
         {
             var masterFrameDictionary = new Dictionary<int, FrameType>();
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
@@ -2880,7 +2894,7 @@ namespace UIMFLibrary
         {
             int count = 0;
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 var frameTypeList = "0,1";
 
@@ -3657,7 +3671,7 @@ namespace UIMFLibrary
         {
             double tic = 0;
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT TIC FROM Frame_Scans WHERE FrameNum = " + frameNumber +
                                         " AND ScanNum = " + scanNum;
@@ -4358,7 +4372,7 @@ namespace UIMFLibrary
         {
             int count = 0;
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
@@ -4413,7 +4427,7 @@ namespace UIMFLibrary
             int iFrameTypeCount = 0;
             int iFrameTypeCountCalibrated = 0;
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 int currentFrameType = 0;
 
@@ -4493,7 +4507,7 @@ namespace UIMFLibrary
             int iFrameTypeCount = -1;
             int iFrameTypeCountCalibrated = -2;
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT FrameType, " +
                                         "COUNT(*) AS FrameCount, " +
@@ -4557,7 +4571,7 @@ namespace UIMFLibrary
         /// </remarks>
         public void PostLogEntry(string entryType, string message, string postedBy)
         {
-            DataWriter.PostLogEntry(m_uimfDatabaseConnection, entryType, message, postedBy);
+            DataWriter.PostLogEntry(m_dbConnection, entryType, message, postedBy);
         }
 
         /// <summary>
@@ -4571,7 +4585,7 @@ namespace UIMFLibrary
         /// </returns>
         public bool TableExists(string tableName)
         {
-            return TableExists(m_uimfDatabaseConnection, tableName);
+            return TableExists(m_dbConnection, tableName);
         }
 
         /// <summary>
@@ -4588,7 +4602,7 @@ namespace UIMFLibrary
         /// </returns>
         public bool TableHasColumn(string tableName, string columnName)
         {
-            return TableHasColumn(m_uimfDatabaseConnection, tableName, columnName);
+            return TableHasColumn(m_dbConnection, tableName, columnName);
         }
 
         /// <summary>
@@ -4603,9 +4617,10 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
+        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class")] 
         public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool isAutoCalibrating = false)
         {
-            using (var dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters || m_HasLegacyFrameParameters)
                 {
@@ -4651,7 +4666,7 @@ namespace UIMFLibrary
                 }
             }
 
-            // Updated any cached frame parameters
+            // Update any cached frame parameters
             var framesToUpdate = m_CachedFrameParameters.Keys.ToList();
             foreach (var frameNumber in framesToUpdate)
             {
@@ -4684,6 +4699,7 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
+        [Obsolete("Use the UpdateCalibrationCoefficients function in the DataWriter class")]
         public void UpdateCalibrationCoefficients(
             int frameNumber,
             float slope,
@@ -4691,56 +4707,7 @@ namespace UIMFLibrary
             bool isAutoCalibrating = false)
         {
 
-            using (var dbCommand = m_uimfDatabaseConnection.CreateCommand())
-            {
-                if (m_UsingLegacyFrameParameters || m_HasLegacyFrameParameters)
-                {
-                    dbCommand.CommandText =
-                        "UPDATE Frame_Parameters " +
-                        "SET CalibrationSlope = " + slope + ", " +
-                            "CalibrationIntercept = " + intercept;
-
-                    if (isAutoCalibrating)
-                    {
-                        dbCommand.CommandText += ", CalibrationDone = 1";
-                    }
-
-                    dbCommand.CommandText += " WHERE FrameNum = " + frameNumber;
-                    dbCommand.ExecuteNonQuery();
-                }
-                
-                if (!m_UsingLegacyFrameParameters)
-                {
-                    // Update existing values
-                    dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET ParamValue = " + slope + " " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope +
-                                            " AND FrameNum = " + frameNumber;
-                    dbCommand.ExecuteNonQuery();
-
-                    dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET ParamValue = " + intercept + " " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept +
-                                            " AND FrameNum = " + frameNumber;
-                    dbCommand.ExecuteNonQuery();
-
-                    // Add a new value if the frame does not have slope or intercept defined as frame params
-                    DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture), frameNumber, frameNumber);
-                    DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture), frameNumber, frameNumber);
-
-                    if (isAutoCalibrating)
-                    {
-                        dbCommand.CommandText = "UPDATE Frame_Params " +
-                                                "SET ParamValue = 1 " +
-                                                "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone +
-                                                 " AND FrameNum = " + frameNumber;
-                        dbCommand.ExecuteNonQuery();
-
-                        // Add a new value if the frame does not have CalibrationDone defined as a frame params
-                        DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1", frameNumber, frameNumber);
-                    }
-                }
-            }
+            DataWriter.UpdateCalibrationCoefficients(this.DBConnection, frameNumber, slope, intercept, isAutoCalibrating);
 
             var frameParams = GetFrameParams(frameNumber);
             frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, slope);
@@ -4805,12 +4772,12 @@ namespace UIMFLibrary
 
         private void CacheGlobalParameters()
         {
-            bool usingLegacyGlobalParameters = UsingLegacyGlobalParams(m_uimfDatabaseConnection);
+            bool usingLegacyGlobalParameters = UsingLegacyGlobalParams(m_dbConnection);
 
             if (usingLegacyGlobalParameters)
             {
                 // Populate the global parameters object
-                var legacyGlobalParameters = GetGlobalParametersFromTable(m_uimfDatabaseConnection);
+                var legacyGlobalParameters = GetGlobalParametersFromTable(m_dbConnection);
 
                 var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
                 m_globalParameters = GlobalParamUtilities.ConvertStringParamsToGlobalParams(globalParamsByType);
@@ -4819,7 +4786,7 @@ namespace UIMFLibrary
 
             m_globalParameters = new GlobalParams();
 
-            using (var dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT ParamID, ParamValue FROM Global_Params";
 
@@ -4859,7 +4826,7 @@ namespace UIMFLibrary
                 // Initially assume that pressure are stored using Torr values
                 PressureIsMilliTorr = false;
 
-                var dbCommand = new SQLiteCommand(m_uimfDatabaseConnection);
+                var dbCommand = new SQLiteCommand(m_dbConnection);
 
                 if (m_UsingLegacyFrameParameters)
                 {
@@ -4923,7 +4890,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, "Frame_Parameters", "HighPressureFunnelPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "HighPressureFunnelPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4933,7 +4900,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("PressureBack"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, "Frame_Parameters", "PressureBack");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "PressureBack");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4944,7 +4911,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("IonFunnelTrapPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, "Frame_Parameters", "IonFunnelTrapPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "IonFunnelTrapPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4955,7 +4922,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("RearIonFunnelPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, "Frame_Parameters", "RearIonFunnelPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "RearIonFunnelPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -5258,7 +5225,7 @@ namespace UIMFLibrary
         {
             var sObjects = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 
-            var cmd = new SQLiteCommand(m_uimfDatabaseConnection)
+            var cmd = new SQLiteCommand(m_dbConnection)
                                     {
                                         CommandText =
                                             "SELECT name, sql FROM main.sqlite_master WHERE type='"
@@ -5308,7 +5275,7 @@ namespace UIMFLibrary
         {
             var frameTypeList = new List<int>();
 
-            using (SQLiteCommand dbCommand = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                 {
@@ -5692,7 +5659,7 @@ namespace UIMFLibrary
             // Finalize the Sql command
             sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
-            using (SQLiteCommand dbcmdUIMF = m_uimfDatabaseConnection.CreateCommand())
+            using (SQLiteCommand dbcmdUIMF = m_dbConnection.CreateCommand())
             {
                 dbcmdUIMF.CommandText = sql;
                 using (SQLiteDataReader reader = dbcmdUIMF.ExecuteReader())
@@ -5771,19 +5738,19 @@ namespace UIMFLibrary
         /// </summary>
         private void LoadPrepStmts()
         {
-            m_getFileBytesCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getFileBytesCommand = m_dbConnection.CreateCommand();
 
-            m_getFrameParametersCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getFrameParametersCommand = m_dbConnection.CreateCommand();
             m_getFrameParametersCommand.CommandText = "SELECT * FROM Frame_Parameters WHERE FrameNum = :FrameNum";
 
-            m_getFrameParamsCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getFrameParamsCommand = m_dbConnection.CreateCommand();
             m_getFrameParamsCommand.CommandText = "SELECT FrameNum, ParamID, ParamValue FROM Frame_Params WHERE FrameNum = :FrameNum";
 
-            m_getFramesAndScanByDescendingIntensityCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getFramesAndScanByDescendingIntensityCommand = m_dbConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand.CommandText =
                 "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
 
-            m_getSpectrumCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getSpectrumCommand = m_dbConnection.CreateCommand();
 
             if (m_UsingLegacyFrameParameters)
             {
@@ -5813,11 +5780,11 @@ namespace UIMFLibrary
                                                                 "AND FrameNum <= :FrameNum2)";
             }
 
-            m_getCountPerFrameCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getCountPerFrameCommand = m_dbConnection.CreateCommand();
             m_getCountPerFrameCommand.CommandText =
                 "SELECT sum(NonZeroCount) FROM Frame_Scans WHERE FrameNum = :FrameNum AND NOT NonZeroCount IS NULL";
 
-            m_getBinDataCommand = m_uimfDatabaseConnection.CreateCommand();
+            m_getBinDataCommand = m_dbConnection.CreateCommand();
             m_getBinDataCommand.CommandText =
                 "SELECT MZ_BIN, INTENSITIES FROM Bin_Intensities WHERE MZ_BIN >= :BinMin AND MZ_BIN <= :BinMax;";
         }
@@ -6080,9 +6047,9 @@ namespace UIMFLibrary
 
         private bool UsingLegacyFrameParams(SQLiteConnection sqLiteConnection, out bool hasLegacyFrameParameters)
         {
-            hasLegacyFrameParameters = TableExists(sqLiteConnection, "Frame_Parameters");
+            hasLegacyFrameParameters = TableExists(sqLiteConnection, DataWriter.FRAME_PARAMETERS_TABLE);
 
-            if (TableExists(sqLiteConnection, "Frame_Params"))
+            if (TableExists(sqLiteConnection, DataWriter.FRAME_PARAMS_TABLE))
                 return false;
 
             return true;
