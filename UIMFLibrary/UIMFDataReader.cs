@@ -73,8 +73,14 @@ namespace UIMFLibrary
         /// <summary>
         /// Frame parameters cache
         /// </summary>
-        /// <remarks>Key is frame number, value is a dictionary of the frame parameters</remarks>
+        /// <remarks>Key is frame number, value is the frame parameters</remarks>
         protected readonly Dictionary<int, FrameParams> m_CachedFrameParameters;
+        
+        /// <summary>
+        /// ScanInfo cache
+        /// </summary>
+        /// <remarks>Key is frame number, value is a List of ScanInfo objects</remarks>
+        protected readonly Dictionary<int, List<ScanInfo>> m_CachedScanInfo;
 
         /// <summary>
         /// Global parameters
@@ -154,6 +160,11 @@ namespace UIMFLibrary
         /// Sqlite command for getting the parameters from Frame_Params
         /// </summary>
         private SQLiteCommand m_getFrameParamsCommand;
+
+        /// <summary>
+        /// Sqlite command for getting a list of the scans for a given frame, along with the NonZeroCount, BPI, BPI_MZ, and TIC
+        /// </summary>
+        private SQLiteCommand m_getFrameScansCommand;
 
         /// <summary>
         /// Sqlite command for getting frames and scans by descending intensity
@@ -256,8 +267,10 @@ namespace UIMFLibrary
 
                 CacheGlobalParameters();
 
-                // Initialize the frame parameters cache
+                // Initialize the frame parameters and scan info caches
                 m_CachedFrameParameters = new Dictionary<int, FrameParams>();
+
+                m_CachedScanInfo = new Dictionary<int, List<ScanInfo>>();
 
                 // Initialize the variable used to track missing columns when reading legacy parameters
                 m_LegacyFrameParametersMissingColumns = new SortedSet<string>();
@@ -1308,19 +1321,22 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts BPI from startFrame to endFrame and startScan to endScan and returns an array
         /// </summary>
-        /// <param name="frameType">
+        /// <param name="frameType">Frame type
         /// </param>
-        /// <param name="startFrameNumber">
+        /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
         /// </param>
-        /// <param name="endFrameNumber">
+        /// <param name="endFrameNumber">End frame number
         /// </param>
-        /// <param name="startScan">
+        /// <param name="startScan">Start scan number (if StartScan and EndScan are zero, then sum across all scans)
         /// </param>
-        /// <param name="endScan">
+        /// <param name="endScan">End scan number
         /// </param>
         /// <returns>
-        /// BPI values array
+        /// Array of intensity values, one per frame
         /// </returns>
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         public double[] GetBPI(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
@@ -1344,8 +1360,12 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the BPI value
         /// </returns>
-        public Dictionary<int, double> GetBPIByFrame(int startFrameNumber, int endFrameNumber, int startScan,
-                                                     int endScan)
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
+        public Dictionary<int, double> GetBPIByFrame(
+            int startFrameNumber, int endFrameNumber, 
+            int startScan, int endScan)
         {
             return GetTicOrBpiByFrame(
                 startFrameNumber,
@@ -1378,6 +1398,9 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the BPI value
         /// </returns>
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         public Dictionary<int, double> GetBPIByFrame(
             int startFrameNumber,
             int endFrameNumber,
@@ -2169,6 +2192,62 @@ namespace UIMFLibrary
             }
 
             return pressure;
+        }
+
+        /// <summary>
+        /// Gets information on the scans associated with a given frame (BPI, BPI_MZ, TIC, NonZeroCount)
+        /// </summary>
+        /// <param name="frameNumber">Frame Number</param>
+        /// <returns>
+        /// List of ScanInfo objects
+        /// </returns>
+        public List<ScanInfo> GetFrameScans(int frameNumber)
+        {
+            if (frameNumber < 0)
+            {
+                throw new ArgumentOutOfRangeException("frameNumber",
+                                                      "FrameNumber should be greater than or equal to zero.");
+            }
+
+            // Check in cache first
+            List<ScanInfo> scansForFrame;
+
+            if (m_CachedScanInfo.TryGetValue(frameNumber, out scansForFrame))
+            {
+                return scansForFrame;
+            }
+
+            scansForFrame = new List<ScanInfo>();
+
+            m_getFrameScansCommand.Parameters.Clear();
+            m_getFrameScansCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
+
+            using (SQLiteDataReader reader = m_getFrameScansCommand.ExecuteReader())
+            {
+                while (reader.Read())
+                {                    
+
+                    int scanNumber = reader.GetInt32(0);        // ScanNum
+
+                    var scanInfo = new ScanInfo(frameNumber, scanNumber)
+                    {
+                        NonZeroCount = reader.GetInt32(1),      // NonZeroCount
+                        BPI = reader.GetDouble(2),              // BPI
+                        BPI_MZ = reader.GetDouble(3),           // BPI_MZ
+                        TIC = reader.GetDouble(4),               // TIC
+                        DriftTime = GetDriftTime(frameNumber, scanNumber, false),
+                        DriftTimeUnnormalized = GetDriftTime(frameNumber, scanNumber, true)
+                    };
+                    
+
+                    scansForFrame.Add(scanInfo);
+                }
+            }
+
+            // Add to the cached parameters
+            m_CachedScanInfo.Add(frameNumber, scansForFrame);
+
+            return scansForFrame;
         }
 
         /// <summary>
@@ -3535,6 +3614,9 @@ namespace UIMFLibrary
         /// <returns>
         /// The number of non-zero m/z values found in the resulting spectrum.
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public int GetSpectrumBinCentric(
             int startFrameNumber,
             int endFrameNumber,
@@ -3639,19 +3721,22 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns an array
         /// </summary>
-        /// <param name="frameType">
+        /// <param name="frameType">Frame type
         /// </param>
-        /// <param name="startFrameNumber">
+        /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
         /// </param>
-        /// <param name="endFrameNumber">
+        /// <param name="endFrameNumber">End frame number
         /// </param>
-        /// <param name="startScan">
+        /// <param name="startScan">Start scan (if StartScan and EndScan are zero, then sum across all scans)
         /// </param>
-        /// <param name="endScan">
+        /// <param name="endScan">End scan
         /// </param>
         /// <returns>
-        /// TIC array
+        /// Array of intensity values, one per frame
         /// </returns>
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         public double[] GetTIC(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, TIC);
@@ -3665,15 +3750,17 @@ namespace UIMFLibrary
         /// <param name="scanNum">
         /// </param>
         /// <returns>
-        /// TIC value<see cref="double"/>.
+        /// TIC value for a single scan in a single frame.
         /// </returns>
+        [Obsolete("This is an inefficient function and should not be used; instead use GetFrameScans")]
         public double GetTIC(int frameNumber, int scanNum)
         {
             double tic = 0;
 
             using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
             {
-                dbCommand.CommandText = "SELECT TIC FROM Frame_Scans WHERE FrameNum = " + frameNumber +
+                dbCommand.CommandText = " SELECT TIC FROM Frame_Scans " +
+                                        " WHERE FrameNum = " + frameNumber +
                                         " AND ScanNum = " + scanNum;
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
@@ -3705,8 +3792,12 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the TIC value
         /// </returns>
-        public Dictionary<int, double> GetTICByFrame(int startFrameNumber, int endFrameNumber, int startScan,
-                                                     int endScan)
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
+        public Dictionary<int, double> GetTICByFrame(
+            int startFrameNumber, int endFrameNumber, 
+            int startScan, int endScan)
         {
             return GetTicOrBpiByFrame(
                 startFrameNumber,
@@ -3739,6 +3830,9 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the TIC value
         /// </returns>
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         public Dictionary<int, double> GetTICByFrame(
             int startFrameNumber,
             int endFrameNumber,
@@ -3768,6 +3862,9 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
         {
             if (!m_doesContainBinCentricData)
@@ -3848,6 +3945,9 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public List<IntensityPoint> GetXic(
             double targetMz,
             double tolerance,
@@ -3965,6 +4065,9 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public List<IntensityPoint> GetXic(
             double targetMz,
             double tolerance,
@@ -4087,6 +4190,9 @@ namespace UIMFLibrary
         /// <returns>
         /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType,
                                        ToleranceType toleranceType)
         {
@@ -4192,6 +4298,9 @@ namespace UIMFLibrary
         /// <returns>
         /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         public double[,] GetXicAsArray(
             double targetMz,
             double tolerance,
@@ -5510,20 +5619,20 @@ namespace UIMFLibrary
         /// Get TIC or BPI for scans of given frame type in given frame range
         /// Optionally filter on scan range
         /// </summary>
-        /// <param name="frameType">
+        /// <param name="frameType">Frame type
         /// </param>
-        /// <param name="startFrameNumber">
+        /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
         /// </param>
-        /// <param name="endFrameNumber">
+        /// <param name="endFrameNumber">End frame number
         /// </param>
-        /// <param name="startScan">
+        /// <param name="startScan">Start scan (if StartScan and EndScan are zero, then sum across all scans)
         /// </param>
-        /// <param name="endScan">
+        /// <param name="endScan">End scan
         /// </param>
-        /// <param name="fieldName">
+        /// <param name="fieldName">Field name to retrieve (BPI or TIC)
         /// </param>
         /// <returns>
-        /// Array of intensity values
+        /// Array of intensity values, one per frame
         /// </returns>
         private double[] GetTicOrBpi(
             FrameType frameType,
@@ -5558,20 +5667,19 @@ namespace UIMFLibrary
         /// Get TIC or BPI for scans of given frame type in given frame range
         /// Optionally filter on scan range
         /// </summary>
-        /// <param name="startFrameNumber">
+        /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
         /// </param>
-        /// <param name="endFrameNumber">
+        /// <param name="endFrameNumber">End frame number
         /// </param>
-        /// <param name="startScan">
+        /// <param name="startScan">Start scan (if StartScan and EndScan are zero, then sum across all scans)
         /// </param>
-        /// <param name="endScan">
+        /// <param name="endScan">End scan
         /// </param>
-        /// <param name="fieldName">
+        /// <param name="fieldName">Field name to retrieve (BPI or TIC)
         /// </param>
-        /// <param name="filterByFrameType">
-        /// The filter By Frame Type.
+        /// <param name="filterByFrameType">Whether or not to filter by Frame Type
         /// </param>
-        /// <param name="frameType">
+        /// <param name="frameType">Frame type to filter on
         /// </param>
         /// <returns>
         /// Dictionary where keys are frame number and values are the TIC or BPI value
@@ -5749,6 +5857,10 @@ namespace UIMFLibrary
             m_getFramesAndScanByDescendingIntensityCommand = m_dbConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand.CommandText =
                 "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
+
+            m_getFrameScansCommand = m_dbConnection.CreateCommand();
+            m_getFrameScansCommand.CommandText =
+                "SELECT ScanNum, NonZeroCount, BPI, BPI_MZ, TIC FROM Frame_Scans where FrameNum = :FrameNum";
 
             m_getSpectrumCommand = m_dbConnection.CreateCommand();
 
@@ -6033,6 +6145,9 @@ namespace UIMFLibrary
 
             if (m_getFramesAndScanByDescendingIntensityCommand != null)
                 m_getFramesAndScanByDescendingIntensityCommand.Dispose();
+
+            if (m_getFrameScansCommand != null)
+                m_getFrameScansCommand.Dispose();
 
             if (m_getSpectrumCommand != null)
                 m_getSpectrumCommand.Dispose();

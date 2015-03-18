@@ -56,16 +56,18 @@ namespace UIMFLibrary_Demo
             reportProgress("Displaying frame parameters for frame " + testFrame);
             reportProgress(TestUtilities.FrameParametersToString(frameParams));
 
-            var frameType = DataReader.FrameType.MS1;
+            const DataReader.FrameType frameType = DataReader.FrameType.MS1;
             double[] xvals;
             int[] yvals;
 
             // Step through 50 frames
             for (var currentFrame = testFrame / 2; currentFrame < testFrame + 50; currentFrame++)
             {
+                
                 // Get a series of mass spectra (all from the same frame, summing 3 scans)
                 for (var imsScan = 125; imsScan < 135; imsScan += 1)
                 {
+                    
                     var imsScanEnd = imsScan + 3;
                     
                     datareader.GetSpectrum(currentFrame, currentFrame, frameType, imsScan, imsScanEnd, out xvals, out yvals);
@@ -226,6 +228,22 @@ namespace UIMFLibrary_Demo
                 {
                     Console.WriteLine("  - Error, all points have an intensity of zero; this should not happen");
                     frameCountWithError++;
+                }
+
+                var frameScanInfo = datareader.GetFrameScans(frameNum);
+
+                if (frameNum % 25 == 0)
+                {
+                    foreach (var scanInfo in frameScanInfo)
+                    {
+                        if (scanInfo.Scan % 100 == 0)
+                        {
+                            Console.WriteLine("  Scan " + scanInfo.Scan.ToString().PadLeft(3) + " has BPI = " +
+                                              scanInfo.BPI + " at " +
+                                              scanInfo.BPI_MZ.ToString("0.0") + " m/z, TIC = " + scanInfo.TIC +
+                                              " and drift time " + scanInfo.DriftTime.ToString("0.0") + " msec");
+                        }
+                    }
                 }
             }
 

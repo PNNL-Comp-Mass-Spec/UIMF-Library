@@ -87,6 +87,7 @@
     <Compile Include="LZFCompressionUtil.cs" />
     <Compile Include="MzCalibrator.cs" />
     <Compile Include="ReaderWriterExtensions.cs" />
+    <Compile Include="ScanInfo.cs" />
     <Compile Include="SpectrumCache.cs" />
     <Compile Include="UIMFDataReader.cs" />
     <Compile Include="UIMFDataUtilities.cs" />
