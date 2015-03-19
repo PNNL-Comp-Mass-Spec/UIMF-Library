@@ -2195,11 +2195,11 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets information on the scans associated with a given frame (BPI, BPI_MZ, TIC, NonZeroCount)
+        /// Gets information on the scans associated with a given frame
         /// </summary>
         /// <param name="frameNumber">Frame Number</param>
         /// <returns>
-        /// List of ScanInfo objects
+        /// List of ScanInfo objects, listing BPI, BPI_MZ, TIC, DriftTime, and NonZeroCount
         /// </returns>
         public List<ScanInfo> GetFrameScans(int frameNumber)
         {
@@ -2234,12 +2234,11 @@ namespace UIMFLibrary
                         NonZeroCount = reader.GetInt32(1),      // NonZeroCount
                         BPI = reader.GetDouble(2),              // BPI
                         BPI_MZ = reader.GetDouble(3),           // BPI_MZ
-                        TIC = reader.GetDouble(4),               // TIC
-                        DriftTime = GetDriftTime(frameNumber, scanNumber, false),
-                        DriftTimeUnnormalized = GetDriftTime(frameNumber, scanNumber, true)
+                        TIC = reader.GetDouble(4),              // TIC
+                        DriftTime = GetDriftTime(frameNumber, scanNumber, true),
+                        DriftTimeUnnormalized = GetDriftTime(frameNumber, scanNumber, false)
                     };
                     
-
                     scansForFrame.Add(scanInfo);
                 }
             }
