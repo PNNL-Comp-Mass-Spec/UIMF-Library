@@ -167,6 +167,14 @@ namespace UIMFLibrary_Demo
             reportProgress();
             reportProgress();
             reportProgress("Displaying some global parameters...");
+
+            var legacyGlobalParams = datareader.GetGlobalParameters();
+
+            reportProgress("DateStarted= " + legacyGlobalParams.DateStarted);
+
+
+            reportProgress("DateStarted= " + gp.GetValue(GlobalParamKeyType.DateStarted));
+
             reportProgress("NumBins= " + gp.Bins);
             reportProgress("NumFrames= " + gp.NumFrames);
 

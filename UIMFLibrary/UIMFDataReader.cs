@@ -5812,9 +5812,13 @@ namespace UIMFLibrary
             var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2);
             var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2);
 
-            bool polynomialCalibrantsAreUsed = Math.Abs(a2) > float.Epsilon || Math.Abs(b2) > float.Epsilon
-                                                || Math.Abs(c2) > float.Epsilon || Math.Abs(d2) > float.Epsilon
-                                                || Math.Abs(e2) > float.Epsilon || Math.Abs(f2) > float.Epsilon;
+            bool polynomialCalibrantsAreUsed = Math.Abs(a2) > float.Epsilon || 
+                                               Math.Abs(b2) > float.Epsilon || 
+                                               Math.Abs(c2) > float.Epsilon || 
+                                               Math.Abs(d2) > float.Epsilon || 
+                                               Math.Abs(e2) > float.Epsilon || 
+                                               Math.Abs(f2) > float.Epsilon;
+
             if (polynomialCalibrantsAreUsed)
             {
                 // note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
