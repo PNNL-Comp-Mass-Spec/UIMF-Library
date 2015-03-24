@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("PNNL")]
 [assembly: AssemblyProduct("UIMFLibrary")]
-[assembly: AssemblyCopyright("Copyright © PNNL 2014")]
+[assembly: AssemblyCopyright("Copyright © PNNL 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
