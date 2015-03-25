@@ -130,16 +130,13 @@ namespace UIMFLibrary
         {
             if (paramType == GlobalParamKeyType.DateStarted && ! string.IsNullOrWhiteSpace(value))
             {
-                // Make sure the date is in the standard format
+                // Make sure the date is in the standard format expected by Proteowizard
                 // Proteowizard requires that it have AM/PM at the end
 
-                if (!value.TrimEnd().EndsWith("AM") && !value.TrimEnd().EndsWith("PM"))
+                DateTime dtDateStarted;
+                if (DateTime.TryParse(value, out dtDateStarted))
                 {
-                    DateTime dtDateStarted;
-                    if (DateTime.TryParse(value, out dtDateStarted))
-                    {
-                        value = dtDateStarted.ToString("M/d/yyyy h:mm:ss tt");
-                    }
+                    value = dtDateStarted.ToString("M/d/yyyy h:mm:ss tt");
                 }
                
             }
