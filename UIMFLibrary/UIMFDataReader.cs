@@ -821,7 +821,12 @@ namespace UIMFLibrary
             }
 
             int width = endScan - startScan + 1;
-            var height = (int)Math.Round((endBin - startBin + 1) / yCompression);
+            var height = endBin - startBin + 1;
+            if (yCompression > 1)
+            {
+                height = (int)Math.Round(height / yCompression);
+            }
+
             var frameData = new double[width, height];
 
             for (int currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
@@ -873,7 +878,7 @@ namespace UIMFLibrary
                     {
 
                         // accumulate the data into the plot_data
-                        if (yCompression < 0)
+                        if (yCompression <= 1)
                         {
                             AccumulateFrameDataNoCompression(reader, width, startScan, startBin, endBin, ref frameData,
                                                              ref streamBinIntensity);
