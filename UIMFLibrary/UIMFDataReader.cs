@@ -75,7 +75,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>Key is frame number, value is the frame parameters</remarks>
         protected readonly Dictionary<int, FrameParams> m_CachedFrameParameters;
-        
+
         /// <summary>
         /// ScanInfo cache
         /// </summary>
@@ -374,7 +374,8 @@ namespace UIMFLibrary
             get { return !m_UsingLegacyFrameParameters; }
         }
 
-        public bool HasLegacyFrameParameters {
+        public bool HasLegacyFrameParameters
+        {
             get { return m_HasLegacyFrameParameters; }
         }
 
@@ -821,8 +822,12 @@ namespace UIMFLibrary
             }
 
             int width = endScan - startScan + 1;
-            int height = endBin - startBin + 1;
-            height = (yCompression > 1) ? (int)Math.Round(height / yCompression) : height;
+            var height = endBin - startBin + 1;
+            if (yCompression > 1)
+            {
+                height = (int)Math.Round(height / yCompression);
+            }
+
             var frameData = new double[width, height];
 
             for (int currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
@@ -874,7 +879,7 @@ namespace UIMFLibrary
                     {
 
                         // accumulate the data into the plot_data
-                        if (yCompression < 0)
+                        if (yCompression <= 1)
                         {
                             AccumulateFrameDataNoCompression(reader, width, startScan, startBin, endBin, ref frameData,
                                                              ref streamBinIntensity);
@@ -1365,7 +1370,7 @@ namespace UIMFLibrary
         /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
         public Dictionary<int, double> GetBPIByFrame(
-            int startFrameNumber, int endFrameNumber, 
+            int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
         {
             return GetTicOrBpiByFrame(
@@ -2226,7 +2231,7 @@ namespace UIMFLibrary
             using (SQLiteDataReader reader = m_getFrameScansCommand.ExecuteReader())
             {
                 while (reader.Read())
-                {                    
+                {
 
                     int scanNumber = reader.GetInt32(0);        // ScanNum
 
@@ -2239,7 +2244,7 @@ namespace UIMFLibrary
                         DriftTime = GetDriftTime(frameNumber, scanNumber, true),
                         DriftTimeUnnormalized = GetDriftTime(frameNumber, scanNumber, false)
                     };
-                    
+
                     scansForFrame.Add(scanInfo);
                 }
             }
@@ -3665,7 +3670,6 @@ namespace UIMFLibrary
                     // }
                     for (int i = 0; i * DATASIZE < decompSpectraRecord.Length; i++)
                     {
-                        
                         int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
                         if (decodedSpectraRecord < 0)
                         {
@@ -3797,7 +3801,7 @@ namespace UIMFLibrary
         /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
         public Dictionary<int, double> GetTICByFrame(
-            int startFrameNumber, int endFrameNumber, 
+            int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
         {
             return GetTicOrBpiByFrame(
@@ -4727,7 +4731,7 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
-        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class")] 
+        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class")]
         public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool isAutoCalibrating = false)
         {
             using (var dbCommand = m_dbConnection.CreateCommand())
@@ -4737,7 +4741,7 @@ namespace UIMFLibrary
                     dbCommand.CommandText = "UPDATE Frame_Parameters " +
                                             "SET CalibrationSlope = " + slope + ", " +
                                                 "CalibrationIntercept = " + intercept;
-                    
+
                     if (isAutoCalibrating)
                     {
                         dbCommand.CommandText += ", CalibrationDone = 1";
@@ -4745,7 +4749,7 @@ namespace UIMFLibrary
 
                     dbCommand.ExecuteNonQuery();
                 }
-                
+
                 if (!m_UsingLegacyFrameParameters)
                 {
                     // Update existing values
@@ -5336,11 +5340,11 @@ namespace UIMFLibrary
             var sObjects = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 
             var cmd = new SQLiteCommand(m_dbConnection)
-                                    {
-                                        CommandText =
-                                            "SELECT name, sql FROM main.sqlite_master WHERE type='"
-                                            + sObjectType + "' ORDER BY NAME"
-                                    };
+            {
+                CommandText =
+                    "SELECT name, sql FROM main.sqlite_master WHERE type='"
+                    + sObjectType + "' ORDER BY NAME"
+            };
 
             using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
@@ -5814,11 +5818,11 @@ namespace UIMFLibrary
             var e2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficiente2);
             var f2 = frameParams.GetValueDouble(FrameParamKeyType.MassCalibrationCoefficientf2);
 
-            bool polynomialCalibrantsAreUsed = Math.Abs(a2) > float.Epsilon || 
-                                               Math.Abs(b2) > float.Epsilon || 
-                                               Math.Abs(c2) > float.Epsilon || 
-                                               Math.Abs(d2) > float.Epsilon || 
-                                               Math.Abs(e2) > float.Epsilon || 
+            bool polynomialCalibrantsAreUsed = Math.Abs(a2) > float.Epsilon ||
+                                               Math.Abs(b2) > float.Epsilon ||
+                                               Math.Abs(c2) > float.Epsilon ||
+                                               Math.Abs(d2) > float.Epsilon ||
+                                               Math.Abs(e2) > float.Epsilon ||
                                                Math.Abs(f2) > float.Epsilon;
 
             if (polynomialCalibrantsAreUsed)
