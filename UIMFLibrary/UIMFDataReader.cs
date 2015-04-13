@@ -821,7 +821,8 @@ namespace UIMFLibrary
             }
 
             int width = endScan - startScan + 1;
-            var height = (int)Math.Round((endBin - startBin + 1) / yCompression);
+            int height = endBin - startBin + 1;
+            height = (yCompression > 1) ? (int)Math.Round(height / yCompression) : height;
             var frameData = new double[width, height];
 
             for (int currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
@@ -3662,8 +3663,9 @@ namespace UIMFLibrary
                     // int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
                     // numEntries = outputLength / DATASIZE;
                     // }
-                    for (int i = 0; i < decompSpectraRecord.Length; i++)
+                    for (int i = 0; i * DATASIZE < decompSpectraRecord.Length; i++)
                     {
+                        
                         int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
                         if (decodedSpectraRecord < 0)
                         {
