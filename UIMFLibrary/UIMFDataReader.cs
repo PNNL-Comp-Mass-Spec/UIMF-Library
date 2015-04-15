@@ -2463,9 +2463,8 @@ namespace UIMFLibrary
                     int binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    int scanNum = Convert.ToInt32(reader["ScanNum"]);
+                    int scanNumber = Convert.ToInt32(reader["ScanNum"]);
 
-                    // get frame number so that we can get the frame calibration parameters
                     if (spectra.Length <= 0)
                     {
                         continue;
@@ -2489,7 +2488,7 @@ namespace UIMFLibrary
                         {
                             if (startBin <= binIndex && binIndex <= endBin)
                             {
-                                intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] =
+                                intensities[frameNum - startFrameNumber][scanNumber - startScan][binIndex - startBin] =
                                     decodedIntensityValue;
                             }
 
@@ -2619,10 +2618,10 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
-            var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
             using (SQLiteDataReader reader = m_getSpectrumCommand.ExecuteReader())
             {
+                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+
                 while (reader.Read())
                 {
                     int binIndex = 0;
@@ -2630,36 +2629,38 @@ namespace UIMFLibrary
                     var spectra = (byte[])reader["Intensities"];
                     int scanNumber = Convert.ToInt32(reader["ScanNum"]);
 
-                    if (spectra.Length > 0)
+                    if (spectra.Length <= 0)
                     {
-                        int outputLength = LZFCompressionUtil.Decompress(
-                            ref spectra,
-                            spectra.Length,
-                            ref decompSpectraRecord,
-                            m_globalParameters.Bins * DATASIZE);
+                        continue;
+                    }
 
-                        int numReturnedBins = outputLength / DATASIZE;
-                        for (int i = 0; i < numReturnedBins; i++)
+                    int outputLength = LZFCompressionUtil.Decompress(
+                        ref spectra,
+                        spectra.Length,
+                        ref decompSpectraRecord,
+                        m_globalParameters.Bins * DATASIZE);
+
+                    int numReturnedBins = outputLength / DATASIZE;
+                    for (int i = 0; i < numReturnedBins; i++)
+                    {
+                        int decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+
+                        if (decodedIntensityValue < 0)
                         {
-                            int decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-
-                            if (decodedIntensityValue < 0)
+                            binIndex += -decodedIntensityValue;
+                        }
+                        else
+                        {
+                            if (doReorder)
                             {
-                                binIndex += -decodedIntensityValue;
+                                intensities[binIndex][scanToIndexMap[scanNumber]] += decodedIntensityValue * divisionFactor;
                             }
                             else
                             {
-                                if (doReorder)
-                                {
-                                    intensities[binIndex][scanToIndexMap[scanNumber]] += decodedIntensityValue * divisionFactor;
-                                }
-                                else
-                                {
-                                    intensities[binIndex][scanNumber] += decodedIntensityValue * divisionFactor;
-                                }
-
-                                binIndex++;
+                                intensities[binIndex][scanNumber] += decodedIntensityValue * divisionFactor;
                             }
+
+                            binIndex++;
                         }
                     }
                 }
@@ -3651,24 +3652,16 @@ namespace UIMFLibrary
 
             using (SQLiteDataReader reader = m_getBinDataCommand.ExecuteReader())
             {
-                // int maxDecompressedSPectraSize = m_globalParameters.NumFrames * frameParams.Scans * DATASIZE;
-                // byte[] decompSpectraRecord = new byte[maxDecompressedSPectraSize];
                 while (reader.Read())
                 {
                     int binNumber = Convert.ToInt32(reader["MZ_BIN"]);
                     int intensity = 0;
                     int entryIndex = 0;
 
-                    // int numEntries = 0;
-
                     var decompSpectraRecord = (byte[])reader["INTENSITIES"];
+                    int numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
 
-                    // if (spectraRecord.Length > 0)
-                    // {
-                    // int outputLength = LZFCompressionUtil.Decompress(ref spectraRecord, spectraRecord.Length, ref decompSpectraRecord, maxDecompressedSPectraSize);
-                    // numEntries = outputLength / DATASIZE;
-                    // }
-                    for (int i = 0; i * DATASIZE < decompSpectraRecord.Length; i++)
+                    for (int i = 0; i < numPossibleRecords; i++)
                     {
                         int decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
                         if (decodedSpectraRecord < 0)
@@ -3878,7 +3871,7 @@ namespace UIMFLibrary
             }
 
             var frameParams = GetFrameParams(1);
-            int numScans = frameParams.Scans;
+            int numImsScans = frameParams.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
@@ -3913,7 +3906,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -3969,7 +3962,7 @@ namespace UIMFLibrary
             double intercept = frameParams.CalibrationIntercept;
             double binWidth = m_globalParameters.BinWidth;
             float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
-            int numScans = frameParams.Scans;
+            int numImsScans = frameParams.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
@@ -4011,7 +4004,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4093,7 +4086,7 @@ namespace UIMFLibrary
             double intercept = frameParams.CalibrationIntercept;
             double binWidth = m_globalParameters.BinWidth;
             float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
-            int numScans = frameParams.Scans;
+            int numImsScans = frameParams.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
@@ -4135,7 +4128,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4211,13 +4204,13 @@ namespace UIMFLibrary
             double intercept = frameParams.CalibrationIntercept;
             double binWidth = m_globalParameters.BinWidth;
             float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
-            int numScans = frameParams.Scans;
+            int numImsScans = frameParams.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             int numFrames = frameSet.NumFrames;
             var frameIndexes = frameSet.FrameIndexes;
 
-            var result = new double[numFrames, numScans];
+            var result = new double[numFrames, numImsScans];
 
             double mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
             double lowMz = targetMz - mzTolerance;
@@ -4254,7 +4247,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4326,7 +4319,7 @@ namespace UIMFLibrary
             double intercept = frameParams.CalibrationIntercept;
             double binWidth = m_globalParameters.BinWidth;
             float tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
-            int numScansInFrame = frameParams.Scans;
+            int numImsScans = frameParams.Scans;
             int numScans = scanMax - scanMin + 1;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
@@ -4370,7 +4363,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScansInFrame, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4423,13 +4416,13 @@ namespace UIMFLibrary
             }
 
             FrameParams frameParameters = GetFrameParams(1);
-            int numScans = frameParameters.Scans;
+            int numImsScans = frameParameters.Scans;
 
             FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             int numFrames = frameSet.NumFrames;
             var frameIndexes = frameSet.FrameIndexes;
 
-            var result = new double[numFrames, numScans];
+            var result = new double[numFrames, numImsScans];
 
             m_getBinDataCommand.Parameters.Clear();
             m_getBinDataCommand.Parameters.Add(new SQLiteParameter("BinMin", targetBin));
@@ -4459,7 +4452,7 @@ namespace UIMFLibrary
                             // Calculate LC Scan and IMS Scan of this entry
                             int scanLc;
                             int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
