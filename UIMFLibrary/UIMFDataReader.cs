@@ -3323,11 +3323,7 @@ namespace UIMFLibrary
                     out intensityArray);
             }
 
-            int numFrames = endFrameNumber - startFrameNumber + 1;
-            int numScans = endScanNumber - startScanNumber + 1;
-            int numBins = endBin - startBin + 1;
-
-            if ((numFrames * numScans) < numBins || !m_doesContainBinCentricData)
+            if (!m_doesContainBinCentricData)
             {
                 return GetSpectrum(
                     startFrameNumber,
