@@ -3201,8 +3201,13 @@ namespace UIMFLibrary
                     int binIndex = kvp.Key;
                     int intensity = kvp.Value;
 
+                    if (intensity <= 0)
+                        continue;
+
                     if (intensityArray[binIndex] == 0)
                     {
+                        // This is the first time we've encountered this bin
+                        // Compute and store m/z
                         mzArray[binIndex] = ConvertBinToMZ(
                             calibrationSlope,
                             calibrationIntercept,
@@ -3230,8 +3235,13 @@ namespace UIMFLibrary
                         int binIndex = kvp.Key;
                         int intensity = kvp.Value;
 
+                        if (intensity <= 0)
+                            continue;
+
                         if (intensityArray[binIndex] == 0)
                         {
+                            // This is the first time we've encountered this bin
+                            // Compute and store m/z
                             mzArray[binIndex] = ConvertBinToMZ(
                                 calibrationSlope,
                                 calibrationIntercept,

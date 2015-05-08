@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using UIMFLibrary;
 
 namespace UIMFLibrary_Demo
@@ -17,20 +18,20 @@ namespace UIMFLibrary_Demo
 
         #endregion
 
-  
+
         #region Public Methods
 
         public void Execute()
         {
             //open and close UIMF file
-            
+
             if (!File.Exists(mTestUIMFFilePath))
             {
-                reportProgress("UIMFFile not found. Input file path was: "+mTestUIMFFilePath);
+                reportProgress("UIMFFile not found. Input file path was: " + mTestUIMFFilePath);
                 return;
             }
 
-			var datareader = new DataReader(mTestUIMFFilePath);
+            var datareader = new DataReader(mTestUIMFFilePath);
 
 
             //--------------------------------------------------------------------------Get Global parameters
@@ -49,10 +50,21 @@ namespace UIMFLibrary_Demo
             if (testFrame > gp.NumFrames)
                 testFrame = gp.NumFrames / 2;
 
-            FrameParams frameParams = datareader.GetFrameParams(testFrame);
+            var frameList = datareader.GetMasterFrameList();
+            if (!frameList.ContainsKey(testFrame))
+            {
+                testFrame = frameList.Keys.First();
+            }
+            var frameParams = datareader.GetFrameParams(testFrame);
 
             reportProgress();
             reportProgress();
+
+            if (frameParams == null)
+            {
+                reportProgress("Error: cannot continue the test since could not retrieve frame " + testFrame + " or " + (testFrame - 1));
+            }
+
             reportProgress("Displaying frame parameters for frame " + testFrame);
             reportProgress(TestUtilities.FrameParametersToString(frameParams));
 
@@ -63,13 +75,15 @@ namespace UIMFLibrary_Demo
             // Step through 50 frames
             for (var currentFrame = testFrame / 2; currentFrame < testFrame + 50; currentFrame++)
             {
-                
+                if (!frameList.ContainsKey(currentFrame))
+                    continue;
+
                 // Get a series of mass spectra (all from the same frame, summing 3 scans)
                 for (var imsScan = 125; imsScan < 135; imsScan += 1)
                 {
-                    
+
                     var imsScanEnd = imsScan + 3;
-                    
+
                     datareader.GetSpectrum(currentFrame, currentFrame, frameType, imsScan, imsScanEnd, out xvals, out yvals);
 
                     UIMFDataUtilities.ParseOutZeroValues(ref xvals, ref yvals, 639, 640);    //note - this utility is for parsing out the zeros or filtering on m/z
@@ -100,7 +114,15 @@ namespace UIMFLibrary_Demo
             reportProgress();
             reportProgress("The following are a few m/z and intensities for the summed mass spectrum from frames: " + frameLower + "-" + frameUpper + "; Scans: " + imsScanLower + "-" + imsScanUpper);
 
-            UIMFDataUtilities.ParseOutZeroValues(ref xvals, ref yvals, 639, 640);    //note - this utility is for parsing out the zeros or filtering on m/z
+            double startMz = 639;
+            bool matchFound = xvals.Any(mzValue => startMz <= mzValue && (startMz + 1) >= mzValue);
+
+            if (!matchFound && xvals.Length / 2 > 0)
+            {
+                startMz = Math.Floor(xvals[xvals.Length / 2]);
+            }
+
+            UIMFDataUtilities.ParseOutZeroValues(ref xvals, ref yvals, startMz, startMz + 1);    //note - this utility is for parsing out the zeros or filtering on m/z
 
             reportProgress(TestUtilities.displayRawMassSpectrum(xvals, yvals));
 
@@ -115,37 +137,47 @@ namespace UIMFLibrary_Demo
             int[] frameVals = null;
             int[] intensityVals = null;
 
-			datareader.GetLCProfile(frameTarget - 25, frameTarget + 25, frameType, imsScanTarget - 2, imsScanTarget + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
-            reportProgress();
-            reportProgress();
+            if (frameList.ContainsKey(frameTarget - 25) && frameList.ContainsKey(frameTarget + 25))
+            {
+                datareader.GetLCProfile(frameTarget - 25, frameTarget + 25, frameType, imsScanTarget - 2, imsScanTarget + 2, targetMZ, toleranceInMZ, out frameVals, out intensityVals);
+                reportProgress();
+                reportProgress();
 
-            reportProgress("2D Extracted ion chromatogram in the LC dimension. Target m/z= " + targetMZ);
-            reportProgress(TestUtilities.display2DChromatogram(frameVals,intensityVals));
+                reportProgress("2D Extracted ion chromatogram in the LC dimension. Target m/z= " + targetMZ);
+                reportProgress(TestUtilities.display2DChromatogram(frameVals, intensityVals));
+            }
 
 
             // Get Drift time profile
             frameTarget = testFrame;
             imsScanTarget = 126;
             targetMZ = 639.32;
-            toleranceInPPM = 25;
-
             int[] scanVals = null;
-            datareader.GetDriftTimeProfile(frameTarget - 1, frameTarget + 1, frameType, imsScanTarget - 25, imsScanTarget + 25, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
-            
-            reportProgress();
-            reportProgress();
 
-            reportProgress("2D Extracted ion chromatogram in the drift time dimension. Target m/z= " + targetMZ);
-            reportProgress(TestUtilities.display2DChromatogram(scanVals, intensityVals));
+            if (frameList.ContainsKey(frameTarget - 1) && frameList.ContainsKey(frameTarget + 1))
+            {
+                
+                datareader.GetDriftTimeProfile(frameTarget - 1, frameTarget + 1, frameType, imsScanTarget - 25,
+                                               imsScanTarget + 25, targetMZ, toleranceInMZ, ref scanVals,
+                                               ref intensityVals);
 
+                reportProgress();
+                reportProgress();
 
-            // Get 3D elution profile
-            datareader.Get3DElutionProfile(frameTarget - 5, frameTarget + 5, 0, imsScanTarget - 5, imsScanTarget + 5, targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
-            reportProgress();
+                reportProgress("2D Extracted ion chromatogram in the drift time dimension. Target m/z= " + targetMZ);
+                reportProgress(TestUtilities.display2DChromatogram(scanVals, intensityVals));
+            }
 
-            reportProgress("3D Extracted ion chromatogram. Target m/z= " + targetMZ);
-            reportProgress(TestUtilities.Display3DChromatogram(frameVals, scanVals, intensityVals));
-         
+            if (frameList.ContainsKey(frameTarget - 5) && frameList.ContainsKey(frameTarget + 5))
+            {
+                // Get 3D elution profile
+                datareader.Get3DElutionProfile(frameTarget - 5, frameTarget + 5, 0, imsScanTarget - 5, imsScanTarget + 5,
+                                               targetMZ, toleranceInMZ, out frameVals, out scanVals, out intensityVals);
+                reportProgress();
+
+                reportProgress("3D Extracted ion chromatogram. Target m/z= " + targetMZ);
+                reportProgress(TestUtilities.Display3DChromatogram(frameVals, scanVals, intensityVals));
+            }
 
         }
 
