@@ -1,2 +1,0 @@
-System.Data.SQLite v1.0.90 is used by Skyline/Topograph 
-and by Matt Chambers' downstream app IDPicker 
