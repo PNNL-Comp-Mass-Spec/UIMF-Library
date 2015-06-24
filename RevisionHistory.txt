@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 3.0.5653; June 24, 2015
+	- Update several AddUpdate functions to return the instance of the class, thus allowing chaining function calls (i.e. the Fluent way)
+
 Version 3.0.5652; June 23, 2015
 	- The reader now explicitly uses the "en-US" CultureInfo for string to number conversions
 	- MSConvert-specific version now uses SQLite v1.0.97 (previously used 1.0.90)

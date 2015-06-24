@@ -199,47 +199,47 @@ namespace UIMFLibrary_Demo
                     writer.CreateTables();
 
                     var globalParameters = new GlobalParams();
-                    globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, 1);
-                    globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "int");
-                    globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now);
-                    globalParameters.AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, 1)
+                                    .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "int")
+                                    .AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now)
+                                    .AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
 
                     writer.InsertGlobal(globalParameters);
 
                     globalParameters = writer.GetGlobalParams();
-                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1);
-                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
-                    writer.FlushUimf();
+
+                    writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1)
+                          .AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test")
+                          .FlushUimf();
 
                     const float SECONDS_PER_FRAME = 1.25f;
 
                     var randGenerator = new Random();
 
-                    for (int frameNum = 1; frameNum <= 5; frameNum++)
+                    for (var frameNum = 1; frameNum <= 5; frameNum++)
                     {
                         var fp = new FrameParams();
 
-                        fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFLibrary.DataReader.FrameType.MS1);
-                        fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481);
-                        fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093);
-                        fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667);
-                        fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME);
+                        fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFLibrary.DataReader.FrameType.MS1)
+                          .AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481)
+                          .AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093)
+                          .AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667)
+                          .AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME);
 
-                        writer.InsertFrame(frameNum, fp);
+                        writer.InsertFrame(frameNum, fp)
+                              .AddUpdateFrameParameter(frameNum, FrameParamKeyType.Accumulations, "18")
+                              .AddUpdateFrameParameter(frameNum, FrameParamKeyType.TOFLosses, randGenerator.Next(0, 150).ToString());
 
-                        writer.AddUpdateFrameParameter(frameNum, FrameParamKeyType.Accumulations, "18");
-                        writer.AddUpdateFrameParameter(frameNum, FrameParamKeyType.TOFLosses, randGenerator.Next(0, 150).ToString());
-
-                        for (int scanNumber = 1; scanNumber < 600; scanNumber++)
+                        for (var scanNumber = 1; scanNumber < 600; scanNumber++)
                         {
                             if (scanNumber == 1 | scanNumber % 100 == 0)
                                 Console.WriteLine("Adding frame " + frameNum + ", scan " + scanNumber);
 
                             var intensities = new int[148000];
 
-                            for (int i = 0; i < intensities.Length; i++)
+                            for (var i = 0; i < intensities.Length; i++)
                             {
-                                int nextRandom = randGenerator.Next(0, 255);
+                                var nextRandom = randGenerator.Next(0, 255);
                                 if (nextRandom < 250)
                                     intensities[i] = 0;
                                 else

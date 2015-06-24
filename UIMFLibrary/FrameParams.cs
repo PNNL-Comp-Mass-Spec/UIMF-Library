@@ -143,9 +143,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (double)</param>
-        public void AddUpdateValue(FrameParamKeyType paramType, double value)
+        public FrameParams AddUpdateValue(FrameParamKeyType paramType, double value)
         {
-            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -153,9 +153,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (int)</param>
-        public void AddUpdateValue(FrameParamKeyType paramType, int value)
+        public FrameParams AddUpdateValue(FrameParamKeyType paramType, int value)
         {
-            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));            
+            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));            
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (string)</param>
-        public void AddUpdateValue(FrameParamKeyType paramType, string value)
+        public FrameParams AddUpdateValue(FrameParamKeyType paramType, string value)
         {
             FrameParam paramEntry;
             if (mFrameParameters.TryGetValue(paramType, out paramEntry))
@@ -177,6 +177,8 @@ namespace UIMFLibrary
             }
 
             UpdateCachedParam(paramType, value);
+            
+            return this;
         }
 
         /// <summary>
@@ -184,9 +186,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
         /// <param name="value">Value (double)</param>
-        public void AddUpdateValue(FrameParamDef paramDef, double value)
+        public FrameParams AddUpdateValue(FrameParamDef paramDef, double value)
         {
-            AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -194,9 +196,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
         /// <param name="value">Value (int)</param>
-        public void AddUpdateValue(FrameParamDef paramDef, int value)
+        public FrameParams AddUpdateValue(FrameParamDef paramDef, int value)
         {
-            AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -204,7 +206,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
         /// <param name="value">Value (string)</param>
-        public void AddUpdateValue(FrameParamDef paramDef, string value)
+        public FrameParams AddUpdateValue(FrameParamDef paramDef, string value)
         {
             FrameParam paramEntry;
             if (mFrameParameters.TryGetValue(paramDef.ParamType, out paramEntry))
@@ -216,6 +218,8 @@ namespace UIMFLibrary
                 paramEntry = new FrameParam(paramDef, value);
                 mFrameParameters.Add(paramDef.ParamType, paramEntry);
             }
+
+            return this;
         }
 
         /// <summary>

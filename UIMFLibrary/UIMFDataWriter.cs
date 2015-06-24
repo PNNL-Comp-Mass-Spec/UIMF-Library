@@ -524,7 +524,7 @@ namespace UIMFLibrary
         /// <param name="frameNum">Frame number</param>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="paramValue">Parameter value</param>
-        public void AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
+        public DataWriter AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
         {
             // Make sure the Frame_Param_Keys table contains key paramKeyType
             ValidateFrameParameterKey(paramKeyType);
@@ -589,6 +589,8 @@ namespace UIMFLibrary
                     "Error adding/updating parameter " + paramKeyType + " for frame " + frameNum + ": " + ex.Message, ex);
                 throw;
             }
+
+            return this;
         }
 
         /// <summary>
@@ -596,9 +598,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="value">Parameter value (integer)</param>
-        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, int value)
+        public DataWriter AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, int value)
         {
-            AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -606,9 +608,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="value">Parameter value (double)</param>
-        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, double value)
+        public DataWriter AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, double value)
         {
-            AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateGlobalParameter(paramKeyType, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -616,9 +618,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="value">Parameter value (date)</param>
-        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, DateTime value)
+        public DataWriter AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, DateTime value)
         {
-            AddUpdateGlobalParameter(paramKeyType, UIMFDataUtilities.StandardizeDate(value));
+            return AddUpdateGlobalParameter(paramKeyType, UIMFDataUtilities.StandardizeDate(value));
         }
 
 
@@ -627,7 +629,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="value">Parameter value (string)</param>
-        public void AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string value)
+        public DataWriter AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string value)
         {
             try
             {
@@ -689,6 +691,8 @@ namespace UIMFLibrary
                 ReportError("Error adding/updating global parameter " + paramKeyType + ": " + ex.Message, ex);
                 throw;
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1294,10 +1298,10 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">FrameParams object</param>
-        public void InsertFrame(int frameNum, FrameParams frameParameters)
+        public DataWriter InsertFrame(int frameNum, FrameParams frameParameters)
         {
             var frameParamsLite = frameParameters.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
-            InsertFrame(frameNum, frameParamsLite);
+            return InsertFrame(frameNum, frameParamsLite);
         }
 
         /// <summary>
@@ -1305,7 +1309,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">Frame parameters dictionary</param>
-        public void InsertFrame(int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
+        public DataWriter InsertFrame(int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
         {
             // Make sure the previous frame's data is committed to the database
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
@@ -1346,6 +1350,8 @@ namespace UIMFLibrary
             {
                 InsertLegacyFrameParams(frameNum, frameParameters);
             }
+
+            return this;
         }
 
         /// <summary>
@@ -1368,13 +1374,15 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="globalParameters">
         /// </param>
-        public void InsertGlobal(GlobalParams globalParameters)
+        public DataWriter InsertGlobal(GlobalParams globalParameters)
         {
             foreach (var globalParam in globalParameters.Values)
             {
                 var paramEntry = globalParam.Value;
                 AddUpdateGlobalParameter(paramEntry.ParamType, paramEntry.Value);
             }
+
+            return this;
         }
 
         /// <summary>

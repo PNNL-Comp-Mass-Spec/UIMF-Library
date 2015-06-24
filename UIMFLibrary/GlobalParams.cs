@@ -101,9 +101,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (double)</param>
-        public void AddUpdateValue(GlobalParamKeyType paramType, double value)
+        public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, double value)
         {
-            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -111,14 +111,14 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (int)</param>
-        public void AddUpdateValue(GlobalParamKeyType paramType, int value)
+        public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, int value)
         {
-            AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public void AddUpdateValue(GlobalParamKeyType paramType, DateTime value)
+        public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, DateTime value)
         {
-            AddUpdateValue(paramType, UIMFDataUtilities.StandardizeDate(value));
+            return AddUpdateValue(paramType, UIMFDataUtilities.StandardizeDate(value));
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (string)</param>
-        public void AddUpdateValue(GlobalParamKeyType paramType, string value)
+        public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, string value)
         {
             if (paramType == GlobalParamKeyType.DateStarted && ! string.IsNullOrWhiteSpace(value))
             {
@@ -151,6 +151,8 @@ namespace UIMFLibrary
                 paramEntry = new GlobalParam(paramType, value);
                 mGlobalParameters.Add(paramType, paramEntry);
             }
+
+            return this;
         }
 
         /// <summary>
