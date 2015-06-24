@@ -10,6 +10,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Data;
 using System.Globalization;
 
 namespace UIMFLibrary
@@ -82,6 +83,11 @@ namespace UIMFLibrary
         /// <remarks>Key is frame number, value is a List of ScanInfo objects</remarks>
         protected readonly Dictionary<int, List<ScanInfo>> m_CachedScanInfo;
 
+        /// <summary>
+        /// U.S. Culture Info
+        /// </summary>
+        protected readonly CultureInfo mCultureInfoUS;
+		
         /// <summary>
         /// Global parameters
         /// </summary>
@@ -202,7 +208,6 @@ namespace UIMFLibrary
             }
         }
 
-
         private int m_spectraToCache;
 
         /// <summary>
@@ -244,6 +249,8 @@ namespace UIMFLibrary
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
             m_maxSpectrumCacheMemoryMB = 750;
+
+            mCultureInfoUS = new CultureInfo("en-US");
 
             m_calibrationTable = new double[0];
             m_spectrumCacheList = new List<SpectrumCache>();
@@ -598,15 +605,15 @@ namespace UIMFLibrary
                     {
                         try
                         {
-                            globalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"], new CultureInfo("en-US"));
-                            globalParameters.DateStarted = Convert.ToString(reader["DateStarted"], new CultureInfo("en-US"));
-                            globalParameters.NumFrames = Convert.ToInt32(reader["NumFrames"], new CultureInfo("en-US"));
-                            globalParameters.TimeOffset = Convert.ToInt32(reader["TimeOffset"], new CultureInfo("en-US"));
-                            globalParameters.BinWidth = Convert.ToDouble(reader["BinWidth"], new CultureInfo("en-US"));
-                            globalParameters.Bins = Convert.ToInt32(reader["Bins"], new CultureInfo("en-US"));
+                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
+                            globalParameters.DateStarted = GetString(reader, "DateStarted");
+                            globalParameters.NumFrames = GetInt32(reader, "NumFrames");
+                            globalParameters.TimeOffset = GetInt32(reader, "TimeOffset");
+                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
+                            globalParameters.Bins = GetInt32(reader, "Bins");
                             try
                             {
-                                globalParameters.TOFCorrectionTime = Convert.ToSingle(reader["TOFCorrectionTime"], new CultureInfo("en-US"));
+                                globalParameters.TOFCorrectionTime = GetSingle(reader, "TOFCorrectionTime");
                             }
                             catch
                             {
@@ -615,20 +622,20 @@ namespace UIMFLibrary
                                     "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                             }
 
-                            globalParameters.Prescan_TOFPulses = Convert.ToInt32(reader["Prescan_TOFPulses"], new CultureInfo("en-US"));
-                            globalParameters.Prescan_Accumulations = Convert.ToInt32(reader["Prescan_Accumulations"], new CultureInfo("en-US"));
-                            globalParameters.Prescan_TICThreshold = Convert.ToInt32(reader["Prescan_TICThreshold"], new CultureInfo("en-US"));
-                            globalParameters.Prescan_Continuous = Convert.ToBoolean(reader["Prescan_Continuous"], new CultureInfo("en-US"));
-                            globalParameters.Prescan_Profile = Convert.ToString(reader["Prescan_Profile"], new CultureInfo("en-US"));
+                            globalParameters.Prescan_TOFPulses = GetInt32(reader, "Prescan_TOFPulses");
+                            globalParameters.Prescan_Accumulations = GetInt32(reader, "Prescan_Accumulations");
+                            globalParameters.Prescan_TICThreshold = GetInt32(reader, "Prescan_TICThreshold");
+                            globalParameters.Prescan_Continuous = GetBoolean(reader, "Prescan_Continuous");
+                            globalParameters.Prescan_Profile = GetString(reader, "Prescan_Profile");
                             globalParameters.FrameDataBlobVersion =
-                                (float)Convert.ToDouble(reader["FrameDataBlobVersion"], new CultureInfo("en-US"));
+                                GetSingle(reader, "FrameDataBlobVersion");
                             globalParameters.ScanDataBlobVersion =
-                                (float)Convert.ToDouble(reader["ScanDataBlobVersion"], new CultureInfo("en-US"));
-                            globalParameters.TOFIntensityType = Convert.ToString(reader["TOFIntensityType"], new CultureInfo("en-US"));
-                            globalParameters.DatasetType = Convert.ToString(reader["DatasetType"], new CultureInfo("en-US"));
+                                GetSingle(reader, "ScanDataBlobVersion");
+                            globalParameters.TOFIntensityType = GetString(reader, "TOFIntensityType");
+                            globalParameters.DatasetType = GetString(reader, "DatasetType");
                             try
                             {
-                                globalParameters.InstrumentName = Convert.ToString(reader["Instrument_Name"], new CultureInfo("en-US"));
+                                globalParameters.InstrumentName = GetString(reader, "Instrument_Name");
                             }
                             // ReSharper disable once EmptyGeneralCatchClause
                             catch
@@ -654,7 +661,7 @@ namespace UIMFLibrary
                     var reportedDateStarted = globalParameters.DateStarted;
                     DateTime dtReportedDateStarted;
 
-                    if (DateTime.TryParse(reportedDateStarted, new CultureInfo("en-US"), DateTimeStyles.None, out dtReportedDateStarted))
+                    if (DateTime.TryParse(reportedDateStarted, mCultureInfoUS, DateTimeStyles.None, out dtReportedDateStarted))
                     {
                         if (dtReportedDateStarted.Year < 450)
                         {
@@ -679,6 +686,36 @@ namespace UIMFLibrary
             }
 
             return globalParameters;
+        }
+
+        private bool GetBoolean(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToBoolean(reader[fieldName], mCultureInfoUS);
+        }
+
+        private double GetDouble(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToDouble(reader[fieldName], mCultureInfoUS);
+        }
+
+        private short GetInt16(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToInt16(reader[fieldName], mCultureInfoUS);
+        }
+
+        private int GetInt32(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToInt32(reader[fieldName], mCultureInfoUS);
+        }
+
+        private float GetSingle(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToSingle(reader[fieldName], mCultureInfoUS);
+        }
+
+        private string GetString(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToString(reader[fieldName], mCultureInfoUS);
         }
 
         /// <summary>
@@ -907,7 +944,7 @@ namespace UIMFLibrary
         {
             for (int scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
-                int currentScan = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US")) - startScan;
+                int currentScan = GetInt32(reader, "ScanNum") - startScan;
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
                 if (compressedBinIntensity.Length == 0)
@@ -962,7 +999,7 @@ namespace UIMFLibrary
             // each pixel accumulates more than 1 bin of data
             for (int scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
-                int currentScan = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US")) - startScan;
+                int currentScan = GetInt32(reader, "ScanNum") - startScan;
 
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
@@ -1446,7 +1483,7 @@ namespace UIMFLibrary
                 {
                     while (reader.Read())
                     {
-                        string tableName = Convert.ToString(reader["Name"], new CultureInfo("en-US"));
+                        string tableName = Convert.ToString(reader["Name"]);
                         if (tableName.StartsWith("Calib_"))
                         {
                             calibrationTableNames.Add(tableName);
@@ -1483,7 +1520,7 @@ namespace UIMFLibrary
                 {
                     while (reader.Read())
                     {
-                        countPerFrame = reader.IsDBNull(0) ? 1 : Convert.ToInt32(reader[0], new CultureInfo("en-US"));
+                        countPerFrame = reader.IsDBNull(0) ? 1 : Convert.ToInt32(reader[0], mCultureInfoUS);
                     }
 
                 }
@@ -1741,7 +1778,7 @@ namespace UIMFLibrary
                     {
                         while (reader.Read())
                         {
-                            frameNumberList.Add(Convert.ToInt32(reader["FrameNum"], new CultureInfo("en-US")));
+                            frameNumberList.Add(GetInt32(reader, "FrameNum"));
                         }
                     }
                 }
@@ -1757,7 +1794,7 @@ namespace UIMFLibrary
                     {
                         while (reader.Read())
                         {
-                            frameNumberList.Add(Convert.ToInt32(reader["FrameNum"], new CultureInfo("en-US")));
+                            frameNumberList.Add(GetInt32(reader, "FrameNum"));
                         }
                     }
                 }
@@ -1820,12 +1857,14 @@ namespace UIMFLibrary
             {
                 using (SQLiteDataReader reader = dbCommand.ExecuteReader())
                 {
+                    var cultureInfoUS = new CultureInfo("en-US");
+
                     while (reader.Read())
                     {
-                        int paramID = Convert.ToInt32(reader["ParamID"], new CultureInfo("en-US"));
-                        string paramName = Convert.ToString(reader["ParamName"], new CultureInfo("en-US"));
-                        string paramDataType = Convert.ToString(reader["ParamDataType"], new CultureInfo("en-US"));
-                        string paramDescription = Convert.ToString(reader["ParamDescription"], new CultureInfo("en-US"));
+                        int paramID = Convert.ToInt32(reader["ParamID"], cultureInfoUS);
+                        string paramName = Convert.ToString(reader["ParamName"], cultureInfoUS);
+                        string paramDataType = Convert.ToString(reader["ParamDataType"], cultureInfoUS);
+                        string paramDescription = Convert.ToString(reader["ParamDescription"], cultureInfoUS);
 
                         try
                         {
@@ -2459,11 +2498,11 @@ namespace UIMFLibrary
 
                 while (reader.Read())
                 {
-                    int frameNum = Convert.ToInt32(reader["FrameNum"], new CultureInfo("en-US"));
+                    int frameNum = GetInt32(reader, "FrameNum");
                     int binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    int scanNumber = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US"));
+                    int scanNumber = GetInt32(reader, "ScanNum");
 
                     if (spectra.Length <= 0)
                     {
@@ -2627,7 +2666,7 @@ namespace UIMFLibrary
                     int binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    int scanNumber = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US"));
+                    int scanNumber = GetInt32(reader, "ScanNum");
 
                     if (spectra.Length <= 0)
                     {
@@ -2706,7 +2745,7 @@ namespace UIMFLibrary
                     int binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    int scanNum = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US"));
+                    int scanNum = GetInt32(reader, "ScanNum");
 
                     Dictionary<int, int> currentBinDictionary = dictionaryArray[scanNum];
 
@@ -2886,16 +2925,16 @@ namespace UIMFLibrary
                             {
                                 var logEntry = new LogEntry();
 
-                                int iEntryID = Convert.ToInt32(reader["Entry_ID"], new CultureInfo("en-US"));
-                                logEntry.PostedBy = Convert.ToString(reader["Posted_By"], new CultureInfo("en-US"));
+                                int iEntryID = GetInt32(reader, "Entry_ID");
+                                logEntry.PostedBy = GetString(reader, "Posted_By");
 
-                                string sPostingTime = Convert.ToString(reader["Posting_Time"], new CultureInfo("en-US"));
+                                string sPostingTime = GetString(reader, "Posting_Time");
                                 DateTime postingTime;
-                                DateTime.TryParse(sPostingTime, new CultureInfo("en-US"), DateTimeStyles.None, out postingTime);
+                                DateTime.TryParse(sPostingTime, mCultureInfoUS, DateTimeStyles.None, out postingTime);
                                 logEntry.PostingTime = postingTime;
 
-                                logEntry.Type = Convert.ToString(reader["Type"], new CultureInfo("en-US"));
-                                logEntry.Message = Convert.ToString(reader["Message"], new CultureInfo("en-US"));
+                                logEntry.Type = GetString(reader, "Type");
+                                logEntry.Message = GetString(reader, "Message");
 
                                 lstLogEntries.Add(iEntryID, logEntry);
                             }
@@ -2933,8 +2972,8 @@ namespace UIMFLibrary
                 {
                     while (reader.Read())
                     {
-                        int frameNumber = Convert.ToInt32(reader["FrameNum"], new CultureInfo("en-US"));
-                        int frameType = Convert.ToInt32(reader["FrameType"], new CultureInfo("en-US"));
+                        int frameNumber = GetInt32(reader, "FrameNum");
+                        int frameType = GetInt32(reader, "FrameType");
 
                         // If the frame type is 0, then we are dealing with an old UIMF file where the MS1 frames were labeled as 0
                         if (frameType == 0)
@@ -3002,7 +3041,7 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-                        count = Convert.ToInt32(reader["FrameCount"], new CultureInfo("en-US"));
+                        count = GetInt32(reader, "FrameCount");
                     }
                 }
             }
@@ -3660,7 +3699,7 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-                    int binNumber = Convert.ToInt32(reader["MZ_BIN"], new CultureInfo("en-US"));
+                    int binNumber = GetInt32(reader, "MZ_BIN");
                     int intensity = 0;
                     int entryIndex = 0;
 
@@ -3770,7 +3809,7 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-                        tic = Convert.ToDouble(reader["TIC"], new CultureInfo("en-US"));
+                        tic = GetDouble(reader, "TIC");
                     }
                 }
             }
@@ -4503,7 +4542,7 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-                        count = Convert.ToInt32(reader["FrameCount"], new CultureInfo("en-US"));
+                        count = GetInt32(reader, "FrameCount");
                     }
                 }
             }
@@ -4908,8 +4947,8 @@ namespace UIMFLibrary
                     while (reader.Read())
                     {
 
-                        int paramID = Convert.ToInt32(reader["ParamID"], new CultureInfo("en-US"));
-                        string paramValue = Convert.ToString(reader["ParamValue"], new CultureInfo("en-US"));
+                        int paramID = GetInt32(reader, "ParamID");
+                        string paramValue = GetString(reader, "ParamValue");
 
                         var paramType = GlobalParamUtilities.GetParamTypeByID(paramID);
 
@@ -5058,7 +5097,7 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the pressure column in the given table is in millitorr<see cref="bool"/>.
         /// </returns>
-        private static bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
+        private bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
         {
             bool isMillitorr = false;
             try
@@ -5069,7 +5108,7 @@ namespace UIMFLibrary
                 object objResult = cmd.ExecuteScalar();
                 if (objResult != null && objResult != DBNull.Value)
                 {
-                    if (Convert.ToSingle(objResult, new CultureInfo("en-US")) > 100)
+                    if (Convert.ToSingle(objResult, mCultureInfoUS) > 100)
                     {
                         isMillitorr = true;
                     }
@@ -5101,7 +5140,7 @@ namespace UIMFLibrary
         /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
         /// If the average is greater than 100, then we assume the values are milliTorr
         /// </remarks>
-        private static bool ColumnIsMilliTorr(SQLiteCommand cmd, FrameParamKeyType paramType)
+        private bool ColumnIsMilliTorr(SQLiteCommand cmd, FrameParamKeyType paramType)
         {
             bool isMillitorr = false;
 
@@ -5119,7 +5158,7 @@ namespace UIMFLibrary
                 object objResult = cmd.ExecuteScalar();
                 if (objResult != null && objResult != DBNull.Value)
                 {
-                    if (Convert.ToSingle(objResult, new CultureInfo("en-US")) > 100)
+                    if (Convert.ToSingle(objResult, mCultureInfoUS) > 100)
                     {
                         isMillitorr = true;
                     }
@@ -5218,7 +5257,7 @@ namespace UIMFLibrary
 
             try
             {
-                result = !DBNull.Value.Equals(reader[columnName]) ? Convert.ToDouble(reader[columnName], new CultureInfo("en-US")) : defaultValue;
+                result = !DBNull.Value.Equals(reader[columnName]) ? GetDouble(reader, columnName) : defaultValue;
             }
             catch (IndexOutOfRangeException)
             {
@@ -5287,7 +5326,7 @@ namespace UIMFLibrary
                     return defaultValue;
                 }
 
-                result = !DBNull.Value.Equals(reader[columnName]) ? Convert.ToInt32(reader[columnName], new CultureInfo("en-US")) : defaultValue;
+                result = !DBNull.Value.Equals(reader[columnName]) ? GetInt32(reader, columnName) : defaultValue;
             }
             catch (IndexOutOfRangeException)
             {
@@ -5349,7 +5388,7 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-                    sObjects.Add(Convert.ToString(reader["Name"], new CultureInfo("en-US")), Convert.ToString(reader["sql"], new CultureInfo("en-US")));
+                    sObjects.Add(GetString(reader, "Name"), GetString(reader, "sql"));
                 }
             }
 
@@ -5403,7 +5442,7 @@ namespace UIMFLibrary
                 {
                     while (reader.Read())
                     {
-                        frameTypeList.Add(Convert.ToInt32(reader["FrameType"], new CultureInfo("en-US")));
+                        frameTypeList.Add(GetInt32(reader, "FrameType"));
                     }
                 }
 
@@ -5517,7 +5556,7 @@ namespace UIMFLibrary
                     var spectraRecord = (byte[])reader["Intensities"];
                     if (spectraRecord.Length > 0)
                     {
-                        int scanNum = Convert.ToInt32(reader["ScanNum"], new CultureInfo("en-US"));
+                        int scanNum = GetInt32(reader, "ScanNum");
 
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
@@ -5932,8 +5971,8 @@ namespace UIMFLibrary
                 var fp = new FrameParameters
 #pragma warning restore 612, 618
                 {
-                    FrameNum = Convert.ToInt32(reader["FrameNum"], new CultureInfo("en-US")),
-                    StartTime = Convert.ToDouble(reader["StartTime"], new CultureInfo("en-US"))
+                    FrameNum = GetInt32(reader, "FrameNum"),
+                    StartTime = GetDouble(reader, "StartTime")
                 };
 
                 if (fp.StartTime > 1E+17)
@@ -5942,7 +5981,7 @@ namespace UIMFLibrary
                     // Auto-compute the correct start time
                     DateTime dtRunStarted;
                     var dateStarted = m_globalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
-                    if (DateTime.TryParse(dateStarted, new CultureInfo("en-US"), DateTimeStyles.None, out dtRunStarted))
+                    if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out dtRunStarted))
                     {
                         long lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;
                         if (lngTickDifference >= 0)
@@ -5952,10 +5991,10 @@ namespace UIMFLibrary
                     }
                 }
 
-                fp.Duration = Convert.ToDouble(reader["Duration"], new CultureInfo("en-US"));
-                fp.Accumulations = Convert.ToInt32(reader["Accumulations"], new CultureInfo("en-US"));
+                fp.Duration = GetDouble(reader, "Duration");
+                fp.Accumulations = GetInt32(reader, "Accumulations");
 
-                int frameTypeInt = Convert.ToInt16(reader["FrameType"], new CultureInfo("en-US"));
+                int frameTypeInt = GetInt16(reader, "FrameType");
 
                 // If the frametype is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
                 if (frameTypeInt == 0)
@@ -5967,18 +6006,18 @@ namespace UIMFLibrary
                     fp.FrameType = (FrameType)frameTypeInt;
                 }
 
-                fp.Scans = Convert.ToInt32(reader["Scans"], new CultureInfo("en-US"));
-                fp.IMFProfile = Convert.ToString(reader["IMFProfile"], new CultureInfo("en-US"));
-                fp.TOFLosses = Convert.ToDouble(reader["TOFLosses"], new CultureInfo("en-US"));
-                fp.AverageTOFLength = Convert.ToDouble(reader["AverageTOFLength"], new CultureInfo("en-US"));
-                fp.CalibrationSlope = Convert.ToDouble(reader["CalibrationSlope"], new CultureInfo("en-US"));
-                fp.CalibrationIntercept = Convert.ToDouble(reader["CalibrationIntercept"], new CultureInfo("en-US"));
-                fp.Temperature = Convert.ToDouble(reader["Temperature"], new CultureInfo("en-US"));
-                fp.voltHVRack1 = Convert.ToDouble(reader["voltHVRack1"], new CultureInfo("en-US"));
-                fp.voltHVRack2 = Convert.ToDouble(reader["voltHVRack2"], new CultureInfo("en-US"));
-                fp.voltHVRack3 = Convert.ToDouble(reader["voltHVRack3"], new CultureInfo("en-US"));
-                fp.voltHVRack4 = Convert.ToDouble(reader["voltHVRack4"], new CultureInfo("en-US"));
-                fp.voltCapInlet = Convert.ToDouble(reader["voltCapInlet"], new CultureInfo("en-US")); // 14, Capillary Inlet Voltage
+                fp.Scans = GetInt32(reader, "Scans");
+                fp.IMFProfile = GetString(reader, "IMFProfile");
+                fp.TOFLosses = GetDouble(reader, "TOFLosses");
+                fp.AverageTOFLength = GetDouble(reader, "AverageTOFLength");
+                fp.CalibrationSlope = GetDouble(reader, "CalibrationSlope");
+                fp.CalibrationIntercept = GetDouble(reader, "CalibrationIntercept");
+                fp.Temperature = GetDouble(reader, "Temperature");
+                fp.voltHVRack1 = GetDouble(reader, "voltHVRack1");
+                fp.voltHVRack2 = GetDouble(reader, "voltHVRack2");
+                fp.voltHVRack3 = GetDouble(reader, "voltHVRack3");
+                fp.voltHVRack4 = GetDouble(reader, "voltHVRack4");
+                fp.voltCapInlet = GetDouble(reader, "voltCapInlet"); // 14, Capillary Inlet Voltage
 
                 if (m_LegacyFrameParametersMissingColumns.Contains("voltEntranceHPFIn"))
                     columnMissing = true;
@@ -5996,15 +6035,15 @@ namespace UIMFLibrary
                     fp.voltEntranceHPFOut = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFOut", 0); // 16, HPF Out Voltage
                 }
 
-                fp.voltEntranceCondLmt = Convert.ToDouble(reader["voltEntranceCondLmt"], new CultureInfo("en-US")); // 17, Cond Limit Voltage
-                fp.voltTrapOut = Convert.ToDouble(reader["voltTrapOut"], new CultureInfo("en-US")); // 18, Trap Out Voltage
-                fp.voltTrapIn = Convert.ToDouble(reader["voltTrapIn"], new CultureInfo("en-US")); // 19, Trap In Voltage
-                fp.voltJetDist = Convert.ToDouble(reader["voltJetDist"], new CultureInfo("en-US")); // 20, Jet Disruptor Voltage
-                fp.voltQuad1 = Convert.ToDouble(reader["voltQuad1"], new CultureInfo("en-US")); // 21, Fragmentation Quadrupole Voltage
-                fp.voltCond1 = Convert.ToDouble(reader["voltCond1"], new CultureInfo("en-US")); // 22, Fragmentation Conductance Voltage
-                fp.voltQuad2 = Convert.ToDouble(reader["voltQuad2"], new CultureInfo("en-US")); // 23, Fragmentation Quadrupole Voltage
-                fp.voltCond2 = Convert.ToDouble(reader["voltCond2"], new CultureInfo("en-US")); // 24, Fragmentation Conductance Voltage
-                fp.voltIMSOut = Convert.ToDouble(reader["voltIMSOut"], new CultureInfo("en-US")); // 25, IMS Out Voltage
+                fp.voltEntranceCondLmt = GetDouble(reader, "voltEntranceCondLmt"); // 17, Cond Limit Voltage
+                fp.voltTrapOut = GetDouble(reader, "voltTrapOut"); // 18, Trap Out Voltage
+                fp.voltTrapIn = GetDouble(reader, "voltTrapIn"); // 19, Trap In Voltage
+                fp.voltJetDist = GetDouble(reader, "voltJetDist"); // 20, Jet Disruptor Voltage
+                fp.voltQuad1 = GetDouble(reader, "voltQuad1"); // 21, Fragmentation Quadrupole Voltage
+                fp.voltCond1 = GetDouble(reader, "voltCond1"); // 22, Fragmentation Conductance Voltage
+                fp.voltQuad2 = GetDouble(reader, "voltQuad2"); // 23, Fragmentation Quadrupole Voltage
+                fp.voltCond2 = GetDouble(reader, "voltCond2"); // 24, Fragmentation Conductance Voltage
+                fp.voltIMSOut = GetDouble(reader, "voltIMSOut"); // 25, IMS Out Voltage
 
                 if (m_LegacyFrameParametersMissingColumns.Contains("voltExitHPFIn"))
                     columnMissing = true;
@@ -6022,10 +6061,10 @@ namespace UIMFLibrary
                     fp.voltExitHPFOut = GetLegacyFrameParamOrDefault(reader, "voltExitHPFOut", 0); // 27, HPF Out Voltage
                 }
 
-                fp.voltExitCondLmt = Convert.ToDouble(reader["voltExitCondLmt"], new CultureInfo("en-US")); // 28, Cond Limit Voltage
-                fp.PressureFront = Convert.ToDouble(reader["PressureFront"], new CultureInfo("en-US"));
-                fp.PressureBack = Convert.ToDouble(reader["PressureBack"], new CultureInfo("en-US"));
-                fp.MPBitOrder = Convert.ToInt16(reader["MPBitOrder"], new CultureInfo("en-US"));
+                fp.voltExitCondLmt = GetDouble(reader, "voltExitCondLmt"); // 28, Cond Limit Voltage
+                fp.PressureFront = GetDouble(reader, "PressureFront");
+                fp.PressureBack = GetDouble(reader, "PressureBack");
+                fp.MPBitOrder = GetInt16(reader, "MPBitOrder");
                 fp.FragmentationProfile = FrameParamUtilities.ConvertByteArrayToFragmentationSequence((byte[])reader["FragmentationProfile"]);
 
                 if (m_LegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
