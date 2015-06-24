@@ -142,7 +142,7 @@ namespace UIMFLibrary
             m_FrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
-            string connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
+            var connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
             m_LastFlush = DateTime.UtcNow;
 
@@ -183,7 +183,7 @@ namespace UIMFLibrary
             try
             {
                
-                if (!this.HasLegacyParameterTables())
+                if (!HasLegacyParameterTables())
                 {
                     // Nothing to do
                     return;
@@ -219,12 +219,12 @@ namespace UIMFLibrary
         private void ConvertLegacyFrameParameters()
         {
 
-            int framesProcessed = 0;
-            string currentTask = "Initializing";
+            var framesProcessed = 0;
+            var currentTask = "Initializing";
 
             try
             {
-                if (this.HasFrameParamsTable())
+                if (HasFrameParamsTable())
                 {
                     // Assume that the frame parameters have already been converted
                     // Nothing to do
@@ -238,7 +238,7 @@ namespace UIMFLibrary
                 }
 
                 // Make sure writing of legacy parameters is turned off
-                bool createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
+                var createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
                 m_CreateLegacyParametersTables = false;
 
                 Console.WriteLine("\nCreating the Frame_Params table using the legacy frame parameters");
@@ -250,7 +250,7 @@ namespace UIMFLibrary
                 // Read and cache the legacy frame parameters
                 currentTask = "Caching existing parameters";
 
-                using (var reader = new UIMFLibrary.DataReader(m_FilePath))
+                using (var reader = new DataReader(m_FilePath))
                 {
                     reader.PreCacheAllFrameParams();
 
@@ -332,28 +332,28 @@ namespace UIMFLibrary
         {
             try
             {
-                if (this.HasGlobalParamsTable())
+                if (HasGlobalParamsTable())
                 {
                     // Assume that the global parameters have already been converted
                     // Nothing to do
                     return;
                 }
 
-                if (!this.HasLegacyParameterTables())
+                if (!HasLegacyParameterTables())
                 {
                     // Nothing to do
                     return;
                 }
 
                 // Make sure writing of legacy parameters is turned off
-                bool createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
+                var createLegacyParametersTablesSaved = m_CreateLegacyParametersTables;
                 m_CreateLegacyParametersTables = false;
 
                 // Keys in this array are frame number, values are the frame parameters
                 GlobalParams cachedGlobalParams;
 
                 // Read and cache the legacy global parameters
-                using (var reader = new UIMFLibrary.DataReader(m_FilePath))
+                using (var reader = new DataReader(m_FilePath))
                 {
                     cachedGlobalParams = reader.GetGlobalParams();
                 }
@@ -462,13 +462,13 @@ namespace UIMFLibrary
         public void AddLegacyParameterTablesUsingExistingParamTables()
         {
            
-            if (this.HasLegacyParameterTables())
+            if (HasLegacyParameterTables())
             {
                 // Nothing to do
                 return;
             }
 
-            if (!this.HasFrameParamsTable())
+            if (!HasFrameParamsTable())
             {
                 // Nothing to do
                 return;
@@ -632,14 +632,14 @@ namespace UIMFLibrary
             try
             {
 
-                if (!this.HasGlobalParamsTable())
+                if (!HasGlobalParamsTable())
                 {
                     throw new Exception("The Global_Params table does not exist; call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
                 if (m_CreateLegacyParametersTables)
                 {
-                    if (!this.HasLegacyParameterTables())
+                    if (!HasLegacyParameterTables())
                         throw new Exception("The Global_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
@@ -810,7 +810,7 @@ namespace UIMFLibrary
         private void CreateFrameParamsTables(SQLiteCommand dbCommand)
         {
 
-            if (this.HasFrameParamsTable() &&
+            if (HasFrameParamsTable() &&
                 DataReader.TableExists(m_dbConnection, "Frame_Param_Keys"))
             {
                 // The tables already exist
@@ -880,7 +880,7 @@ namespace UIMFLibrary
         /// </summary>
         private void CreateGlobalParamsTable(SQLiteCommand dbCommand)
         {
-            if (this.HasGlobalParamsTable())
+            if (HasGlobalParamsTable())
             {
                 // The table already exists
                 return;
@@ -975,14 +975,14 @@ namespace UIMFLibrary
             if (frameCountToRemove < 1)
                 return;
 
-            int numFrames = 0;
+            var numFrames = 0;
 
             dbCommand.CommandText = "SELECT ParamValue AS NumFrames From Global_Params WHERE ParamID=" + (int)GlobalParamKeyType.NumFrames;
             using (SQLiteDataReader reader = dbCommand.ExecuteReader())
             {
                 if (reader.Read())
                 {
-                    string value = reader.GetString(0);
+                    var value = reader.GetString(0);
                     if (int.TryParse(value, out numFrames))
                     {
                         numFrames -= frameCountToRemove;
@@ -1121,7 +1121,7 @@ namespace UIMFLibrary
             var sFrameList = new StringBuilder();
 
             // Construct a comma-separated list of frame numbers
-            foreach (int frameNum in frameNums)
+            foreach (var frameNum in frameNums)
             {
                 sFrameList.Append(frameNum + ",");
             }
@@ -1311,12 +1311,12 @@ namespace UIMFLibrary
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
             FlushUimf(false);
 
-            if (!this.HasFrameParamsTable())
+            if (!HasFrameParamsTable())
                 throw new Exception("The Frame_Params table does not exist; call method CreateTables before calling InsertFrame");
 
             if (m_CreateLegacyParametersTables)
             {
-                if (!this.HasLegacyParameterTables())
+                if (!HasLegacyParameterTables())
                     throw new Exception("The Frame_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling InsertFrame");
             }
 
@@ -1689,7 +1689,7 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 return -1;
 
-            int nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+            var nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
@@ -1731,7 +1731,7 @@ namespace UIMFLibrary
                 return 0;
             }
 
-            int nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMapList, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
+            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMapList, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 
@@ -1779,8 +1779,8 @@ namespace UIMFLibrary
             float intercept, 
             bool isAutoCalibrating = false)
         {
-            bool hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            bool hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+            var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            var hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
 
             using (var dbCommand = dBconnection.CreateCommand())
             {
@@ -1871,9 +1871,8 @@ namespace UIMFLibrary
             float intercept,
             bool isAutoCalibrating = false)
         {
-
-            bool hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            bool hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+            var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            var hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
 
             using (var dbCommand = dBconnection.CreateCommand())
             {
@@ -1967,7 +1966,7 @@ namespace UIMFLibrary
         [Obsolete("Use AddUpdateFrameParameter")]
         public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
         {
-            for (int i = 0; i < parameters.Count - 1; i++)
+            for (var i = 0; i < parameters.Count - 1; i++)
             {
                 if (i >= values.Count)
                     break;
@@ -2002,9 +2001,9 @@ namespace UIMFLibrary
         /// </param>
         public void UpdateFrameType(int startFrameNum, int endFrameNum)
         {
-            for (int i = startFrameNum; i <= endFrameNum; i++)
+            for (var i = startFrameNum; i <= endFrameNum; i++)
             {
-                int frameType = i % 4 == 0 ? 1 : 2;
+                var frameType = i % 4 == 0 ? 1 : 2;
                 AddUpdateFrameParameter(i, FrameParamKeyType.FrameType, frameType.ToString(CultureInfo.InvariantCulture));
             }
         }
@@ -2014,7 +2013,7 @@ namespace UIMFLibrary
         /// </summary>
         public void UpdateGlobalFrameCount()
         {
-            if (!this.HasFrameParamsTable())
+            if (!HasFrameParamsTable())
                 throw new Exception("UIMF file does not have table Frame_Params; use method CreateTables to add tables");
 
             object frameCount;
@@ -2143,7 +2142,7 @@ namespace UIMFLibrary
 
             var sbSql = new StringBuilder("CREATE TABLE " + tableName + " ( ");
 
-            for (int i = 0; i < lstFields.Count; i++)
+            for (var i = 0; i < lstFields.Count; i++)
             {
                 sbSql.Append(lstFields[i].Item1 + " " + lstFields[i].Item2);
 
@@ -2756,7 +2755,7 @@ namespace UIMFLibrary
         /// </summary>
         protected void ValidateFrameParameterKeys(List<FrameParamKeyType> paramKeys)
         {
-            bool updateRequired = false;
+            var updateRequired = false;
 
             foreach (var newKey in paramKeys)
             {
@@ -2846,11 +2845,11 @@ namespace UIMFLibrary
         public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
         {
             // mz = (k * (t-t0))^2
-            double t = binNumber * binWidth / 1000;
+            var t = binNumber * binWidth / 1000;
 
-            double resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3)
-                                + frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7)
-                                + frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
+            var resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3) +
+                             frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7) +
+                             frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
 
             var mz =
                 frameParameters.CalibrationSlope *
@@ -2876,13 +2875,13 @@ namespace UIMFLibrary
         public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParameters)
         {
             // mz = (k * (t-t0))^2
-            double t = binNumber * binWidth / 1000;
+            var t = binNumber * binWidth / 1000;
 
             var massCalCoefficients = frameParameters.MassCalibrationCoefficients;
 
-            double resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3)
-                                + massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7)
-                                + massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
+            var resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3) +
+                             massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7) +
+                             massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
 
             var mz =
                 frameParameters.CalibrationSlope *
