@@ -48,6 +48,20 @@ namespace UIMFLibrary
 
         #endregion
 
+        #region Public Events
+
+        /// <summary>
+        /// Error event
+        /// </summary>
+        public event EventHandler<MessageEventArgs> ErrorEvent;
+
+        /// <summary>
+        /// Message event
+        /// </summary>
+        public event EventHandler<MessageEventArgs> MessageEvent;
+
+        #endregion
+
         #region Static Fields
 
         /// <summary>
@@ -135,6 +149,14 @@ namespace UIMFLibrary
         /// </summary>
         private static readonly SortedSet<int> m_UnrecognizedFrameParamTypes = new SortedSet<int>();
 
+        /// <summary>
+        /// Tracks frame numbers for which we called OnErrorMessage() to warn the caller that there is invalid data
+        /// </summary>
+        /// <remarks>
+        /// Key is a frame number (integer) or frame range (two integers separated by a dash)
+        /// Value is a list of warning messages</remarks>
+        private readonly IDictionary<string, SortedSet<string>> m_FramesWarnedInvalidData;
+ 
         /// <summary>
         /// Frame type with MS1 data
         /// </summary>
@@ -255,6 +277,8 @@ namespace UIMFLibrary
             m_calibrationTable = new double[0];
             m_spectrumCacheList = new List<SpectrumCache>();
             m_frameTypeInfo = new Dictionary<FrameType, FrameSetContainer>();
+
+            m_FramesWarnedInvalidData = new Dictionary<string, SortedSet<string>>();
 
             FileSystemInfo uimfFileInfo = new FileInfo(fileName);
 
@@ -1000,7 +1024,6 @@ namespace UIMFLibrary
             for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
                 var currentScan = GetInt32(reader, "ScanNum") - startScan;
-
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
                 if (compressedBinIntensity.Length == 0)
@@ -3246,6 +3269,13 @@ namespace UIMFLibrary
                     if (intensity <= 0)
                         continue;
 
+                    if (binIndex >= intensityArray.Length)
+                    {
+                        WarnFrameDataError(startFrameNumber, endFrameNumber,
+                                           "Bin value out of range (greater than " + intensityArray.Length + ")");
+                        continue;
+                    }
+
                     if (intensityArray[binIndex] == 0)
                     {
                         // This is the first time we've encountered this bin
@@ -3280,6 +3310,12 @@ namespace UIMFLibrary
                         if (intensity <= 0)
                             continue;
 
+                        if (binIndex >= intensityArray.Length)
+                        {
+                            WarnFrameDataError(startFrameNumber, endFrameNumber,
+                                               "Bin value out of range (greater than " + intensityArray.Length + ")");
+                            continue;
+                        }
                         if (intensityArray[binIndex] == 0)
                         {
                             // This is the first time we've encountered this bin
@@ -6238,6 +6274,46 @@ namespace UIMFLibrary
             return usingLegacyParams;
         }
 
+        private void WarnFrameDataError(int startFrameNumber, int endFrameNumber, string errorMessage)
+        {
+            SortedSet<string> warningList;
+            var reportWarning = true;
+
+            string frameKey;
+            if (endFrameNumber <= 0)
+                frameKey= startFrameNumber.ToString();
+            else
+                frameKey = startFrameNumber + "-" + endFrameNumber;
+
+            if (m_FramesWarnedInvalidData.TryGetValue(frameKey, out warningList))
+            {
+                if (warningList.Contains(errorMessage))
+                {
+                    reportWarning = false;
+                }
+                else
+                {
+                    warningList.Add(errorMessage);
+                }
+            }
+            else
+            {
+                warningList = new SortedSet<string>(StringComparer.CurrentCultureIgnoreCase)
+                {
+                    errorMessage
+                };
+                m_FramesWarnedInvalidData.Add(frameKey, warningList);
+            }
+
+            if (reportWarning)
+            {
+                if (frameKey.Contains("-") && startFrameNumber != endFrameNumber)
+                    this.OnErrorMessage(new MessageEventArgs("Error with frames " + frameKey + ": " + errorMessage));
+                else
+                    this.OnErrorMessage(new MessageEventArgs("Error with frame " + startFrameNumber + ": " + errorMessage));
+            }
+        }
+
         private static void WarnUnrecognizedFrameParamID(int paramID, string paramName)
         {
             if (!m_UnrecognizedFrameParamTypes.Contains(paramID))
@@ -6251,5 +6327,42 @@ namespace UIMFLibrary
 
         #endregion
 
+        #region "Events"
+
+        /// <summary>
+        /// Raise the error event
+        /// </summary>
+        /// <param name="e">
+        /// Message event args
+        /// </param>
+        public void OnErrorMessage(MessageEventArgs e)
+        {
+            var errorEvent = this.ErrorEvent;
+            if (errorEvent != null)
+            {
+                errorEvent(this, e);
+            }
+            else
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Raise the message event
+        /// </summary>
+        /// <param name="e">
+        /// Message event args
+        /// </param>
+        public void OnMessage(MessageEventArgs e)
+        {
+            var messageEvent = this.MessageEvent;
+            if (messageEvent != null)
+            {
+                messageEvent(this, e);
+            }
+        }
+
+        #endregion
     }
 }

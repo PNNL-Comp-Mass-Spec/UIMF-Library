@@ -32,7 +32,7 @@ namespace UIMFLibrary_Demo
             }
 
             var datareader = new DataReader(mTestUIMFFilePath);
-
+            datareader.ErrorEvent += datareader_ErrorEvent;
 
             //--------------------------------------------------------------------------Get Global parameters
 
@@ -181,7 +181,6 @@ namespace UIMFLibrary_Demo
 
         }
 
-
         public void ReadAllFramesAndScans()
         {
             if (!File.Exists(mTestUIMFFilePath))
@@ -294,6 +293,12 @@ namespace UIMFLibrary_Demo
         #endregion
 
         #region Private Methods
+
+        static void datareader_ErrorEvent(object sender, MessageEventArgs e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
         private void reportProgress()
         {
             Console.WriteLine();
