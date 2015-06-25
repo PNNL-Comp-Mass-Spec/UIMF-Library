@@ -199,9 +199,10 @@ namespace UIMFLibrary_Demo
                     writer.CreateTables();
 
                     var globalParameters = new GlobalParams();
-                    globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, 1)
-                                    .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "int")
+                    globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, 400000)
+                                    .AddUpdateValue(GlobalParamKeyType.BinWidth, 0.25)
                                     .AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now)
+                                    .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC")                                    
                                     .AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
 
                     writer.InsertGlobal(globalParameters);

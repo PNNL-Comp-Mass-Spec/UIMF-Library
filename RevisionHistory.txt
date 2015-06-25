@@ -1,8 +1,9 @@
 UIMFLibrary Revision History
 
 Version 3.0.5654; June 25, 2015
-	- Added check for out-of-range bin values in GetSpectrum
+	- Added check for out-of-range bin values in GetSpectrum in the reader
 		- Errors reported via new event, ErrorEvent 
+	- Added check for out-of-range bin values in InsertScan in the writer
 
 Version 3.0.5653; June 24, 2015
 	- Update several AddUpdate functions to return the instance of the class, thus allowing chaining function calls (i.e. the Fluent way)

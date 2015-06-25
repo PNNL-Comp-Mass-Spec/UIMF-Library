@@ -1686,7 +1686,7 @@ namespace UIMFLibrary
             int frameNumber,
             FrameParams frameParameters,
             int scanNum,
-            IEnumerable<int> intensities,
+            IList<int> intensities,
             double binWidth)
         {
             byte[] spectra;
@@ -1696,6 +1696,13 @@ namespace UIMFLibrary
 
             if (frameParameters == null)
                 return -1;
+
+            if (intensities.Count > m_globalParameters.Bins)
+            {
+                throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
+                                    " has more entries than the number of bins defined in the global parameters" +
+                                    " (" + m_globalParameters.Bins + ")");
+            }
 
             var nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
@@ -1720,7 +1727,7 @@ namespace UIMFLibrary
             int frameNumber,
             FrameParams frameParameters,
             int scanNum,
-            IEnumerable<KeyValuePair<int, int>> binToIntensityMap,
+            IList<KeyValuePair<int, int>> binToIntensityMap,
             double binWidth,
             int timeOffset)
         {
@@ -1732,14 +1739,27 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 return -1;
 
-            var binToIntensityMapList = binToIntensityMap.ToList();
+            if (binToIntensityMap == null)
+                throw new ArgumentNullException("binToIntensityMap", "binToIntensityMap cannot be null");
 
-            if (binToIntensityMap == null || !binToIntensityMapList.Any())
+            if (!binToIntensityMap.Any())
             {
                 return 0;
             }
 
-            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMapList, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
+            var maxBin = (from item in binToIntensityMap select item.Key).Max();
+
+            if (maxBin > m_globalParameters.Bins)
+            {
+                throw new Exception("New data for frame " + frameNumber + ", scan " + scanNum + 
+                    " has a bin value greater than the number of bins defined in the global parameters" +
+                    " (" + m_globalParameters.Bins + ")");
+
+                // Future possibility: silently auto-change the Bins value 
+                // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
+            }
+
+            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
 

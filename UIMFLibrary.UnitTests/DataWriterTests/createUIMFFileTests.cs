@@ -35,17 +35,15 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 var globalParameters = new GlobalParams();
 
-                globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, 400000);
-                globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, 0.25);
+                globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, 400000)
+                                .AddUpdateValue(GlobalParamKeyType.BinWidth, 0.25)
+                                .AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now)
+                                .AddUpdateValue(GlobalParamKeyType.NumFrames, 10)
+                                .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC");
 
-                globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now);
-                globalParameters.AddUpdateValue(GlobalParamKeyType.NumFrames, 10);
-                globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC");
-
-                writer.InsertGlobal(globalParameters);
-                writer.AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1);
-                writer.AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
-
+                writer.InsertGlobal(globalParameters)
+                      .AddUpdateGlobalParameter(GlobalParamKeyType.TimeOffset, 1)
+                      .AddUpdateGlobalParameter(GlobalParamKeyType.InstrumentName, "IMS_Test");
 
                 Console.WriteLine("Adding frame 1");
 
@@ -53,30 +51,30 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 var randGenerator = new Random();
 
-                for (int frameNum = 1; frameNum <= 10; frameNum++)
+                for (var frameNum = 1; frameNum <= 10; frameNum++)
                 {                   
 
                     var fp = new FrameParams();
 
-                    fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)DataReader.FrameType.MS1);
-                    fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481);
-                    fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093);
-                    fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667);
-                    fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME);
-                    fp.AddUpdateValue(FrameParamKeyType.Scans, 600);
+                    fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)DataReader.FrameType.MS1)
+                      .AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481)
+                      .AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093)
+                      .AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667)
+                      .AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME)
+                      .AddUpdateValue(FrameParamKeyType.Scans, 600);
 
                     writer.InsertFrame(frameNum, fp);
 
-                    for (int scanNumber = 1; scanNumber <= 600; scanNumber++)
+                    for (var scanNumber = 1; scanNumber <= 600; scanNumber++)
                     {
                         if (scanNumber == 1 | scanNumber % 100 == 0)
                             Console.WriteLine("Adding frame " + frameNum + ", scan " + scanNumber);
 
                         var intensities = new int[148000];
 
-                        for (int i = 0; i < intensities.Length; i++)
+                        for (var i = 0; i < intensities.Length; i++)
                         {
-                            int nextRandom = randGenerator.Next(0, 255);
+                            var nextRandom = randGenerator.Next(0, 255);
                             if (nextRandom < 250)
                                 intensities[i] = 0;
                             else

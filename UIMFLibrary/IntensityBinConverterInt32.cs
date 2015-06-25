@@ -21,7 +21,7 @@ namespace UIMFLibrary
 		/// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
 		/// </remarks>
 		public static int Encode(
-            List<KeyValuePair<int, int>> binToIntensityMap,
+            IList<KeyValuePair<int, int>> binToIntensityMap,
 			int timeOffset,
 			out byte[] spectra,
 			out double tic,
@@ -35,19 +35,19 @@ namespace UIMFLibrary
 
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			var rlzeDataList = new List<int>();
-			int nonZeroCount = 0;
+			var nonZeroCount = 0;
 
 			// 32-bit integers are 4 bytes
 			const int dataTypeSize = 4;
 
 			// Calculate TIC and BPI while run length zero encoding
-			int previousBin = int.MinValue;
+			var previousBin = int.MinValue;
 
 			rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Key));
-			for (int i = 0; i < binToIntensityMap.Count; i++)
+			for (var i = 0; i < binToIntensityMap.Count; i++)
 			{
-				int intensity = binToIntensityMap[i].Value;
-				int currentBin = binToIntensityMap[i].Key;
+				var intensity = binToIntensityMap[i].Value;
+				var currentBin = binToIntensityMap[i].Key;
 
                 // the intensities will always be positive integers
                 tic += intensity;
@@ -71,9 +71,9 @@ namespace UIMFLibrary
 		    }
 
             // Compress intensities
-			int nlzf = 0;
+			var nlzf = 0;
 			var nrlze = rlzeDataList.Count;
-			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+			var runLengthZeroEncodedData = rlzeDataList.ToArray();
 
 			var compressedData = new byte[nrlze * dataTypeSize * 5];
 			if (nrlze > 0)
