@@ -1102,7 +1102,7 @@ namespace UIMFLibrary
             try
             {
                 // Get list of tables in source DB
-                Dictionary<string, string> dctTableInfo = CloneUIMFGetObjects("table");
+                var dctTableInfo = CloneUIMFGetObjects("table");
 
                 // Delete the "sqlite_sequence" database from dctTableInfo if present
                 if (dctTableInfo.ContainsKey("sqlite_sequence"))
@@ -1111,7 +1111,7 @@ namespace UIMFLibrary
                 }
 
                 // Get list of indices in source DB
-                Dictionary<string, string> dctIndexInfo = CloneUIMFGetObjects("index");
+                var dctIndexInfo = CloneUIMFGetObjects("index");
 
                 if (File.Exists(targetDBPath))
                 {
@@ -1130,7 +1130,7 @@ namespace UIMFLibrary
                     {
 
                         // Create each table
-                        foreach (KeyValuePair<string, string> kvp in dctTableInfo)
+                        foreach (var kvp in dctTableInfo)
                         {
                             if (!string.IsNullOrEmpty(kvp.Value))
                             {
@@ -1140,7 +1140,7 @@ namespace UIMFLibrary
                             }
                         }
 
-                        foreach (KeyValuePair<string, string> kvp in dctIndexInfo)
+                        foreach (var kvp in dctIndexInfo)
                         {
                             if (!string.IsNullOrEmpty(kvp.Value))
                             {
@@ -1156,7 +1156,7 @@ namespace UIMFLibrary
                             cmdTargetDB.ExecuteNonQuery();
 
                             // Populate each table
-                            foreach (KeyValuePair<string, string> kvp in dctTableInfo)
+                            foreach (var kvp in dctTableInfo)
                             {
                                 sCurrentTable = string.Copy(kvp.Key);
 
@@ -1351,9 +1351,9 @@ namespace UIMFLibrary
             scanValues = new int[lengthOfOutputArrays];
             intensities = new int[lengthOfOutputArrays];
 
-            int[] lowerUpperBins = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
+            var lowerUpperBins = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
 
-            int[][][] frameIntensities = GetIntensityBlock(
+            var frameIntensities = GetIntensityBlock(
                 startFrameNumber,
                 endFrameNumber,
                 frameType,
@@ -1676,9 +1676,9 @@ namespace UIMFLibrary
             imsScanValues = new int[lengthOfScanArray];
             intensities = new int[lengthOfScanArray];
 
-            int[] lowerAndUpperBinBoundaries = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
+            var lowerAndUpperBinBoundaries = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
 
-            int[][][] intensityBlock = GetIntensityBlock(
+            var intensityBlock = GetIntensityBlock(
                 startFrameNumber,
                 endFrameNumber,
                 frameType,
@@ -1784,7 +1784,7 @@ namespace UIMFLibrary
         {
             var frameNumberList = new List<int>();
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 var frameTypeValue = m_frameTypeMS1;
 
@@ -2388,9 +2388,9 @@ namespace UIMFLibrary
             }
 
             var intensityValues = new int[endFrameNumber - startFrameNumber + 1][];
-            int[] lowerUpperBins = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
+            var lowerUpperBins = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
 
-            int[][][] frameIntensities = GetIntensityBlock(
+            var frameIntensities = GetIntensityBlock(
                 startFrameNumber,
                 endFrameNumber,
                 frameType,
@@ -2771,7 +2771,7 @@ namespace UIMFLibrary
                     var spectra = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
 
-                    Dictionary<int, int> currentBinDictionary = dictionaryArray[scanNum];
+                    var currentBinDictionary = dictionaryArray[scanNum];
 
 
                     if (spectra.Length <= 0)
@@ -2857,10 +2857,10 @@ namespace UIMFLibrary
 
             frameValues = new int[endFrameNumber - startFrameNumber + 1];
 
-            int[] lowerAndUpperBinBoundaries = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
+            var lowerAndUpperBinBoundaries = GetUpperLowerBinsFromMz(startFrameNumber, targetMZ, toleranceInMZ);
             intensities = new int[endFrameNumber - startFrameNumber + 1];
 
-            int[][][] frameIntensities = GetIntensityBlock(
+            var frameIntensities = GetIntensityBlock(
                 startFrameNumber,
                 endFrameNumber,
                 frameType,
@@ -2910,7 +2910,7 @@ namespace UIMFLibrary
 
             if (TableExists("Log_Entries"))
             {
-                using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+                using (var dbCommand = m_dbConnection.CreateCommand())
                 {
                     var sSql = "SELECT Entry_ID, Posted_By, Posting_Time, Type, Message FROM Log_Entries";
                     var sWhere = string.Empty;
@@ -2985,7 +2985,7 @@ namespace UIMFLibrary
         {
             var masterFrameDictionary = new Dictionary<int, FrameType>();
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
@@ -3044,7 +3044,7 @@ namespace UIMFLibrary
         {
             var count = 0;
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 var frameTypeList = "0,1";
 
@@ -3226,7 +3226,7 @@ namespace UIMFLibrary
         {
             var nonZeroCount = 0;
 
-            SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
+            var spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
 
             var frameParams = GetFrameParams(startFrameNumber);
 
@@ -3238,7 +3238,7 @@ namespace UIMFLibrary
             mzArray = new double[m_globalParameters.Bins + 1];
             intensityArray = new int[m_globalParameters.Bins + 1];
 
-            IList<SortedList<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
+            var cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
             // Validate the scan number range
             // Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015
@@ -3259,9 +3259,9 @@ namespace UIMFLibrary
             // If we are summing all scans together, then we can use the summed version of the spectrum cache
             if (endScanNumber - startScanNumber + 1 >= scans)
             {
-                IDictionary<int, int> currentIntensityDictionary = spectrumCache.SummedIntensityDictionary;
+                var currentIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
-                foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
+                foreach (var kvp in currentIntensityDictionary)
                 {
                     var binIndex = kvp.Key;
                     var intensity = kvp.Value;
@@ -3300,9 +3300,9 @@ namespace UIMFLibrary
                     // Prior to January 2015 we used a Dictionary<int, int>, which gives faster lookups for .TryGetValue
                     // However, a Dictionary uses roughly 2x more memory vs. a SortedList, which can cause problems for rich UIMF files
                     // Thus, we're now using a SortedList
-                    SortedList<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
+                    var currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
 
-                    foreach (KeyValuePair<int, int> kvp in currentIntensityDictionary)
+                    foreach (var kvp in currentIntensityDictionary)
                     {
                         var binIndex = kvp.Key;
                         var intensity = kvp.Value;
@@ -3493,14 +3493,14 @@ namespace UIMFLibrary
             mzArray = new double[numBinsToConsider];
             intensityArray = new int[numBinsToConsider];
 
-            SpectrumCache spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
+            var spectrumCache = GetOrCreateSpectrumCache(startFrameNumber, endFrameNumber, frameType);
             var frameParams = GetFrameParams(startFrameNumber);
-            IList<SortedList<int, int>> cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
+            var cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
             // If we are summing all scans together, then we can use the summed version of the spectrum cache
             if (endScanNumber - startScanNumber + 1 == frameParams.Scans)
             {
-                IDictionary<int, int> summedIntensityDictionary = spectrumCache.SummedIntensityDictionary;
+                var summedIntensityDictionary = spectrumCache.SummedIntensityDictionary;
 
                 for (var binIndex = 0; binIndex < numBinsToConsider; binIndex++)
                 {
@@ -3843,7 +3843,7 @@ namespace UIMFLibrary
         {
             double tic = 0;
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 dbCommand.CommandText = " SELECT TIC FROM Frame_Scans " +
                                         " WHERE FrameNum = " + frameNumber +
@@ -4567,7 +4567,7 @@ namespace UIMFLibrary
         {
             var count = 0;
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
@@ -4622,7 +4622,7 @@ namespace UIMFLibrary
             var iFrameTypeCount = 0;
             var iFrameTypeCountCalibrated = 0;
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 var currentFrameType = 0;
 
@@ -4702,7 +4702,7 @@ namespace UIMFLibrary
             var iFrameTypeCount = -1;
             var iFrameTypeCountCalibrated = -2;
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT FrameType, " +
                                         "COUNT(*) AS FrameCount, " +
@@ -4941,7 +4941,7 @@ namespace UIMFLibrary
             if (string.IsNullOrWhiteSpace(paramName))
                 throw new ArgumentOutOfRangeException("paramName", "paramName cannot be empty");
 
-            FrameParamKeyType paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+            var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
             if (paramType == FrameParamKeyType.Unknown)
             {
                 // Unrecognized parameter ID; ignore this key
@@ -5148,7 +5148,7 @@ namespace UIMFLibrary
                 cmd.CommandText = "SELECT Avg(Pressure) AS AvgPressure FROM (SELECT " + columnName + " AS Pressure FROM "
                                   + tableName + " WHERE IFNULL(" + columnName + ", 0) > 0 ORDER BY FrameNum LIMIT 25) SubQ";
 
-                object objResult = cmd.ExecuteScalar();
+                var objResult = cmd.ExecuteScalar();
                 if (objResult != null && objResult != DBNull.Value)
                 {
                     if (Convert.ToSingle(objResult, mCultureInfoUS) > 100)
@@ -5198,7 +5198,7 @@ namespace UIMFLibrary
                                     " WHERE Cast(IFNULL(Pressure, 0) as real) > 0 " +
                                     " ORDER BY FrameNum LIMIT 25) SubQ";
 
-                object objResult = cmd.ExecuteScalar();
+                var objResult = cmd.ExecuteScalar();
                 if (objResult != null && objResult != DBNull.Value)
                 {
                     if (Convert.ToSingle(objResult, mCultureInfoUS) > 100)
@@ -5470,7 +5470,7 @@ namespace UIMFLibrary
         {
             var frameTypeList = new List<int>();
 
-            using (SQLiteCommand dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 if (m_UsingLegacyFrameParameters)
                 {
@@ -5551,7 +5551,7 @@ namespace UIMFLibrary
         /// </returns>
         private SpectrumCache GetOrCreateSpectrumCache(int startFrameNumber, int endFrameNumber, FrameType frameType)
         {
-            foreach (SpectrumCache possibleSpectrumCache in m_spectrumCacheList)
+            foreach (var possibleSpectrumCache in m_spectrumCacheList)
             {
                 if (possibleSpectrumCache.StartFrameNumber == startFrameNumber &&
                     possibleSpectrumCache.EndFrameNumber == endFrameNumber)
@@ -5625,7 +5625,7 @@ namespace UIMFLibrary
                             break;
                     }
 
-                    SortedList<int, int> currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
+                    var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
 
                     for (var i = 0; i < numBins; i++)
                     {
@@ -5732,7 +5732,7 @@ namespace UIMFLibrary
             int endScan,
             string fieldName)
         {
-            Dictionary<int, double> dctTicOrBPI = GetTicOrBpiByFrame(
+            var dctTicOrBPI = GetTicOrBpiByFrame(
                 startFrameNumber,
                 endFrameNumber,
                 startScan,
@@ -5857,7 +5857,7 @@ namespace UIMFLibrary
             // Finalize the Sql command
             sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
-            using (SQLiteCommand dbcmdUIMF = m_dbConnection.CreateCommand())
+            using (var dbcmdUIMF = m_dbConnection.CreateCommand())
             {
                 dbcmdUIMF.CommandText = sql;
                 using (var reader = dbcmdUIMF.ExecuteReader())

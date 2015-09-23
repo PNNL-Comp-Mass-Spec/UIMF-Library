@@ -22,7 +22,7 @@ namespace UIMFLibrary
         {
             var frag = new double[blob.Length / 8];
 
-            for (int i = 0; i < frag.Length; i++)
+            for (var i = 0; i < frag.Length; i++)
             {
                 frag[i] = BitConverter.ToDouble(blob, i * 8);
             }
@@ -44,7 +44,7 @@ namespace UIMFLibrary
                 frag = new double[0];
 
             // convert the fragmentation profile into an array of bytes
-            int length_blob = frag.Length;
+            var length_blob = frag.Length;
             var blob_values = new byte[length_blob * 8];
 
             Buffer.BlockCopy(frag, 0, blob_values, 0, length_blob * 8);
@@ -239,7 +239,7 @@ namespace UIMFLibrary
                 var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
 
                 // Now convert to a base-64 encoded string
-                string base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+                var base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
 
                 // Finally, store in frameParams
                 frameParams.Add(FrameParamKeyType.FragmentationProfile, base64String);
@@ -373,7 +373,7 @@ namespace UIMFLibrary
         /// <returns>Specific FrameParamKeyType enum, or FrameParamKeyType.Unknown</returns>
         public static FrameParamKeyType GetParamTypeByName(string paramName)
         {
-            int iteration = 0;
+            var iteration = 0;
 
             // On the first iteration of the while loop, we require a case-sensitive match
             // If no match is found, then on the second iteration we use a case-insensitive match
@@ -384,7 +384,7 @@ namespace UIMFLibrary
                 {
                     // Note that this conversion works for both the names in the FrameParamKeyType enum and for the integer values
                     // See MSDN's "Enum.Parse Method" page at http://msdn.microsoft.com/en-us/library/essfb559.aspx
-                    bool ignoreCase = iteration > 0;
+                    var ignoreCase = iteration > 0;
                     var paramType = (FrameParamKeyType)Enum.Parse(typeof(FrameParamKeyType), paramName, ignoreCase);
                     if (Enum.IsDefined(typeof(FrameParamKeyType), paramType) | paramType.ToString().Contains(","))
                     {

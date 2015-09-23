@@ -159,7 +159,7 @@ namespace UIMFLibrary
             firstScan = int.MaxValue;
             lastScan = int.MinValue;
 
-            for (int i = 0; i < listOfIntensityDictionaries.Count; i++)
+            for (var i = 0; i < listOfIntensityDictionaries.Count; i++)
             {
                 if (listOfIntensityDictionaries[i].Any(dataPoint => dataPoint.Value > 0))
                 {

@@ -107,7 +107,7 @@ namespace UIMFLibrary
         /// </returns>
         public int MZtoTOF(double mz)
         {
-            double r = Math.Sqrt(mz);
+            var r = Math.Sqrt(mz);
             return (int)(((r / this.K) + this.T0) + .5); // .5 for rounding
         }
 
@@ -122,7 +122,7 @@ namespace UIMFLibrary
         /// </returns>
         public double TOFtoMZ(double TOFValue)
         {
-            double r = this.K * (TOFValue - this.T0);
+            var r = this.K * (TOFValue - this.T0);
             return r * r;
         }
 

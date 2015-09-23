@@ -90,7 +90,7 @@ namespace UIMFLibrary
                 if (!HasParameter(FrameParamKeyType.FrameType))
                     return DataReader.FrameType.MS1;
 
-                int frameType = GetValueInt32(FrameParamKeyType.FrameType);
+                var frameType = GetValueInt32(FrameParamKeyType.FrameType);
                 if (frameType == 0)
                 {
                     // This is an older UIMF file where the MS1 frames were labeled as 0

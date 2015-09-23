@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace UIMFLibrary
 {
@@ -49,7 +48,7 @@ namespace UIMFLibrary
         public static Dictionary<GlobalParamKeyType, string> ConvertGlobalParameters(GlobalParameters globalParameters)
 #pragma warning restore 612, 618
         {
-            int prescanContinuous = 0;
+            var prescanContinuous = 0;
 
             if (globalParameters.Prescan_Continuous)
                 prescanContinuous = 1;
@@ -122,8 +121,8 @@ namespace UIMFLibrary
                 return new GlobalParameters();
 
             // PrescanContinuous is a boolean value stored as a 0 or 1
-            int result = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanContinuous, 0);
-            bool prescanContinuous = (result != 0);
+            var result = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanContinuous, 0);
+            var prescanContinuous = (result != 0);
 
             // Populate legacyGlobalParams using dictionary GlobalParams
             var legacyGlobalParams = new GlobalParameters
@@ -170,7 +169,7 @@ namespace UIMFLibrary
         /// <returns>Specific GlobalParamKeyType enum, or GlobalParamKeyType.Unknown</returns>
         public static GlobalParamKeyType GetParamTypeByName(string paramName)
         {
-            int iteration = 0;
+            var iteration = 0;
 
             // On the first iteration of the while loop, we require a case-sensitive match
             // If no match is found, then on the second iteration we use a case-insensitive match
@@ -181,7 +180,7 @@ namespace UIMFLibrary
                 {
                     // Note that this conversion works for both the names in the GlobalParamKeyType enum and for the integer values
                     // See MSDN's "Enum.Parse Method" page at http://msdn.microsoft.com/en-us/library/essfb559.aspx
-                    bool ignoreCase = iteration > 0;
+                    var ignoreCase = iteration > 0;
                     var paramType = (GlobalParamKeyType)Enum.Parse(typeof(GlobalParamKeyType), paramName, ignoreCase);
                     if (Enum.IsDefined(typeof(GlobalParamKeyType), paramType) | paramType.ToString().Contains(","))
                     {

@@ -31,14 +31,14 @@ namespace UIMFLibrary
 			// RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
 			short zeroCount = 0;
 			var rlzeDataList = new List<int>();
-			int nonZeroCount = 0;
+			var nonZeroCount = 0;
 
 			// 32-bit integers are 4 bytes
 			const int dataTypeSize = 4;
 
 			// Calculate TIC and BPI while run length zero encoding
-		    int i = -1;
-            foreach (int intensity in intensities)
+		    var i = -1;
+            foreach (var intensity in intensities)
             {
                 i++;
 				if (intensity > 0)
@@ -75,9 +75,9 @@ namespace UIMFLibrary
 			}
 
 			// Compress intensities
-			int nlzf = 0;
+			var nlzf = 0;
 			var nrlze = rlzeDataList.Count;
-			int[] runLengthZeroEncodedData = rlzeDataList.ToArray();
+			var runLengthZeroEncodedData = rlzeDataList.ToArray();
 
 			var compressedData = new byte[nrlze * dataTypeSize * 5];
 			if (nrlze > 0)

@@ -114,9 +114,9 @@ namespace UIMFLibrary
 			uint oidx = 0;
 			long reference;
 
-			uint hval = (uint)((input[iidx] << 8) | input[iidx + 1]); // FRST(in_data, iidx);
+			var hval = (uint)((input[iidx] << 8) | input[iidx + 1]); // FRST(in_data, iidx);
 			long off;
-			int lit = 0;
+			var lit = 0;
 
 			for (;;)
 			{
@@ -133,7 +133,7 @@ namespace UIMFLibrary
 					{
 						/* match found at *reference++ */
 						uint len = 2;
-						uint maxlen = (uint)inputLength - iidx - len;
+						var maxlen = (uint)inputLength - iidx - len;
 						maxlen = maxlen > MAX_REF ? MAX_REF : maxlen;
 
 						if (oidx + lit + 1 + 3 >= outputLength)
@@ -261,9 +261,9 @@ namespace UIMFLibrary
 				}
 				else /* back reference */
 				{
-					uint len = ctrl >> 5;
+					var len = ctrl >> 5;
 
-					int reference = (int)(oidx - ((ctrl & 0x1f) << 8) - 1);
+					var reference = (int)(oidx - ((ctrl & 0x1f) << 8) - 1);
 
 					if (len == 7)
 					{

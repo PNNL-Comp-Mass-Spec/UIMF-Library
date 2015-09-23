@@ -96,10 +96,10 @@ namespace UIMFLibrary
 			string workingDirectory)
 		{
 			// Create the temporary database
-			string temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
+			var temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
 
 			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
-			string connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
+			var connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
 			using (var temporaryDatabaseConnection = new SQLiteConnection(connectionString, true))
 			{
 				temporaryDatabaseConnection.Open();
@@ -235,16 +235,16 @@ namespace UIMFLibrary
 				sqliteFile.Delete();
 			}
 
-			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+			var connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
-			int tablesCreated = 0;
+			var tablesCreated = 0;
 
 			// Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
 			using (var connection = new SQLiteConnection(connectionString, true))
 			{
 				connection.Open();
 
-				for (int i = 0; i <= numBins; i += BIN_SIZE)
+				for (var i = 0; i <= numBins; i += BIN_SIZE)
 				{
 					using (var sqlCommand = new SQLiteCommand(this.GetCreateIntensitiesTableQuery(i), connection))
 					{
@@ -270,13 +270,13 @@ namespace UIMFLibrary
 		private void CreateIndexes(string locationForNewDatabase, int numBins)
 		{
 			var sqliteFile = new FileInfo(locationForNewDatabase);
-			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+			var connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
 			using (var connection = new SQLiteConnection(connectionString, true))
 			{
 				connection.Open();
 
-				for (int i = 0; i <= numBins; i += BIN_SIZE)
+				for (var i = 0; i <= numBins; i += BIN_SIZE)
 				{
 					using (var sqlCommand = new SQLiteCommand(this.GetCreateIndexesQuery(i), connection))
 					{
@@ -286,14 +286,14 @@ namespace UIMFLibrary
 					if (numBins > 0)
 					{
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-                        string progressMessage = "Creating indices, Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
-						double percentComplete = 37 + (i / (double)numBins) * 30;
+                        var progressMessage = "Creating indices, Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+						var percentComplete = 37 + (i / (double)numBins) * 30;
 						this.UpdateProgress(percentComplete, progressMessage);
 					}
 
 				    if (i > 0 && i % 100 == 0)
 				    {
-                        string progressMessage = "Indexing bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+                        var progressMessage = "Indexing bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 				        Console.WriteLine(DateTime.Now + " - " + progressMessage);
 				    }
 
@@ -320,7 +320,7 @@ namespace UIMFLibrary
 			var uimfFileInfo = new FileInfo(uimfReader.UimfFilePath);
 
 			// Get location of new SQLite file
-			string sqliteFileName = uimfFileInfo.Name.Replace(".UIMF", "_temporary.db3").Replace(".uimf", "_temporary.db3");
+			var sqliteFileName = uimfFileInfo.Name.Replace(".UIMF", "_temporary.db3").Replace(".uimf", "_temporary.db3");
 			var sqliteFile = new FileInfo(Path.Combine(workingDirectory, sqliteFileName));
 
 			if (String.Equals(uimfFileInfo.FullName, sqliteFile.FullName, StringComparison.CurrentCultureIgnoreCase))
@@ -338,14 +338,14 @@ namespace UIMFLibrary
 				File.Delete(sqliteFile.FullName);
 			}
 
-			string connectionString = "Data Source=" + sqliteFile.FullName + ";";
+			var connectionString = "Data Source=" + sqliteFile.FullName + ";";
 
 			// Get global UIMF information
 			var globalParameters = uimfReader.GetGlobalParams();
-			int numFrames = globalParameters.NumFrames;
-			int numBins = globalParameters.Bins;
+			var numFrames = globalParameters.NumFrames;
+			var numBins = globalParameters.Bins;
 
-			int tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
+			var tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
             System.Threading.Thread.Sleep(150);
 
 			using (var connection = new SQLiteConnection(connectionString, true))
@@ -354,40 +354,40 @@ namespace UIMFLibrary
 
 				var commandDictionary = new Dictionary<int, SQLiteCommand>();
 
-				for (int i = 0; i <= numBins; i += BIN_SIZE)
+				for (var i = 0; i <= numBins; i += BIN_SIZE)
 				{
-					string query = this.GetInsertIntensityQuery(i);
+					var query = this.GetInsertIntensityQuery(i);
 					var sqlCommand = new SQLiteCommand(query, connection);
 
                     commandDictionary.Add(i, sqlCommand);
 				}
 
-				using (SQLiteTransaction transaction = connection.BeginTransaction())
+				using (var transaction = connection.BeginTransaction())
 				{
-					for (int frameNumber = 1; frameNumber <= numFrames; frameNumber++)
+					for (var frameNumber = 1; frameNumber <= numFrames; frameNumber++)
 					{
-						string progressMessage = "Processing Frame: " + frameNumber + " / " + numFrames;
+						var progressMessage = "Processing Frame: " + frameNumber + " / " + numFrames;
 						Console.WriteLine(DateTime.Now + " - " + progressMessage);
 
                         var frameParams = uimfReader.GetFrameParams(frameNumber);
-                        int numScans = frameParams.Scans;
+                        var numScans = frameParams.Scans;
 
 						// Get data from UIMF file
-						Dictionary<int, int>[] frameBinData = uimfReader.GetIntensityBlockOfFrame(frameNumber);
+						var frameBinData = uimfReader.GetIntensityBlockOfFrame(frameNumber);
 
-						for (int scanNumber = 0; scanNumber < numScans; scanNumber++)
+						for (var scanNumber = 0; scanNumber < numScans; scanNumber++)
 						{
-							Dictionary<int, int> scanData = frameBinData[scanNumber];
+							var scanData = frameBinData[scanNumber];
 
-							foreach (KeyValuePair<int, int> kvp in scanData)
+							foreach (var kvp in scanData)
 							{
-								int binNumber = kvp.Key;
-								int intensity = kvp.Value;
-								int modValue = binNumber % BIN_SIZE;
-								int minBin = binNumber - modValue;
+								var binNumber = kvp.Key;
+								var intensity = kvp.Value;
+								var modValue = binNumber % BIN_SIZE;
+								var minBin = binNumber - modValue;
 
-								SQLiteCommand sqlCommand = commandDictionary[minBin];
-								SQLiteParameterCollection parameters = sqlCommand.Parameters;
+								var sqlCommand = commandDictionary[minBin];
+								var parameters = sqlCommand.Parameters;
 								parameters.Clear();
 								parameters.Add(new SQLiteParameter(":MZ_BIN", binNumber));
 								parameters.Add(new SQLiteParameter(":SCAN_LC", frameNumber));
@@ -398,7 +398,7 @@ namespace UIMFLibrary
 						}
 
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-						double percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
+						var percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
 						this.UpdateProgress(percentComplete, progressMessage);
 					}
 
@@ -485,7 +485,7 @@ namespace UIMFLibrary
 		/// </param>
 		private void GetMinAndMaxBin(int binNumber, out int minBin, out int maxBin)
 		{
-			int modValue = binNumber % BIN_SIZE;
+			var modValue = binNumber % BIN_SIZE;
 			minBin = binNumber - modValue;
 			maxBin = binNumber + (BIN_SIZE - modValue - 1);
 		}
@@ -525,20 +525,20 @@ namespace UIMFLibrary
 			SQLiteConnection temporaryDatabaseConnection, 
 			DataReader uimfReader)
 		{
-			int numBins = uimfReader.GetGlobalParams().Bins;
+			var numBins = uimfReader.GetGlobalParams().Bins;
 
             var frameParams = uimfReader.GetFrameParams(1);
-            int numImsScans = frameParams.Scans;
+            var numImsScans = frameParams.Scans;
 
-			string targetFile = uimfWriterConnection.ConnectionString;
-			int charIndex = targetFile.IndexOf(";");
+			var targetFile = uimfWriterConnection.ConnectionString;
+			var charIndex = targetFile.IndexOf(";");
 			if (charIndex > 0)
 			{
 				targetFile = targetFile.Substring(0, charIndex - 1).Trim();
 			}
 
 			Console.WriteLine(DateTime.Now + " - Adding bin-centric data to " + targetFile);
-			DateTime dtLastProgress = DateTime.UtcNow;
+			var dtLastProgress = DateTime.UtcNow;
 
 		    if (DataReader.TableExists(uimfWriterConnection, "Bin_Intensities"))
 		    {
@@ -554,18 +554,18 @@ namespace UIMFLibrary
 
 		    using (var insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
 			{
-				for (int i = 0; i <= numBins; i++)
+				for (var i = 0; i <= numBins; i++)
 				{
 					this.SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
 
 					if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
 					{
-                        string progressMessage = "Processing Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+                        var progressMessage = "Processing Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 						Console.WriteLine(DateTime.Now + " - " + progressMessage);
 						dtLastProgress = DateTime.UtcNow;
 
 						// Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-						double percentComplete = (37 + 30) + (i / (double)numBins) * 33;
+						var percentComplete = (37 + 30) + (i / (double)numBins) * 33;
 						this.UpdateProgress(percentComplete, progressMessage);
 					}
 				}
@@ -600,22 +600,22 @@ namespace UIMFLibrary
 			var runLengthZeroEncodedData = new List<int>();
 			insertCommand.Parameters.Clear();
 
-			string query = this.GetReadSingleBinQuery(binNumber);
+			var query = this.GetReadSingleBinQuery(binNumber);
 
 			using (var readCommand = new SQLiteCommand(query, inConnection))
 			{
-				using (SQLiteDataReader reader = readCommand.ExecuteReader())
+				using (var reader = readCommand.ExecuteReader())
 				{
-					int previousLocation = 0;
+					var previousLocation = 0;
 
 					while (reader.Read())
 					{
-                        int scanLc = reader.GetInt32(1);
-                        int scanIms = reader.GetInt32(2);
-                        int intensity = reader.GetInt32(3);
+                        var scanLc = reader.GetInt32(1);
+                        var scanIms = reader.GetInt32(2);
+                        var intensity = reader.GetInt32(3);
 
-						int newLocation = (scanLc * numImsScans) + scanIms;
-						int difference = newLocation - previousLocation - 1;
+						var newLocation = (scanLc * numImsScans) + scanIms;
+						var difference = newLocation - previousLocation - 1;
 
 						// Add the negative difference if greater than 0 to represent a number of scans without data
 						if (difference > 0)
@@ -631,7 +631,7 @@ namespace UIMFLibrary
 				}
 			}
 
-			int dataCount = runLengthZeroEncodedData.Count;
+			var dataCount = runLengthZeroEncodedData.Count;
 
 			if (dataCount > 0)
 			{
