@@ -59,6 +59,18 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Returns True if storing data using the ppm bin-based mode
+        /// </summary>
+        public bool IsPpmBinBased
+        {
+            get
+            {
+                var instrumentClass = GetValueInt32(GlobalParamKeyType.InstrumentClass, (int)InstrumentClassType.TOF);
+                return instrumentClass == (int)InstrumentClassType.PpmBinBased;
+            }
+        }
+
+        /// <summary>
         /// Number of frames in the dataset
         /// </summary>
         public int NumFrames

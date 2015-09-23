@@ -14,7 +14,7 @@ namespace UIMFLibrary
         DateStarted = 2,
         NumFrames = 3,
         TimeOffset = 4,
-        BinWidth = 5,
+        BinWidth = 5,               // Tof-bin size (in nanosecods) or ppm bin size (in parts-per-million)
         Bins = 6,
         TOFCorrectionTime = 7,
         TOFIntensityType = 8,
@@ -23,7 +23,16 @@ namespace UIMFLibrary
         PrescanAccumulations = 11,
         PrescanTICThreshold = 12,
         PrescanContinuous = 13,
-        PrescanProfile = 14
+        PrescanProfile = 14,
+        InstrumentClass = 15,       // 0 for TOF; 1 for ppm bin-based
+        PpmBinBasedStartMz = 16,    // Only used when InstrumentClass is 1 (ppm bin-based)
+        PpmBinBasedEndMz = 17       // Only used when InstrumentClass is 1 (ppm bin-based)
+    }
+
+    public enum InstrumentClassType
+    {
+        TOF = 0,
+        PpmBinBased = 1
     }
 
     #endregion
@@ -147,6 +156,21 @@ namespace UIMFLibrary
                 case GlobalParamKeyType.PrescanProfile:
                     InitializeByType("PrescanProfile", typeof(string), "Profile used when PrescanContinuous is 1");
                     break;
+
+                case GlobalParamKeyType.InstrumentClass:
+                    InitializeByType("InstrumentClass", typeof(int), "Instrument class (0 for TOF, 1 for ppm bin-based)");
+                    break;
+
+                case GlobalParamKeyType.PpmBinBasedStartMz:
+                    InitializeByType("PpmBinBasedStartMz", typeof(float), "Starting m/z value for ppm bin-based mode");
+                    break;
+
+                case GlobalParamKeyType.PpmBinBasedEndMz:
+                    InitializeByType("PpmBinBasedEndMz", typeof(float), "Ending m/z value for ppm bin-based mode");
+                    break;
+
+                case GlobalParamKeyType.Unknown:
+                    throw new ArgumentOutOfRangeException("paramType", "Cannot initialiaze a global parameter of type Unknown: " + (int)paramType);
 
                 default:
                     throw new ArgumentOutOfRangeException("paramType", "Unrecognized global param enum for paramType: " + (int)paramType);

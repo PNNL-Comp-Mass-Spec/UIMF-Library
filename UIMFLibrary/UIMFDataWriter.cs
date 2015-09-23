@@ -413,7 +413,7 @@ namespace UIMFLibrary
         public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
         {
             // Check whether the Log_Entries table needs to be created
-            using (SQLiteCommand cmdPostLogEntry = oConnection.CreateCommand())
+            using (var cmdPostLogEntry = oConnection.CreateCommand())
             {
 
                 if (!DataReader.TableExists(oConnection, "Log_Entries"))
@@ -982,7 +982,7 @@ namespace UIMFLibrary
             var numFrames = 0;
 
             dbCommand.CommandText = "SELECT ParamValue AS NumFrames From Global_Params WHERE ParamID=" + (int)GlobalParamKeyType.NumFrames;
-            using (SQLiteDataReader reader = dbCommand.ExecuteReader())
+            using (var reader = dbCommand.ExecuteReader())
             {
                 if (reader.Read())
                 {
@@ -1697,6 +1697,9 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 return -1;
 
+            if (m_globalParameters.IsPpmBinBased)
+                throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
+
             if (intensities.Count > m_globalParameters.Bins)
             {
                 throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
@@ -1741,6 +1744,9 @@ namespace UIMFLibrary
 
             if (binToIntensityMap == null)
                 throw new ArgumentNullException("binToIntensityMap", "binToIntensityMap cannot be null");
+
+            if (m_globalParameters.IsPpmBinBased)
+                throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
 
             if (!binToIntensityMap.Any())
             {
