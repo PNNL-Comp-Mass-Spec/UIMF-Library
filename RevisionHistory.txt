@@ -24,7 +24,7 @@ Version 3.0.5556; March 19, 2015
 	- Fix bug storing DriftTime in GetFrameScans
 
 Version 3.0.5540; March 3, 2015
-	- Added methods PreCacheAllFrameParams, which speeds up AddLegacyParameterTablesUsingExistingParamTables
+	- Added method PreCacheAllFrameParams, which speeds up AddLegacyParameterTablesUsingExistingParamTables
 
 Version 3.0.5536; February 27, 2015
 	- The writer now has the option (enabled by default) to populate the legacy parameter tables (Global_Parameters and Frame_Parameters)
@@ -34,7 +34,7 @@ Version 3.0.5532; February 23, 2015
 	- Added PressureUnits frameter parameter
 
 Version 3.0.5504; January 26, 2015
-	- Recuded memory footprint by updating SpectrumCache to use a SortedList instead of a Dictionary
+	- Reduced memory footprint by updating SpectrumCache to use a SortedList instead of a Dictionary
 
 Version 3.0.5450; December 3, 2014
 	- Added support for Agilent .D folders where the first scan is 1 instead of 0
