@@ -4130,12 +4130,8 @@ namespace UIMFLibrary
         /// <param name="tolerance">
         /// Tolerance.
         /// </param>
-        /// <param name="frameIndexMin">
-        /// Minimum frame index
-        /// </param>
-        /// <param name="frameIndexMax">
-        /// Maximum frame index
-        /// </param>
+        /// <param name="frameNumberMin"></param>
+        /// <param name="frameNumberMax"></param>
         /// <param name="scanMin">
         /// Minimum scan number
         /// </param>
@@ -4157,8 +4153,8 @@ namespace UIMFLibrary
         public List<IntensityPoint> GetXic(
             double targetMz,
             double tolerance,
-            int frameIndexMin,
-            int frameIndexMax,
+            int frameNumberMin,
+            int frameNumberMax,
             int scanMin,
             int scanMax,
             FrameType frameType,
@@ -4169,14 +4165,14 @@ namespace UIMFLibrary
                 ThrowMissingBinCentricTablesException();
             }
 
-            var frameParams = GetFrameParams(1);
+            var frameParams = GetFrameParams(frameNumberMin);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
             var binWidth = m_globalParameters.BinWidth;
             var tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
-            var frameSet = m_frameTypeInfo[frameType];
+            FrameSetContainer frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
@@ -4228,13 +4224,13 @@ namespace UIMFLibrary
                             var frameIndex = frameIndexes[scanLc];
 
                             // We can stop after we get past the max frame number given
-                            if (frameIndex > frameIndexMax)
+                            if (frameIndex > frameIndexes[frameNumberMax])
                             {
                                 break;
                             }
 
                             // Skip all frames and scans that we do not care about
-                            if (frameIndex < frameIndexMin || scanIms < scanMin || scanIms > scanMax)
+                            if (frameIndex < frameIndexes[frameNumberMin] || scanIms < scanMin || scanIms > scanMax)
                             {
                                 continue;
                             }
@@ -4363,10 +4359,10 @@ namespace UIMFLibrary
         /// <param name="tolerance">
         /// Tolerance.
         /// </param>
-        /// <param name="frameIndexMin">
+        /// <param name="frameNumberMin">
         /// Frame index min.
         /// </param>
-        /// <param name="frameIndexMax">
+        /// <param name="frameNumberMax">
         /// Frame index max.
         /// </param>
         /// <param name="scanMin">
@@ -4390,8 +4386,8 @@ namespace UIMFLibrary
         public double[,] GetXicAsArray(
             double targetMz,
             double tolerance,
-            int frameIndexMin,
-            int frameIndexMax,
+            int frameNumberMin,
+            int frameNumberMax,
             int scanMin,
             int scanMax,
             FrameType frameType,
@@ -4402,7 +4398,7 @@ namespace UIMFLibrary
                 ThrowMissingBinCentricTablesException();
             }
 
-            var frameParams = GetFrameParams(frameIndexMin);
+            var frameParams = GetFrameParams(frameNumberMin);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
             var binWidth = m_globalParameters.BinWidth;
@@ -4412,7 +4408,7 @@ namespace UIMFLibrary
 
             var frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
-            var numFrames = frameIndexMax - frameIndexMin + 1;
+            var numFrames = frameNumberMax - frameNumberMin + 1;
 
             var result = new double[numFrames, numScans];
 
@@ -4463,19 +4459,19 @@ namespace UIMFLibrary
                             var frameIndex = frameIndexes[scanLc];
 
                             // We can stop after we get past the max frame number given
-                            if (frameIndex > frameIndexMax)
+                            if (frameIndex > frameIndexes[frameNumberMax])
                             {
                                 break;
                             }
 
                             // Skip all frames and scans that we do not care about
-                            if (frameIndex < frameIndexMin || scanIms < scanMin || scanIms > scanMax)
+                            if (frameIndex < frameIndexes[frameNumberMin] || scanIms < scanMin || scanIms > scanMax)
                             {
                                 continue;
                             }
 
                             // Add intensity to the result
-                            result[frameIndex - frameIndexMin, scanIms - scanMin] += decodedSpectraRecord;
+                            result[frameIndex - frameIndexes[frameNumberMin], scanIms - scanMin] += decodedSpectraRecord;
                         }
                     }
                 }

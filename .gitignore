@@ -1,2 +1,9 @@
 UIMFLibrary_Demo/packages/
 packages/
+UIMFLibrary.FunctionalTests/bin/
+UIMFLibrary.UnitTests/bin/
+UIMFLibrary.UnitTests/obj/
+UIMFLibrary/bin/
+UIMFLibrary/obj/
+UIMFLibrary.FunctionalTests/obj/
+*.user
