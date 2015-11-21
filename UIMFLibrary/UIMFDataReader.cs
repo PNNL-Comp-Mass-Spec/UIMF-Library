@@ -5577,7 +5577,9 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Clear();
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
-            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", 1));
+            // new SQLiteParameter("ScanNum1", 0) doesn't work - '0' turns into null, but '1' skips any '0' scans
+            // Probably due to some of the overloading; we can manually cast the value, or manually set it via the initializer syntax.
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", (object) 0));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
@@ -6216,7 +6218,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        // Unload the prep statements
+        /// Unload the prep statements
         /// </summary>
         private void UnloadPrepStmts()
         {
