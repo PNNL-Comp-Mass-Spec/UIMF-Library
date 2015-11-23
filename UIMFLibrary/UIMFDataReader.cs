@@ -5607,8 +5607,10 @@ namespace UIMFLibrary
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
             // new SQLiteParameter("ScanNum1", 0) doesn't work - '0' turns into null, but '1' skips any '0' scans
-            // Probably due to some of the overloading; we can manually cast the value, or manually set it via the initializer syntax.
-            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", (object) 0));
+            // Caused by the SQLiteParameter(string, DbType...) overloads
+            // https://social.msdn.microsoft.com/Forums/en-US/596f17c7-bf7f-4eac-b061-a0026a5579eb/faq-item-why-i-cannot-pass-0-as-value-to-a-sql-parameter-in-adonet
+            // We can manually cast the value, or manually set it via the initializer syntax.
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", Convert.ToInt32(0)));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
