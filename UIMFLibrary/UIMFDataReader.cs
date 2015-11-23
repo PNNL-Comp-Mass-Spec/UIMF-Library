@@ -2263,6 +2263,35 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Retrieve the ScanInfo for a single scan in a specified frame
+        /// </summary>
+        /// <param name="frameNumber">Frame Number</param>
+        /// <param name="scan">Scan Number</param>
+        /// <returns>ScanInfo object, listing BPI, BPI_MZ, TIC, DriftTime, and NonZeroCount</returns>
+        public ScanInfo GetScan(int frameNumber, int scan)
+        {
+            var scansForFrame = GetFrameScans(frameNumber);
+
+            //var scanNums = scansForFrame.Select(x => x.Scan).ToList();
+            //var minScan = scanNums.Min();
+            //var maxScan = scanNums.Max();
+            //if (scan < minScan || scan > maxScan)
+            //{
+            //    throw new ArgumentOutOfRangeException("scan",
+            //                                          "Scan index \"" + scan + "\" out of range for Frame \"" + frameNumber + "\"");
+            //}
+
+            var matches = scansForFrame.Where(x => x.Scan == scan).ToList();
+            if (matches.Count == 0)
+            {
+                    throw new ArgumentOutOfRangeException("scan",
+                                                          "Scan index \"" + scan + "\" not found in Frame \"" + frameNumber + "\"");
+            }
+
+            return matches.First();
+        }
+
+        /// <summary>
         /// Gets information on the scans associated with a given frame
         /// </summary>
         /// <param name="frameNumber">Frame Number</param>
