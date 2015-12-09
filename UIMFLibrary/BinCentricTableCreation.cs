@@ -48,6 +48,9 @@ namespace UIMFLibrary
 
 		#region Public Events
 
+        /// <summary>
+        /// Error event handler
+        /// </summary>
         public event EventHandler<MessageEventArgs> OnError;
 
 		/// <summary>

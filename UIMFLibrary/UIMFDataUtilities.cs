@@ -17,16 +17,31 @@ namespace UIMFLibrary
 	{
 		#region Public Methods and Operators
 
+        /// <summary>
+        /// Convert a double to a string, forcing invariant culture
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string DoubleToString(double value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Convert a float to a string, forcing invariant culture
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
 	    public static string FloatToString(double value)
 	    {
 	        return FloatToString((float)value);
 	    }
 
+        /// <summary>
+        /// Convert a double to a string, forcing invariant culture
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string FloatToString(float value)
         {
             if ((value - (int)value) < float.Epsilon * 2)
@@ -35,11 +50,21 @@ namespace UIMFLibrary
             return value.ToString(CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Convert an int to a string, forcing invariant culture
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string IntToString(double value)
         {
             return IntToString((int)value);
         }
 
+        /// <summary>
+        /// Convert a int to a string, forcing invariant culture
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string IntToString(int value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
@@ -96,6 +121,11 @@ namespace UIMFLibrary
             Array.Resize(ref yvals, targetIndex);
 		}
 
+        /// <summary>
+        /// Force date string output to an invariant culture format
+        /// </summary>
+        /// <param name="dateString"></param>
+        /// <returns></returns>
         public static string StandardizeDate(string dateString)
         {
             if (string.IsNullOrWhiteSpace(dateString))
@@ -110,6 +140,11 @@ namespace UIMFLibrary
             throw new ArgumentException("dateString parameter is not a valid date");
         }
 
+        /// <summary>
+        /// Force date string output to an invariant culture format
+        /// </summary>
+        /// <param name="dateValue"></param>
+        /// <returns></returns>
         public static string StandardizeDate(DateTime dateValue)
 	    {
 	        if (dateValue > DateTime.MinValue)

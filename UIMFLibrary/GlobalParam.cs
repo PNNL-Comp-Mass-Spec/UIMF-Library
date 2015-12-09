@@ -9,34 +9,118 @@ namespace UIMFLibrary
     /// </summary>
     public enum GlobalParamKeyType
     {
+        /// <summary>
+        /// Unknown Global Parameter key
+        /// </summary>
         Unknown = 0,
+
+        /// <summary>
+        /// Key: Instrument Name
+        /// </summary>
         InstrumentName = 1,
+
+        /// <summary>
+        /// Key: Date Data collection started
+        /// </summary>
         DateStarted = 2,
+
+        /// <summary>
+        /// Key: Number of frames
+        /// </summary>
         NumFrames = 3,
+
+        /// <summary>
+        /// Key: Time offset
+        /// </summary>
         TimeOffset = 4,
+
+        /// <summary>
+        /// Key: Bin width
+        /// </summary>
         BinWidth = 5,               // Tof-bin size (in nanosecods) or ppm bin size (in parts-per-million)
+
+        /// <summary>
+        /// Key: Bins
+        /// </summary>
         Bins = 6,
+
+        /// <summary>
+        /// Key: TOF Correction Time
+        /// </summary>
         TOFCorrectionTime = 7,
+
+        /// <summary>
+        /// Key: TOF Intensity type
+        /// </summary>
         TOFIntensityType = 8,
+
+        /// <summary>
+        /// Key: Dataset type
+        /// </summary>
         DatasetType = 9,
+
+        /// <summary>
+        /// Key: Prescan TOF Pulses
+        /// </summary>
         PrescanTOFPulses = 10,
+
+        /// <summary>
+        /// Key: Prescan Accumulations
+        /// </summary>
         PrescanAccumulations = 11,
+
+        /// <summary>
+        /// Key: Prescan TIC Threshold
+        /// </summary>
         PrescanTICThreshold = 12,
+
+        /// <summary>
+        /// Key: Prescan Continuous
+        /// </summary>
         PrescanContinuous = 13,
+
+        /// <summary>
+        /// Key: Prescan Profile
+        /// </summary>
         PrescanProfile = 14,
+
+        /// <summary>
+        /// Key: Instrument Class
+        /// </summary>
         InstrumentClass = 15,       // 0 for TOF; 1 for ppm bin-based
+
+        /// <summary>
+        /// Key: PPM Bin Based Start m/z
+        /// </summary>
         PpmBinBasedStartMz = 16,    // Only used when InstrumentClass is 1 (ppm bin-based)
+
+        /// <summary>
+        /// Key: PPM Bin Base End m/z
+        /// </summary>
         PpmBinBasedEndMz = 17       // Only used when InstrumentClass is 1 (ppm bin-based)
     }
 
+    /// <summary>
+    /// Instrument Class types
+    /// </summary>
     public enum InstrumentClassType
     {
+        /// <summary>
+        /// TOF-based instrument
+        /// </summary>
         TOF = 0,
+
+        /// <summary>
+        /// PPM bin based instrument
+        /// </summary>
         PpmBinBased = 1
     }
 
     #endregion
 
+    /// <summary>
+    /// Global parameters
+    /// </summary>
     public class GlobalParam
     {
 

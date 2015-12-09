@@ -14,6 +14,9 @@ namespace UIMFLibrary
         private readonly int mFrameNumber;
         private readonly int mScanNumber;
 
+        /// <summary>
+        /// Frame number for scan
+        /// </summary>
         public int Frame 
         {
             get
@@ -22,6 +25,9 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Scan number
+        /// </summary>
         public int Scan
         {
             get

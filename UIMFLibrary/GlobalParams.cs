@@ -128,6 +128,11 @@ namespace UIMFLibrary
             return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType"></param>
+        /// <param name="value"></param>
         public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, DateTime value)
         {
             return AddUpdateValue(paramType, UIMFDataUtilities.StandardizeDate(value));

@@ -32,7 +32,14 @@ namespace UIMFLibrary
         /// </summary>
         private const int MINIMUM_FLUSH_INTERVAL_SECONDS = 5;
 
+        /// <summary>
+        /// Name of table containing frame parameters - legacy format
+        /// </summary>
         public const string FRAME_PARAMETERS_TABLE = "Frame_Parameters";
+
+        /// <summary>
+        /// Name of table containing fram parameters - new format
+        /// </summary>
         public const string FRAME_PARAMS_TABLE = "Frame_Params";
 
         #endregion
@@ -1196,6 +1203,10 @@ namespace UIMFLibrary
             }
         }
 
+        /// <summary>
+        /// Dispose of the specified SQLite command
+        /// </summary>
+        /// <param name="dbCommand"></param>
         protected void DisposeCommand(SQLiteCommand dbCommand)
         {
             if (dbCommand != null)
@@ -2836,6 +2847,10 @@ namespace UIMFLibrary
 
         }
 
+        /// <summary>
+        /// Check for existence of the Frame_Scans table
+        /// </summary>
+        /// <param name="callingMethod"></param>
         protected void ValidateFrameScansExists(string callingMethod)
         {
             if (!m_HasFrameScansTable)

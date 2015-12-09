@@ -9,57 +9,264 @@ namespace UIMFLibrary
     /// </summary>
     public enum FrameParamKeyType
     {
+        /// <summary>
+        /// Unknown frame parameter key
+        /// </summary>
         Unknown = 0,
+
+        /// <summary>
+        /// Key: Frame start time
+        /// </summary>
         StartTimeMinutes = 1,
+
+        /// <summary>
+        /// Key: Duration of frame
+        /// </summary>
         DurationSeconds = 2,
+        
+        /// <summary>
+        /// Key: Number of accumulations in frame
+        /// </summary>
         Accumulations = 3,
+
+        /// <summary>
+        /// Key: FrameType
+        /// </summary>
         FrameType = 4,
+
+        /// <summary>
+        /// Key: Decoded
+        /// </summary>
         Decoded = 5,
+
+        /// <summary>
+        /// Key: Calibration done
+        /// </summary>
         CalibrationDone = 6,
+
+        /// <summary>
+        /// Key: Scans
+        /// </summary>
         Scans = 7,
+
+        /// <summary>
+        /// Key: Multiplexing Encoding sequence
+        /// </summary>
         MultiplexingEncodingSequence = 8,        // Previously called IMFProfile
+
+        /// <summary>
+        /// Key: Multiplexing bit order
+        /// </summary>
         MPBitOrder = 9,
+
+        /// <summary>
+        /// Key: TOF Losses
+        /// </summary>
         TOFLosses = 10,
+
+        /// <summary>
+        /// Key: Average TOF length
+        /// </summary>
         AverageTOFLength = 11,
+
+        /// <summary>
+        /// Key: Calibration Slope
+        /// </summary>
         CalibrationSlope = 12,
+
+        /// <summary>
+        /// Key: Calibration Intercept
+        /// </summary>
         CalibrationIntercept = 13,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: a2
+        /// </summary>
         MassCalibrationCoefficienta2 = 14,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: b2
+        /// </summary>
         MassCalibrationCoefficientb2 = 15,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: c2
+        /// </summary>
         MassCalibrationCoefficientc2 = 16,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: d2
+        /// </summary>
         MassCalibrationCoefficientd2 = 17,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: e2
+        /// </summary>
         MassCalibrationCoefficiente2 = 18,
+
+        /// <summary>
+        /// Key: Mass Calibration Coefficient: f2
+        /// </summary>
         MassCalibrationCoefficientf2 = 19,
+
+        /// <summary>
+        /// Key: Ambient temperature
+        /// </summary>
         AmbientTemperature = 20,
+
+        /// <summary>
+        /// Key: Voltage High Voltage Rack 1
+        /// </summary>
         VoltHVRack1 = 21,
+
+        /// <summary>
+        /// Key: Voltage High Voltage Rack 2
+        /// </summary>
         VoltHVRack2 = 22,
+
+        /// <summary>
+        /// Key: Voltage High Voltage Rack 3
+        /// </summary>
         VoltHVRack3 = 23,
+
+        /// <summary>
+        /// Key: Voltage High Voltage Rack 4
+        /// </summary>
         VoltHVRack4 = 24,
+
+        /// <summary>
+        /// Key: Voltage Cap Inlet
+        /// </summary>
         VoltCapInlet = 25,
+
+        /// <summary>
+        /// Key: Voltage Entrance HPF In
+        /// </summary>
         VoltEntranceHPFIn = 26,
+
+        /// <summary>
+        /// Key: Voltage Entrance HPF Out
+        /// </summary>
         VoltEntranceHPFOut = 27,
+
+        /// <summary>
+        /// Key: Voltage Entrance CondLmt
+        /// </summary>
         VoltEntranceCondLmt = 28,
+
+        /// <summary>
+        /// Key: Voltage Trap Out
+        /// </summary>
         VoltTrapOut = 29,
+
+        /// <summary>
+        /// Key: Voltage Trap In
+        /// </summary>
         VoltTrapIn = 30,
+
+        /// <summary>
+        /// Key: Voltage Jet Dist
+        /// </summary>
         VoltJetDist = 31,
+
+        /// <summary>
+        /// Key: Voltage Quad 1
+        /// </summary>
         VoltQuad1 = 32,
+
+        /// <summary>
+        /// Key: Voltage Cond 1
+        /// </summary>
         VoltCond1 = 33,
+
+        /// <summary>
+        /// Key: Voltage Quad 2
+        /// </summary>
         VoltQuad2 = 34,
+
+        /// <summary>
+        /// Key: Voltage Cond 2
+        /// </summary>
         VoltCond2 = 35,
+
+        /// <summary>
+        /// Key: Voltage IMS Out
+        /// </summary>
         VoltIMSOut = 36,
+
+        /// <summary>
+        /// Key: Voltage Exit HPF In
+        /// </summary>
         VoltExitHPFIn = 37,
+
+        /// <summary>
+        /// Key: Voltage Exit HPF Out
+        /// </summary>
         VoltExitHPFOut = 38,
+
+        /// <summary>
+        /// Key: Voltage Exit CondLmt
+        /// </summary>
         VoltExitCondLmt = 39,
+
+        /// <summary>
+        /// Key: Pressure Front
+        /// </summary>
         PressureFront = 40,
+
+        /// <summary>
+        /// Key: Pressure Back
+        /// </summary>
         PressureBack = 41,
+
+        /// <summary>
+        /// Key: High Pressure Funnel Pressure
+        /// </summary>
         HighPressureFunnelPressure = 42,
+
+        /// <summary>
+        /// Key: Ion Funnel Trap Pressure
+        /// </summary>
         IonFunnelTrapPressure = 43,
+
+        /// <summary>
+        /// Key: Rear Ion Funnel Pressure
+        /// </summary>
         RearIonFunnelPressure = 44,
+
+        /// <summary>
+        /// Key: Quadrupole Pressure
+        /// </summary>
         QuadrupolePressure = 45,
+
+        /// <summary>
+        /// Key: ESI Voltage
+        /// </summary>
         ESIVoltage = 46,
+
+        /// <summary>
+        /// Key: Float Voltage
+        /// </summary>
         FloatVoltage = 47,
+
+        /// <summary>
+        /// Key: Fragmentation Profile
+        /// </summary>
         FragmentationProfile = 48,
-        ScanNumFirst= 49,
+
+        /// <summary>
+        /// Key: Scan Number First
+        /// </summary>
+        ScanNumFirst = 49,
+
+        /// <summary>
+        /// Key: Scan Number Last
+        /// </summary>
         ScanNumLast = 50,
+
+        /// <summary>
+        /// Key: Pressure Units
+        /// </summary>
         PressureUnits = 51
     }
 

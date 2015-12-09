@@ -79,13 +79,6 @@ namespace UIMFLibrary
         protected Dictionary<FrameParamKeyType, FrameParamDef> m_frameParameterKeys;
 
         /// <summary>
-        /// Frame parameters class cache
-        /// </summary>
-        /// <remarks>One FrameParameters instance per frame number</remarks>
-        /// [Obsolete("Use m_CachedFrameParameters instead")]
-        //protected readonly FrameParameters[] m_frameParametersCache;
-
-        /// <summary>
         /// Frame parameters cache
         /// </summary>
         /// <remarks>Key is frame number, value is the frame parameters</remarks>
@@ -395,16 +388,25 @@ namespace UIMFLibrary
 
         #region Public Properties
 
+        /// <summary>
+        /// The connection to the SQLite database
+        /// </summary>
         public SQLiteConnection DBConnection
         {
             get { return m_dbConnection; }
         }
 
+        /// <summary>
+        /// Whether the database has a "FrameParams" table
+        /// </summary>
         public bool HasFrameParamsTable
         {
             get { return !m_UsingLegacyFrameParameters; }
         }
 
+        /// <summary>
+        /// Whether the database is using a legacy frame parameter table
+        /// </summary>
         public bool HasLegacyFrameParameters
         {
             get { return m_HasLegacyFrameParameters; }

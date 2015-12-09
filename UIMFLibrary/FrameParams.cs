@@ -11,13 +11,39 @@ namespace UIMFLibrary
     {
         #region Structures
 
+        /// <summary>
+        /// Mass Calibration Coefficients
+        /// </summary>
         public struct MassCalibrationCoefficientsType
         {
+            /// <summary>
+            /// Calibration Coefficient a2
+            /// </summary>
             public double a2;
+
+            /// <summary>
+            /// Calibration Coefficient b2
+            /// </summary>
             public double b2;
+
+            /// <summary>
+            /// Calibration Coefficient c2
+            /// </summary>
             public double c2;
+
+            /// <summary>
+            /// Calibration Coefficient d2
+            /// </summary>
             public double d2;
+
+            /// <summary>
+            /// Calibration Coefficient e2
+            /// </summary>
             public double e2;
+
+            /// <summary>
+            /// Calibration Coefficient f2
+            /// </summary>
             public double f2;
         }
 
