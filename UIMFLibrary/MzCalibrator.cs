@@ -23,6 +23,13 @@ namespace UIMFLibrary
         /// </summary>
         private double T0;
 
+        private double binWidth;
+
+        private double TenthsOfNanoSecondsPerBin
+        {
+            get { return this.binWidth * 10; }
+        }
+
         #endregion
 
         #region Constructors and Destructors
@@ -36,13 +43,17 @@ namespace UIMFLibrary
         /// <param name="t0">
         /// t0
         /// </param>
+        /// <param name="binWidthNs">
+        /// bin width, in nanoseconds
+        /// </param>
         /// <remarks>
         /// mass = (k * (t-t0))^2
         /// </remarks>
-        public MzCalibrator(double k, double t0)
+        public MzCalibrator(double k, double t0, double binWidthNs = 1)
         {
             this.K = k;
             this.T0 = t0;
+            this.binWidth = binWidthNs;
         }
 
         #endregion
@@ -124,6 +135,47 @@ namespace UIMFLibrary
         {
             var r = this.K * (TOFValue - this.T0);
             return r * r;
+        }
+
+        /// <summary>
+        /// Convert m/z to bin number
+        /// </summary>
+        /// <param name="mz">m/z</param>
+        /// <returns>bin number</returns>
+        public double MZtoBin(double mz)
+        {
+            // TODO: Add TOFCorrectionTime?
+            return this.TOFtoBin(this.MZtoTOF(mz));
+        }
+
+        /// <summary>
+        /// Convert bin to m/z
+        /// </summary>
+        /// <param name="bin">bin number</param>
+        /// <returns>m/z</returns>
+        public double BinToMZ(double bin)
+        {
+            return this.TOFtoMZ(this.BinToTOF(bin));
+        }
+
+        /// <summary>
+        /// Convert from a bin number to a TOF value
+        /// </summary>
+        /// <param name="bin"></param>
+        /// <returns></returns>
+        public double BinToTOF(double bin)
+        {
+            return bin / this.binWidth * this.TenthsOfNanoSecondsPerBin;
+        }
+
+        /// <summary>
+        /// Convert from a TOF value to bin number
+        /// </summary>
+        /// <param name="TOF"></param>
+        /// <returns></returns>
+        public double TOFtoBin(double TOF)
+        {
+            return TOF * this.binWidth / this.TenthsOfNanoSecondsPerBin;
         }
 
         #endregion

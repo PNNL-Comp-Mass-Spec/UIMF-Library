@@ -913,15 +913,14 @@ namespace UIMFLibrary
                         Console.WriteLine(" ... Warning, CalibrationSlope is 0 for frame " + currentFrameNumber);
 
                     var mzMin =
-                        mzCalibrator.TOFtoMZ((float)((startBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+                        mzCalibrator.BinToMZ(startBin);
 
                     var mzMax =
-                        mzCalibrator.TOFtoMZ((float)((endBin / m_globalParameters.BinWidth) * TenthsOfNanoSecondsPerBin));
+                        mzCalibrator.BinToMZ(endBin);
 
                     for (var i = 0; i < height; i++)
                     {
-                        m_calibrationTable[i] = mzCalibrator.MZtoTOF(mzMin + (i * (mzMax - mzMin) / height)) * 
-                                                m_globalParameters.BinWidth / TenthsOfNanoSecondsPerBin;
+                        m_calibrationTable[i] = mzCalibrator.MZtoBin(mzMin + (i * (mzMax - mzMin) / height));
                     }
                 }
 
@@ -3058,7 +3057,7 @@ namespace UIMFLibrary
             var calibrationSlope = frameParameters.CalibrationSlope;
             var calibrationIntercept = frameParameters.CalibrationIntercept;
 
-            return new MzCalibrator(calibrationSlope / 10000.0, calibrationIntercept * 10000.0);
+            return new MzCalibrator(calibrationSlope / 10000.0, calibrationIntercept * 10000.0, m_globalParameters.BinWidth);
         }
 
         /// <summary>
