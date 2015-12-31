@@ -3113,11 +3113,26 @@ namespace UIMFLibrary
         /// TOF bin arrive time<see cref="double"/>.
         /// </returns>
         /// <remarks>The function name is misleading; does not return an m/z</remarks>
+        [Obsolete("Misleading name. Use GetBinForPixel(pixel)")]
         public double GetPixelMZ(int bin)
         {
-            if ((m_calibrationTable != null) && (bin < m_calibrationTable.Length))
+            return GetBinForPixel(bin);
+        }
+
+        /// <summary>
+        /// Get the minimum TOF bin arrival time value for the given pixel bin
+        /// </summary>
+        /// <param name="pixel">
+        /// Pixel bin
+        /// </param>
+        /// <returns>
+        /// TOF bin arrive time<see cref="double"/>.
+        /// </returns>
+        public double GetBinForPixel(int pixel)
+        {
+            if ((m_calibrationTable != null) && (pixel < m_calibrationTable.Length))
             {
-                return m_calibrationTable[bin];
+                return m_calibrationTable[pixel];
             }
 
             return -1;
