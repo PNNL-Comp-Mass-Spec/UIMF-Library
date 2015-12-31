@@ -12,6 +12,13 @@ namespace UIMFLibrary
     /// </summary>
     public static class ReaderWriterExtensions
     {
+        /// <summary>
+        /// Asynchronously insert a frame
+        /// </summary>
+        /// <param name="dataWriter"></param>
+        /// <param name="frameNum"></param>
+        /// <param name="frameParameters"></param>
+        /// <returns></returns>
         public static async Task InsertFrameAsync(this DataWriter dataWriter, int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
         {
             try
