@@ -816,6 +816,26 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Remove the bin centric table and the related indices. Some UIMF write/update operations 
+        /// breaks the bin intensities table. Call this method after these operations to retain
+        /// data integrity.
+        /// </summary>
+        public void RemoveBinCentricTables()
+        {
+            if (!DataReader.TableExists(this.m_dbConnection, "Bin_Intensities"))
+                return;
+
+            using (var dbCommand = this.m_dbConnection.CreateCommand())
+            {
+                // Drop the table
+                dbCommand.CommandText = "DROP TABLE Bin_Intensities);";
+                dbCommand.ExecuteNonQuery();
+            }
+
+            this.FlushUimf(false);
+        }
+
+        /// <summary>
         /// Create the Frame_Param_Keys and Frame_Params tables
         /// </summary>
         private void CreateFrameParamsTables(SQLiteCommand dbCommand)
