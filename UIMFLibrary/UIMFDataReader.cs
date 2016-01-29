@@ -1781,6 +1781,7 @@ namespace UIMFLibrary
         /// <returns>
         /// Array of frame numbers
         /// </returns>
+        /// <remarks>Use GetMasterFrameList() to obtain all of the frame numbers, regardless of frameType</remarks>
         public int[] GetFrameNumbers(FrameType frameType)
         {
             var frameNumberList = new List<int>();
