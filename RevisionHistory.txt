@@ -1,5 +1,15 @@
 UIMFLibrary Revision History
 
+Version 3.0.5940; April 6, 2016
+	- Update GetSpectrum to avoid an index out of range exception if the requested scan number does not exist in the spectrum cache
+
+Version 3.0.5842; December 30, 2015
+	- Add m/z-bin conversion functions to MzCalibrator
+
+Version 3.0.5744; September 23, 2015
+	- Add new GlobalParams: InstrumentClass, PpmBinBasedStartMz, and PpmBinBasedEndMz
+	- Add property IsPpmBinBased to GlobalParams
+
 Version 3.0.5654; June 25, 2015
 	- Added check for out-of-range bin values in GetSpectrum in the reader
 		- Errors reported via new event, ErrorEvent 

@@ -94,7 +94,7 @@ namespace UIMFLibrary
         /// U.S. Culture Info
         /// </summary>
         protected readonly CultureInfo mCultureInfoUS;
-		
+
         /// <summary>
         /// Global parameters
         /// </summary>
@@ -149,7 +149,7 @@ namespace UIMFLibrary
         /// Key is a frame number (integer) or frame range (two integers separated by a dash)
         /// Value is a list of warning messages</remarks>
         private readonly IDictionary<string, SortedSet<string>> m_FramesWarnedInvalidData;
- 
+
         /// <summary>
         /// Frame type with MS1 data
         /// </summary>
@@ -2286,8 +2286,8 @@ namespace UIMFLibrary
             var matches = scansForFrame.Where(x => x.Scan == scan).ToList();
             if (matches.Count == 0)
             {
-                    throw new ArgumentOutOfRangeException("scan",
-                                                          "Scan index \"" + scan + "\" not found in Frame \"" + frameNumber + "\"");
+                throw new ArgumentOutOfRangeException("scan",
+                                                      "Scan index \"" + scan + "\" not found in Frame \"" + frameNumber + "\"");
             }
 
             return matches.First();
@@ -3575,6 +3575,12 @@ namespace UIMFLibrary
                 // Get the data out of the cache, making sure to sum across scans if necessary
                 for (var scanIndex = startScanNumber; scanIndex <= endScanNumber; scanIndex++)
                 {
+                    if (scanIndex >= cachedListOfIntensityDictionaries.Count)
+                    {
+                        // Scan index is past the cached intensity values
+                        break;
+                    }
+
                     IDictionary<int, int> currentIntensityDictionary = cachedListOfIntensityDictionaries[scanIndex];
 
                     // No need to move on if the dictionary is empty
@@ -5643,7 +5649,7 @@ namespace UIMFLibrary
                 {
                     var binIndex = 0;
                     var spectraRecord = (byte[])reader["Intensities"];
-                    
+
                     if (spectraRecord.Length <= 0)
                     {
                         continue;
@@ -6327,7 +6333,7 @@ namespace UIMFLibrary
 
             string frameKey;
             if (endFrameNumber <= 0)
-                frameKey= startFrameNumber.ToString();
+                frameKey = startFrameNumber.ToString();
             else
                 frameKey = startFrameNumber + "-" + endFrameNumber;
 
