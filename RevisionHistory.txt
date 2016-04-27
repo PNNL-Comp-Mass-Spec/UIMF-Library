@@ -1,5 +1,10 @@
 UIMFLibrary Revision History
 
+Version 3.0.5961; April 27, 2016
+	- Update to SQLite v1.0.97 (previously used 1.0.93)
+	- Update to .NET 4.5.1
+	- Add ReaderWriterExtensions.cs to UIMFLibrary.csproj (was already used by UIMFLibraryAsync.csproj)
+
 Version 3.0.5940; April 6, 2016
 	- Update GetSpectrum to avoid an index out of range exception if the requested scan number does not exist in the spectrum cache
 

@@ -126,7 +126,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite">
-      <HintPath>..\lib\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\Lib\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
@@ -158,6 +158,7 @@
     <Compile Include="LogEntry.cs" />
     <Compile Include="LZFCompressionUtil.cs" />
     <Compile Include="MzCalibrator.cs" />
+    <Compile Include="ReaderWriterExtensions.cs" />
     <Compile Include="ScanInfo.cs" />
     <Compile Include="SpectrumCache.cs" />
     <Compile Include="UIMFDataReader.cs">
@@ -179,8 +180,8 @@
     <PostBuildEvent>if exist "$(TargetDir)SQLite.Interop.dll" (del "$(TargetDir)SQLite.Interop.dll")
 if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
 if not exist "$(TargetDir)x64" mkdir "$(TargetDir)x64"
-xcopy "$(ProjectDir)..\lib\x86\SQLite.Interop.dll" "$(TargetDir)x86" /D /Y
-xcopy "$(ProjectDir)..\lib\x64\SQLite.Interop.dll" "$(TargetDir)x64" /D /Y
+xcopy "$(ProjectDir)..\Lib\x86\SQLite.Interop.dll" "$(TargetDir)x86" /D /Y
+xcopy "$(ProjectDir)..\Lib\x64\SQLite.Interop.dll" "$(TargetDir)x64" /D /Y
 
 </PostBuildEvent>
   </PropertyGroup>
