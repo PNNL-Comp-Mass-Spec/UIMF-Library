@@ -12,6 +12,7 @@
 
 using System.Globalization;
 using System.Linq;
+using System.IO;
 
 namespace UIMFLibrary
 {
@@ -123,7 +124,7 @@ namespace UIMFLibrary
         /// <param name="fileName">
         /// Full path to the data file
         /// </param>
-        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after insantiating the writer</remarks>
+        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public DataWriter(string fileName)
             : this(fileName, true)
         {
@@ -140,13 +141,15 @@ namespace UIMFLibrary
         /// <param name="createLegacyParametersTables">
         /// When true, then will create and populate tables Global_Parameters and Frame_Parameters
         /// </param>
-        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after insantiating the writer</remarks>
+        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public DataWriter(string fileName, bool createLegacyParametersTables)
         {
             m_FilePath = fileName;
 
             m_CreateLegacyParametersTables = createLegacyParametersTables;
             m_FrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
+
+            var usingExistingDatabase = File.Exists(m_FilePath);
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             var connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
@@ -168,8 +171,13 @@ namespace UIMFLibrary
                 m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
                 m_globalParameters = new GlobalParams();
 
-                // If table Global_Parameters exists and table Global_Params does not exist, then create Global_Params using Global_Parameters
+                // If table Global_Parameters exists and table Global_Params does not exist, create Global_Params using Global_Parameters
                 ConvertLegacyGlobalParameters();
+
+                if (usingExistingDatabase && m_globalParameters.Values.Count == 0)
+                {
+                    m_globalParameters = DataReader.CacheGlobalParameters(m_dbConnection);
+                }
 
                 // Read the frame numbers in the legacy Frame_Parameters table to make sure that m_FrameNumsInLegacyFrameParametersTable is up to date
                 CacheLegacyFrameNums();

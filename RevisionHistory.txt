@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 3.0.5970; May 6, 2016
+	- Fix bug that failed to populate the cached GlobalParams when the writer opens an existing .uimf file
+
 Version 3.0.5961; April 27, 2016
 	- Update to SQLite v1.0.97 (previously used 1.0.93)
 	- Update to .NET 4.5.1

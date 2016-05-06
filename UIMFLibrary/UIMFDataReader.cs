@@ -93,7 +93,7 @@ namespace UIMFLibrary
         /// <summary>
         /// U.S. Culture Info
         /// </summary>
-        protected readonly CultureInfo mCultureInfoUS;
+        protected static readonly CultureInfo mCultureInfoUS = new CultureInfo("en-US");
 
         /// <summary>
         /// Global parameters
@@ -264,8 +264,6 @@ namespace UIMFLibrary
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
             m_maxSpectrumCacheMemoryMB = 750;
-
-            mCultureInfoUS = new CultureInfo("en-US");
 
             m_calibrationTable = new double[0];
             m_spectrumCacheList = new List<SpectrumCache>();
@@ -441,7 +439,7 @@ namespace UIMFLibrary
         /// Looks for the given column on the given table in the SqLite database
         /// Note that table names are case sensitive
         /// </summary>
-        /// <param name="oConnection">
+        /// <param name="uimfConnection">
         /// </param>
         /// <param name="tableName">
         /// </param>
@@ -451,12 +449,12 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the column exists<see cref="bool"/>.
         /// </returns>
-        public static bool ColumnExists(SQLiteConnection oConnection, string tableName, string columnName)
+        public static bool ColumnExists(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
             var columnExists = false;
 
             using (
-                var cmd = new SQLiteCommand(oConnection)
+                var cmd = new SQLiteCommand(uimfConnection)
                 {
                     CommandText =
                         "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '"
@@ -607,7 +605,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Get global parameters from table.
         /// </summary>
-        /// <param name="oUimfDatabaseConnection">
+        /// <param name="uimfConnection">
         /// UIMF database connection.
         /// </param>
         /// <returns>
@@ -616,12 +614,12 @@ namespace UIMFLibrary
         /// <exception cref="Exception">
         /// </exception>
 #pragma warning disable 612, 618
-        private GlobalParameters GetGlobalParametersFromTable(SQLiteConnection oUimfDatabaseConnection)
+        private static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection uimfConnection)
         {
             var globalParameters = new GlobalParameters();
 #pragma warning restore 612, 618
 
-            using (var dbCommand = oUimfDatabaseConnection.CreateCommand())
+            using (var dbCommand = uimfConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT * FROM Global_Parameters";
 
@@ -714,32 +712,32 @@ namespace UIMFLibrary
             return globalParameters;
         }
 
-        private bool GetBoolean(IDataRecord reader, string fieldName)
+        private static bool GetBoolean(IDataRecord reader, string fieldName)
         {
             return Convert.ToBoolean(reader[fieldName], mCultureInfoUS);
         }
 
-        private double GetDouble(IDataRecord reader, string fieldName)
+        private static double GetDouble(IDataRecord reader, string fieldName)
         {
             return Convert.ToDouble(reader[fieldName], mCultureInfoUS);
         }
 
-        private short GetInt16(IDataRecord reader, string fieldName)
+        private static short GetInt16(IDataRecord reader, string fieldName)
         {
             return Convert.ToInt16(reader[fieldName], mCultureInfoUS);
         }
 
-        private int GetInt32(IDataRecord reader, string fieldName)
+        private static int GetInt32(IDataRecord reader, string fieldName)
         {
             return Convert.ToInt32(reader[fieldName], mCultureInfoUS);
         }
 
-        private float GetSingle(IDataRecord reader, string fieldName)
+        private static float GetSingle(IDataRecord reader, string fieldName)
         {
             return Convert.ToSingle(reader[fieldName], mCultureInfoUS);
         }
 
-        private string GetString(IDataRecord reader, string fieldName)
+        private static string GetString(IDataRecord reader, string fieldName)
         {
             return Convert.ToString(reader[fieldName], mCultureInfoUS);
         }
@@ -748,18 +746,18 @@ namespace UIMFLibrary
         /// Looks for the given table in the SqLite database
         /// Note that table names are case sensitive
         /// </summary>
-        /// <param name="oConnection">
+        /// <param name="uimfConnection">
         /// </param>
         /// <param name="tableName">
         /// </param>
         /// <returns>
         /// True if the table exists<see cref="bool"/>.
         /// </returns>
-        public static bool TableExists(SQLiteConnection oConnection, string tableName)
+        public static bool TableExists(SQLiteConnection uimfConnection, string tableName)
         {
             bool hasRows;
 
-            using (var cmd = new SQLiteCommand(oConnection)
+            using (var cmd = new SQLiteCommand(uimfConnection)
             {
                 CommandText = "SELECT name " +
                               "FROM sqlite_master " +
@@ -779,19 +777,19 @@ namespace UIMFLibrary
         /// Looks for the given index in the SqLite database
         /// Note that index names are case sensitive
         /// </summary>
-        /// <param name="uimfWriterConnection">
+        /// <param name="uimfConnection">
         /// </param>
         /// <param name="indexName">
         /// </param>
         /// <returns>
         /// True if the index exists<see cref="bool"/>.
         /// </returns>
-        public static bool IndexExists(SQLiteConnection uimfWriterConnection, string indexName)
+        public static bool IndexExists(SQLiteConnection uimfConnection, string indexName)
         {
             bool hasRows;
 
             using (
-                var cmd = new SQLiteCommand(uimfWriterConnection)
+                var cmd = new SQLiteCommand(uimfConnection)
                 {
                     CommandText = "SELECT name FROM " +
                                   "sqlite_master " +
@@ -810,7 +808,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Check whether a table has a column
         /// </summary>
-        /// <param name="oConnection">
+        /// <param name="uimfConnection">
         /// Sqlite connection
         /// </param>
         /// <param name="tableName">
@@ -822,12 +820,12 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the table contains the specified column<see cref="bool"/>.
         /// </returns>
-        public static bool TableHasColumn(SQLiteConnection oConnection, string tableName, string columnName)
+        public static bool TableHasColumn(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
             bool hasColumn;
 
             using (
-                var cmd = new SQLiteCommand(oConnection)
+                var cmd = new SQLiteCommand(uimfConnection)
                 {
                     CommandText = "Select * From '" + tableName + "' Limit 1;"
                 })
@@ -1864,18 +1862,18 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        public static Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(SQLiteConnection oConnection)
+        public static Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(SQLiteConnection uimfConnection)
         {
             var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
-            if (!TableExists(oConnection, "Frame_Param_Keys"))
+            if (!TableExists(uimfConnection, "Frame_Param_Keys"))
             {
                 return GetLegacyFrameParameterKeys();
             }
 
             const string sqlQuery = "Select ParamID, ParamName, ParamDataType, ParamDescription From Frame_Param_Keys;";
 
-            using (var dbCommand = new SQLiteCommand(oConnection)
+            using (var dbCommand = new SQLiteCommand(uimfConnection)
             {
                 CommandText = sqlQuery
             })
@@ -5015,21 +5013,33 @@ namespace UIMFLibrary
 
         private void CacheGlobalParameters()
         {
-            var usingLegacyGlobalParameters = UsingLegacyGlobalParams(m_dbConnection);
+            m_globalParameters = CacheGlobalParameters(m_dbConnection);
+        }
+
+        /// <summary>
+        /// Read either the global params (or the legacy global parameters) and return a GlobalParams object with the parameters
+        /// </summary>
+        /// <param name="uimfConnection"></param>
+        /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
+        /// <returns></returns>
+        internal static GlobalParams CacheGlobalParameters(SQLiteConnection uimfConnection)
+        {
+            var usingLegacyGlobalParameters = UsingLegacyGlobalParams(uimfConnection);
+            GlobalParams globalParams;
 
             if (usingLegacyGlobalParameters)
             {
                 // Populate the global parameters object
-                var legacyGlobalParameters = GetGlobalParametersFromTable(m_dbConnection);
+                var legacyGlobalParameters = GetGlobalParametersFromTable(uimfConnection);
 
                 var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                m_globalParameters = GlobalParamUtilities.ConvertStringParamsToGlobalParams(globalParamsByType);
-                return;
+                globalParams = GlobalParamUtilities.ConvertStringParamsToGlobalParams(globalParamsByType);
+                return globalParams;
             }
 
-            m_globalParameters = new GlobalParams();
+            globalParams = new GlobalParams();
 
-            using (var dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = uimfConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT ParamID, ParamValue FROM Global_Params";
 
@@ -5052,10 +5062,12 @@ namespace UIMFLibrary
                             continue;
                         }
 
-                        m_globalParameters.AddUpdateValue(paramType, paramValue);
+                        globalParams.AddUpdateValue(paramType, paramValue);
                     }
                 }
             }
+
+            return globalParams;
         }
 
         /// <summary>
@@ -6306,21 +6318,21 @@ namespace UIMFLibrary
                                 "use the DataWriter class to add it by calling function CreateBinCentricTables");
         }
 
-        private bool UsingLegacyFrameParams(SQLiteConnection sqLiteConnection, out bool hasLegacyFrameParameters)
+        private bool UsingLegacyFrameParams(SQLiteConnection uimfConnection, out bool hasLegacyFrameParameters)
         {
-            hasLegacyFrameParameters = TableExists(sqLiteConnection, DataWriter.FRAME_PARAMETERS_TABLE);
+            hasLegacyFrameParameters = TableExists(uimfConnection, DataWriter.FRAME_PARAMETERS_TABLE);
 
-            if (TableExists(sqLiteConnection, DataWriter.FRAME_PARAMS_TABLE))
+            if (TableExists(uimfConnection, DataWriter.FRAME_PARAMS_TABLE))
                 return false;
 
             return true;
         }
 
-        private bool UsingLegacyGlobalParams(SQLiteConnection sqLiteConnection)
+        private static bool UsingLegacyGlobalParams(SQLiteConnection uimfConnection)
         {
-            var usingLegacyParams = TableExists(sqLiteConnection, "Global_Parameters");
+            var usingLegacyParams = TableExists(uimfConnection, "Global_Parameters");
 
-            if (TableExists(sqLiteConnection, "Global_Params"))
+            if (TableExists(uimfConnection, "Global_Params"))
                 usingLegacyParams = false;
 
             return usingLegacyParams;
