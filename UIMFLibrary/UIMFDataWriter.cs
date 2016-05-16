@@ -1693,8 +1693,8 @@ namespace UIMFLibrary
             double binWidth,
             int indexOfMaxIntensity,
             int nonZeroCount,
-            double bpi,
-            Int64 tic,
+            int bpi,
+            long tic,
             byte[] spectra)
         {
             if (nonZeroCount <= 0)
@@ -1705,7 +1705,7 @@ namespace UIMFLibrary
             // Insert records.
             ValidateFrameScansExists("InsertScanStoreBytes");
 
-            InsertScanAddParameters(frameNumber, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
+            InsertScanAddParameters(frameNumber, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
             m_dbCommandInsertScan.ExecuteNonQuery();
 
         }
@@ -1721,20 +1721,45 @@ namespace UIMFLibrary
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <returns>Number of non-zero data points</returns>
         /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
-        public int InsertScan(
+        public void InsertScan(
             int frameNumber,
             FrameParams frameParameters,
             int scanNum,
             IList<int> intensities,
             double binWidth)
         {
+            int nonZeroCount;
+            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out nonZeroCount);
+        }
+
+        /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
+        /// <param name="frameNumber">Frame Number</param>
+        /// <param name="frameParameters">Frame parameters</param>
+        /// <param name="scanNum">
+        /// Scan number
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
+        /// <param name="intensities">Array of intensities, including all zeros</param>
+        /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
+        /// <param name="nonZeroCount">Number of non-zero data points (output)</param>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
+        public void InsertScan(
+            int frameNumber,
+            FrameParams frameParameters,
+            int scanNum,
+            IList<int> intensities,
+            double binWidth,
+            out int nonZeroCount)
+        {
             byte[] spectra;
             double tic;
             double bpi;
             int indexOfMaxIntensity;
 
+            nonZeroCount = 0;
+
             if (frameParameters == null)
-                return -1;
+                throw new ArgumentNullException("frameParameters");
 
             if (m_globalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
@@ -1746,11 +1771,10 @@ namespace UIMFLibrary
                                     " (" + m_globalParameters.Bins + ")");
             }
 
-            var nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+            nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
 
-            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectra);
 
-            return nonZeroCount;
         }
 
         /// <summary>
@@ -1806,7 +1830,7 @@ namespace UIMFLibrary
 
             var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
 
-            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, bpi, (Int64)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectra);
 
             return nonZeroCount;
 
@@ -2662,7 +2686,7 @@ namespace UIMFLibrary
             int nonZeroCount,
             int bpi,
             double bpiMz,
-            Int64 tic,
+            long tic,
             byte[] spectraRecord)
         {
             m_dbCommandInsertScan.Parameters.Clear();

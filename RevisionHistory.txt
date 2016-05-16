@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 3.0.5980; May 16, 2016
+	- Update InsertScan to no longer return an int but to instead have output parameter nonZeroCount
+
 Version 3.0.5970; May 6, 2016
 	- Fix bug that failed to populate the cached GlobalParams when the writer opens an existing .uimf file
 
