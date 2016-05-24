@@ -2421,7 +2421,7 @@ namespace UIMFLibrary
             var lstFields = new List<Tuple<string, string, string>>
 			{
 				Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
-				Tuple.Create("ScanNum", "SMALLINT NOT NULL", "short"),
+				Tuple.Create("ScanNum", "INTEGER NOT NULL", "int"),         // Switched from SMALLINT to INTEGER in May 2016
 				Tuple.Create("NonZeroCount", "INTEGER NOT NULL", "int"),
 				Tuple.Create("BPI", sqlDataType + " NOT NULL", dotNetDataType),
 				Tuple.Create("BPI_MZ", "DOUBLE NOT NULL", "double"),

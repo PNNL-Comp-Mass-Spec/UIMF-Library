@@ -889,7 +889,20 @@ namespace UIMFLibrary
                 height = (int)Math.Round(height / yCompression);
             }
 
-            var frameData = new double[width, height];
+            double[,] frameData;
+
+            try
+            {
+                frameData = new double[width, height];
+            }
+            catch (OutOfMemoryException ex)
+            {
+                throw new OutOfMemoryException("2D frameData array is too large with dimensions " + width + " by " + height, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Exception instantiating 2D frameData array of size " + width + " by " + height + ": " + ex.Message, ex);
+            }
 
             for (var currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
             {
@@ -928,8 +941,9 @@ namespace UIMFLibrary
                 // and returns a two-dimensional array intensities[scan][bin]
                 // frameNum is mandatory and all other arguments are optional
                 using (var dbCommand = m_dbConnection.CreateCommand())
-                {
-                    dbCommand.CommandText = "SELECT ScanNum, Intensities " +
+                {                    
+                    // The ScanNum cast here is required to support UIMF files that list the ScanNum field as SMALLINT yet have scan number values > 32765
+                    dbCommand.CommandText = "SELECT Cast(ScanNum as Integer) AS ScanNum, Intensities " +
                                             "FROM Frame_Scans " +
                                             "WHERE FrameNum = " + currentFrameNumber +
                                             " AND ScanNum >= " + startScan +
@@ -967,7 +981,10 @@ namespace UIMFLibrary
         {
             for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
-                var currentScan = GetInt32(reader, "ScanNum") - startScan;
+                var scanNum = GetInt32(reader, "ScanNum");
+                ValidateScanNumber(scanNum);
+
+                var currentScan = scanNum - startScan;
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
                 if (compressedBinIntensity.Length == 0)
@@ -1008,7 +1025,7 @@ namespace UIMFLibrary
                 }
             }
         }
-
+   
         private void AccumulateFrameDataWithCompression(
             SQLiteDataReader reader,
             int width,
@@ -1022,7 +1039,10 @@ namespace UIMFLibrary
             // each pixel accumulates more than 1 bin of data
             for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
-                var currentScan = GetInt32(reader, "ScanNum") - startScan;
+                var scanNum = GetInt32(reader, "ScanNum");
+                ValidateScanNumber(scanNum);
+
+                var currentScan = scanNum - startScan;
                 var compressedBinIntensity = (byte[])(reader["Intensities"]);
 
                 if (compressedBinIntensity.Length == 0)
@@ -1169,7 +1189,7 @@ namespace UIMFLibrary
                                 }
                                 else
                                 {
-                                    if (sCurrentTable.ToLower() == "Frame_Scans".ToLower() &&
+                                    if (string.Equals(sCurrentTable, "Frame_Scans", StringComparison.InvariantCultureIgnoreCase) &&
                                         frameTypesToAlwaysCopy != null
                                         && frameTypesToAlwaysCopy.Count > 0)
                                     {
@@ -2554,7 +2574,8 @@ namespace UIMFLibrary
                     var binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    var scanNumber = GetInt32(reader, "ScanNum");
+                    var scanNum = GetInt32(reader, "ScanNum");
+                    ValidateScanNumber(scanNum);
 
                     if (spectra.Length <= 0)
                     {
@@ -2579,7 +2600,7 @@ namespace UIMFLibrary
                         {
                             if (startBin <= binIndex && binIndex <= endBin)
                             {
-                                intensities[frameNum - startFrameNumber][scanNumber - startScan][binIndex - startBin] =
+                                intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] =
                                     decodedIntensityValue;
                             }
 
@@ -2719,7 +2740,8 @@ namespace UIMFLibrary
                     var binIndex = 0;
 
                     var spectra = (byte[])reader["Intensities"];
-                    var scanNumber = GetInt32(reader, "ScanNum");
+                    var scanNum = GetInt32(reader, "ScanNum");
+                    ValidateScanNumber(scanNum);
 
                     if (spectra.Length <= 0)
                     {
@@ -2745,11 +2767,11 @@ namespace UIMFLibrary
                         {
                             if (doReorder)
                             {
-                                intensities[binIndex][scanToIndexMap[scanNumber]] += decodedIntensityValue * divisionFactor;
+                                intensities[binIndex][scanToIndexMap[scanNum]] += decodedIntensityValue * divisionFactor;
                             }
                             else
                             {
-                                intensities[binIndex][scanNumber] += decodedIntensityValue * divisionFactor;
+                                intensities[binIndex][scanNum] += decodedIntensityValue * divisionFactor;
                             }
 
                             binIndex++;
@@ -2799,6 +2821,7 @@ namespace UIMFLibrary
 
                     var spectra = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
+                    ValidateScanNumber(scanNum);
 
                     var currentBinDictionary = dictionaryArray[scanNum];
 
@@ -4705,7 +4728,7 @@ namespace UIMFLibrary
                                                 "FROM Frame_Params " +
                                                 "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
                                                 " AND ParamValue = " + currentFrameType + ") " +
-                                                "AND ParamID = " + (int)FrameParamKeyType.CalibrationDone +
+                                                " AND ParamID = " + (int)FrameParamKeyType.CalibrationDone +
                                                 " AND Cast(IFNULL(ParamValue, 0) as integer) > 0 ";
 
                         using (var reader = dbCommand.ExecuteReader())
@@ -5653,79 +5676,98 @@ namespace UIMFLibrary
             var minScan = numScansInFrame;
             var maxScan = -1;
 
+
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
+
                 var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+                var recordIndex = 0;
 
                 while (reader.Read())
                 {
                     var binIndex = 0;
-                    var spectraRecord = (byte[])reader["Intensities"];
 
-                    if (spectraRecord.Length <= 0)
+                    try
                     {
-                        continue;
-                    }
 
-                    var scanNum = GetInt32(reader, "ScanNum");
+                        var spectraRecord = (byte[])reader["Intensities"];
 
-                    minScan = Math.Min(minScan, scanNum);
-                    maxScan = Math.Max(maxScan, scanNum);
-
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectraRecord,
-                        spectraRecord.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
-
-                    var numBins = outputLength / DATASIZE;
-
-                    while (true)
-                    {
-                        // Possibly add one or more additional items to listOfIntensityDictionaries
-                        if (scanNum >= listOfIntensityDictionaries.Count)
-                            listOfIntensityDictionaries.Add(new SortedList<int, int>());
-                        else
-                            break;
-                    }
-
-                    var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
-
-                    for (var i = 0; i < numBins; i++)
-                    {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-                        if (decodedSpectraRecord < 0)
+                        if (spectraRecord.Length <= 0)
                         {
-                            binIndex += -decodedSpectraRecord;
+                            continue;
                         }
-                        else
+
+                        var scanNum = GetInt32(reader, "ScanNum");
+                        ValidateScanNumber(scanNum);
+
+                        minScan = Math.Min(minScan, scanNum);
+                        maxScan = Math.Max(maxScan, scanNum);
+
+                        var outputLength = LZFCompressionUtil.Decompress(
+                            ref spectraRecord,
+                            spectraRecord.Length,
+                            ref decompSpectraRecord,
+                            m_globalParameters.Bins * DATASIZE);
+
+                        var numBins = outputLength / DATASIZE;
+
+                        while (true)
                         {
-                            int currentValue;
-                            if (currentIntensityDictionary.TryGetValue(binIndex, out currentValue))
+                            // Possibly add one or more additional items to listOfIntensityDictionaries
+                            if (scanNum >= listOfIntensityDictionaries.Count)
+                                listOfIntensityDictionaries.Add(new SortedList<int, int>());
+                            else
+                                break;
+                        }
+
+                        var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
+
+                        for (var i = 0; i < numBins; i++)
+                        {
+                            var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                            if (decodedSpectraRecord < 0)
                             {
-                                currentIntensityDictionary[binIndex] += decodedSpectraRecord;
-                                summedIntensityDictionary[binIndex] += decodedSpectraRecord;
+                                binIndex += -decodedSpectraRecord;
                             }
                             else
                             {
-                                currentIntensityDictionary.Add(binIndex, decodedSpectraRecord);
-
-                                // Check the summed dictionary
-                                if (summedIntensityDictionary.TryGetValue(binIndex, out currentValue))
+                                int currentValue;
+                                if (currentIntensityDictionary.TryGetValue(binIndex, out currentValue))
                                 {
+                                    currentIntensityDictionary[binIndex] += decodedSpectraRecord;
                                     summedIntensityDictionary[binIndex] += decodedSpectraRecord;
                                 }
                                 else
                                 {
-                                    summedIntensityDictionary.Add(binIndex, decodedSpectraRecord);
-                                }
-                            }
+                                    currentIntensityDictionary.Add(binIndex, decodedSpectraRecord);
 
-                            binIndex++;
+                                    // Check the summed dictionary
+                                    if (summedIntensityDictionary.TryGetValue(binIndex, out currentValue))
+                                    {
+                                        summedIntensityDictionary[binIndex] += decodedSpectraRecord;
+                                    }
+                                    else
+                                    {
+                                        summedIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+                                    }
+                                }
+
+                                binIndex++;
+                            }
                         }
+
                     }
+                    catch (Exception ex)
+                    {
+                        var msg = "Exception reading intensities for recordIndex " + recordIndex + ", binIndex " + binIndex + ": " + ex.Message;
+                        Console.WriteLine(msg);
+                        throw new Exception(msg, ex);
+                    }
+
+                    recordIndex++;
                 }
             }
+
 
             // Remove the oldest spectrum in the cache
             if (m_spectrumCacheList.Count >= m_spectraToCache)
@@ -6007,6 +6049,8 @@ namespace UIMFLibrary
         /// </summary>
         private void LoadPrepStmts()
         {
+            // The ScanNum casts below are required to support UIMF files that list the ScanNum field as SMALLINT yet have scan number values > 32765
+
             m_getFileBytesCommand = m_dbConnection.CreateCommand();
 
             m_getFrameParametersCommand = m_dbConnection.CreateCommand();
@@ -6017,17 +6061,17 @@ namespace UIMFLibrary
 
             m_getFramesAndScanByDescendingIntensityCommand = m_dbConnection.CreateCommand();
             m_getFramesAndScanByDescendingIntensityCommand.CommandText =
-                "SELECT FrameNum, ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
+                "SELECT FrameNum, Cast(ScanNum as Integer) AS ScanNum, BPI FROM Frame_Scans ORDER BY BPI";
 
             m_getFrameScansCommand = m_dbConnection.CreateCommand();
             m_getFrameScansCommand.CommandText =
-                "SELECT ScanNum, NonZeroCount, BPI, BPI_MZ, TIC FROM Frame_Scans where FrameNum = :FrameNum";
+                "SELECT Cast(ScanNum as Integer) AS ScanNum, NonZeroCount, BPI, BPI_MZ, TIC FROM Frame_Scans where FrameNum = :FrameNum";
 
             m_getSpectrumCommand = m_dbConnection.CreateCommand();
 
             if (m_UsingLegacyFrameParameters)
             {
-                m_getSpectrumCommand.CommandText = "SELECT FS.ScanNum, FS.FrameNum, FS.Intensities " +
+                m_getSpectrumCommand.CommandText = "SELECT Cast(FS.ScanNum as Integer) AS ScanNum, FS.FrameNum, FS.Intensities " +
                                                    "FROM Frame_Scans FS JOIN " +
                                                         "Frame_Parameters FP ON (FS.FrameNum = FP.FrameNum) " +
                                                    "WHERE FS.FrameNum >= :FrameNum1 AND " +
@@ -6038,7 +6082,7 @@ namespace UIMFLibrary
             }
             else
             {
-                m_getSpectrumCommand.CommandText = "SELECT ScanNum, FrameNum, Intensities " +
+                m_getSpectrumCommand.CommandText = "SELECT Cast(ScanNum as Integer) AS ScanNum, FrameNum, Intensities " +
                                                    "FROM Frame_Scans " +
                                                    "WHERE FrameNum >= :FrameNum1 AND " +
                                                          "FrameNum <= :FrameNum2 AND " +
@@ -6336,6 +6380,17 @@ namespace UIMFLibrary
                 usingLegacyParams = false;
 
             return usingLegacyParams;
+        }
+
+        private void ValidateScanNumber(int scanNum)
+        {
+            if (scanNum < 0)
+            {
+                // The .UIMF file was created with an old version of the writer that used SMALLINT for the ScanNum field in the Frame_Params table, thus limiting the scan range to 0 to 32765
+                // In May 2016 we switched to a 32-bit integer for ScanNum
+                var msg = "Scan number larger than 32765 for file with the ScanNum field as a SMALLINT; change the field type to INTEGER";
+                throw new Exception(msg);
+            }
         }
 
         private void WarnFrameDataError(int startFrameNumber, int endFrameNumber, string errorMessage)
