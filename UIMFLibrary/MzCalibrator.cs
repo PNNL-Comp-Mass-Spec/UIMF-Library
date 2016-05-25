@@ -13,16 +13,6 @@ namespace UIMFLibrary
     {
         #region Fields
 
-        /// <summary>
-        /// k
-        /// </summary>
-        private double K;
-
-        /// <summary>
-        /// t0
-        /// </summary>
-        private double T0;
-
         private double binWidth;
 
         private double TenthsOfNanoSecondsPerBin
@@ -74,34 +64,12 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets or sets the k.
         /// </summary>
-        public double k
-        {
-            get
-            {
-                return this.K;
-            }
-
-            set
-            {
-                this.K = value;
-            }
-        }
+        public double K { get; set; }
 
         /// <summary>
         /// Gets or sets the t 0.
         /// </summary>
-        public double t0
-        {
-            get
-            {
-                return this.T0;
-            }
-
-            set
-            {
-                this.T0 = value;
-            }
-        }
+        public double T0 { get; set; }
 
         #endregion
 
@@ -116,10 +84,10 @@ namespace UIMFLibrary
         /// <returns>
         /// TOF value<see cref="int"/>.
         /// </returns>
-        public int MZtoTOF(double mz)
+        public virtual int MZtoTOF(double mz)
         {
             var r = Math.Sqrt(mz);
-            return (int)(((r / this.K) + this.T0) + .5); // .5 for rounding
+            return (int)Math.Round(((r / this.K) + this.T0));
         }
 
         /// <summary>
@@ -131,10 +99,10 @@ namespace UIMFLibrary
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
-        public double TOFtoMZ(double TOFValue)
+        public virtual double TOFtoMZ(double TOFValue)
         {
             var r = this.K * (TOFValue - this.T0);
-            return r * r;
+            return Math.Pow(r, 2);
         }
 
         /// <summary>
@@ -179,5 +147,26 @@ namespace UIMFLibrary
         }
 
         #endregion
+    }
+
+    public class MzCalibratorFtms : MzCalibrator
+    {
+        public MzCalibratorFtms(double k, double t0, double binWidthNs = 1) : base(k, t0, binWidthNs)
+        {
+        }
+
+        public override int MZtoTOF(double mz)
+        {
+            var r = Math.Sqrt(mz);
+            var multipledR = ((r/this.K) + this.T0)*1e4;
+            return (int) multipledR;
+        }
+
+        public override double TOFtoMZ(double TOFValue)
+        {
+            var r = this.K * (TOFValue - this.T0);
+            r /= 1e4;
+            return Math.Pow(r, 2);
+        }
     }
 }
