@@ -1364,7 +1364,11 @@ namespace UIMFLibrary
                 throw new ArgumentException("Failed to get 3D profile. Input startScan was greater than input endScan");
             }
 
-            var lengthOfOutputArrays = (endFrameNumber - startFrameNumber + 1) * (endScan - startScan + 1);
+            // Not assume that the frame range given contains uniform frame types. 
+            // Query frames within the range that qualifies the given frame type.
+            int[] allFrameNumbers = this.GetFrameNumbers(frameType);
+            int[] frameNumbers = allFrameNumbers.Where(x => x <= endFrameNumber && x >= startFrameNumber).ToArray();
+            var lengthOfOutputArrays = (frameNumbers.Count()) * (endScan - startScan + 1);
 
             frameValues = new int[lengthOfOutputArrays];
             scanValues = new int[lengthOfOutputArrays];
@@ -1383,7 +1387,7 @@ namespace UIMFLibrary
 
             var counter = 0;
 
-            for (var frameNumber = startFrameNumber; frameNumber <= endFrameNumber; frameNumber++)
+            for (int frameIndex = 0; frameIndex < frameNumbers.Count(); frameIndex++)
             {
                 for (var scan = startScan; scan <= endScan; scan++)
                 {
@@ -1391,11 +1395,11 @@ namespace UIMFLibrary
                     for (var bin = lowerUpperBins[0]; bin <= lowerUpperBins[1]; bin++)
                     {
                         var binIntensity =
-                            frameIntensities[frameNumber - startFrameNumber][scan - startScan][bin - lowerUpperBins[0]];
+                            frameIntensities[frameIndex][scan - startScan][bin - lowerUpperBins[0]];
                         sumAcrossBins += binIntensity;
                     }
 
-                    frameValues[counter] = frameNumber;
+                    frameValues[counter] = frameNumbers[frameIndex];
                     scanValues[counter] = scan;
                     intensities[counter] = sumAcrossBins;
                     counter++;
@@ -2543,7 +2547,13 @@ namespace UIMFLibrary
                 endBin = m_globalParameters.Bins;
             }
 
-            var lengthOfFrameArray = endFrameNumber - startFrameNumber + 1;
+            
+            // This method does not assumes the uniformity of frame types within a given frame range. 
+            // The following code block extracts frames that qualify the given frame type in the given
+            // range.
+            int[] allFrameNumbers = this.GetFrameNumbers(frameType);
+            int[] frameNumbers = allFrameNumbers.Where(x => x <= endFrameNumber && x >= startFrameNumber).ToArray();
+            var lengthOfFrameArray = (frameNumbers.Count());
 
             var intensities = new int[lengthOfFrameArray][][];
             for (var i = 0; i < lengthOfFrameArray; i++)
@@ -2556,7 +2566,6 @@ namespace UIMFLibrary
             }
 
             // now setup queries to retrieve data
-
             m_getSpectrumCommand.Parameters.Clear();
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
             m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
@@ -2567,45 +2576,50 @@ namespace UIMFLibrary
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
                 var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
+                var frameIndex = 0;
                 while (reader.Read())
                 {
                     var frameNum = GetInt32(reader, "FrameNum");
-                    var binIndex = 0;
-
-                    var spectra = (byte[])reader["Intensities"];
-                    var scanNum = GetInt32(reader, "ScanNum");
-                    ValidateScanNumber(scanNum);
-
-                    if (spectra.Length <= 0)
+                    if ((frameNumbers.Count() - frameIndex > 0) && frameNum >= frameNumbers[frameIndex])
                     {
-                        continue;
-                    }
+                        var binIndex = 0;
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectra,
-                        spectra.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                        var spectra = (byte[])reader["Intensities"];
+                        var scanNum = GetInt32(reader, "ScanNum");
+                        ValidateScanNumber(scanNum);
 
-                    var numBins = outputLength / DATASIZE;
-                    for (var i = 0; i < numBins; i++)
-                    {
-                        var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-                        if (decodedIntensityValue < 0)
+                        if (spectra.Length <= 0)
                         {
-                            binIndex += -decodedIntensityValue;
+                            continue;
                         }
-                        else
+
+                        var outputLength = LZFCompressionUtil.Decompress(
+                            ref spectra,
+                            spectra.Length,
+                            ref decompSpectraRecord,
+                            m_globalParameters.Bins * DATASIZE);
+
+                        var numBins = outputLength / DATASIZE;
+                        for (var i = 0; i < numBins; i++)
                         {
-                            if (startBin <= binIndex && binIndex <= endBin)
+                            var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                            if (decodedIntensityValue < 0)
                             {
-                                intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] =
-                                    decodedIntensityValue;
+                                binIndex += -decodedIntensityValue;
                             }
+                            else
+                            {
+                                if (startBin <= binIndex && binIndex <= endBin)
+                                {
+                                    intensities[frameIndex][scanNum - startScan][binIndex - startBin] =
+                                        decodedIntensityValue;
+                                }
 
-                            binIndex++;
+                                binIndex++;
+                            }
                         }
+
+                        frameIndex++; 
                     }
                 }
             }
