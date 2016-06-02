@@ -4882,7 +4882,7 @@ namespace UIMFLibrary
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
         [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class")]
-        public void UpdateAllCalibrationCoefficients(float slope, float intercept, bool isAutoCalibrating = false)
+        public void UpdateAllCalibrationCoefficients(double slope, double intercept, bool isAutoCalibrating = false)
         {
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
@@ -4966,8 +4966,8 @@ namespace UIMFLibrary
         [Obsolete("Use the UpdateCalibrationCoefficients function in the DataWriter class")]
         public void UpdateCalibrationCoefficients(
             int frameNumber,
-            float slope,
-            float intercept,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
 

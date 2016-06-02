@@ -1898,8 +1898,8 @@ namespace UIMFLibrary
         /// </param>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public void UpdateAllCalibrationCoefficients(
-            float slope,
-            float intercept,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
             UpdateAllCalibrationCoefficients(m_dbConnection, slope, intercept, isAutoCalibrating);
@@ -1921,8 +1921,8 @@ namespace UIMFLibrary
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public static void UpdateAllCalibrationCoefficients(
             SQLiteConnection dBconnection,
-            float slope,
-            float intercept,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
             var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
@@ -1987,7 +1987,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="intercept">
         /// </param>
-        public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
+        public void UpdateCalibrationCoefficients(int frameNumber, double slope, double intercept)
         {
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
@@ -2013,8 +2013,8 @@ namespace UIMFLibrary
         public static void UpdateCalibrationCoefficients(
             SQLiteConnection dBconnection,
             int frameNumber,
-            float slope,
-            float intercept,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
             var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);

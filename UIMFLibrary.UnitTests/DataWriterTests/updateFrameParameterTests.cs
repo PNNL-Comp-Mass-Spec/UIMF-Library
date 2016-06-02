@@ -41,10 +41,10 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
             sourceFile.CopyTo(targetFilePath, true);
 
-            UpdateCalibrationCoefficients(targetFilePath, 0.3476655f, 0.03313236f);
+            UpdateCalibrationCoefficients(targetFilePath, 0.3476655, 0.03313236);
 	    }
 
-	    public void UpdateCalibrationCoefficients(string uimfPath, float slope, float intercept)
+        public void UpdateCalibrationCoefficients(string uimfPath, double slope, double intercept)
         {
             Console.WriteLine("Opening file " + uimfPath);
 
