@@ -656,7 +656,7 @@ namespace UIMFLibrary
 		/// Update progress.
 		/// </summary>
 		/// <param name="percentComplete">
-		/// Percent complete.
+		/// Percent complete; value between 0 and 100
 		/// </param>
 		private void UpdateProgress(double percentComplete)
 		{
@@ -667,7 +667,7 @@ namespace UIMFLibrary
 		/// Update progress.
 		/// </summary>
 		/// <param name="percentComplete">
-		/// Percent complete.
+        /// Percent complete; value between 0 and 100
 		/// </param>
 		/// <param name="currentTask">
 		/// Current task.

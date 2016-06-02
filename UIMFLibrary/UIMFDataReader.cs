@@ -122,7 +122,7 @@ namespace UIMFLibrary
         private readonly bool m_HasLegacyFrameParameters;
 
         /// <summary>
-        /// True when the .UIMF file has table Frame_Params (which takes precedence over any existing Frame_Parameters table)
+        /// True when the .UIMF file has table Frame_Parameters (note that the Frame_Params table takes precedence over an existing Frame_Parameters table)
         /// </summary>
         private readonly bool m_UsingLegacyFrameParameters;
 
