@@ -6465,6 +6465,7 @@ namespace UIMFLibrary
             {
                 Console.WriteLine(e.Message);
             }
+           System.Diagnostics.Trace.WriteLine(e.Message);
         }
 
         /// <summary>

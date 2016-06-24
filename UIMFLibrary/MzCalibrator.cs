@@ -158,14 +158,14 @@ namespace UIMFLibrary
         public override int MZtoTOF(double mz)
         {
             var r = Math.Sqrt(mz);
-            var multipledR = ((r/this.K) + this.T0)*1e4;
+            var multipledR = ((r/this.K) + this.T0)*1e2;
             return (int) multipledR;
         }
 
         public override double TOFtoMZ(double TOFValue)
         {
             var r = this.K * (TOFValue - this.T0);
-            r /= 1e4;
+            r /= 1e2;
             return Math.Pow(r, 2);
         }
     }
