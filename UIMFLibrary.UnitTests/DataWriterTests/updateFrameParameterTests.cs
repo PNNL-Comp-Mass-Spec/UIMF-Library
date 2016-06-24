@@ -4,6 +4,10 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.IO;
+using System.Linq;
+
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
 	using NUnit.Framework;
@@ -14,15 +18,45 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 	[TestFixture]
 	public class updateFrameParameterTests
 	{
-		// TODO: update this so that it copies the UIMF, updates it, and checks it.
-		// [Test]
-		// public void updateFrameType()
-		// {
-        // DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
-		// dw.OpenUIMF(FileName);
-		// dw.UpdateFrameType(0, 1200);
-		// dw.CloseUIMF();
+	    [Test]
+	    public void UpdateCalibrationCoefficients()
+	    {
+	        var sourceFile = new FileInfo(FileRefs.uimfStandardDemultiplexedFile1);
+	        if (!sourceFile.Exists)
+	            Assert.Fail("Test file not found: " + sourceFile.FullName);
 
-		// }
+	        if (sourceFile.Directory == null)
+	        {
+	            Assert.Fail("Unable to get the full path to the directory for: " + sourceFile.FullName);
+	        }
+
+            var targetFolder = new DirectoryInfo(Path.Combine(sourceFile.Directory.FullName, "UIMFLibrary_Temp"));
+
+	        if (!targetFolder.Exists)
+	            targetFolder.Create();
+
+            var targetFilePath = Path.Combine(targetFolder.FullName, sourceFile.Name);
+
+	        Console.WriteLine("Copying file " + sourceFile.Name + " to " + targetFilePath);
+
+            sourceFile.CopyTo(targetFilePath, true);
+
+            UpdateCalibrationCoefficients(targetFilePath, 0.3476655, 0.03313236);
+	    }
+
+        public void UpdateCalibrationCoefficients(string uimfPath, double slope, double intercept)
+        {
+            Console.WriteLine("Opening file " + uimfPath);
+
+            using (var writer = new DataWriter(uimfPath))
+            {
+                Console.WriteLine("Calling UpdateAllCalibrationCoefficients");
+
+                writer.UpdateAllCalibrationCoefficients(slope, intercept, false);
+
+                Console.WriteLine("Updated all frames to have slope {0} and intercept {1}", slope, intercept);
+            }
+
+        }
 	}
 }

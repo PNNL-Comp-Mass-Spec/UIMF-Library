@@ -113,6 +113,31 @@ namespace UIMFLibrary
         private bool m_HasFrameParamsTable;
         private bool m_HasFrameScansTable;
 
+        private bool m_FrameParamsTableChecked;
+        private bool m_GlobalParamsTableChecked;
+        private bool m_LegacyParameterTablesChecked;
+
+        #endregion
+
+        #region "Properties"
+
+        /// <summary>
+        /// True if the UIMF file has table Frame_Params
+        /// </summary>
+        /// <remarks>When opening a .UIMF file without the Frame_Params table, the writer will auto-add it</remarks>
+        public bool HasFrameParamsTable { get { return CheckHasFrameParamsTable(); } }
+
+        /// <summary>
+        /// True if the UIMF file has table Global_Params
+        /// </summary>
+        /// <remarks>When opening a .UIMF file without the Global_Params table, the writer will auto-add it</remarks>
+        public bool HasGlobalParamsTable { get { return CheckHasGlobalParamsTable(); } }
+
+        /// <summary>
+        /// True if the UIMF file has tables Global_Parameters and Frame_Parameters
+        /// </summary>
+        public bool HasLegacyParameterTables { get { return CheckHasLegacyParameterTables(); } }
+
         #endregion
 
         #region Constructor
@@ -139,7 +164,7 @@ namespace UIMFLibrary
         /// Full path to the data file
         /// </param>
         /// <param name="createLegacyParametersTables">
-        /// When true, then will create and populate tables Global_Parameters and Frame_Parameters
+        /// When true, then will create and populate legacy tables Global_Parameters and Frame_Parameters
         /// </param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public DataWriter(string fileName, bool createLegacyParametersTables)
@@ -197,8 +222,8 @@ namespace UIMFLibrary
         {
             try
             {
-               
-                if (!HasLegacyParameterTables())
+
+                if (!HasLegacyParameterTables)
                 {
                     // Nothing to do
                     return;
@@ -239,7 +264,7 @@ namespace UIMFLibrary
 
             try
             {
-                if (HasFrameParamsTable())
+                if (HasFrameParamsTable)
                 {
                     // Assume that the frame parameters have already been converted
                     // Nothing to do
@@ -347,14 +372,14 @@ namespace UIMFLibrary
         {
             try
             {
-                if (HasGlobalParamsTable())
+                if (HasGlobalParamsTable)
                 {
                     // Assume that the global parameters have already been converted
                     // Nothing to do
                     return;
                 }
 
-                if (!HasLegacyParameterTables())
+                if (!HasLegacyParameterTables)
                 {
                     // Nothing to do
                     return;
@@ -476,14 +501,14 @@ namespace UIMFLibrary
         /// <remarks>Does not add any values if the legacy tables already exist</remarks>
         public void AddLegacyParameterTablesUsingExistingParamTables()
         {
-           
-            if (HasLegacyParameterTables())
+
+            if (HasLegacyParameterTables)
             {
                 // Nothing to do
                 return;
             }
 
-            if (!HasFrameParamsTable())
+            if (!HasFrameParamsTable)
             {
                 // Nothing to do
                 return;
@@ -649,14 +674,14 @@ namespace UIMFLibrary
             try
             {
 
-                if (!HasGlobalParamsTable())
+                if (!HasGlobalParamsTable)
                 {
                     throw new Exception("The Global_Params table does not exist; call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
                 if (m_CreateLegacyParametersTables)
                 {
-                    if (!HasLegacyParameterTables())
+                    if (!HasLegacyParameterTables)
                         throw new Exception("The Global_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
@@ -738,7 +763,7 @@ namespace UIMFLibrary
         /// <param name="paramValue"></param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
         internal static int AssureAllFramesHaveFrameParam(
-            SQLiteCommand dbCommand, 
+            SQLiteCommand dbCommand,
             FrameParamKeyType paramKeyType,
             string paramValue)
         {
@@ -756,8 +781,8 @@ namespace UIMFLibrary
         /// <param name="frameNumEnd">Optional: Ending frame number; ignored if frameNumEnd is 0 or negative</param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
         internal static int AssureAllFramesHaveFrameParam(
-            SQLiteCommand dbCommand, 
-            FrameParamKeyType paramKeyType, 
+            SQLiteCommand dbCommand,
+            FrameParamKeyType paramKeyType,
             string paramValue,
             int frameNumStart,
             int frameNumEnd)
@@ -767,7 +792,7 @@ namespace UIMFLibrary
                 paramValue = string.Empty;
 
             // This query finds the frame numbers that are missing the parameter, then performs the insert, all in one SQL statement
-            dbCommand.CommandText = 
+            dbCommand.CommandText =
                 "INSERT INTO Frame_Params (FrameNum, ParamID, ParamValue) " +
                 "SELECT Distinct FrameNum, " + (int)paramKeyType + " AS ParamID, '" + paramValue + "' " +
                 "FROM Frame_Params  " +
@@ -849,7 +874,7 @@ namespace UIMFLibrary
         private void CreateFrameParamsTables(SQLiteCommand dbCommand)
         {
 
-            if (HasFrameParamsTable() &&
+            if (HasFrameParamsTable &&
                 DataReader.TableExists(m_dbConnection, "Frame_Param_Keys"))
             {
                 // The tables already exist
@@ -887,6 +912,7 @@ namespace UIMFLibrary
                 "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
             dbCommand.ExecuteNonQuery();
 
+            m_FrameParamsTableChecked = false;
 
         }
 
@@ -919,7 +945,7 @@ namespace UIMFLibrary
         /// </summary>
         private void CreateGlobalParamsTable(SQLiteCommand dbCommand)
         {
-            if (HasGlobalParamsTable())
+            if (HasGlobalParamsTable)
             {
                 // The table already exists
                 return;
@@ -934,6 +960,7 @@ namespace UIMFLibrary
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on Global_Params(ParamID);";
             dbCommand.ExecuteNonQuery();
 
+            m_GlobalParamsTableChecked = false;
         }
 
         /// <summary>
@@ -959,6 +986,7 @@ namespace UIMFLibrary
                 dbCommand.ExecuteNonQuery();
             }
 
+            m_LegacyParameterTablesChecked = false;
         }
 
         /// <summary>
@@ -1354,12 +1382,12 @@ namespace UIMFLibrary
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
             FlushUimf(false);
 
-            if (!HasFrameParamsTable())
+            if (!HasFrameParamsTable)
                 throw new Exception("The Frame_Params table does not exist; call method CreateTables before calling InsertFrame");
 
             if (m_CreateLegacyParametersTables)
             {
-                if (!HasLegacyParameterTables())
+                if (!HasLegacyParameterTables)
                     throw new Exception("The Frame_Parameters table does not exist (and m_CreateLegacyParametersTables=true); call method CreateTables before calling InsertFrame");
             }
 
@@ -1820,7 +1848,7 @@ namespace UIMFLibrary
 
             if (maxBin > m_globalParameters.Bins)
             {
-                throw new Exception("New data for frame " + frameNumber + ", scan " + scanNum + 
+                throw new Exception("New data for frame " + frameNumber + ", scan " + scanNum +
                     " has a bin value greater than the number of bins defined in the global parameters" +
                     " (" + m_globalParameters.Bins + ")");
 
@@ -1859,6 +1887,27 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for all frames
         /// </summary>
+        /// <param name="slope">
+        /// The slope value for the calibration.
+        /// </param>
+        /// <param name="intercept">
+        /// The intercept for the calibration.
+        /// </param>
+        /// <param name="isAutoCalibrating">
+        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// </param>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        public void UpdateAllCalibrationCoefficients(
+            double slope,
+            double intercept,
+            bool isAutoCalibrating = false)
+        {
+            UpdateAllCalibrationCoefficients(m_dbConnection, slope, intercept, isAutoCalibrating);
+        }
+
+        /// <summary>
+        /// Update the slope and intercept for all frames
+        /// </summary>
         /// <param name="dBconnection"></param>
         /// <param name="slope">
         /// The slope value for the calibration.
@@ -1871,9 +1920,9 @@ namespace UIMFLibrary
         /// </param>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public static void UpdateAllCalibrationCoefficients(
-            SQLiteConnection dBconnection, 
-            float slope, 
-            float intercept, 
+            SQLiteConnection dBconnection,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
             var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
@@ -1938,7 +1987,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="intercept">
         /// </param>
-        public void UpdateCalibrationCoefficients(int frameNumber, float slope, float intercept)
+        public void UpdateCalibrationCoefficients(int frameNumber, double slope, double intercept)
         {
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
@@ -1964,8 +2013,8 @@ namespace UIMFLibrary
         public static void UpdateCalibrationCoefficients(
             SQLiteConnection dBconnection,
             int frameNumber,
-            float slope,
-            float intercept,
+            double slope,
+            double intercept,
             bool isAutoCalibrating = false)
         {
             var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
@@ -2110,7 +2159,7 @@ namespace UIMFLibrary
         /// </summary>
         public void UpdateGlobalFrameCount()
         {
-            if (!HasFrameParamsTable())
+            if (!HasFrameParamsTable)
                 throw new Exception("UIMF file does not have table Frame_Params; use method CreateTables to add tables");
 
             object frameCount;
@@ -2211,7 +2260,7 @@ namespace UIMFLibrary
             {
                 var dbCommand = m_dbConnection.CreateCommand();
                 dbCommand.CommandText = " UPDATE Frame_Parameters " +
-                                        " SET " + parameterName + " = " + defaultValue + 
+                                        " SET " + parameterName + " = " + defaultValue +
                                         " WHERE " + parameterName + " IS NULL";
                 dbCommand.ExecuteNonQuery();
 
@@ -2560,32 +2609,35 @@ namespace UIMFLibrary
 
             return fieldMapping;
         }
-       
-        private bool HasFrameParamsTable()
+
+        private bool CheckHasFrameParamsTable()
         {
-            if (!m_HasFrameParamsTable)
+            if (!m_HasFrameParamsTable && !m_FrameParamsTableChecked)
             {
                 m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, FRAME_PARAMS_TABLE);
+                m_FrameParamsTableChecked = true;
             }
 
             return m_HasFrameParamsTable;
         }
 
-        private bool HasGlobalParamsTable()
+        private bool CheckHasGlobalParamsTable()
         {
-            if (!m_HasGlobalParamsTable)
+            if (!m_HasGlobalParamsTable && !m_GlobalParamsTableChecked)
             {
                 m_HasGlobalParamsTable = DataReader.TableExists(m_dbConnection, "Global_Params");
+                m_GlobalParamsTableChecked = true;
             }
 
             return m_HasGlobalParamsTable;
         }
 
-        private bool HasLegacyParameterTables()
+        private bool CheckHasLegacyParameterTables()
         {
-            if (!m_HasLegacyParameterTables)
+            if (!m_HasLegacyParameterTables && !m_LegacyParameterTablesChecked)
             {
                 m_HasLegacyParameterTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
+                m_LegacyParameterTablesChecked = true;
             }
 
             return m_HasLegacyParameterTables;
