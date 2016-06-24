@@ -2615,6 +2615,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Gets a set of intensity values that will be used for demultiplexing.
+        /// Optionally limit the bin range using binStart and binEnd
         /// </summary>
         /// <param name="frameNumber">
         /// The frame where the intensity data should come from.
@@ -2631,23 +2632,32 @@ namespace UIMFLibrary
         /// <param name="doReorder">
         /// Whether to re-order the data or not. This can be used to speed up the demultiplexing process.
         /// </param>
+        /// <param name="pagingFilterStartBin">
+        /// Start bin for filtering data; ignored if pagingFilterCount is 0
+        /// </param>
+        /// <param name="pagingFilterCount">
+        /// Number of bins to return when using pagingFilterStartBin
+        /// </param>
         /// <param name="numFramesToSum">
         /// Number of frames to sum. Must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
         /// </param>
         /// <returns>
         ///  Array of intensities for a given frame; dimensions are bin and scan
         /// </returns>
-        public double[][] GetIntensityBlockForDemultiplexing(
+        public Double[][] GetIntensityBlockForDemultiplexing(
             int frameNumber,
             FrameType frameType,
             int segmentLength,
             Dictionary<int, int> scanToIndexMap,
             bool doReorder,
-            int numFramesToSum = 1)
+            int numFramesToSum = 1,
+            int pagingFilterStartBin = 0,
+            int pagingFilterCount = 0)
         {
+
             if (numFramesToSum < 1 || numFramesToSum % 2 != 1)
             {
-                throw new SystemException(
+                throw new Exception(
                     "Number of frames to sum must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.");
             }
 
@@ -2705,7 +2715,23 @@ namespace UIMFLibrary
 
             var divisionFactor = 1 / totalFrames;
 
+            int startBin;
+            int endBin;
             var numBins = m_globalParameters.Bins;
+
+            if (pagingFilterCount > 0)
+            {
+                // Limited bin range
+                startBin = pagingFilterStartBin;
+                endBin = pagingFilterStartBin + pagingFilterCount - 1;
+                numBins = pagingFilterCount;
+            }
+            else
+            {
+                startBin = 0;
+                endBin = numBins - 1;
+            }
+
             var numScans = frameParams.Scans;
 
             // The number of scans has to be divisible by the given segment length
@@ -2765,15 +2791,19 @@ namespace UIMFLibrary
                         }
                         else
                         {
-                            if (doReorder)
+                            if (binIndex >= startBin && binIndex <= endBin)
                             {
-                                intensities[binIndex][scanToIndexMap[scanNum]] += decodedIntensityValue * divisionFactor;
-                            }
-                            else
-                            {
-                                intensities[binIndex][scanNum] += decodedIntensityValue * divisionFactor;
-                            }
+                                var targetBinIndex = binIndex - startBin;
 
+                                if (doReorder)
+                                {
+                                    intensities[targetBinIndex][scanToIndexMap[scanNum]] += decodedIntensityValue * divisionFactor;
+                                }
+                                else
+                                {
+                                    intensities[targetBinIndex][scanNum] += decodedIntensityValue * divisionFactor;
+                                }
+                            }
                             binIndex++;
                         }
                     }
