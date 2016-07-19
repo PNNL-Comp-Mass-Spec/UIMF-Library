@@ -389,26 +389,17 @@ namespace UIMFLibrary
         /// <summary>
         /// The connection to the SQLite database
         /// </summary>
-        public SQLiteConnection DBConnection
-        {
-            get { return m_dbConnection; }
-        }
+        public SQLiteConnection DBConnection => m_dbConnection;
 
         /// <summary>
         /// Whether the database has a "FrameParams" table
         /// </summary>
-        public bool HasFrameParamsTable
-        {
-            get { return !m_UsingLegacyFrameParameters; }
-        }
+        public bool HasFrameParamsTable => !m_UsingLegacyFrameParameters;
 
         /// <summary>
         /// Whether the database is using a legacy frame parameter table
         /// </summary>
-        public bool HasLegacyFrameParameters
-        {
-            get { return m_HasLegacyFrameParameters; }
-        }
+        public bool HasLegacyFrameParameters => m_HasLegacyFrameParameters;
 
         /// <summary>
         /// Gets or sets a value indicating whether pressure is millitorr.
@@ -418,18 +409,12 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets the tenths of nano seconds per bin.
         /// </summary>
-        public double TenthsOfNanoSecondsPerBin
-        {
-            get { return m_globalParameters.BinWidth * 10.0; }
-        }
+        public double TenthsOfNanoSecondsPerBin => m_globalParameters.BinWidth * 10.0;
 
         /// <summary>
         /// Gets the uimf file path.
         /// </summary>
-        public string UimfFilePath
-        {
-            get { return m_uimfFilePath; }
-        }
+        public string UimfFilePath => m_uimfFilePath;
 
         #endregion
 
@@ -879,7 +864,7 @@ namespace UIMFLibrary
         {
             if (endFrameNumber - startFrameNumber < 0)
             {
-                throw new ArgumentException("Start frame cannot be greater than end frame", "endFrameNumber");
+                throw new ArgumentException("Start frame cannot be greater than end frame", nameof(endFrameNumber));
             }
 
             var width = endScan - startScan + 1;
@@ -1264,10 +1249,7 @@ namespace UIMFLibrary
                 if (m_dbConnection != null)
                 {
                     m_dbConnection.Close();
-                    if (m_dbConnection != null)
-                    {
-                        m_dbConnection.Dispose();
-                    }
+                    m_dbConnection?.Dispose();
                 }
             }
             catch (ObjectDisposedException)
@@ -1997,7 +1979,7 @@ namespace UIMFLibrary
         {
             if (frameNumber < 0)
             {
-                throw new ArgumentOutOfRangeException("frameNumber",
+                throw new ArgumentOutOfRangeException(nameof(frameNumber),
                                                       "FrameNumber should be greater than or equal to zero.");
             }
 
@@ -2014,7 +1996,7 @@ namespace UIMFLibrary
             {
                 if (frameNumber < 0)
                 {
-                    throw new ArgumentOutOfRangeException("frameNumber",
+                    throw new ArgumentOutOfRangeException(nameof(frameNumber),
                                                           "FrameNumber " + frameNumber + " not found in .UIMF file");
                 }
             }
@@ -2166,7 +2148,7 @@ namespace UIMFLibrary
         {
             if (frameNumber < 0)
             {
-                throw new ArgumentOutOfRangeException("frameNumber",
+                throw new ArgumentOutOfRangeException(nameof(frameNumber),
                                                       "FrameNumber should be greater than or equal to zero.");
             }
 
@@ -2297,14 +2279,14 @@ namespace UIMFLibrary
             //var maxScan = scanNums.Max();
             //if (scan < minScan || scan > maxScan)
             //{
-            //    throw new ArgumentOutOfRangeException("scan",
+            //    throw new ArgumentOutOfRangeException(nameof(scan),
             //                                          "Scan index \"" + scan + "\" out of range for Frame \"" + frameNumber + "\"");
             //}
 
             var matches = scansForFrame.Where(x => x.Scan == scan).ToList();
             if (matches.Count == 0)
             {
-                throw new ArgumentOutOfRangeException("scan",
+                throw new ArgumentOutOfRangeException(nameof(scan),
                                                       "Scan index \"" + scan + "\" not found in Frame \"" + frameNumber + "\"");
             }
 
@@ -2322,7 +2304,7 @@ namespace UIMFLibrary
         {
             if (frameNumber < 0)
             {
-                throw new ArgumentOutOfRangeException("frameNumber",
+                throw new ArgumentOutOfRangeException(nameof(frameNumber),
                                                       "FrameNumber should be greater than or equal to zero.");
             }
 
@@ -2381,7 +2363,7 @@ namespace UIMFLibrary
             if (frameParams == null)
             {
                 // Frame number out of range
-                throw new ArgumentOutOfRangeException("frameNumber",
+                throw new ArgumentOutOfRangeException(nameof(frameNumber),
                                                       "FrameNumber " + frameNumber + " is not in the .UIMF file");
             }
 
@@ -4275,7 +4257,7 @@ namespace UIMFLibrary
             var tofCorrectionTime = m_globalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
-            FrameSetContainer frameSet = m_frameTypeInfo[frameType];
+            var frameSet = m_frameTypeInfo[frameType];
             var frameIndexes = frameSet.FrameIndexes;
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
@@ -5038,7 +5020,7 @@ namespace UIMFLibrary
         private static void AddFrameParamKey(Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, int paramID, string paramName, string paramDataType, string paramDescription)
         {
             if (string.IsNullOrWhiteSpace(paramName))
-                throw new ArgumentOutOfRangeException("paramName", "paramName cannot be empty");
+                throw new ArgumentOutOfRangeException(nameof(paramName), "paramName cannot be empty");
 
             var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
             if (paramType == FrameParamKeyType.Unknown)
@@ -6364,28 +6346,19 @@ namespace UIMFLibrary
         /// </summary>
         private void UnloadPrepStmts()
         {
+            m_getCountPerFrameCommand?.Dispose();
 
-            if (m_getCountPerFrameCommand != null)
-                m_getCountPerFrameCommand.Dispose();
+            m_getFileBytesCommand?.Dispose();
 
-            if (m_getFileBytesCommand != null)
-                m_getFileBytesCommand.Dispose();
+            m_getFrameParametersCommand?.Dispose();
 
-            if (m_getFrameParametersCommand != null)
-                m_getFrameParametersCommand.Dispose();
+            m_getFrameParamsCommand?.Dispose();
 
-            if (m_getFrameParamsCommand != null)
-                m_getFrameParamsCommand.Dispose();
+            m_getFramesAndScanByDescendingIntensityCommand?.Dispose();
 
-            if (m_getFramesAndScanByDescendingIntensityCommand != null)
-                m_getFramesAndScanByDescendingIntensityCommand.Dispose();
+            m_getFrameScansCommand?.Dispose();
 
-            if (m_getFrameScansCommand != null)
-                m_getFrameScansCommand.Dispose();
-
-            if (m_getSpectrumCommand != null)
-                m_getSpectrumCommand.Dispose();
-
+            m_getSpectrumCommand?.Dispose();
         }
 
         private static void ThrowMissingBinCentricTablesException()
@@ -6508,10 +6481,7 @@ namespace UIMFLibrary
         public void OnMessage(MessageEventArgs e)
         {
             var messageEvent = this.MessageEvent;
-            if (messageEvent != null)
-            {
-                messageEvent(this, e);
-            }
+            messageEvent?.Invoke(this, e);
         }
 
         #endregion

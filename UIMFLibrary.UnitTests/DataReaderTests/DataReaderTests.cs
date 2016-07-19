@@ -4,8 +4,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System.Runtime.Remoting;
-
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
     using System;
@@ -49,7 +47,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var methodDescriptor = nameSpace + ".";
 
-            if (nameSpace.EndsWith("." + className))
+            if (nameSpace != null && nameSpace.EndsWith("." + className))
             {
                 methodDescriptor += methodInfo.Name;
             }
@@ -78,9 +76,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInMZ = 25 / 1e6 * bpimz;
 
             Console.WriteLine("Tolerance in mz is " + toleranceInMZ);
-            using (this.m_reader = new DataReader(filePath))
+            using (m_reader = new DataReader(filePath))
             {
-                int[][] intensityMap = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
+                var intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(
                     startFrame - 40,
                     startFrame + 40,
                     0,
@@ -89,19 +87,19 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     bpimz,
                     toleranceInMZ);
 
-                int lastIndex = intensityMap.Length - 1;
-                int lastValue = intensityMap[lastIndex][intensityMap[lastIndex].Length - 1];
+                var lastIndex = intensityMap.Length - 1;
+                var lastValue = intensityMap[lastIndex][intensityMap[lastIndex].Length - 1];
 
                 Assert.AreEqual(0, intensityMap[0][0]);
                 Assert.AreEqual(32, intensityMap[9][23]);
                 Assert.AreEqual(179, intensityMap[42][18]);
                 Assert.AreEqual(0, lastValue);
 
-                foreach (int[] scanIntensities in intensityMap)
+                foreach (var scanIntensities in intensityMap)
                 {
-                    bool addLinefeed = false;
+                    var addLinefeed = false;
                   
-                    foreach (int value in scanIntensities)
+                    foreach (var value in scanIntensities)
                     {
                         if (value > 0)
                         {
@@ -211,7 +209,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzArray;
                 int[] intensityArray;
 
-                int nonZeroCount = reader.GetSpectrum(
+                var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
                     DataReader.FrameType.MS1,
                     scanNumber,
@@ -240,7 +238,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                int[] intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
+                var intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
 
                 Assert.AreEqual(148001, intensities.Length);
                 Assert.AreEqual(80822, intensities.Sum());
@@ -268,9 +266,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzVals;
 
                 const double testMZ = 627.2655682;
-                for (int frame = startFrame; frame <= stopFrame; frame++)
+                for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
-                    int[] intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MS1, scan, scan);
+                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MS1, scan, scan);
                     sequentialFrameIntensityVals.Add(intensitiesForFrame);
                 }
 
@@ -279,11 +277,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(44965, sequentialFrameIntensityVals[1][testBin]);
                 Assert.AreEqual(45758, sequentialFrameIntensityVals[2][testBin]);
 
-                int[] intensities = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
+                var intensities = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
 
                 Assert.AreEqual(126568, intensities[testBin]);
 
-                int numZeros = reader.GetSpectrum(
+                var numZeros = reader.GetSpectrum(
                     startFrame,
                     stopFrame,
                     DataReader.FrameType.MS1,
@@ -294,8 +292,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(764, numZeros);
 
-                int maxIntensityForTestMZ = 0;
-                for (int i = 0; i < intensities.Length; i++)
+                var maxIntensityForTestMZ = 0;
+                for (var i = 0; i < intensities.Length; i++)
                 {
                     if (mzVals[i] > (testMZ - 0.1) && mzVals[i] < (testMZ + 0.1))
                     {
@@ -328,7 +326,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzArray;
                 int[] intensityArray;
 
-                int nonZeroCount = reader.GetSpectrum(
+                var nonZeroCount = reader.GetSpectrum(
                     frameStart,
                     frameStop,
                     DataReader.FrameType.MS1,
@@ -408,15 +406,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int testFrame = 1000;
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
-            using (this.m_reader = new DataReader(filePath))
+            using (m_reader = new DataReader(filePath))
             {
-                var gp = this.m_reader.GetGlobalParams();
-                var fp = this.m_reader.GetFrameParams(testFrame);
+                var gp = m_reader.GetGlobalParams();
+                var fp = m_reader.GetFrameParams(testFrame);
 
                 var sb = new StringBuilder();
 
                 double prevMz = 0;
-                for (int i = 0; i < 400000; i++)
+                for (var i = 0; i < 400000; i++)
                 {
                     sb.Append(i);
                     sb.Append('\t');
@@ -426,7 +424,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                     sb.Append('\t');
 
-                    double ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
+                    var ppmDifference = ((mz - prevMz) * Math.Pow(10, 6)) / mz;
                     prevMz = mz;
                     sb.Append(ppmDifference);
                     sb.Append(Environment.NewLine);
@@ -465,37 +463,34 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                double difference;
-                Dictionary<int, double> bpi;
-
-                bpi = reader.GetBPIByFrame(20, 20, 0, 0);
-                difference = 91235 - bpi[20];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
+                var difference = 91235 - bpi[20];
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 bpi = reader.GetBPIByFrame(20, 20, 1, 100);
                 difference = 7406 - bpi[20];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 bpi = reader.GetBPIByFrame(20, 30, 50, 200);
                 difference = 42828 - bpi[25];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 // Uncomment this to get a BPI across the entire dataset (typically slow)
                 // bpi = reader.GetBPIByFrame(0, 0, 0, 0);
                 // difference = 83524 - bpi[100];
-                // Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                // Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 difference = 2028 - bpiList[70];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
             }
 
             // File with updated parameter tables
             using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
             {
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                double difference = 2028 - bpiList[70];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                var difference = 2028 - bpiList[70];
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
             }
 
         }
@@ -508,29 +503,26 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                double difference;
-                Dictionary<int, double> tic;
-
-                tic = reader.GetTICByFrame(20, 20, 0, 0);
-                difference = 2195378 - tic[20];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                var tic = reader.GetTICByFrame(20, 20, 0, 0);
+                var difference = 2195378 - tic[20];
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 tic = reader.GetTICByFrame(20, 20, 1, 100);
                 difference = 13703 - tic[20];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 tic = reader.GetTICByFrame(20, 30, 50, 200);
                 difference = 1081201 - tic[25];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 // Uncomment this to get a TIC across the entire dataset (typically slow)
                 //tic = reader.GetTICByFrame(0, 0, 0, 0);
                 //difference = 2026072 - tic[100];
-                //Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                //Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 difference = 3649 - ticList[70];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
 
             }
 
@@ -538,8 +530,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
             {
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                double difference = 3649 - ticList[70];
-                Assert.LessOrEqual(Math.Abs(difference), Single.Epsilon);
+                var difference = 3649 - ticList[70];
+                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
             }
 
         }
@@ -728,14 +720,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </returns>
         private double ConvertBinToMZ(double slope, double intercept, double binWidth, double correctionTimeForTOF, int bin)
         {
-            double t = bin * binWidth / 1000;
+            var t = bin * binWidth / 1000;
 
             // double residualMassError  = fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
             const double residualMassError = 0;
 
             var sqrtMZ = slope * (t - correctionTimeForTOF / 1000 - intercept);
 
-            double mz = sqrtMZ * sqrtMZ + residualMassError;
+            var mz = sqrtMZ * sqrtMZ + residualMassError;
             return mz;
         }
 
@@ -755,7 +747,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             try
             {
                 // Write the text to the file
-                string completeString = Encoding.UTF8.GetString(data);
+                var completeString = Encoding.UTF8.GetString(data);
                 ostream = new FileStream(fileName, FileMode.Create, FileAccess.ReadWrite);
 
                 writer = new StreamWriter(ostream, new UnicodeEncoding());
@@ -767,15 +759,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
             finally
             {
-                if (writer != null)
-                {
-                    writer.Close();
-                }
+                writer?.Close();
 
-                if (ostream != null)
-                {
-                    ostream.Close();
-                }
+                ostream?.Close();
             }
         }
 

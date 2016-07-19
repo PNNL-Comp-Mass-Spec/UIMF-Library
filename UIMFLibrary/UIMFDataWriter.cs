@@ -125,18 +125,18 @@ namespace UIMFLibrary
         /// True if the UIMF file has table Frame_Params
         /// </summary>
         /// <remarks>When opening a .UIMF file without the Frame_Params table, the writer will auto-add it</remarks>
-        public bool HasFrameParamsTable { get { return CheckHasFrameParamsTable(); } }
+        public bool HasFrameParamsTable => CheckHasFrameParamsTable();
 
         /// <summary>
         /// True if the UIMF file has table Global_Params
         /// </summary>
         /// <remarks>When opening a .UIMF file without the Global_Params table, the writer will auto-add it</remarks>
-        public bool HasGlobalParamsTable { get { return CheckHasGlobalParamsTable(); } }
+        public bool HasGlobalParamsTable => CheckHasGlobalParamsTable();
 
         /// <summary>
         /// True if the UIMF file has tables Global_Parameters and Frame_Parameters
         /// </summary>
-        public bool HasLegacyParameterTables { get { return CheckHasLegacyParameterTables(); } }
+        public bool HasLegacyParameterTables => CheckHasLegacyParameterTables();
 
         #endregion
 
@@ -1265,10 +1265,7 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         protected void DisposeCommand(SQLiteCommand dbCommand)
         {
-            if (dbCommand != null)
-            {
-                dbCommand.Dispose();
-            }
+            dbCommand?.Dispose();
         }
 
         /// <summary>
@@ -1787,7 +1784,7 @@ namespace UIMFLibrary
             nonZeroCount = 0;
 
             if (frameParameters == null)
-                throw new ArgumentNullException("frameParameters");
+                throw new ArgumentNullException(nameof(frameParameters));
 
             if (m_globalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
@@ -1834,7 +1831,7 @@ namespace UIMFLibrary
                 return -1;
 
             if (binToIntensityMap == null)
-                throw new ArgumentNullException("binToIntensityMap", "binToIntensityMap cannot be null");
+                throw new ArgumentNullException(nameof(binToIntensityMap), "binToIntensityMap cannot be null");
 
             if (m_globalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
@@ -2095,7 +2092,7 @@ namespace UIMFLibrary
             var paramType = FrameParamUtilities.GetParamTypeByName(parameterName);
 
             if (paramType == FrameParamKeyType.Unknown)
-                throw new ArgumentOutOfRangeException("parameterName", "Unrecognized parameter name " + parameterName + "; cannot update");
+                throw new ArgumentOutOfRangeException(nameof(parameterName), "Unrecognized parameter name " + parameterName + "; cannot update");
 
             AddUpdateFrameParameter(frameNumber, paramType, parameterValue);
 

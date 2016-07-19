@@ -30,7 +30,7 @@ namespace UIMFLibrary.UnitTests
 		public static void Display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
 		{
 			var sb = new StringBuilder();
-			for (int i = 0; i < frameORScanVals.Length; i++)
+			for (var i = 0; i < frameORScanVals.Length; i++)
 			{
 				sb.Append(frameORScanVals[i]);
 				sb.Append("\t");
@@ -51,7 +51,7 @@ namespace UIMFLibrary.UnitTests
 		{
 			var sb = new StringBuilder();
 
-			string separator = Environment.NewLine;
+			var separator = Environment.NewLine;
 
             sb.Append("avg TOF length = \t" + fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
 			sb.Append(separator);
@@ -94,7 +94,7 @@ namespace UIMFLibrary.UnitTests
 		public static void DisplayRawMassSpectrum(double[] mzValues, int[] intensities)
 		{
 			var sb = new StringBuilder();
-			for (int i = 0; i < mzValues.Length; i++)
+			for (var i = 0; i < mzValues.Length; i++)
 			{
 				sb.Append(mzValues[i]);
 				sb.Append("\t");
@@ -137,13 +137,13 @@ namespace UIMFLibrary.UnitTests
 		/// </returns>
 		public static int GetMax(int[][] values, out int xcoord, out int ycoord)
 		{
-			int max = 0;
+			var max = 0;
 			xcoord = 0;
 			ycoord = 0;
 
-			for (int i = 0; i < values.Length; i++)
+			for (var i = 0; i < values.Length; i++)
 			{
-				for (int j = 0; j < values[i].Length; j++)
+				for (var j = 0; j < values[i].Length; j++)
 				{
 					if (values[i][j] > max)
 					{
@@ -172,8 +172,8 @@ namespace UIMFLibrary.UnitTests
 		public static void PrintAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
 		{
 			var sb = new StringBuilder();
-			int frameValue = frameVals[0];
-			for (int i = 0; i < frameVals.Length; i++)
+			var frameValue = frameVals[0];
+			for (var i = 0; i < frameVals.Length; i++)
 			{
 				if (frameValue != frameVals[i])
 				{
@@ -211,8 +211,8 @@ namespace UIMFLibrary.UnitTests
 		public static void PrintAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
 		{
 			var sb = new StringBuilder();
-			int frameValue = frameVals[0];
-			for (int i = 0; i < frameVals.Length; i++)
+			var frameValue = frameVals[0];
+			for (var i = 0; i < frameVals.Length; i++)
 			{
 				if (frameValue != frameVals[i])
 				{
