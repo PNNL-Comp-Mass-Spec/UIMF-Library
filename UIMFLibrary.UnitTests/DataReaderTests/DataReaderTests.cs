@@ -4,6 +4,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Runtime.Remoting;
+
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
     using System;
@@ -113,7 +115,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Console.WriteLine();
             }
-        }
+        }      
 
         /// <summary>
         /// We found a bug in some UIMF Files generated on IMS2 where the bin value exceeded the maximum bin value.
@@ -149,6 +151,46 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(1, intensityArray[0]);
 
             }
+        }
+
+        /// <summary>
+        /// Test methods GetMasterFrameList, GetFrameNumbers, GetNumberOfFrames, and HasMSMSData
+        /// </summary>
+        [Test]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", 1175, 0)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", 1419, 1421)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\SarcCtrl_P21_1mgml_IMS6_AgTOF07_210min_CID_01_05Oct12_Frodo_Precursors_Removed.UIMF", 442, 7058)]
+        public void TestFrameCounts(string filePath, int frameCountExpectedMS1, int frameCountExpectedMS2)
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            using (var reader = new DataReader(filePath))
+            {
+                var allFrames = reader.GetMasterFrameList();
+                var frameNumbersMS1 = reader.GetFrameNumbers(DataReader.FrameType.MS1);
+                var frameNumbersMS2 = reader.GetFrameNumbers(DataReader.FrameType.MS2);
+
+                var frameCountMS1 = reader.GetNumberOfFrames(DataReader.FrameType.MS1);
+                var frameCountMS2 = reader.GetNumberOfFrames(DataReader.FrameType.MS2);
+
+                var hasMSn = reader.HasMSMSData();
+
+                Console.WriteLine(
+                    $"{allFrames.Count} total frames, {frameCountMS1} MS1, {frameCountMS2} MS2, HasMSn: {hasMSn}");
+
+                var frameCountExpected = frameCountExpectedMS1 + frameCountExpectedMS2;
+
+                Assert.AreEqual(frameCountExpected, allFrames.Count, "Frame count mismatch");
+                Assert.AreEqual(frameCountExpectedMS1, frameCountMS1, "MS1 count mismatch");
+                Assert.AreEqual(frameCountExpectedMS2, frameCountMS2, "MS2 count mismatch");
+
+                Assert.AreEqual(frameCountMS1, frameNumbersMS1.Length, "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS1 frames");
+                Assert.AreEqual(frameCountMS2, frameNumbersMS2.Length, "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS2 frames");
+
+                Assert.AreEqual(hasMSn, frameCountMS2 > 0, "HasMSMSData result disagrees with frameCountMS2");
+            }
+
+
         }
 
         /// <summary>

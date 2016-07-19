@@ -1813,8 +1813,8 @@ namespace UIMFLibrary
 
                 if (m_UsingLegacyFrameParameters)
                 {
-                    dbCommand.CommandText =
-                        "SELECT DISTINCT(FrameNum) FROM Frame_Parameters WHERE FrameType = :FrameType ORDER BY FrameNum";
+                    dbCommand.CommandText = "SELECT DISTINCT(FrameNum) FROM Frame_Parameters " +
+                                            "WHERE FrameType = :FrameType ORDER BY FrameNum";
                     dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
 
                     using (var reader = dbCommand.ExecuteReader())
@@ -3128,22 +3128,22 @@ namespace UIMFLibrary
 
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
-                var frameTypeList = "0,1";
+                var frameTypeValue = m_frameTypeMS1;
 
                 if (frameType != FrameType.MS1)
-                    frameTypeList = ((int)frameType).ToString(CultureInfo.InvariantCulture);
+                    frameTypeValue = (int)frameType;
 
                 if (m_UsingLegacyFrameParameters)
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Parameters " +
-                                            "WHERE FrameType IN (:FrameType)";
+                                            "WHERE FrameType = :FrameType";
                 else
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Params " +
                                             "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
-                                            " AND ParamValue IN (:FrameType)";
+                                            " AND ParamValue = :FrameType";
 
-                dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeList));
+                dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
 
                 using (var reader = dbCommand.ExecuteReader())
                 {
@@ -5605,16 +5605,18 @@ namespace UIMFLibrary
             }
 
             if (frameTypeList.Contains(0))
-            {
+            {                
                 if (frameTypeList.Contains(1))
                 {
-                    throw new Exception("FrameTypes of 0 and 1 found. Not a valid UIMF file.");
+                    throw new Exception("FrameTypes of 0 and 1 found. Not a valid UIMF file since both frame types should not be present in the same file");
                 }
 
+                // Older UIMF file where MS1 spectra are tracked as FrameType 0
                 m_frameTypeMS1 = 0;
             }
             else
             {
+                // Newer UIMF file; MS1 spectra are FrameType 1
                 m_frameTypeMS1 = 1;
             }
         }
