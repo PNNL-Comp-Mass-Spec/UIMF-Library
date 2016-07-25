@@ -152,7 +152,7 @@ namespace UIMFLibrary
 		/// <remarks>
 		/// Set to 1 after a frame has been decoded (added June 27, 2011)
 		/// </remarks>
-		public int Decoded = 0;
+		public int Decoded;
 
 		/// <summary>
 		/// Frame duration, in seconds
@@ -416,7 +416,7 @@ namespace UIMFLibrary
 		/// </param>
 		public FrameParameters(DateTime dtRunStartTime)
 		{
-			this.StartTime = System.DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
+			StartTime = DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
 		}
 
 		#endregion
@@ -430,12 +430,12 @@ namespace UIMFLibrary
 		{
 			get
 			{
-				return this.voltEntranceHPFIn;
+				return voltEntranceHPFIn;
 			}
 
 			set
 			{
-				this.voltEntranceHPFIn = value;
+				voltEntranceHPFIn = value;
 			}
 		}
 
@@ -446,12 +446,12 @@ namespace UIMFLibrary
 		{
 			get
 			{
-				return this.voltEntranceHPFOut;
+				return voltEntranceHPFOut;
 			}
 
 			set
 			{
-				this.voltEntranceHPFOut = value;
+				voltEntranceHPFOut = value;
 			}
 		}
 
@@ -462,12 +462,12 @@ namespace UIMFLibrary
 		{
 			get
 			{
-				return this.voltExitHPFIn;
+				return voltExitHPFIn;
 			}
 
 			set
 			{
-				this.voltExitHPFIn = value;
+				voltExitHPFIn = value;
 			}
 		}
 
@@ -478,12 +478,12 @@ namespace UIMFLibrary
 		{
 			get
 			{
-				return this.voltExitHPFOut;
+				return voltExitHPFOut;
 			}
 
 			set
 			{
-				this.voltExitHPFOut = value;
+				voltExitHPFOut = value;
 			}
 		}
 
@@ -501,62 +501,62 @@ namespace UIMFLibrary
 		{
 			Target = new FrameParameters
 			{
-			    FrameNum = this.FrameNum,
-			    StartTime = this.StartTime,
-			    Duration = this.Duration,
-			    Accumulations = this.Accumulations,
-			    FrameType = this.FrameType,
-			    Scans = this.Scans,
-			    IMFProfile = this.IMFProfile,
-			    TOFLosses = this.TOFLosses,
-			    AverageTOFLength = this.AverageTOFLength,
-			    CalibrationSlope = this.CalibrationSlope,
-			    CalibrationIntercept = this.CalibrationIntercept,
-			    a2 = this.a2,
-			    b2 = this.b2,
-			    c2 = this.c2,
-			    d2 = this.d2,
-			    e2 = this.e2,
-			    f2 = this.f2,
-			    Temperature = this.Temperature,
-			    voltHVRack1 = this.voltHVRack1,
-			    voltHVRack2 = this.voltHVRack2,
-			    voltHVRack3 = this.voltHVRack3,
-			    voltHVRack4 = this.voltHVRack4,
-			    voltCapInlet = this.voltCapInlet,
-			    voltEntranceHPFIn = this.voltEntranceHPFIn,
-			    voltEntranceHPFOut = this.voltEntranceHPFOut,
-			    voltEntranceCondLmt = this.voltEntranceCondLmt,
-			    voltTrapOut = this.voltTrapOut,
-			    voltTrapIn = this.voltTrapIn,
-			    voltJetDist = this.voltJetDist,
-			    voltQuad1 = this.voltQuad1,
-			    voltCond1 = this.voltCond1,
-			    voltQuad2 = this.voltQuad2,
-			    voltCond2 = this.voltCond2,
-			    voltIMSOut = this.voltIMSOut,
-			    voltExitHPFIn = this.voltExitHPFIn,
-			    voltExitHPFOut = this.voltExitHPFOut,
-			    voltExitCondLmt = this.voltExitCondLmt,
-			    PressureFront = this.PressureFront,
-			    PressureBack = this.PressureBack,
-			    MPBitOrder = this.MPBitOrder
+			    FrameNum = FrameNum,
+			    StartTime = StartTime,
+			    Duration = Duration,
+			    Accumulations = Accumulations,
+			    FrameType = FrameType,
+			    Scans = Scans,
+			    IMFProfile = IMFProfile,
+			    TOFLosses = TOFLosses,
+			    AverageTOFLength = AverageTOFLength,
+			    CalibrationSlope = CalibrationSlope,
+			    CalibrationIntercept = CalibrationIntercept,
+			    a2 = a2,
+			    b2 = b2,
+			    c2 = c2,
+			    d2 = d2,
+			    e2 = e2,
+			    f2 = f2,
+			    Temperature = Temperature,
+			    voltHVRack1 = voltHVRack1,
+			    voltHVRack2 = voltHVRack2,
+			    voltHVRack3 = voltHVRack3,
+			    voltHVRack4 = voltHVRack4,
+			    voltCapInlet = voltCapInlet,
+			    voltEntranceHPFIn = voltEntranceHPFIn,
+			    voltEntranceHPFOut = voltEntranceHPFOut,
+			    voltEntranceCondLmt = voltEntranceCondLmt,
+			    voltTrapOut = voltTrapOut,
+			    voltTrapIn = voltTrapIn,
+			    voltJetDist = voltJetDist,
+			    voltQuad1 = voltQuad1,
+			    voltCond1 = voltCond1,
+			    voltQuad2 = voltQuad2,
+			    voltCond2 = voltCond2,
+			    voltIMSOut = voltIMSOut,
+			    voltExitHPFIn = voltExitHPFIn,
+			    voltExitHPFOut = voltExitHPFOut,
+			    voltExitCondLmt = voltExitCondLmt,
+			    PressureFront = PressureFront,
+			    PressureBack = PressureBack,
+			    MPBitOrder = MPBitOrder
 			};
 
-		    if (this.FragmentationProfile != null)
+		    if (FragmentationProfile != null)
 			{
-				Target.FragmentationProfile = new double[this.FragmentationProfile.Length];
-				Array.Copy(this.FragmentationProfile, Target.FragmentationProfile, this.FragmentationProfile.Length);
+				Target.FragmentationProfile = new double[FragmentationProfile.Length];
+				Array.Copy(FragmentationProfile, Target.FragmentationProfile, FragmentationProfile.Length);
 			}
 
-			Target.HighPressureFunnelPressure = this.HighPressureFunnelPressure;
-			Target.IonFunnelTrapPressure = this.IonFunnelTrapPressure;
-			Target.RearIonFunnelPressure = this.RearIonFunnelPressure;
-			Target.QuadrupolePressure = this.QuadrupolePressure;
-			Target.ESIVoltage = this.ESIVoltage;
-			Target.FloatVoltage = this.FloatVoltage;
-			Target.CalibrationDone = this.CalibrationDone;
-			Target.Decoded = this.Decoded;
+			Target.HighPressureFunnelPressure = HighPressureFunnelPressure;
+			Target.IonFunnelTrapPressure = IonFunnelTrapPressure;
+			Target.RearIonFunnelPressure = RearIonFunnelPressure;
+			Target.QuadrupolePressure = QuadrupolePressure;
+			Target.ESIVoltage = ESIVoltage;
+			Target.FloatVoltage = FloatVoltage;
+			Target.CalibrationDone = CalibrationDone;
+			Target.Decoded = Decoded;
 		}
 
 		#endregion

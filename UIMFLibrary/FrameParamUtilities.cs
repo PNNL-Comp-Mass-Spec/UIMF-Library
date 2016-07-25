@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace UIMFLibrary
 {
@@ -286,7 +285,7 @@ namespace UIMFLibrary
                 StartTime = frameParameters.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
                 Duration = frameParameters.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
                 Accumulations = frameParameters.GetValueInt32(FrameParamKeyType.Accumulations, 0),
-                FrameType = (DataReader.FrameType)frametype,
+                FrameType = frametype,
                 Decoded = frameParameters.GetValueInt32(FrameParamKeyType.Decoded, 0),
                 CalibrationDone = frameParameters.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
                 Scans = frameParameters.Scans,
@@ -456,12 +455,12 @@ namespace UIMFLibrary
         public static FrameParamDef GetParamDefByName(string paramName)
         {
             if (String.IsNullOrWhiteSpace(paramName))
-                throw new ArgumentOutOfRangeException("paramName", "paramName is empty");
+                throw new ArgumentOutOfRangeException(nameof(paramName), "paramName is empty");
 
             var paramType = GetParamTypeByName(paramName);
 
             if (paramType == FrameParamKeyType.Unknown)
-                throw new ArgumentOutOfRangeException("paramName", "unknown value for paramName: " + paramName);
+                throw new ArgumentOutOfRangeException(nameof(paramName), "unknown value for paramName: " + paramName);
 
             return GetParamDefByType(paramType);
         }
@@ -724,7 +723,7 @@ namespace UIMFLibrary
 
 
                 default:
-                    throw new ArgumentOutOfRangeException("paramType", "Unrecognized frame param enum for paramType: " + (int)paramType);
+                    throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
             }
 
         }        

@@ -254,10 +254,10 @@ namespace UIMFLibrary
                     break;
 
                 case GlobalParamKeyType.Unknown:
-                    throw new ArgumentOutOfRangeException("paramType", "Cannot initialiaze a global parameter of type Unknown: " + (int)paramType);
+                    throw new ArgumentOutOfRangeException(nameof(paramType), "Cannot initialiaze a global parameter of type Unknown: " + (int)paramType);
 
                 default:
-                    throw new ArgumentOutOfRangeException("paramType", "Unrecognized global param enum for paramType: " + (int)paramType);
+                    throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized global param enum for paramType: " + (int)paramType);
             }
 
         }

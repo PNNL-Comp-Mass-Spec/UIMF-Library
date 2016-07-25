@@ -70,10 +70,7 @@ namespace UIMFLibrary
         /// Frame parameters dictionary
         /// </summary>
         /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
-        public Dictionary<FrameParamKeyType, FrameParam> Values
-        {
-            get { return mFrameParameters; }
-        }
+        public Dictionary<FrameParamKeyType, FrameParam> Values => mFrameParameters;
 
         /// <summary>
         /// Calibration slope
@@ -131,13 +128,7 @@ namespace UIMFLibrary
         /// Mass calibration coefficients
         /// </summary>
         /// <remarks>Provided for quick reference to avoid having to access the dictionary and convert from string to double</remarks>
-        public MassCalibrationCoefficientsType MassCalibrationCoefficients
-        {
-            get
-            {
-                return mCachedMassCalibrationCoefficients;
-            }
-        }
+        public MassCalibrationCoefficientsType MassCalibrationCoefficients => mCachedMassCalibrationCoefficients;
 
         /// <summary>
         /// Scans per frame

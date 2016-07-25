@@ -132,10 +132,7 @@ namespace UIMFLibrary
 		public void OnErrorMessage(MessageEventArgs e)
 		{
             var errorEvent = this.OnError;
-            if (errorEvent != null)
-			{
-                errorEvent(this, e);
-			}
+		    errorEvent?.Invoke(this, e);
 		}
 
 		/// <summary>
@@ -147,10 +144,7 @@ namespace UIMFLibrary
 		public void OnMessage(MessageEventArgs e)
 		{
             var messageEvent = this.Message;
-            if (messageEvent != null)
-			{
-                messageEvent(this, e);
-			}
+		    messageEvent?.Invoke(this, e);
 		}
 
 		/// <summary>
@@ -162,10 +156,7 @@ namespace UIMFLibrary
 		public void OnProgressUpdate(ProgressEventArgs e)
 		{
             var progressUpdate = this.OnProgress;
-            if (progressUpdate != null)
-			{
-                progressUpdate(this, e);
-			}
+		    progressUpdate?.Invoke(this, e);
 		}
 
 		#endregion
@@ -534,7 +525,7 @@ namespace UIMFLibrary
             var numImsScans = frameParams.Scans;
 
 			var targetFile = uimfWriterConnection.ConnectionString;
-			var charIndex = targetFile.IndexOf(";");
+			var charIndex = targetFile.IndexOf(';');
 			if (charIndex > 0)
 			{
 				targetFile = targetFile.Substring(0, charIndex - 1).Trim();
