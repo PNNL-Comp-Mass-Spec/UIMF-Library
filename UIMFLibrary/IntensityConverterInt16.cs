@@ -17,7 +17,7 @@ namespace UIMFLibrary
 		/// Number of non-zero data points
 		/// </returns>
 		public static int Encode(
-			Int16[] intensities,
+			short[] intensities,
 			out byte[] spectra,
 			out double tic,
 			out double bpi,

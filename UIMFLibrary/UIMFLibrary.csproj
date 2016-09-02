@@ -101,10 +101,12 @@
     <Compile Include="GlobalParam.cs" />
     <Compile Include="GlobalParams.cs" />
     <Compile Include="GlobalParamUtilities.cs" />
+    <Compile Include="IntensityEncoderUtilities.cs" />
     <Compile Include="IntensityBinConverterInt32.cs" />
     <Compile Include="ClassDefinitions.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="FrameTypeInfo.cs" />
+    <Compile Include="IntensityConverter.cs" />
     <Compile Include="IntensityConverterDouble.cs" />
     <Compile Include="IntensityConverterFloat.cs" />
     <Compile Include="IntensityConverterInt16.cs" />
