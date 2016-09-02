@@ -1,6 +1,6 @@
 UIMFLibrary Revision History
 
-Version 3.0.5988; May24, 2016
+Version 3.0.5988; May 24, 2016
 	- Now defining the ScanNum field as a 32-bit integer instead of a 16-bit integer in the Frame_Scans table
 	- Add custom exception handlers to the reader
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -10,9 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UIMFLibrary_Demo</RootNamespace>
     <AssemblyName>UIMFLibrary_Demo</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <TargetFrameworkProfile />
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -68,8 +67,6 @@
     <Compile Include="TestUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\UIMFLibrary\UIMFLibrary.csproj">
       <Project>{25849DAD-D507-4429-ACA4-2DB63F9EAF52}</Project>
       <Name>UIMFLibrary</Name>
@@ -78,9 +75,9 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
-xcopy "$(ProjectDir)..\..\lib\x86\SQLite.Interop.dll" "$(TargetDir)x86" /D
+xcopy "$(ProjectDir)..\..\lib\x86\SQLite.Interop.dll" "$(TargetDir)x86" /D /y
 if not exist "$(TargetDir)x64" mkdir "$(TargetDir)x64"
-xcopy "$(ProjectDir)..\..\lib\x64\SQLite.Interop.dll" "$(TargetDir)x64" /D
+xcopy "$(ProjectDir)..\..\lib\x64\SQLite.Interop.dll" "$(TargetDir)x64" /D /y
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

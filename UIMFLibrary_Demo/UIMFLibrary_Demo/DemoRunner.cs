@@ -199,10 +199,11 @@ namespace UIMFLibrary_Demo
             reportProgress();
             reportProgress("Displaying some global parameters...");
 
+#pragma warning disable 618
             var legacyGlobalParams = datareader.GetGlobalParameters();
+#pragma warning restore 618
 
-            reportProgress("DateStarted= " + legacyGlobalParams.DateStarted);
-
+            reportProgress("DateStarted_Legacy= " + legacyGlobalParams.DateStarted);
 
             reportProgress("DateStarted= " + gp.GetValue(GlobalParamKeyType.DateStarted));
 
