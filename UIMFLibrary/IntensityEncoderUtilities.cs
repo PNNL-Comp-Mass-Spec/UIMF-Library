@@ -3,8 +3,20 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
+    /// <summary>
+    /// Utilities for encoding intensity using run length encoding
+    /// </summary>
     public static class IntensityEncoderUtilities
     {
+        /// <summary>
+        /// Encode the list of intensity values using run length encoding
+        /// </summary>
+        /// <param name="intensities">Intensities</param>
+        /// <param name="spectra">Encoded intensities, as bytes</param>
+        /// <param name="tic">Sum of all intensities</param>
+        /// <param name="bpi">Largest intensity</param>
+        /// <param name="indexOfMaxIntensity">Data index for the BPI</param>
+        /// <param name="nonZeroCount">Number of non-zero values in intensities</param>
         public static void Encode(
             this short[] intensities,
             out byte[] spectra,

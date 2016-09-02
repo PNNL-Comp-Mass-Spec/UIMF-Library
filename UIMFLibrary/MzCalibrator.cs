@@ -13,7 +13,7 @@ namespace UIMFLibrary
     {
         #region Fields
 
-        private double binWidth;
+        private readonly double binWidth;
 
         private double TenthsOfNanoSecondsPerBin
         {
@@ -51,7 +51,7 @@ namespace UIMFLibrary
         #region Public Properties
 
         /// <summary>
-        /// Gets the description.
+        /// Returns the calibration equation
         /// </summary>
         public string Description
         {
@@ -149,18 +149,60 @@ namespace UIMFLibrary
         #endregion
     }
 
+    /// <summary>
+    /// Extends MzCalibrator to add support for a scaling factor
+    /// </summary>
     public class MzCalibratorFtms : MzCalibrator
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MzCalibratorFtms"/> class.
+        /// </summary>
+        /// <param name="k">
+        /// k
+        /// </param>
+        /// <param name="t0">
+        /// t0
+        /// </param>
+        /// <param name="binWidthNs">
+        /// bin width, in nanoseconds
+        /// </param>
+        /// <remarks>
+        /// mass = (k * (t-t0))^2
+        /// </remarks>
         public MzCalibratorFtms(double k, double t0, double binWidthNs = 1) : base(k, t0, binWidthNs)
         {
         }
 
+        /// <summary>
+        /// Convert m/z to TOF value
+        /// </summary>
+        /// <param name="mz">
+        /// mz
+        /// </param>
+        /// <param name="factor">
+        /// The scaling factor
+        /// </param>
+        /// <returns>
+        /// TOF value<see cref="int"/>.
+        /// </returns>
         public int MZtoTOF(double mz, double factor)
         {
            var tof = base.MZtoTOF(mz) * factor;
            return (int)tof;
         }
 
+        /// <summary>
+        /// Convert TOF value to m/z
+        /// </summary>
+        /// <param name="tofValue">
+        /// The tof value
+        /// </param>
+        /// <param name="factor">
+        /// The scaling factor
+        /// </param>
+        /// <returns>
+        /// m/z<see cref="double"/>.
+        /// </returns>
         public double ToftoMz(double tofValue, double factor)
         {
            var mz = TOFtoMZ(tofValue);
