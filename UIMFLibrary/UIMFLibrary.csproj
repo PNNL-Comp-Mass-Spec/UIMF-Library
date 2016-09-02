@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -106,7 +106,6 @@
     <Compile Include="ClassDefinitions.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="FrameTypeInfo.cs" />
-    <Compile Include="IntensityConverter.cs" />
     <Compile Include="IntensityConverterDouble.cs" />
     <Compile Include="IntensityConverterFloat.cs" />
     <Compile Include="IntensityConverterInt16.cs" />
