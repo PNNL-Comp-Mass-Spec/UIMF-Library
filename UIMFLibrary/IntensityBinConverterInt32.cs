@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
-	static internal class IntensityBinConverterInt32
+	internal static class IntensityBinConverterInt32
 	{
 		/// <summary>
 		/// Convert a list of intensity information by bin to a zero length encoded byte array
