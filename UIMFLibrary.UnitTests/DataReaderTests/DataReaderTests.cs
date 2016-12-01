@@ -536,6 +536,145 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         }
 
+        [Test]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NumFrames", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "FileText", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "V_Frame_Params", "ParamName", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "ParamID", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "", false)]
+        public void SQLiteTableHasColumn(string filePath, string tableName, string columnName, bool columnExistsExpected)
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            using (var reader = new DataReader(filePath))
+            {
+                var columnExists = reader.TableHasColumn(tableName, columnName);
+
+                Assert.AreEqual(columnExistsExpected, columnExists,
+                    "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
+                    "; expected it to be " + GetExistenceDescription(columnExistsExpected) +
+                    "; See file " + Path.GetFileName(filePath));
+
+                if (columnExistsExpected)
+                    Console.WriteLine("Verified that table " + tableName + " has column " + columnName);
+                else
+                    Console.WriteLine("Verified that table " + tableName + " does not have column " + columnName);
+            }
+        }
+
+        /// <summary>
+        /// Test DataReader.ColumnExists
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="tableName"></param>
+        /// <param name="columnName"></param>
+        /// <param name="columnExistsExpected"></param>
+        /// <remarks>Note that the ColumnExists method does not work with views</remarks>
+        [Test]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NumFrames", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "FileText", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "ParamID", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "NoColumn", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "", false)]
+        public void SQLiteColumnExists(string filePath, string tableName, string columnName, bool columnExistsExpected)
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            using (var reader = new DataReader(filePath))
+            {
+                var uimfConnection = reader.DBConnection;
+#pragma warning disable CS0618 // Type or member is obsolete
+                var columnExists = DataReader.ColumnExists(uimfConnection, tableName, columnName);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+                Assert.AreEqual(columnExistsExpected, columnExists, 
+                    "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
+                    "; expected it to be " + GetExistenceDescription(columnExistsExpected) + 
+                    "; See file " + Path.GetFileName(filePath));
+
+                Console.WriteLine("Verified that table " + tableName + " has column " + columnName);
+            }
+        }
+
+        [Test]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "xmlFile", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Temp_Log_Entries", false)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "V_Frame_Params", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Global_Params", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Parameters", true)]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Old_Log_Entries", false)]
+        public void SQLiteTableExists(string filePath, string tableName, bool tableExistsExpected)
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            using (var reader = new DataReader(filePath))
+            {
+                var tableExists = reader.TableExists(tableName);
+
+                Assert.AreEqual(tableExistsExpected, tableExists,
+                    "Table " + tableName + " " + GetExistenceDescription(tableExists) + " in file " + Path.GetFileName(filePath) +
+                    "; expected it to be " + GetExistenceDescription(tableExistsExpected));
+
+                if (tableExistsExpected)
+                    Console.WriteLine("Verified that table " + tableName + " exists in file " + Path.GetFileName(filePath));
+                else
+                    Console.WriteLine("Verified that table " + tableName + " does not exist in file " + Path.GetFileName(filePath));
+            }
+        }
+
+        [Test]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "DateStarted,NumFrames,TimeOffset,BinWidth,Bins,TOFCorrectionTime,FrameDataBlobVersion,ScanDataBlobVersion,TOFIntensityType,DatasetType,Prescan_TOFPulses,Prescan_Accumulations,Prescan_TICThreshold,Prescan_Continuous,Prescan_Profile,Instrument_Name")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "FileText")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Log_Entries", "Entry_ID,Posting_Time,Posted_By,Type,Message")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Temp_Log_Entries", "")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "V_Frame_Params", "FrameNum,ParamName,ParamID,ParamValue,ParamDescription,ParamDataType")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Global_Params", "ParamID,ParamName,ParamValue,ParamDataType,ParamDescription")]
+        [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Old_Log_Entries", "")]
+        public void SQLiteTableColumns(string filePath, string tableName, string expectedColumnNames)
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var expectedColNameList = expectedColumnNames.Split(',').ToList();
+            if (string.IsNullOrEmpty(expectedColumnNames))
+                expectedColNameList.Clear();
+
+            using (var reader = new DataReader(filePath))
+            {
+                var columnNames = DataReader.GetTableColumnNames(reader.DBConnection, tableName);
+
+                for (var i = 0; i < columnNames.Count; i++)
+                {
+                    if (i >= expectedColNameList.Count)
+                    {
+                        break;
+                    }
+
+                    Assert.AreEqual(expectedColNameList[i], columnNames[i],
+                                    "Column name mismatch for table " + tableName + ", column " + (i + 1) + "; expected " +
+                                    expectedColNameList[i] + " but actually " + columnNames[i]);
+                }
+
+                if (expectedColNameList.Count != columnNames.Count)
+                {
+                    Assert.Fail("Table " + tableName + " has " + columnNames.Count + " columns; " +
+                                "we expected it to have " + expectedColNameList.Count + " columns");
+                }
+
+                if (expectedColNameList.Count == 0)
+                    Console.WriteLine("Verified that table " + tableName + " does not exist");
+                else                
+                    Console.WriteLine("Verified all " + expectedColNameList.Count + " columns in table " + tableName);
+            }
+        }
+
         #endregion
 
         ////TODO: this test fails... not sure we need it.
@@ -729,6 +868,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var mz = sqrtMZ * sqrtMZ + residualMassError;
             return mz;
+        }
+
+        private string GetExistenceDescription(bool columnExists)
+        {
+            return columnExists ? "found" : "not found";
         }
 
         /// <summary>
