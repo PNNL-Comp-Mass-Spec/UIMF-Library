@@ -10,39 +10,39 @@ using System.Linq;
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
-	using NUnit.Framework;
+    using NUnit.Framework;
 
-	/// <summary>
-	/// The update frame parameter tests.
-	/// </summary>
-	[TestFixture]
-	public class updateFrameParameterTests
-	{
-	    [Test]
-	    public void UpdateCalibrationCoefficients()
-	    {
-	        var sourceFile = new FileInfo(FileRefs.uimfStandardDemultiplexedFile1);
-	        if (!sourceFile.Exists)
-	            Assert.Fail("Test file not found: " + sourceFile.FullName);
+    /// <summary>
+    /// The update frame parameter tests.
+    /// </summary>
+    [TestFixture]
+    public class updateFrameParameterTests
+    {
+        [Test]
+        public void UpdateCalibrationCoefficients()
+        {
+            var sourceFile = new FileInfo(FileRefs.uimfStandardDemultiplexedFile1);
+            if (!sourceFile.Exists)
+                Assert.Fail("Test file not found: " + sourceFile.FullName);
 
-	        if (sourceFile.Directory == null)
-	        {
-	            Assert.Fail("Unable to get the full path to the directory for: " + sourceFile.FullName);
-	        }
+            if (sourceFile.Directory == null)
+            {
+                Assert.Fail("Unable to get the full path to the directory for: " + sourceFile.FullName);
+            }
 
             var targetFolder = new DirectoryInfo(Path.Combine(sourceFile.Directory.FullName, "UIMFLibrary_Temp"));
 
-	        if (!targetFolder.Exists)
-	            targetFolder.Create();
+            if (!targetFolder.Exists)
+                targetFolder.Create();
 
             var targetFilePath = Path.Combine(targetFolder.FullName, sourceFile.Name);
 
-	        Console.WriteLine("Copying file " + sourceFile.Name + " to " + targetFilePath);
+            Console.WriteLine("Copying file " + sourceFile.Name + " to " + targetFilePath);
 
             sourceFile.CopyTo(targetFilePath, true);
 
             UpdateCalibrationCoefficients(targetFilePath, 0.3476655, 0.03313236);
-	    }
+        }
 
         public void UpdateCalibrationCoefficients(string uimfPath, double slope, double intercept)
         {
@@ -58,5 +58,5 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             }
 
         }
-	}
+    }
 }

@@ -9,36 +9,36 @@ using System.Linq;
 
 namespace UIMFLibrary
 {
-	using System.Collections.Generic;
+    using System.Collections.Generic;
 
-	/// <summary>
-	/// The spectrum cache.
-	/// </summary>
-	public class SpectrumCache
-	{
-		#region Constructors and Destructors
+    /// <summary>
+    /// The spectrum cache.
+    /// </summary>
+    public class SpectrumCache
+    {
+        #region Constructors and Destructors
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SpectrumCache"/> class.
-		/// </summary>
-		/// <param name="startFrameNumber">
-		/// The start frame number.
-		/// </param>
-		/// <param name="endFrameNumber">
-		/// The end frame number.
-		/// </param>
-		/// <param name="listOfIntensityDictionaries">
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpectrumCache"/> class.
+        /// </summary>
+        /// <param name="startFrameNumber">
+        /// The start frame number.
+        /// </param>
+        /// <param name="endFrameNumber">
+        /// The end frame number.
+        /// </param>
+        /// <param name="listOfIntensityDictionaries">
         /// The list of intensity dictionaries (previously a list of dictionaries, now a list of SortedList objects)
-		/// </param>
-		/// <param name="summedIntensityDictionary">
-		/// The summed intensity dictionary.
-		/// </param>
-	    public SpectrumCache(
-	        int startFrameNumber,
-	        int endFrameNumber,
+        /// </param>
+        /// <param name="summedIntensityDictionary">
+        /// The summed intensity dictionary.
+        /// </param>
+        public SpectrumCache(
+            int startFrameNumber,
+            int endFrameNumber,
             IList<SortedList<int, int>> listOfIntensityDictionaries, 
-	        IDictionary<int, int> summedIntensityDictionary)
-	    {
+            IDictionary<int, int> summedIntensityDictionary)
+        {
             this.StartFrameNumber = startFrameNumber;
             this.EndFrameNumber = endFrameNumber;
             this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
@@ -53,65 +53,65 @@ namespace UIMFLibrary
             this.LastScan = lastScan;
             
             UpdateMemoryUsageEstimate();
-	    }
+        }
 
-	    /// <summary>
-		/// Initializes a new instance of the <see cref="SpectrumCache"/> class.
-		/// </summary>
-		/// <param name="startFrameNumber">
-		/// The start frame number.
-		/// </param>
-		/// <param name="endFrameNumber">
-		/// The end frame number.
-		/// </param>
-		/// <param name="listOfIntensityDictionaries">
-		/// The list of intensity dictionaries.
-		/// </param>
-		/// <param name="summedIntensityDictionary">
-		/// The summed intensity dictionary.
-		/// </param>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpectrumCache"/> class.
+        /// </summary>
+        /// <param name="startFrameNumber">
+        /// The start frame number.
+        /// </param>
+        /// <param name="endFrameNumber">
+        /// The end frame number.
+        /// </param>
+        /// <param name="listOfIntensityDictionaries">
+        /// The list of intensity dictionaries.
+        /// </param>
+        /// <param name="summedIntensityDictionary">
+        /// The summed intensity dictionary.
+        /// </param>
         /// <param name="firstScan">The scan number of the first entry in listOfIntensityDictionaries that has non-zero intensities</param>
         /// <param name="lastScan">The scan number of the last entry in listOfIntensityDictionaries that has non-zero intensities</param>
-		public SpectrumCache(
-			int startFrameNumber, 
-			int endFrameNumber, 
-			IList<SortedList<int, int>> listOfIntensityDictionaries, 
-			IDictionary<int, int> summedIntensityDictionary,
+        public SpectrumCache(
+            int startFrameNumber, 
+            int endFrameNumber, 
+            IList<SortedList<int, int>> listOfIntensityDictionaries, 
+            IDictionary<int, int> summedIntensityDictionary,
             int firstScan,
             int lastScan)
-		{
-			this.StartFrameNumber = startFrameNumber;
-			this.EndFrameNumber = endFrameNumber;
-			this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
-			this.SummedIntensityDictionary = summedIntensityDictionary;
+        {
+            this.StartFrameNumber = startFrameNumber;
+            this.EndFrameNumber = endFrameNumber;
+            this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
+            this.SummedIntensityDictionary = summedIntensityDictionary;
 
-		    this.FirstScan = firstScan;
+            this.FirstScan = firstScan;
             this.LastScan = lastScan;
 
-	        int firstScanComputed;
-	        int lastScanComputed;
+            int firstScanComputed;
+            int lastScanComputed;
             FindFirstLastScan(listOfIntensityDictionaries, out firstScanComputed, out lastScanComputed);
 
-	        if (firstScanComputed > 0 || lastScanComputed > 0)
-	        {
-	            if (this.FirstScan < firstScanComputed)
-	                this.FirstScan = firstScanComputed;
+            if (firstScanComputed > 0 || lastScanComputed > 0)
+            {
+                if (this.FirstScan < firstScanComputed)
+                    this.FirstScan = firstScanComputed;
 
                 if (this.LastScan > lastScanComputed)
                     this.LastScan = lastScanComputed;
-	        }
+            }
 
-			UpdateMemoryUsageEstimate();
-		}
+            UpdateMemoryUsageEstimate();
+        }
     
-	    #endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		/// <summary>
-		/// Gets the end frame number.
-		/// </summary>
-		public int EndFrameNumber { get; private set; }
+        /// <summary>
+        /// Gets the end frame number.
+        /// </summary>
+        public int EndFrameNumber { get; private set; }
 
         /// <summary>
         /// Gets the list of intensity Lists
@@ -124,10 +124,10 @@ namespace UIMFLibrary
         /// </remarks>
         public IList<SortedList<int, int>> ListOfIntensityDictionaries { get; private set; }
 
-		/// <summary>
-		/// Gets the start frame number.
-		/// </summary>
-		public int StartFrameNumber { get; private set; }
+        /// <summary>
+        /// Gets the start frame number.
+        /// </summary>
+        public int StartFrameNumber { get; private set; }
 
         /// <summary>
         /// Gets the first (minimum) scan number in ListOfIntensityDictionaries
@@ -139,17 +139,17 @@ namespace UIMFLibrary
         /// </summary>
         public int LastScan { get; private set; }
 
-		/// <summary>
-		/// Gets the summed intensity dictionary.
-		/// </summary>
-		public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
+        /// <summary>
+        /// Gets the summed intensity dictionary.
+        /// </summary>
+        public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
 
         /// <summary>
         /// Estimated MB of data tracked by this cached spectrum
         /// </summary>
         public int MemoryUsageEstimateMB { get; private set; }
 
-		#endregion
+        #endregion
 
         #region Member Functions
 
@@ -185,7 +185,7 @@ namespace UIMFLibrary
         /// Each entry nominally takes up 8 bytes, but in reality each entry takes up 16 bytes.</remarks>
         private void UpdateMemoryUsageEstimate()
         {
-	        System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8 * 5;
+            System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8 * 5;
             foreach (var item in ListOfIntensityDictionaries)
             {
                 byteEstimate += item.Count * 8 * 2;

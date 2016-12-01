@@ -2310,57 +2310,57 @@ namespace UIMFLibrary
         {
 
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("FrameNum", "INTEGER PRIMARY KEY", "int"),
-				Tuple.Create("StartTime", "DOUBLE", "double"),
-				Tuple.Create("Duration", "DOUBLE", "double"),
-				Tuple.Create("Accumulations", "SMALLINT", "short"),
-				Tuple.Create("FrameType", "SMALLINT", "short"),
-				Tuple.Create("Scans", "INTEGER", "int"),
-				Tuple.Create("IMFProfile", "TEXT", "string"),
-				Tuple.Create("TOFLosses", "DOUBLE", "double"),
-				Tuple.Create("AverageTOFLength", "DOUBLE NOT NULL", "double"),
-				Tuple.Create("CalibrationSlope", "DOUBLE", "double"),
-				Tuple.Create("CalibrationIntercept", "DOUBLE", "double"),
-				Tuple.Create("a2", "DOUBLE", "double"),
-				Tuple.Create("b2", "DOUBLE", "double"),
-				Tuple.Create("c2", "DOUBLE", "double"),
-				Tuple.Create("d2", "DOUBLE", "double"),
-				Tuple.Create("e2", "DOUBLE", "double"),
-				Tuple.Create("f2", "DOUBLE", "double"),
-				Tuple.Create("Temperature", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack1", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack2", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack3", "DOUBLE", "double"),
-				Tuple.Create("voltHVRack4", "DOUBLE", "double"),
-				Tuple.Create("voltCapInlet", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceHPFIn", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceHPFOut", "DOUBLE", "double"),
-				Tuple.Create("voltEntranceCondLmt", "DOUBLE", "double"),
-				Tuple.Create("voltTrapOut", "DOUBLE", "double"),
-				Tuple.Create("voltTrapIn", "DOUBLE", "double"),
-				Tuple.Create("voltJetDist", "DOUBLE", "double"),
-				Tuple.Create("voltQuad1", "DOUBLE", "double"),
-				Tuple.Create("voltCond1", "DOUBLE", "double"),
-				Tuple.Create("voltQuad2", "DOUBLE", "double"),
-				Tuple.Create("voltCond2", "DOUBLE", "double"),
-				Tuple.Create("voltIMSOut", "DOUBLE", "double"),
-				Tuple.Create("voltExitHPFIn", "DOUBLE", "double"),
-				Tuple.Create("voltExitHPFOut", "DOUBLE", "double"),
-				Tuple.Create("voltExitCondLmt", "DOUBLE", "double"),
-				Tuple.Create("PressureFront", "DOUBLE", "double"),
-				Tuple.Create("PressureBack", "DOUBLE", "double"),
-				Tuple.Create("MPBitOrder", "TINYINT", "short"),
-				Tuple.Create("FragmentationProfile", "BLOB", "object"),
-				Tuple.Create("HighPressureFunnelPressure", "DOUBLE", "double"),
-				Tuple.Create("IonFunnelTrapPressure", "DOUBLE ", "double"),
-				Tuple.Create("RearIonFunnelPressure", "DOUBLE", "double"),
-				Tuple.Create("QuadrupolePressure", "DOUBLE", "double"),
-				Tuple.Create("ESIVoltage", "DOUBLE", "double"),
-				Tuple.Create("FloatVoltage", "DOUBLE", "double"),
-				Tuple.Create("CalibrationDone", "INTEGER", "int"),
-				Tuple.Create("Decoded", "INTEGER", "int")
-			};
+            {
+                Tuple.Create("FrameNum", "INTEGER PRIMARY KEY", "int"),
+                Tuple.Create("StartTime", "DOUBLE", "double"),
+                Tuple.Create("Duration", "DOUBLE", "double"),
+                Tuple.Create("Accumulations", "SMALLINT", "short"),
+                Tuple.Create("FrameType", "SMALLINT", "short"),
+                Tuple.Create("Scans", "INTEGER", "int"),
+                Tuple.Create("IMFProfile", "TEXT", "string"),
+                Tuple.Create("TOFLosses", "DOUBLE", "double"),
+                Tuple.Create("AverageTOFLength", "DOUBLE NOT NULL", "double"),
+                Tuple.Create("CalibrationSlope", "DOUBLE", "double"),
+                Tuple.Create("CalibrationIntercept", "DOUBLE", "double"),
+                Tuple.Create("a2", "DOUBLE", "double"),
+                Tuple.Create("b2", "DOUBLE", "double"),
+                Tuple.Create("c2", "DOUBLE", "double"),
+                Tuple.Create("d2", "DOUBLE", "double"),
+                Tuple.Create("e2", "DOUBLE", "double"),
+                Tuple.Create("f2", "DOUBLE", "double"),
+                Tuple.Create("Temperature", "DOUBLE", "double"),
+                Tuple.Create("voltHVRack1", "DOUBLE", "double"),
+                Tuple.Create("voltHVRack2", "DOUBLE", "double"),
+                Tuple.Create("voltHVRack3", "DOUBLE", "double"),
+                Tuple.Create("voltHVRack4", "DOUBLE", "double"),
+                Tuple.Create("voltCapInlet", "DOUBLE", "double"),
+                Tuple.Create("voltEntranceHPFIn", "DOUBLE", "double"),
+                Tuple.Create("voltEntranceHPFOut", "DOUBLE", "double"),
+                Tuple.Create("voltEntranceCondLmt", "DOUBLE", "double"),
+                Tuple.Create("voltTrapOut", "DOUBLE", "double"),
+                Tuple.Create("voltTrapIn", "DOUBLE", "double"),
+                Tuple.Create("voltJetDist", "DOUBLE", "double"),
+                Tuple.Create("voltQuad1", "DOUBLE", "double"),
+                Tuple.Create("voltCond1", "DOUBLE", "double"),
+                Tuple.Create("voltQuad2", "DOUBLE", "double"),
+                Tuple.Create("voltCond2", "DOUBLE", "double"),
+                Tuple.Create("voltIMSOut", "DOUBLE", "double"),
+                Tuple.Create("voltExitHPFIn", "DOUBLE", "double"),
+                Tuple.Create("voltExitHPFOut", "DOUBLE", "double"),
+                Tuple.Create("voltExitCondLmt", "DOUBLE", "double"),
+                Tuple.Create("PressureFront", "DOUBLE", "double"),
+                Tuple.Create("PressureBack", "DOUBLE", "double"),
+                Tuple.Create("MPBitOrder", "TINYINT", "short"),
+                Tuple.Create("FragmentationProfile", "BLOB", "object"),
+                Tuple.Create("HighPressureFunnelPressure", "DOUBLE", "double"),
+                Tuple.Create("IonFunnelTrapPressure", "DOUBLE ", "double"),
+                Tuple.Create("RearIonFunnelPressure", "DOUBLE", "double"),
+                Tuple.Create("QuadrupolePressure", "DOUBLE", "double"),
+                Tuple.Create("ESIVoltage", "DOUBLE", "double"),
+                Tuple.Create("FloatVoltage", "DOUBLE", "double"),
+                Tuple.Create("CalibrationDone", "INTEGER", "int"),
+                Tuple.Create("Decoded", "INTEGER", "int")
+            };
 
             return lstFields;
 
@@ -2376,12 +2376,12 @@ namespace UIMFLibrary
         {
 
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+            {
+                Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
-				Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
+                Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
                 Tuple.Create("ParamDescription", "TEXT NULL", "string"),
-			};
+            };
 
             return lstFields;
 
@@ -2398,11 +2398,11 @@ namespace UIMFLibrary
         {
 
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
+            {
+                Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
-				Tuple.Create("ParamValue", "TEXT", "string"),
-			};
+                Tuple.Create("ParamValue", "TEXT", "string"),
+            };
 
             return lstFields;
 
@@ -2418,13 +2418,13 @@ namespace UIMFLibrary
         {
 
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+            {
+                Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
-				Tuple.Create("ParamValue", "TEXT", "string"),
-				Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
+                Tuple.Create("ParamValue", "TEXT", "string"),
+                Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
                 Tuple.Create("ParamDescription", "TEXT NULL", "string"),
-			};
+            };
 
             return lstFields;
 
@@ -2465,15 +2465,15 @@ namespace UIMFLibrary
             }
 
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
-				Tuple.Create("ScanNum", "INTEGER NOT NULL", "int"),         // Switched from SMALLINT to INTEGER in May 2016
-				Tuple.Create("NonZeroCount", "INTEGER NOT NULL", "int"),
-				Tuple.Create("BPI", sqlDataType + " NOT NULL", dotNetDataType),
-				Tuple.Create("BPI_MZ", "DOUBLE NOT NULL", "double"),
-				Tuple.Create("TIC", sqlDataType + " NOT NULL", dotNetDataType),
-				Tuple.Create("Intensities", "BLOB", "object")
-			};
+            {
+                Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
+                Tuple.Create("ScanNum", "INTEGER NOT NULL", "int"),         // Switched from SMALLINT to INTEGER in May 2016
+                Tuple.Create("NonZeroCount", "INTEGER NOT NULL", "int"),
+                Tuple.Create("BPI", sqlDataType + " NOT NULL", dotNetDataType),
+                Tuple.Create("BPI_MZ", "DOUBLE NOT NULL", "double"),
+                Tuple.Create("TIC", sqlDataType + " NOT NULL", dotNetDataType),
+                Tuple.Create("Intensities", "BLOB", "object")
+            };
 
             return lstFields;
 
@@ -2488,24 +2488,24 @@ namespace UIMFLibrary
         private List<Tuple<string, string, string>> GetGlobalParametersFields()
         {
             var lstFields = new List<Tuple<string, string, string>>
-			{
-				Tuple.Create("DateStarted", "TEXT", "string"),
-				Tuple.Create("NumFrames", "INTEGER NOT NULL", "int"),
-				Tuple.Create("TimeOffset", "INTEGER NOT NULL", "int"),
-				Tuple.Create("BinWidth", "DOUBLE NOT NULL", "double"),
-				Tuple.Create("Bins", "INTEGER NOT NULL", "int"),
-				Tuple.Create("TOFCorrectionTime", "FLOAT NOT NULL", "float"),
-				Tuple.Create("FrameDataBlobVersion", "FLOAT NOT NULL", "float"),
-				Tuple.Create("ScanDataBlobVersion", "FLOAT NOT NULL", "float"),
-				Tuple.Create("TOFIntensityType", "TEXT NOT NULL", "string"),
-				Tuple.Create("DatasetType", "TEXT", "string"),
-				Tuple.Create("Prescan_TOFPulses", "INTEGER", "int"),
-				Tuple.Create("Prescan_Accumulations", "INTEGER", "int"),
-				Tuple.Create("Prescan_TICThreshold", "INTEGER", "int"),
-				Tuple.Create("Prescan_Continuous", "BOOLEAN", "bool"),
-				Tuple.Create("Prescan_Profile", "TEXT", "string"),
-				Tuple.Create("Instrument_Name", "TEXT", "string")
-			};
+            {
+                Tuple.Create("DateStarted", "TEXT", "string"),
+                Tuple.Create("NumFrames", "INTEGER NOT NULL", "int"),
+                Tuple.Create("TimeOffset", "INTEGER NOT NULL", "int"),
+                Tuple.Create("BinWidth", "DOUBLE NOT NULL", "double"),
+                Tuple.Create("Bins", "INTEGER NOT NULL", "int"),
+                Tuple.Create("TOFCorrectionTime", "FLOAT NOT NULL", "float"),
+                Tuple.Create("FrameDataBlobVersion", "FLOAT NOT NULL", "float"),
+                Tuple.Create("ScanDataBlobVersion", "FLOAT NOT NULL", "float"),
+                Tuple.Create("TOFIntensityType", "TEXT NOT NULL", "string"),
+                Tuple.Create("DatasetType", "TEXT", "string"),
+                Tuple.Create("Prescan_TOFPulses", "INTEGER", "int"),
+                Tuple.Create("Prescan_Accumulations", "INTEGER", "int"),
+                Tuple.Create("Prescan_TICThreshold", "INTEGER", "int"),
+                Tuple.Create("Prescan_Continuous", "BOOLEAN", "bool"),
+                Tuple.Create("Prescan_Profile", "TEXT", "string"),
+                Tuple.Create("Instrument_Name", "TEXT", "string")
+            };
 
             return lstFields;
 
@@ -2585,24 +2585,24 @@ namespace UIMFLibrary
         {
 
             var fieldMapping = new Dictionary<string, GlobalParamKeyType>
-			{
+            {
                 {"DateStarted", GlobalParamKeyType.DateStarted},
-				{"NumFrames", GlobalParamKeyType.NumFrames},
-				{"TimeOffset", GlobalParamKeyType.TimeOffset},
-				{"BinWidth", GlobalParamKeyType.BinWidth},
-				{"Bins", GlobalParamKeyType.Bins},
-				{"TOFCorrectionTime", GlobalParamKeyType.TOFCorrectionTime},
-				// Legacy, not supported: {"FrameDataBlobVersion", GlobalParamKeyType.FrameDataBlobVersion},
-				// Legacy, not supported: {"ScanDataBlobVersion", GlobalParamKeyType.ScanDataBlobVersion},
-				{"TOFIntensityType", GlobalParamKeyType.TOFIntensityType},
-				{"DatasetType", GlobalParamKeyType.DatasetType},
-				{"Prescan_TOFPulses", GlobalParamKeyType.PrescanTOFPulses},
-				{"Prescan_Accumulations", GlobalParamKeyType.PrescanAccumulations},
-				{"Prescan_TICThreshold", GlobalParamKeyType.PrescanTICThreshold},
-				{"Prescan_Continuous", GlobalParamKeyType.PrescanContinuous},
-				{"Prescan_Profile", GlobalParamKeyType.PrescanProfile},
-				{"Instrument_Name", GlobalParamKeyType.InstrumentName}
-			};
+                {"NumFrames", GlobalParamKeyType.NumFrames},
+                {"TimeOffset", GlobalParamKeyType.TimeOffset},
+                {"BinWidth", GlobalParamKeyType.BinWidth},
+                {"Bins", GlobalParamKeyType.Bins},
+                {"TOFCorrectionTime", GlobalParamKeyType.TOFCorrectionTime},
+                // Legacy, not supported: {"FrameDataBlobVersion", GlobalParamKeyType.FrameDataBlobVersion},
+                // Legacy, not supported: {"ScanDataBlobVersion", GlobalParamKeyType.ScanDataBlobVersion},
+                {"TOFIntensityType", GlobalParamKeyType.TOFIntensityType},
+                {"DatasetType", GlobalParamKeyType.DatasetType},
+                {"Prescan_TOFPulses", GlobalParamKeyType.PrescanTOFPulses},
+                {"Prescan_Accumulations", GlobalParamKeyType.PrescanAccumulations},
+                {"Prescan_TICThreshold", GlobalParamKeyType.PrescanTICThreshold},
+                {"Prescan_Continuous", GlobalParamKeyType.PrescanContinuous},
+                {"Prescan_Profile", GlobalParamKeyType.PrescanProfile},
+                {"Instrument_Name", GlobalParamKeyType.InstrumentName}
+            };
 
             return fieldMapping;
         }

@@ -62,17 +62,17 @@ namespace UIMFLibrary
         {
             var frameParams = new Dictionary<FrameParamKeyType, string>
             {
-	            // Start time of frame, in minutes
-	            {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.DoubleToString(frameParameters.StartTime)},
+                // Start time of frame, in minutes
+                {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.DoubleToString(frameParameters.StartTime)},
                 
-	            // Duration of frame, in seconds
-	            {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.DoubleToString(frameParameters.Duration)},
+                // Duration of frame, in seconds
+                {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.DoubleToString(frameParameters.Duration)},
                 
-	            // Number of collected and summed acquisitions in a frame 
-	            {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
+                // Number of collected and summed acquisitions in a frame 
+                {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
                 
-	            // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-	            {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
+                // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+                {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
 
                 // Set to 1 after a frame has been decoded (added June 27, 2011)
                 {FrameParamKeyType.Decoded, UIMFDataUtilities.IntToString(frameParameters.Decoded)},
@@ -80,27 +80,27 @@ namespace UIMFLibrary
                 // Set to 1 after a frame has been calibrated
                 {FrameParamKeyType.CalibrationDone, UIMFDataUtilities.IntToString(frameParameters.CalibrationDone)},
 
-	            // Number of TOF scans
-	            {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
+                // Number of TOF scans
+                {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
 
-	            // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-	            {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
+                // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
+                {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
 
-	            // Original size of bit sequence
-	            {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
+                // Original size of bit sequence
+                {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
 
                 // Number of TOF Losses
-	            {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
-	        
+                {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
+            
                 // Average time between TOF trigger pulses
                 {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.DoubleToString(frameParameters.AverageTOFLength)},
 
                 // Calibration slope, k0
-	            {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
+                {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
 
                 // Calibration intercept, t0
-	            {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
-	        };
+                {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
+            };
 
             // These six parameters are coefficients for residual mass error correction      
             // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11

@@ -6,118 +6,118 @@
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-	using System.Text;
+    using System.Text;
 
-	using NUnit.Framework;
+    using NUnit.Framework;
 
-	/// <summary>
-	/// The MSMS related tests.
-	/// </summary>
-	public class MSMS_relatedTests
-	{
-		#region Public Methods and Operators
+    /// <summary>
+    /// The MSMS related tests.
+    /// </summary>
+    public class MSMS_relatedTests
+    {
+        #region Public Methods and Operators
 
-		/// <summary>
-		/// The get frame type test 1.
-		/// </summary>
-		[Test]
-		public void GetFrameTypeTest1()
-		{
+        /// <summary>
+        /// The get frame type test 1.
+        /// </summary>
+        [Test]
+        public void GetFrameTypeTest1()
+        {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
-			{
-				var gp = reader.GetGlobalParams();
+            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            {
+                var gp = reader.GetGlobalParams();
 
-				int checkSum = 0;
+                int checkSum = 0;
 
-				for (int frame = 1; frame <= gp.NumFrames; frame++)
-				{
-					checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
-				}
+                for (int frame = 1; frame <= gp.NumFrames; frame++)
+                {
+                    checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
+                }
 
-				Assert.AreEqual(222, checkSum);
-			}
-		}
+                Assert.AreEqual(222, checkSum);
+            }
+        }
 
-		/// <summary>
-		/// The get msms test 1.
-		/// </summary>
-		[Test]
-		public void GetMSMSTest1()
-		{
+        /// <summary>
+        /// The get msms test 1.
+        /// </summary>
+        [Test]
+        public void GetMSMSTest1()
+        {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
-			{
-				const int testFrame = 2;
-				const int startScan = 1;
-				const int stopScan = 300;
+            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            {
+                const int testFrame = 2;
+                const int startScan = 1;
+                const int stopScan = 300;
 
-				int[] intensityArray;
-				double[] mzArray;
-				reader.GetSpectrum(
-					testFrame, 
-					testFrame, 
-					DataReader.FrameType.MS2, 
-					startScan, 
-					stopScan, 
-					out mzArray, 
-					out intensityArray);
+                int[] intensityArray;
+                double[] mzArray;
+                reader.GetSpectrum(
+                    testFrame, 
+                    testFrame, 
+                    DataReader.FrameType.MS2, 
+                    startScan, 
+                    stopScan, 
+                    out mzArray, 
+                    out intensityArray);
 
-				var sb = new StringBuilder();
-				for (int i = 0; i < mzArray.Length; i++)
-				{
-					sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
-				}
+                var sb = new StringBuilder();
+                for (int i = 0; i < mzArray.Length; i++)
+                {
+                    sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
+                }
 
-				Assert.IsNotNull(mzArray);
-				Assert.IsTrue(mzArray.Length > 0);
-			}
-		}
+                Assert.IsNotNull(mzArray);
+                Assert.IsTrue(mzArray.Length > 0);
+            }
+        }
 
-		/// <summary>
-		/// The contains msms data test 3.
-		/// </summary>
-		[Test]
-		public void containsMSMSDataTest3()
-		{
+        /// <summary>
+        /// The contains msms data test 3.
+        /// </summary>
+        [Test]
+        public void containsMSMSDataTest3()
+        {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
-			{
-				Assert.AreEqual(true, reader.HasMSMSData());
-			}
-		}
+            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            {
+                Assert.AreEqual(true, reader.HasMSMSData());
+            }
+        }
 
-		/// <summary>
-		/// The contains msms data_test 1.
-		/// </summary>
-		[Test]
-		public void containsMSMSData_test1()
-		{
+        /// <summary>
+        /// The contains msms data_test 1.
+        /// </summary>
+        [Test]
+        public void containsMSMSData_test1()
+        {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
-			{
-				Assert.AreEqual(false, reader.HasMSMSData());
-			}
-		}
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            {
+                Assert.AreEqual(false, reader.HasMSMSData());
+            }
+        }
 
-		/// <summary>
-		/// The contains msms data_test 2.
-		/// </summary>
-		[Test]
-		public void containsMSMSData_test2()
-		{
+        /// <summary>
+        /// The contains msms data_test 2.
+        /// </summary>
+        [Test]
+        public void containsMSMSData_test2()
+        {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-			using (var reader = new DataReader(FileRefs.uimfStandardFile1))
-			{
-				Assert.AreEqual(false, reader.HasMSMSData());
-			}
-		}
+            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            {
+                Assert.AreEqual(false, reader.HasMSMSData());
+            }
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }

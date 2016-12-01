@@ -71,7 +71,7 @@ namespace UIMFLibrary
                 {GlobalParamKeyType.PrescanTICThreshold, UIMFDataUtilities.IntToString(globalParameters.Prescan_TICThreshold)},
                 {GlobalParamKeyType.PrescanContinuous, UIMFDataUtilities.IntToString(prescanContinuous)},
                 {GlobalParamKeyType.PrescanProfile, globalParameters.Prescan_Profile}
-	        };
+            };
 
             return globalParams;
         }
