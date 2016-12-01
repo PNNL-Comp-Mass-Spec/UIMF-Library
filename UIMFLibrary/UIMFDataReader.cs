@@ -747,7 +747,7 @@ namespace UIMFLibrary
         /// <param name="tableName">
         /// </param>
         /// <returns>
-        /// True if the table exists<see cref="bool"/>.
+        /// True if the table or view exists<see cref="bool"/>.
         /// </returns>
         public static bool TableExists(SQLiteConnection uimfConnection, string tableName)
         {
@@ -757,7 +757,7 @@ namespace UIMFLibrary
             {
                 CommandText = "SELECT name " +
                               "FROM sqlite_master " +
-                              "WHERE type='table' And tbl_name = '" + tableName + "'"
+                              "WHERE type IN ('table','view') And tbl_name = '" + tableName + "'"
             })
             {
                 using (var reader = cmd.ExecuteReader())
@@ -814,8 +814,11 @@ namespace UIMFLibrary
         /// Column name.
         /// </param>
         /// <returns>
-        /// True if the table contains the specified column<see cref="bool"/>.
+        /// True if the table or view has the specified column<see cref="bool"/>.
         /// </returns>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// </remarks>
         public static bool TableHasColumn(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
             bool hasColumn;
@@ -4868,7 +4871,7 @@ namespace UIMFLibrary
         /// Table name.
         /// </param>
         /// <returns>
-        /// True if the table exists<see cref="bool"/>.
+        /// True if the table or view exists<see cref="bool"/>.
         /// </returns>
         public bool TableExists(string tableName)
         {
@@ -4885,15 +4888,18 @@ namespace UIMFLibrary
         /// Column name.
         /// </param>
         /// <returns>
-        /// True if the table has a column<see cref="bool"/>.
+        /// True if the table or view has the specified column<see cref="bool"/>.
         /// </returns>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// </remarks>
         public bool TableHasColumn(string tableName, string columnName)
         {
             return TableHasColumn(m_dbConnection, tableName, columnName);
         }
 
         /// <summary>
-        /// /// Update the calibration coefficients for all frames
+        /// Update the calibration coefficients for all frames
         /// </summary>
         /// <param name="slope">
         /// The slope value for the calibration.
