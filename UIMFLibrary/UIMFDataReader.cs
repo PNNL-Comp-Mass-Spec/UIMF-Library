@@ -739,6 +739,44 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Determine the columns in a table or view
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// Sqlite connection
+        /// </param>
+        /// <param name="tableName">
+        /// Table name
+        /// </param>
+        /// <returns>
+        /// List of column names in the table.
+        /// </returns>
+        public static List<string> GetTableColumnNames(SQLiteConnection uimfConnection, string tableName)
+        {
+            var columns = new List<string>();
+
+            var tableExists = TableExists(uimfConnection, tableName);
+            if (!tableExists)
+                return columns;
+
+            using (
+                var cmd = new SQLiteCommand(uimfConnection)
+                {
+                    CommandText = "Select * From '" + tableName + "' Limit 1;"
+                })
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    for (var i = 0; i < reader.FieldCount; i++)
+                    {
+                        columns.Add(reader.GetName(i));
+                    }                    
+                }
+            }
+
+            return columns;
+        }
+
+        /// <summary>
         /// Looks for the given table in the SqLite database
         /// Note that table names are case sensitive
         /// </summary>
