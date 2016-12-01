@@ -434,13 +434,23 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the column exists<see cref="bool"/>.
         /// </returns>
+        /// <remarks>This function does not work with Views; use method TableHasColumn instead</remarks>
+        [Obsolete("Use method TableHasColumn")]
         public static bool ColumnExists(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
-            var columnExists = false;
-
             using (
                 var cmd = new SQLiteCommand(uimfConnection)
                 {
+                    // Lookup the table creation SQL, for example (newlines added here for readability):
+                    //  CREATE TABLE Global_Parameters ( 
+                    //   DateStarted STRING, 
+                    //   NumFrames INT(4) NOT NULL, 
+                    //   BinWidth DOUBLE NOT NULL, 
+                    //   Bins INT(4) NOT NULL, 
+                    //   TOFCorrectionTime FLOAT NOT NULL, 
+                    //   TOFIntensityType TEXT NOT NULL, 
+                    //   DatasetType TEXT, 
+                    //   Prescan_Continuous BOOL)
                     CommandText =
                         "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '"
                         + tableName + "'"
@@ -460,6 +470,7 @@ namespace UIMFLibrary
                         }
 
                         // Extract the column names using a RegEx
+                        // This RegEx assumes the column names do not have spaces
                         var reColumns = new Regex(@", *([\w()0-9]+)", RegexOptions.Compiled);
                         var reMatches = reColumns.Matches(sql);
 
@@ -467,13 +478,13 @@ namespace UIMFLibrary
 
                         if (lstColumns.Contains(columnName))
                         {
-                            columnExists = true;
+                            return true;
                         }
                     }
                 }
             }
 
-            return columnExists;
+            return false;
         }
 
         /// <summary>
