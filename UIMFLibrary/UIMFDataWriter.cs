@@ -1776,13 +1776,11 @@ namespace UIMFLibrary
             double binWidth,
             out int nonZeroCount)
         {
-            byte[] spectra;
+            byte[] spectrum;
             double tic;
             double bpi;
             int indexOfMaxIntensity;
-
-            nonZeroCount = 0;
-
+            
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
 
@@ -1796,9 +1794,10 @@ namespace UIMFLibrary
                                     " (" + m_globalParameters.Bins + ")");
             }
 
-            nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectra, out tic, out bpi, out indexOfMaxIntensity);
+            // Convert the intensities array into a zero length encoded byte array, stored in variable spectrum
+            nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectrum, out tic, out bpi, out indexOfMaxIntensity);
 
-            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 
         }
 
@@ -1822,7 +1821,8 @@ namespace UIMFLibrary
             double binWidth,
             int timeOffset)
         {
-            byte[] spectra;
+
+            byte[] spectrum;
             double tic;
             double bpi;
             int binNumberMaxIntensity;
@@ -1853,9 +1853,9 @@ namespace UIMFLibrary
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
             }
 
-            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
+            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectrum, out tic, out bpi, out binNumberMaxIntensity);
 
-            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectra);
+            InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 
             return nonZeroCount;
 
