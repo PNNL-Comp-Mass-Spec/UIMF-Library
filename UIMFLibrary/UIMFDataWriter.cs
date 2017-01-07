@@ -1869,6 +1869,12 @@ namespace UIMFLibrary
             }
 
             var maxBin = (from item in binToIntensityMap select item.Key).Max();
+            // Assure that binToIntensityMap does not have any intensities of 0 (since their presence messes up the encoding)
+            if ((from item in binToIntensityMap where item.Item2 == 0 select item).Any())
+            {
+                throw new ArgumentException("Intensity value of 0 found in binToIntensityMap", nameof(binToIntensityMap));
+            }
+
 
             if (maxBin > m_globalParameters.Bins)
             {
