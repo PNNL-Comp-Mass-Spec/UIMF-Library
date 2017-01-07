@@ -76,5 +76,15 @@ namespace UIMFLibrary
             mFrameNumber = frameNumber;
             mScanNumber = scanNumber;
         }
+
+        /// <summary>
+        /// Summarize the data tracked by this class
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("Frame {0}, scan {1}, TIC {2:F0}, BPI {3:F0}, BPI_Mz {4:F4}", mFrameNumber, mScanNumber, TIC, BPI, BPI_MZ);
+        }
+
     }
 }
