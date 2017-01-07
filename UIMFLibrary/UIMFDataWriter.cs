@@ -1787,11 +1787,16 @@ namespace UIMFLibrary
             if (m_globalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
 
-            if (intensities.Count > m_globalParameters.Bins)
+            // Make sure intensities.Count is not greater than the number of bins tracked by the global parameters
+            // However, allow it to be one size larger because GetSpectrumAsBins pads the intensities array with an extra value for compatibility with older UIMF files
+            if (intensities.Count > m_globalParameters.Bins + 1)
             {
                 throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
                                     " has more entries than the number of bins defined in the global parameters" +
                                     " (" + m_globalParameters.Bins + ")");
+
+                // Future possibility: silently auto-change the Bins value 
+                // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
             }
 
             // Convert the intensities array into a zero length encoded byte array, stored in variable spectrum
@@ -1855,7 +1860,7 @@ namespace UIMFLibrary
             int binNumberMaxIntensity;
 
             if (frameParameters == null)
-                return -1;
+                throw new ArgumentNullException(nameof(frameParameters));
 
             if (binToIntensityMap == null)
                 throw new ArgumentNullException(nameof(binToIntensityMap), "binToIntensityMap cannot be null");
@@ -1868,19 +1873,21 @@ namespace UIMFLibrary
                 return 0;
             }
 
-            var maxBin = (from item in binToIntensityMap select item.Key).Max();
             // Assure that binToIntensityMap does not have any intensities of 0 (since their presence messes up the encoding)
             if ((from item in binToIntensityMap where item.Item2 == 0 select item).Any())
             {
                 throw new ArgumentException("Intensity value of 0 found in binToIntensityMap", nameof(binToIntensityMap));
             }
 
+            var maxBin = (from item in binToIntensityMap select item.Item1).Max();
 
-            if (maxBin > m_globalParameters.Bins)
+            // Make sure intensities.Count is not greater than the number of bins tracked by the global parameters
+            // However, allow it to be one size larger because GetSpectrumAsBins pads the intensities array with an extra value for compatibility with older UIMF files
+            if (maxBin > m_globalParameters.Bins + 1)
             {
-                throw new Exception("New data for frame " + frameNumber + ", scan " + scanNum +
-                    " has a bin value greater than the number of bins defined in the global parameters" +
-                    " (" + m_globalParameters.Bins + ")");
+                throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
+                                    " has more entries than the number of bins defined in the global parameters" +
+                                    " (" + m_globalParameters.Bins + ")");
 
                 // Future possibility: silently auto-change the Bins value 
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);

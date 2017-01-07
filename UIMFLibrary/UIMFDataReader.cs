@@ -3765,6 +3765,7 @@ namespace UIMFLibrary
 
             // Adding 1 to the number of bins to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
             var intensityArray = new int[m_globalParameters.Bins + 1];
+            var maxIndex = intensityArray.Length - 1;
 
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
@@ -3796,6 +3797,13 @@ namespace UIMFLibrary
                         }
                         else
                         {
+                            if (binIndex > maxIndex)
+                            {
+                                Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ", 
+                                    startFrameNumber, startScanNumber, binIndex, maxIndex);
+                                break;
+                            }
+
                             intensityArray[binIndex] += decodedSpectraRecord;
                             binIndex++;
                         }
