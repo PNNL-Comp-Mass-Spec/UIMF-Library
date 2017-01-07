@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UIMFLibrary
 {
@@ -20,8 +21,38 @@ namespace UIMFLibrary
         /// <remarks>
         /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
         /// </remarks>
+        [Obsolete("Use the version of Encode that takes a list of Tuples")]
         public static int Encode(
             IList<KeyValuePair<int, int>> binToIntensityMap,
+            int timeOffset,
+            out byte[] spectra,
+            out double tic,
+            out double bpi,
+            out int binNumberMaxIntensity)
+        {
+            var binToIntensityMapCopy = new List<Tuple<int, int>>(binToIntensityMap.Count);
+            binToIntensityMapCopy.AddRange(binToIntensityMap.Select(item => new Tuple<int, int>(item.Key, item.Value)));
+
+            return Encode(binToIntensityMapCopy, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
+        }
+
+        /// <summary>
+        /// Convert a list of intensity information by bin to a zero length encoded byte array
+        /// </summary>
+        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
+        /// <param name="timeOffset">Time offset</param>
+        /// <param name="spectra">Spectra intensity bytes (output)</param>
+        /// <param name="tic">TIC (output)</param>
+        /// <param name="bpi">Base peak intensity (output)</param>
+        /// <param name="binNumberMaxIntensity">Bin number of the BPI</param>
+        /// <returns>
+        /// Number of non-zero data points
+        /// </returns>
+        /// <remarks>
+        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
+        /// </remarks>
+        public static int Encode(
+            IList<Tuple<int, int>> binToIntensityMap,
             int timeOffset,
             out byte[] spectra,
             out double tic,
@@ -43,11 +74,11 @@ namespace UIMFLibrary
             // Calculate TIC and BPI while run length zero encoding
             var previousBin = int.MinValue;
 
-            rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Key));
+            rlzeDataList.Add(-(timeOffset + binToIntensityMap[0].Item1));
             for (var i = 0; i < binToIntensityMap.Count; i++)
             {
-                var intensity = binToIntensityMap[i].Value;
-                var currentBin = binToIntensityMap[i].Key;
+                var intensity = binToIntensityMap[i].Item2;
+                var currentBin = binToIntensityMap[i].Item1;
 
                 // the intensities will always be positive integers
                 tic += intensity;

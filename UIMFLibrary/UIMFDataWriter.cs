@@ -1813,6 +1813,7 @@ namespace UIMFLibrary
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
         /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
+        [Obsolete("Use the version of InsertScan that takes a list of Tuples")]
         public int InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1822,6 +1823,32 @@ namespace UIMFLibrary
             int timeOffset)
         {
 
+            var binToIntensityMapCopy = new List<Tuple<int, int>>(binToIntensityMap.Count);
+            binToIntensityMapCopy.AddRange(binToIntensityMap.Select(item => new Tuple<int, int>(item.Key, item.Value)));
+
+            return InsertScan(frameNumber, frameParameters, scanNum, binToIntensityMapCopy, binWidth, timeOffset);
+        }
+
+        /// <summary>
+        /// This method takes in a list of intensity information by bin and converts the data to a run length encoded array
+        /// which is later compressed at the byte level for reduced size
+        /// </summary>
+        /// <param name="frameNumber">Frame number</param>
+        /// <param name="frameParameters">FrameParams</param>
+        /// <param name="scanNum">Scan number</param>
+        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
+        /// <param name="binWidth">Bin width (in ns)</param>
+        /// <param name="timeOffset">Time offset</param>
+        /// <returns>Non-zero data count<see cref="int"/></returns>
+        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
+        public int InsertScan(
+            int frameNumber,
+            FrameParams frameParameters,
+            int scanNum,
+            IList<Tuple<int, int>> binToIntensityMap,
+            double binWidth,
+            int timeOffset)
+        {
             byte[] spectrum;
             double tic;
             double bpi;
@@ -1836,7 +1863,7 @@ namespace UIMFLibrary
             if (m_globalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
 
-            if (!binToIntensityMap.Any())
+            if (binToIntensityMap.Count == 0)
             {
                 return 0;
             }
