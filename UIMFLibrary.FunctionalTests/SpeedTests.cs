@@ -44,7 +44,7 @@ namespace UIMFLibrary.UnitTests
 
             var methodDescriptor = nameSpace + ".";
 
-            if (nameSpace.EndsWith("." + className))
+            if (nameSpace != null && nameSpace.EndsWith("." + className))
             {
                 methodDescriptor += methodInfo.Name;
             }
@@ -61,7 +61,7 @@ namespace UIMFLibrary.UnitTests
         /// Summed mass spectrum speed tests.
         /// </summary>
         [Test]
-        public void GetSummedMassspectrumSpeedTests()
+        public void GetSummedMassSpectrumSpeedTests()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -80,12 +80,12 @@ namespace UIMFLibrary.UnitTests
 
                 var sw = new Stopwatch();
                 sw.Start();
-                for (int frame = frameStart; frame < frameStop; frame++)
+                for (var frame = frameStart; frame < frameStop; frame++)
                 {
                     int[] intensities;
                     double[] mzValues;
 
-                    int nonZeros = dr.GetSpectrum(
+                    var nonZeros = dr.GetSpectrum(
                         frame, 
                         frame, 
                         DataReader.FrameType.MS1, 
@@ -97,8 +97,8 @@ namespace UIMFLibrary.UnitTests
 
                 sw.Stop();
 
-                Console.WriteLine("Total time to read " + numIterations + " scans = " + sw.ElapsedMilliseconds);
-                Console.WriteLine("Average time (milliseconds) = " + sw.ElapsedMilliseconds / (double)numIterations);
+                Console.WriteLine($"Total time to read {numIterations} scans = {sw.ElapsedMilliseconds} msec");
+                Console.WriteLine($"Average time/scan = {sw.ElapsedMilliseconds / (double)numIterations} msec");
             }
         }
 
