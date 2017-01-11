@@ -1153,7 +1153,7 @@ namespace UIMFLibrary
         /// </returns>
         public bool CloneUIMF(string targetDBPath, List<string> tablesToSkip, List<FrameType> frameTypesToAlwaysCopy)
         {
-            var sCurrentTable = string.Empty;
+            var sCurrentObject = string.Empty;
 
             try
             {
@@ -1168,6 +1168,10 @@ namespace UIMFLibrary
 
                 // Get list of indices in source DB
                 var dctIndexInfo = CloneUIMFGetObjects("index");
+
+                // Get list of views in source DB
+                var dctViewInfo = CloneUIMFGetObjects("view");
+
 
                 if (File.Exists(targetDBPath))
                 {
@@ -1188,22 +1192,28 @@ namespace UIMFLibrary
                         // Create each table
                         foreach (var kvp in dctTableInfo)
                         {
-                            if (!string.IsNullOrEmpty(kvp.Value))
-                            {
-                                sCurrentTable = string.Copy(kvp.Key);
-                                cmdTargetDB.CommandText = kvp.Value;
-                                cmdTargetDB.ExecuteNonQuery();
-                            }
+                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            sCurrentObject = kvp.Key + " (create table)";
+                            cmdTargetDB.CommandText = kvp.Value;
+                            cmdTargetDB.ExecuteNonQuery();
                         }
 
+                        // Create each view
+                        foreach (var kvp in dctViewInfo)
+                        {
+                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            sCurrentObject = kvp.Key + " (create view)";
+                            cmdTargetDB.CommandText = kvp.Value;
+                            cmdTargetDB.ExecuteNonQuery();
+                        }                        
+
+                        // Add the indices
                         foreach (var kvp in dctIndexInfo)
                         {
-                            if (!string.IsNullOrEmpty(kvp.Value))
-                            {
-                                sCurrentTable = kvp.Key + " (create index)";
-                                cmdTargetDB.CommandText = kvp.Value;
-                                cmdTargetDB.ExecuteNonQuery();
-                            }
+                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            sCurrentObject = kvp.Key + " (create index)";
+                            cmdTargetDB.CommandText = kvp.Value;
+                            cmdTargetDB.ExecuteNonQuery();
                         }
 
                         try
@@ -1214,53 +1224,52 @@ namespace UIMFLibrary
                             // Populate each table
                             foreach (var kvp in dctTableInfo)
                             {
-                                sCurrentTable = string.Copy(kvp.Key);
+                                sCurrentObject = string.Copy(kvp.Key);
 
-                                if (!tablesToSkip.Contains(sCurrentTable))
+                                if (!tablesToSkip.Contains(sCurrentObject))
                                 {
-                                    var sSql = "INSERT INTO main." + sCurrentTable + " SELECT * FROM SourceDB." +
-                                               sCurrentTable + ";";
+                                    var sSql = "INSERT INTO main." + sCurrentObject + " SELECT * FROM SourceDB." +
+                                               sCurrentObject + ";";
 
                                     cmdTargetDB.CommandText = sSql;
                                     cmdTargetDB.ExecuteNonQuery();
                                 }
                                 else
                                 {
-                                    if (string.Equals(sCurrentTable, "Frame_Scans", StringComparison.InvariantCultureIgnoreCase) &&
-                                        frameTypesToAlwaysCopy != null
-                                        && frameTypesToAlwaysCopy.Count > 0)
+                                    if (!string.Equals(sCurrentObject, "Frame_Scans", StringComparison.InvariantCultureIgnoreCase) ||
+                                        frameTypesToAlwaysCopy == null || 
+                                        frameTypesToAlwaysCopy.Count <= 0) continue;
+
+                                    // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
+                                    foreach (var frameType in frameTypesToAlwaysCopy)
                                     {
-                                        // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
-                                        foreach (var frameType in frameTypesToAlwaysCopy)
+                                        var sSql = "INSERT INTO main." + sCurrentObject + " " +
+                                                   "SELECT * FROM SourceDB." + sCurrentObject + " " +
+                                                   "WHERE FrameNum IN (";
+
+                                        if (m_UsingLegacyFrameParameters)
                                         {
-                                            var sSql = "INSERT INTO main." + sCurrentTable + " " +
-                                                       "SELECT * FROM SourceDB." + sCurrentTable + " " +
-                                                       "WHERE FrameNum IN (";
-
-                                            if (m_UsingLegacyFrameParameters)
-                                            {
-                                                sSql += "SELECT FrameNum " +
-                                                        "FROM Frame_Parameters " +
-                                                        "WHERE FrameType = " + GetFrameTypeInt(frameType);
-                                            }
-                                            else
-                                            {
-                                                sSql += "SELECT FrameNum " +
-                                                        "FROM Frame_Params " +
-                                                        "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
-                                                        " AND ParamValue = " + GetFrameTypeInt(frameType);
-                                            }
-
-                                            sSql += ");";
-
-                                            cmdTargetDB.CommandText = sSql;
-                                            cmdTargetDB.ExecuteNonQuery();
+                                            sSql += "SELECT FrameNum " +
+                                                    "FROM Frame_Parameters " +
+                                                    "WHERE FrameType = " + GetFrameTypeInt(frameType);
                                         }
+                                        else
+                                        {
+                                            sSql += "SELECT FrameNum " +
+                                                    "FROM Frame_Params " +
+                                                    "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
+                                                    " AND ParamValue = " + GetFrameTypeInt(frameType);
+                                        }
+
+                                        sSql += ");";
+
+                                        cmdTargetDB.CommandText = sSql;
+                                        cmdTargetDB.ExecuteNonQuery();
                                     }
                                 }
                             }
 
-                            sCurrentTable = "(DETACH DATABASE)";
+                            sCurrentObject = "(DETACH DATABASE)";
 
                             // Detach the source DB
                             cmdTargetDB.CommandText = "DETACH DATABASE 'SourceDB';";
@@ -1268,7 +1277,7 @@ namespace UIMFLibrary
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception("Error copying data into cloned database, table " + sCurrentTable, ex);
+                            throw new Exception("Error copying data into cloned database, table " + sCurrentObject, ex);
                         }
 
                     }
@@ -1276,7 +1285,7 @@ namespace UIMFLibrary
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Error initializing cloned database, table " + sCurrentTable, ex);
+                    throw new Exception("Error initializing cloned database, object " + sCurrentObject, ex);
                 }
             }
             catch (Exception ex)
@@ -5581,15 +5590,19 @@ namespace UIMFLibrary
             var cmd = new SQLiteCommand(m_dbConnection)
             {
                 CommandText =
-                    "SELECT name, sql FROM main.sqlite_master WHERE type='"
-                    + sObjectType + "' ORDER BY NAME"
+                    string.Format(
+                        "SELECT name, sql " +
+                        "FROM main.sqlite_master " +
+                        "WHERE type='{0}' " +
+                        "ORDER BY name",
+                        sObjectType)
             };
 
             using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    sObjects.Add(GetString(reader, "Name"), GetString(reader, "sql"));
+                    sObjects.Add(GetString(reader, "name"), GetString(reader, "sql"));
                 }
             }
 
