@@ -103,6 +103,7 @@ namespace UIMFLibrary
         private bool m_LegacyGlobalParametersTableHasData;
 
         private bool m_LegacyFrameParameterTableHasDecodedColumn;
+        private bool m_LegacyFrameParameterTableHaHPFColumns;
 
         /// <summary>
         /// This list tracks the frame numbers that are present in the Frame_Parameters table
@@ -1780,7 +1781,7 @@ namespace UIMFLibrary
             double tic;
             double bpi;
             int indexOfMaxIntensity;
-            
+
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
 
@@ -3008,15 +3009,42 @@ namespace UIMFLibrary
         /// </summary>
         protected void ValidateLegacyDecodedColumnExists()
         {
-            if (!m_LegacyFrameParameterTableHasDecodedColumn)
-            {
-                if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
-                {
-                    AddFrameParameter("Decoded", "INT", 0);
-                }
+            if (m_LegacyFrameParameterTableHasDecodedColumn)
+                return;
 
-                m_LegacyFrameParameterTableHasDecodedColumn = true;
+            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
+            {
+                AddFrameParameter("Decoded", "INT", 0);
             }
+
+            m_LegacyFrameParameterTableHasDecodedColumn = true;
+        }
+
+        /// <summary>
+        /// Assures that several columns exist in the legacy Frame_Parameters table
+        /// </summary>
+        /// <remarks>
+        /// This method is used when writing data to legacy tables 
+        /// in a UIMF file that was cloned from an old file format
+        /// </remarks>
+        public void ValidateLegacyHPFColumnsExist()
+        {
+            if (m_LegacyFrameParameterTableHaHPFColumns)
+                return;
+
+            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
+            {
+                AddFrameParameter("voltEntranceHPFIn", "DOUBLE", 0);
+                AddFrameParameter("VoltEntranceHPFOut", "DOUBLE", 0);
+            }
+
+            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltExitHPFIn"))
+            {
+                AddFrameParameter("voltExitHPFIn", "DOUBLE", 0);
+                AddFrameParameter("voltExitHPFOut", "DOUBLE", 0);
+            }
+
+            m_LegacyFrameParameterTableHaHPFColumns = true;
         }
 
         /// <summary>
