@@ -143,7 +143,7 @@ namespace UIMFLibrary
         private static readonly SortedSet<int> m_UnrecognizedFrameParamTypes = new SortedSet<int>();
 
         /// <summary>
-        /// Tracks frame numbers for which we called OnErrorMessage() to warn the caller that there is invalid data
+        /// Tracks frame numbers for which we called ReportError() to warn the caller that there is invalid data
         /// </summary>
         /// <remarks>
         /// Key is a frame number (integer) or frame range (two integers separated by a dash)
@@ -786,7 +786,7 @@ namespace UIMFLibrary
                     for (var i = 0; i < reader.FieldCount; i++)
                     {
                         columns.Add(reader.GetName(i));
-                    }                    
+                    }
                 }
             }
 
@@ -995,7 +995,7 @@ namespace UIMFLibrary
                 // and returns a two-dimensional array intensities[scan][bin]
                 // frameNum is mandatory and all other arguments are optional
                 using (var dbCommand = m_dbConnection.CreateCommand())
-                {                    
+                {
                     // The ScanNum cast here is required to support UIMF files that list the ScanNum field as SMALLINT yet have scan number values > 32765
                     dbCommand.CommandText = "SELECT Cast(ScanNum as Integer) AS ScanNum, Intensities " +
                                             "FROM Frame_Scans " +
@@ -1079,7 +1079,7 @@ namespace UIMFLibrary
                 }
             }
         }
-   
+
         private void AccumulateFrameDataWithCompression(
             SQLiteDataReader reader,
             int width,
@@ -1209,7 +1209,8 @@ namespace UIMFLibrary
                         // Create each table
                         foreach (var kvp in dctTableInfo)
                         {
-                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            if (string.IsNullOrEmpty(kvp.Value))
+                                continue;
                             sCurrentObject = kvp.Key + " (create table)";
                             cmdTargetDB.CommandText = kvp.Value;
                             cmdTargetDB.ExecuteNonQuery();
@@ -1218,16 +1219,18 @@ namespace UIMFLibrary
                         // Create each view
                         foreach (var kvp in dctViewInfo)
                         {
-                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            if (string.IsNullOrEmpty(kvp.Value))
+                                continue;
                             sCurrentObject = kvp.Key + " (create view)";
                             cmdTargetDB.CommandText = kvp.Value;
                             cmdTargetDB.ExecuteNonQuery();
-                        }                        
+                        }
 
                         // Add the indices
                         foreach (var kvp in dctIndexInfo)
                         {
-                            if (string.IsNullOrEmpty(kvp.Value)) continue;
+                            if (string.IsNullOrEmpty(kvp.Value))
+                                continue;
                             sCurrentObject = kvp.Key + " (create index)";
                             cmdTargetDB.CommandText = kvp.Value;
                             cmdTargetDB.ExecuteNonQuery();
@@ -1254,8 +1257,9 @@ namespace UIMFLibrary
                                 else
                                 {
                                     if (!string.Equals(sCurrentObject, "Frame_Scans", StringComparison.InvariantCultureIgnoreCase) ||
-                                        frameTypesToAlwaysCopy == null || 
-                                        frameTypesToAlwaysCopy.Count <= 0) continue;
+                                        frameTypesToAlwaysCopy == null ||
+                                        frameTypesToAlwaysCopy.Count <= 0)
+                                        continue;
 
                                     // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
                                     foreach (var frameType in frameTypesToAlwaysCopy)
@@ -3825,7 +3829,7 @@ namespace UIMFLibrary
                         {
                             if (binIndex > maxIndex)
                             {
-                                Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ", 
+                                Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ",
                                     startFrameNumber, startScanNumber, binIndex, maxIndex);
                                 break;
                             }
@@ -5680,7 +5684,7 @@ namespace UIMFLibrary
             }
 
             if (frameTypeList.Contains(0))
-            {                
+            {
                 if (frameTypeList.Contains(1))
                 {
                     throw new Exception("FrameTypes of 0 and 1 found. Not a valid UIMF file since both frame types should not be present in the same file");
@@ -6434,6 +6438,16 @@ namespace UIMFLibrary
             WarnUnrecognizedFrameParamID(paramID, "UnknownParamName");
         }
 
+        private void ReportError(string errorMessage)
+        {
+            OnErrorMessage(new MessageEventArgs(errorMessage));
+        }
+
+        private void ReportMessage(string message)
+        {
+            OnMessage(new MessageEventArgs(message));
+        }
+
         /// <summary>
         /// Unload the prep statements
         /// </summary>
@@ -6525,9 +6539,9 @@ namespace UIMFLibrary
             if (reportWarning)
             {
                 if (frameKey.Contains("-") && startFrameNumber != endFrameNumber)
-                    this.OnErrorMessage(new MessageEventArgs("Error with frames " + frameKey + ": " + errorMessage));
+                    ReportError("Error with frames " + frameKey + ": " + errorMessage);
                 else
-                    this.OnErrorMessage(new MessageEventArgs("Error with frame " + startFrameNumber + ": " + errorMessage));
+                    ReportError("Error with frame " + startFrameNumber + ": " + errorMessage);
             }
         }
 
@@ -6561,9 +6575,11 @@ namespace UIMFLibrary
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e.Message);
+                Console.ResetColor();
             }
-           System.Diagnostics.Trace.WriteLine(e.Message);
+            System.Diagnostics.Trace.WriteLine(e.Message);
         }
 
         /// <summary>
@@ -6575,7 +6591,14 @@ namespace UIMFLibrary
         public void OnMessage(MessageEventArgs e)
         {
             var messageEvent = this.MessageEvent;
-            messageEvent?.Invoke(this, e);
+            if (messageEvent != null)
+            {
+                messageEvent(this, e);
+            }
+            else
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         #endregion
