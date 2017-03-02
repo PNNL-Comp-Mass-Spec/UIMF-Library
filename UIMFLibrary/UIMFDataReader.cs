@@ -313,20 +313,37 @@ namespace UIMFLibrary
                     firstFrameNumber = frameList.First().Key;
                 }
 
-                if (m_HasLegacyFrameParameters)
+                if (firstFrameNumber < 0)
                 {
-                    // Read the parameters for the first frame so that m_LegacyFrameParametersMissingColumns will be up to date
-                    GetFrameParams(firstFrameNumber);
+                    // No data in Frame_Params or Frame_Parameters
+                    // Likely the calling method is only instantiating the reader so that
+                    // it can read the global parameters
+                    string tableName;
+                    if (m_UsingLegacyFrameParameters)
+                        tableName = "Frame_Parameters";
+                    else
+                        tableName = "Frame_Params";
+
+                    ReportMessage(string.Format("Note: table {0} is empty; " +
+                                                "this will be true if reading a newly created .UIMF file with no data", tableName));
                 }
+                else
+                {
+                    if (m_HasLegacyFrameParameters)
+                    {
+                        // Read the parameters for the first frame so that m_LegacyFrameParametersMissingColumns will be up to date
+                        GetFrameParams(firstFrameNumber);
+                    }
 
-                // Lookup whether the pressure columns are in torr or mTorr
-                DeterminePressureUnits(firstFrameNumber);
+                    // Lookup whether the pressure columns are in torr or mTorr
+                    DeterminePressureUnits(firstFrameNumber);
 
-                // Find out if the MS1 Frames are labeled as 0 or 1.
-                DetermineFrameTypes();
+                    // Find out if the MS1 Frames are labeled as 0 or 1.
+                    DetermineFrameTypes();
 
-                // Discover and store info about each frame type
-                FillOutFrameInfo();
+                    // Discover and store info about each frame type
+                    FillOutFrameInfo();
+                }
 
                 m_doesContainBinCentricData = DoesContainBinCentricData();
             }
