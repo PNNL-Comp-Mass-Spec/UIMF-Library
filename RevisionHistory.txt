@@ -1,5 +1,34 @@
 UIMFLibrary Revision History
 
+Version 3.0.6270; March 2, 2017
+	- Update the DataReader to allow reading .uimf files with empty Frame_Params and/or Frame_Parameters
+	- Add method ValidateLegacyHPFColumnsExist to DataWriter
+	- Add method ValidateLegacyHPFColumnsExist
+
+Version 3.0.6220; January 11, 2017
+	- Update CloneUIMF to copy views
+
+Version 3.0.6215; January 6, 2017
+	- Preferentially use lists of Tuples instead of lists of KeyValuePair
+	- Raise an exception if binToIntensityMap is passed to InsertScan with intensity values of 0
+
+Version 3.0.6180; December 2, 2016
+	- Update TableExists to check for views in addition to tables
+	- Add method GetTableColumnNames
+	- Add unit tests
+
+Version 3.0.6043; July 18, 2016
+	- Fix bug in the SQL used by GetFrameNumbers that was not returning any results.
+
+Version 3.0.6019; June 24, 2016
+	- Add pagingFilterStartBin and pagingFilterCount to GetIntensityBlockForDemultiplexing
+
+Version 3.0.5996; June 1, 2016
+	-  Add properties HasFrameParamsTable, HasGlobalParamsTable, and HasLegacyParameterTables
+
+Version 3.0.5989; May 25, 2016
+	- Update mz calibrator to contain virtual methods that can be overriden by derived classes.
+
 Version 3.0.5988; May 24, 2016
 	- Now defining the ScanNum field as a 32-bit integer instead of a 16-bit integer in the Frame_Scans table
 	- Add custom exception handlers to the reader
