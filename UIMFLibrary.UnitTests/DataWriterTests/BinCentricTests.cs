@@ -23,7 +23,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         /// The test create bin centric tables.
         /// </summary>
         [Test]
-        [Ignore]
+        [Ignore("TBD")]
         public void TestCreateBinCentricTables()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
