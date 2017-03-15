@@ -98,7 +98,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 foreach (var scanIntensities in intensityMap)
                 {
                     var addLinefeed = false;
-                  
+
                     foreach (var value in scanIntensities)
                     {
                         if (value > 0)
@@ -113,7 +113,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Console.WriteLine();
             }
-        }      
+        }
 
         /// <summary>
         /// We found a bug in some UIMF Files generated on IMS2 where the bin value exceeded the maximum bin value.
@@ -592,9 +592,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var columnExists = DataReader.ColumnExists(uimfConnection, tableName, columnName);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-                Assert.AreEqual(columnExistsExpected, columnExists, 
+                Assert.AreEqual(columnExistsExpected, columnExists,
                     "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
-                    "; expected it to be " + GetExistenceDescription(columnExistsExpected) + 
+                    "; expected it to be " + GetExistenceDescription(columnExistsExpected) +
                     "; See file " + Path.GetFileName(filePath));
 
                 Console.WriteLine("Verified that table " + tableName + " has column " + columnName);
@@ -670,7 +670,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 if (expectedColNameList.Count == 0)
                     Console.WriteLine("Verified that table " + tableName + " does not exist");
-                else                
+                else
                     Console.WriteLine("Verified all " + expectedColNameList.Count + " columns in table " + tableName);
             }
         }
@@ -718,7 +718,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         // TODO:  test seems to write out mostly zeros....  we should test a region richer in intensity data
         // TODO:  is this method the same as another??  Check against Get3DProfile
 
-        // TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this 
+        // TODO:  this test fails on Gord's machine..... ok on Hudson??   Need to resolve this
         // [Test]
         // public void variableSummingTest()
         // {

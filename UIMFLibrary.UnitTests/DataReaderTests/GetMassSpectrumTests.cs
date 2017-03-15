@@ -100,12 +100,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzValues;
 
                 int nonZeros = dr.GetSpectrum(
-                    this.testFrameScanInfo1.startFrame, 
-                    this.testFrameScanInfo1.stopFrame, 
-                    DataReader.FrameType.MS1, 
-                    this.testFrameScanInfo1.startScan, 
-                    this.testFrameScanInfo1.stopScan, 
-                    out mzValues, 
+                    this.testFrameScanInfo1.startFrame,
+                    this.testFrameScanInfo1.stopFrame,
+                    DataReader.FrameType.MS1,
+                    this.testFrameScanInfo1.startScan,
+                    this.testFrameScanInfo1.stopScan,
+                    out mzValues,
                     out intensities);
                 TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
             }
@@ -129,12 +129,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 if (bRunTest)
                 {
                     int nonZeros = dr.GetSpectrum(
-                        this.testFrameScanInfo1.startFrame, 
-                        this.testFrameScanInfo1.stopFrame, 
-                        DataReader.FrameType.MS1, 
-                        this.testFrameScanInfo1.startScan, 
-                        this.testFrameScanInfo1.stopScan, 
-                        out mzValues, 
+                        this.testFrameScanInfo1.startFrame,
+                        this.testFrameScanInfo1.stopFrame,
+                        DataReader.FrameType.MS1,
+                        this.testFrameScanInfo1.startScan,
+                        this.testFrameScanInfo1.stopScan,
+                        out mzValues,
                         out intensities);
                     TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
                 }
@@ -161,32 +161,32 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     double[] mzValues;
 
                     int nonZeros = dr.GetSpectrum(
-                        frame, 
-                        frame, 
-                        DataReader.FrameType.MS1, 
-                        testFrameScanInfo2.startScan, 
-                        testFrameScanInfo2.stopScan, 
-                        out mzValues, 
+                        frame,
+                        frame,
+                        DataReader.FrameType.MS1,
+                        testFrameScanInfo2.startScan,
+                        testFrameScanInfo2.stopScan,
+                        out mzValues,
                         out intensities);
 
                     // jump back
                     nonZeros = dr.GetSpectrum(
-                        frame - 1, 
-                        frame - 1, 
-                        DataReader.FrameType.MS1, 
-                        testFrameScanInfo2.startScan, 
-                        testFrameScanInfo2.stopScan, 
-                        out mzValues, 
+                        frame - 1,
+                        frame - 1,
+                        DataReader.FrameType.MS1,
+                        testFrameScanInfo2.startScan,
+                        testFrameScanInfo2.stopScan,
+                        out mzValues,
                         out intensities);
 
                     // and ahead... just testing it's ability to jump around
                     nonZeros = dr.GetSpectrum(
-                        frame + 2, 
-                        frame + 2, 
-                        DataReader.FrameType.MS1, 
-                        testFrameScanInfo2.startScan, 
-                        testFrameScanInfo2.stopScan, 
-                        out mzValues, 
+                        frame + 2,
+                        frame + 2,
+                        DataReader.FrameType.MS1,
+                        testFrameScanInfo2.startScan,
+                        testFrameScanInfo2.stopScan,
+                        out mzValues,
                         out intensities);
                 }
             }
@@ -207,12 +207,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 double[] mzValues;
 
                 int nonZeros = dr.GetSpectrum(
-                    this.testFrameScanInfo1.startFrame, 
-                    this.testFrameScanInfo1.stopFrame, 
-                    DataReader.FrameType.MS1, 
-                    this.testFrameScanInfo1.startScan, 
-                    this.testFrameScanInfo1.stopScan, 
-                    out mzValues, 
+                    this.testFrameScanInfo1.startFrame,
+                    this.testFrameScanInfo1.stopFrame,
+                    DataReader.FrameType.MS1,
+                    this.testFrameScanInfo1.startScan,
+                    this.testFrameScanInfo1.stopScan,
+                    out mzValues,
                     out intensities);
 
                 int nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
