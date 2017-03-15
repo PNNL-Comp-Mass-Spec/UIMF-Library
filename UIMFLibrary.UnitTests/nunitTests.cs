@@ -1,45 +1,41 @@
 ﻿/*-------------------------------------------------------
  * Author: Aaron Robinson, PNNL, 2010
- * 
+ *
  * Tests basic functionality of UIMFLibrary using Nunit
- * 
+ *
  * DateLastMod: June 17, 2010
  * -----------------------------------------------------*/
 
 using System;
-using System.Text;
 using System.IO;
-using System.Data;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Globalization;
 using UIMFLibrary;
-using System.Collections.Generic;
 using NUnit.Framework;
 
 [TestFixture]
 public class TestClass
 {
     //string FileName = @"C:\\IMS\\SarcopeniaStudy\\HSer_0pt25_380_18_c1_75um_fr2970_Cheetah_0000.uimf";
-    static string FileName = "C:\\ProteomicsSoftwareTools\\IMF2UIMF\\trunk\\MikesIMFFiles\\QC_Shew_IMS4_QTOF3_45min_run3_4bit_0000.uimf";
-    UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader(FileName);
-    UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter(FileName);
-
+    static string FileName = @"C:\ProteomicsSoftwareTools\IMF2UIMF\trunk\MikesIMFFiles\QC_Shew_IMS4_QTOF3_45min_run3_4bit_0000.uimf";
+    readonly UIMFLibrary.DataReader dr = new UIMFLibrary.DataReader(FileName);
+    readonly UIMFLibrary.DataWriter dw = new UIMFLibrary.DataWriter(FileName);
 
     [Test]
     public void createDB()
     {
 
-        GlobalParameters globals = new GlobalParameters();
+        var globals = new GlobalParameters();
 
         if (File.Exists(FileName))
         {
             File.Delete(FileName);
         }
         dw.CreateTables("double");
-        
+
         globals.Bins = 400000;
         globals.BinWidth = .25;
-        globals.DateStarted = DateTime.Now.ToString();
+        globals.DateStarted = DateTime.Now.ToString(CultureInfo.InvariantCulture);
         globals.FrameDataBlobVersion = 0.1F;
         globals.NumFrames = 400;
         globals.TOFIntensityType = "ADC";
@@ -61,38 +57,37 @@ public class TestClass
     [Test]
     public void getLowestBinNumber()
     {
-        GlobalParameters gp = dr.GetGlobalParameters();
+        var gp = dr.GetGlobalParameters();
 
-        double[] bins = new double[gp.Bins];
-        int[] inten = new int[gp.Bins];
-        double globalMinBin = double.MaxValue;
+        var globalMinBin = double.MaxValue;
 
-        double[] mzs = new double[gp.Bins];
-        double[] its = new double[gp.Bins];
+        var mzs = new double[gp.Bins];
+        var its = new double[gp.Bins];
 
-        for (int i = 1; i < gp.NumFrames; i++)
+        for (var i = 1; i < gp.NumFrames; i++)
         {
 
-            FrameParameters fp = dr.GetFrameParameters(i);
-            int numScans = fp.Scans;
-            for (int j = 1; j < numScans; j++)
+            var fp = dr.GetFrameParameters(i);
+            var numScans = fp.Scans;
+            for (var j = 1; j < numScans; j++)
             {
-
+                int[] inten;
+                double[] bins;
                 dr.GetSpectrum(i, j, out bins, out inten);
                 if (bins.Length > 0)
                 {
                     if (bins[0] <= globalMinBin)
                     {
                         globalMinBin = bins[0];
-                        Console.WriteLine("Global minimum = " + bins[0].ToString() + " @Frame= " + i.ToString() + " @scan= " + j.ToString());
+                        Console.WriteLine("Global minimum = " + bins[0].ToString(CultureInfo.InvariantCulture) + " @Frame= " + i.ToString() + " @scan= " + j.ToString());
                     }
                 }
             }
             Console.WriteLine("Finished processing frame " + i.ToString());
-            
+
         }
 
-        Console.WriteLine("Global minimum " + globalMinBin.ToString());
+        Console.WriteLine("Global minimum " + globalMinBin.ToString(CultureInfo.InvariantCulture));
 
     }
 
@@ -100,18 +95,18 @@ public class TestClass
     [Test]
     public void checkDataTime()
     {
-        GlobalParameters expInfo = dr.GetGlobalParameters();
+        var expInfo = dr.GetGlobalParameters();
         Console.WriteLine(expInfo.DateStarted);
     }
-    [Test]
 
+    [Test]
     public void printBins()
     {
-        GlobalParameters datasetInfo = dr.GetGlobalParameters();
-        
-        int bins = datasetInfo.Bins; // will get once file opens
-        double [] mzs = new double[bins];
-        int[] intensities = new int[bins];
+        var datasetInfo = dr.GetGlobalParameters();
+
+        var bins = datasetInfo.Bins; // will get once file opens
+        var mzs = new double[bins];
+        var intensities = new int[bins];
 
         Console.WriteLine("the bin number si wrong");
 
@@ -125,29 +120,29 @@ public class TestClass
         //string FileName = "c:\\Eric_SurfN_500_100_fr120_0000.uimf";
         // this database has bad data for frame 201
 
-        GlobalParameters datasetInfo = dr.GetGlobalParameters();
-        int frameType = 0;
-        int bins = 94000; // will get once file opens
+        var datasetInfo = dr.GetGlobalParameters();
+        var frameType = 0;
+        var bins = 94000; // will get once file opens
 
         int i, j;
         int startFrame, endFrame, startScan, endScan;
 
         // set scan and fram2 dimension for window
-        int scanDim = 4;
-        int frameDim = 4;
+        var scanDim = 4;
+        var frameDim = 4;
 
         // set sliding window bounds for frames
-        int loopStartFrames = 1;
-        int loopStopFrames = 300 - frameDim;
+        var loopStartFrames = 1;
+        var loopStopFrames = 300 - frameDim;
         // set sliding window bounds for Scans
-        int loopStartScans = 0;
-        int loopStopScans = 500 - scanDim;
+        var loopStartScans = 0;
+        var loopStopScans = 500 - scanDim;
 
         // set arrays to bin size
         double[] mzsCache = null;
-        int[] intensitiesCache = null; 
+        int[] intensitiesCache = null;
 
-        Stopwatch stopWatch = new Stopwatch();
+        var stopWatch = new Stopwatch();
         TimeSpan ts;
         double timeCached = -1;
 
@@ -174,8 +169,8 @@ public class TestClass
         Console.WriteLine("TimeCached: " + timeCached);
 
         stopWatch.Reset();
-        
-        
+
+
         /*double[] mzsNormal = null;
         int[] intensitiesNormal = null;
 
@@ -197,7 +192,7 @@ public class TestClass
                     dr.SumScans(mzsNormal, intensitiesNormal, frameType, startFrame, endFrame, startScan, endScan);
                 }
             }
-            
+
             stopWatch.Stop();
             ts = stopWatch.Elapsed;
             timeNormal = ts.TotalSeconds;
@@ -208,7 +203,7 @@ public class TestClass
         // Assert that both arrays are the same
         //Assert.AreEqual(mzsNormal, mzsCache);
         //Assert.AreEqual(intensitiesNormal, intensitiesCache);
-        
+
         // Assert that the normal method is slower
         //Assert.Greater(timeNormal, timeCached);
     }
@@ -217,23 +212,23 @@ public class TestClass
     public void getScan()
     {
 
-        double[] mzsCache = new double[98000];
-        int[] intensitiesCache = new int[98000];
-        double[] mzsNormal = new double[98000];
-        int[] intensitiesNormal = new int[98000];
+        var mzsCache = new double[98000];
+        var intensitiesCache = new int[98000];
+        var mzsNormal = new double[98000];
+        var intensitiesNormal = new int[98000];
         //double[] mzsCache = new double[98000];
         //int[] intensitiesCache = new int[98000];
-      
+
 
         //Assert.AreEqual(mzsNormal, mzsCache);
         //Assert.AreEqual(intensitiesNormal, intensitiesCache);
     }
- 
+
     private int countNonZeroValues(int[] array)
     {
-        int count = 0;
+        var count = 0;
 
-        for (int i = 0; i < array.Length; i++)
+        for (var i = 0; i < array.Length; i++)
         {
             if (array[i] > 0)
             {
@@ -247,17 +242,17 @@ public class TestClass
     [Test]
     public void getIntensityBlock()
     {
-        int frameNum  = 10;
-        int startScan = 255;
-        int endScan = 255;
-        int startBin = 0;
-        int endBin = 98000;
+        var frameNum  = 10;
+        var startScan = 255;
+        var endScan = 255;
+        var startBin = 0;
+        var endBin = 98000;
 
 
-        GlobalParameters gp = dr.GetGlobalParameters();
+        var gp = dr.GetGlobalParameters();
 
-        int[] abundance = new int[gp.Bins];
-        double[] mzs = new double[gp.Bins];
+        var abundance = new int[gp.Bins];
+        var mzs = new double[gp.Bins];
 
         endBin = gp.Bins;
 
@@ -272,7 +267,7 @@ public class TestClass
         //{
         //    int nonZeroCount = dr.GetSpectrum(frameNum, i, abundance, mzs);
 
-        //    //the number of non-zero values returned from getspectrum should be 
+        //    //the number of non-zero values returned from getspectrum should be
         //    //equal to the number of non zero values from startBin to endBin
         //    int countsInBlock = countNonZeroValues(intensities[i - startScan]);
         //    Assert.AreEqual(nonZeroCount, countsInBlock);
