@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;RELEASE;NET461</DefineConstants>
+    <OutputPath>bin\Release\net461\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.97" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\falkor\lib\UIMFLibrary\System.Data.SQLite.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
