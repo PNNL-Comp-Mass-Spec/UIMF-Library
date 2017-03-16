@@ -4,7 +4,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace UIMFLibrary.UnitTests
+namespace UIMFLibrary.FunctionalTests
 {
 	/// <summary>
 	/// The file refs.

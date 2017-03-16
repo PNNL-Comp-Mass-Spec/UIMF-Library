@@ -4,13 +4,12 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace UIMFLibrary.UnitTests
+using System;
+using System.Diagnostics;
+using NUnit.Framework;
+
+namespace UIMFLibrary.FunctionalTests
 {
-    using System;
-    using System.Diagnostics;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// The speed tests.
     /// </summary>
