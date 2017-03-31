@@ -9,3 +9,5 @@ UIMFLibrary.FunctionalTests/obj/
 *.user
 UIMFLibrary.v12.suo
 .vs/
+/Test_Data
+/Releases

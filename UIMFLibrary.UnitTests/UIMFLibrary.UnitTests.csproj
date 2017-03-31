@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
+    <Version>1.0.1</Version>
+    <Description>UIMFLibrary unit tests</Description>
+    <Company>Pacific Northwest National Laboratory</Company>
+    <Authors>PNNL-Comp-Mass-Spec</Authors>
+    <PackageLicenseUrl>https://opensource.org/licenses/ECL-2.0</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NET461</DefineConstants>
