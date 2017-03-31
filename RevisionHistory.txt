@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 3.1.0; March 31, 2017
+	- Use new .csproj format and push to NuGet
+
 Version 3.0.6270; March 2, 2017
 	- Update the DataReader to allow reading .uimf files with empty Frame_Params and/or Frame_Parameters
 	- Add method ValidateLegacyHPFColumnsExist to DataWriter
