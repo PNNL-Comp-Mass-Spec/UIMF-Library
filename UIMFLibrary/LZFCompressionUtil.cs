@@ -43,7 +43,7 @@ namespace UIMFLibrary
     */
 
     /// <summary>
-    /// Improved C# LZF Compressor, a very small data compression library. The compression algorithm is extremely fast. 
+    /// Improved C# LZF Compressor, a very small data compression library. The compression algorithm is extremely fast.
     /// </summary>
     public sealed class LZFCompressionUtil
     {
@@ -226,7 +226,7 @@ namespace UIMFLibrary
         /// Reference to the data to decompress
         /// </param>
         /// <param name="inputLength">
-        /// Lenght of the data to decompress
+        /// Length of the data to decompress
         /// </param>
         /// <param name="output">
         /// Reference to a buffer which will contain the decompressed data
@@ -300,11 +300,10 @@ namespace UIMFLibrary
                     output[oidx++] = output[reference++];
                     output[oidx++] = output[reference++];
 
-                    do output[oidx++] = output[reference++];
-                    while ((--len) != 0);
+                    do output[oidx++] = output[reference++]; while ((--len) != 0);
                 }
-            }
-            while (iidx < inputLength);
+            } while (iidx < inputLength);
+
 
             return (int)oidx;
         }

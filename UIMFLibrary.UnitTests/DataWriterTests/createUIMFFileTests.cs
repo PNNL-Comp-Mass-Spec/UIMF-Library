@@ -53,7 +53,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 var randGenerator = new Random();
 
                 for (var frameNum = 1; frameNum <= 10; frameNum++)
-                {                   
+                {
 
                     var fp = new FrameParams();
 
@@ -93,7 +93,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
             }
 
-     
+
         }
     }
 }
