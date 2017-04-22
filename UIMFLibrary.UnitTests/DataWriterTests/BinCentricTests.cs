@@ -19,59 +19,95 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     {
         #region Public Methods and Operators
 
+        private DateTime mLastProgressUpdateTime = DateTime.UtcNow;
+        private DateTime mLastProgressMessageTime = DateTime.UtcNow;
+
         /// <summary>
         /// The test create bin centric tables.
         /// </summary>
         [Test]
-        [Ignore("TBD")]
+        [Category("PNL_Domain")]
         public void TestCreateBinCentricTables()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
             var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
 
-            if (fiSource.Exists)
+            if (!fiSource.Exists)
             {
-                var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
-                if (fiTarget == null)
-                    return;
-
-                using (var uimfWriter = new DataWriter(fiTarget.FullName))
-                {
-                    uimfWriter.CreateBinCentricTables();
-                }
+                return;
             }
+            var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
+            if (fiTarget == null)
+                return;
 
+            using (var uimfWriter = new DataWriter(fiTarget.FullName))
+            {
+                uimfWriter.CreateBinCentricTables();
+            }
         }
 
-        private FileInfo DuplicateUIMF(FileInfo fiSource, string suffixAddon)
+        /// <summary>
+        /// The test create bin centric tables.
+        /// Demonstrates separate method for instantiating BinCentricTableCreation
+        /// </summary>
+        /// <remarks>For speed purposes, it is important to wrap the call to CreateBinCentricTable in a transaction</remarks>
+        [Test]
+        [Category("PNL_Domain")]
+        public void TestCreateBinCentricTables2()
         {
-            if (fiSource.Directory != null)
-            {
-                var fiTarget =
-                    new FileInfo(Path.Combine(fiSource.Directory.FullName,
-                                              Path.GetFileNameWithoutExtension(fiSource.Name) + suffixAddon +
-                                              Path.GetExtension(fiSource.Name)));
+            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-                try
+            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
+
+            if (!fiSource.Exists)
+                return;
+
+            var fiTarget = DuplicateUIMF(fiSource, "_BinCentric2");
+            if (fiTarget == null)
+                return;
+
+            using (var uimfReader = new DataReader(fiTarget.FullName))
+            {
+                // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on a remote UNC share or in readonly folders
+                var connectionString = "Data Source = " + fiTarget.FullName;
+                using (var dbConnection = new System.Data.SQLite.SQLiteConnection(connectionString, true))
                 {
-                    fiSource.CopyTo(fiTarget.FullName, true);
-                    return fiTarget;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception duplication " + fiSource.FullName + ": " + ex.Message);
-                    // File copy error; probably in use by another process                    
+                    dbConnection.Open();
+
+                    using (var dbCommand = dbConnection.CreateCommand())
+                    {
+                        dbCommand.CommandText = "PRAGMA synchronous=0;BEGIN TRANSACTION;";
+                        dbCommand.ExecuteNonQuery();
+                    }
+
+                    var binCentricTableCreator = new BinCentricTableCreation();
+
+                    // Attach the events
+                    binCentricTableCreator.OnProgress += binCentricTableCreator_ProgressEvent;
+                    binCentricTableCreator.Message += binCentricTableCreator_MessageEvent;
+
+                    mLastProgressUpdateTime = DateTime.UtcNow;
+                    mLastProgressMessageTime = DateTime.UtcNow;
+
+                    binCentricTableCreator.CreateBinCentricTable(dbConnection, uimfReader, ".");
+
+                    using (var dbCommand = dbConnection.CreateCommand())
+                    {
+                        dbCommand.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
+                        dbCommand.ExecuteNonQuery();
+                    }
+
+                    dbConnection.Close();
                 }
             }
-
-            return null;
         }
 
         /// <summary>
         /// The test create bin centric tables small file.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestCreateBinCentricTablesSmallFile()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -113,5 +149,49 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         }
 
         #endregion
+
+        private FileInfo DuplicateUIMF(FileInfo fiSource, string suffixAddon)
+        {
+            if (fiSource.Directory == null)
+                return null;
+
+            var fiTarget =
+                new FileInfo(Path.Combine(fiSource.Directory.FullName,
+                                          Path.GetFileNameWithoutExtension(fiSource.Name) + suffixAddon +
+                                          Path.GetExtension(fiSource.Name)));
+
+            try
+            {
+                fiSource.CopyTo(fiTarget.FullName, true);
+                return fiTarget;
+            }
+            catch (Exception ex)
+            {
+                // File copy error; probably in use by another process
+                Console.WriteLine("Exception duplication " + fiSource.FullName + ": " + ex.Message);
+            }
+
+            return null;
+        }
+
+        void binCentricTableCreator_ProgressEvent(object sender, UIMFLibrary.ProgressEventArgs e)
+        {
+            if (DateTime.UtcNow.Subtract(mLastProgressUpdateTime).TotalSeconds >= 5)
+            {
+                Console.WriteLine("{0:F}% complete", e.PercentComplete);
+                mLastProgressUpdateTime = DateTime.UtcNow;
+            }
+        }
+
+        void binCentricTableCreator_MessageEvent(object sender, UIMFLibrary.MessageEventArgs e)
+        {
+            if (DateTime.UtcNow.Subtract(mLastProgressMessageTime).TotalSeconds >= 30)
+            {
+                Console.WriteLine(e.Message);
+                mLastProgressMessageTime = DateTime.UtcNow;
+            }
+
+        }
+
     }
 }
