@@ -245,6 +245,7 @@ namespace UIMFLibrary
             do
             {
                 uint ctrl = input[iidx++];
+                // var ctrlStart = ctrl;
 
                 if (ctrl < (1 << 5)) /* literal run */
                 {
@@ -256,8 +257,20 @@ namespace UIMFLibrary
                         return 0;
                     }
 
-                    do output[oidx++] = input[iidx++];
-                    while ((--ctrl) != 0);
+                    do
+                    {
+                        output[oidx++] = input[iidx++];
+                        if (iidx == inputLength)
+                            break;
+
+                    }
+                    while (--ctrl != 0);
+
+                    //if (ctrl > 1)
+                    //{
+                    //    Console.WriteLine("ctrl points to an index outside the length of input: {0} vs. {1}", ctrlStart, inputLength);
+                    //}
+
                 }
                 else /* back reference */
                 {
