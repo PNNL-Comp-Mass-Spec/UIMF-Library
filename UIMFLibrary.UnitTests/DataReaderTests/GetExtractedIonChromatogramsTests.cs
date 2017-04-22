@@ -55,15 +55,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 int[] frameVals;
                 int[] scanVals;
                 this.m_reader.Get3DElutionProfile(
-                    startFrame - 20, 
-                    startFrame + 20, 
-                    0, 
-                    startScan - 20, 
-                    startScan + 20, 
-                    targetMZ, 
-                    toleranceInMZ, 
-                    out frameVals, 
-                    out scanVals, 
+                    startFrame - 20,
+                    startFrame + 20,
+                    0,
+                    startScan - 20,
+                    startScan + 20,
+                    targetMZ,
+                    toleranceInMZ,
+                    out frameVals,
+                    out scanVals,
                     out intensityVals);
             }
 
@@ -101,12 +101,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
             {
                 int[][] values = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
-                    startFrame - 40, 
-                    startFrame + 40, 
-                    0, 
-                    startScan - 60, 
-                    startScan + 60, 
-                    targetMZ, 
+                    startFrame - 40,
+                    startFrame + 40,
+                    0,
+                    startScan - 60,
+                    startScan + 60,
+                    targetMZ,
                     toleranceInMZ);
 
                 var sb = new StringBuilder();
@@ -126,7 +126,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(510, values[2][66]);
                 Assert.AreEqual(663, values[3][64]);
                 Assert.AreEqual(436, values[4][57]);
-                
+
                 // Console.WriteLine(sb.ToString());
             }
         }
@@ -161,15 +161,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (this.m_reader = new DataReader(filePath))
             {
                 this.m_reader.Get3DElutionProfile(
-                    startFrame, 
-                    stopFrame, 
-                    0, 
-                    startScan, 
-                    stopScan, 
-                    targetMZ, 
-                    toleranceInMZ, 
-                    out frameVals, 
-                    out scanVals, 
+                    startFrame,
+                    stopFrame,
+                    0,
+                    startScan,
+                    stopScan,
+                    targetMZ,
+                    toleranceInMZ,
+                    out frameVals,
+                    out scanVals,
                     out intensityVals);
             }
 
@@ -207,14 +207,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
             {
                 this.m_reader.GetDriftTimeProfile(
-                    startFrame - 2, 
-                    startFrame + 2, 
-                    DataReader.FrameType.MS1, 
-                    startScan - 100, 
-                    startScan + 100, 
-                    targetMZ, 
-                    toleranceInMZ, 
-                    ref scanVals, 
+                    startFrame - 2,
+                    startFrame + 2,
+                    DataReader.FrameType.MS1,
+                    startScan - 100,
+                    startScan + 100,
+                    targetMZ,
+                    toleranceInMZ,
+                    ref scanVals,
                     ref intensityVals);
 
                 TestUtilities.Display2DChromatogram(scanVals, intensityVals);
@@ -257,14 +257,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var sw = new Stopwatch();
                 sw.Start();
                 this.m_reader.GetLCProfile(
-                    startFrame, 
-                    endFrame, 
-                    DataReader.FrameType.MS1, 
-                    startScan, 
-                    stopScan, 
-                    targetMZ, 
-                    toleranceInMZ, 
-                    out frameVals, 
+                    startFrame,
+                    endFrame,
+                    DataReader.FrameType.MS1,
+                    startScan,
+                    stopScan,
+                    targetMZ,
+                    toleranceInMZ,
+                    out frameVals,
                     out intensityVals);
                 sw.Stop();
 
@@ -311,14 +311,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var sw = new Stopwatch();
                 sw.Start();
                 this.m_reader.GetLCProfile(
-                    startFrame - 200, 
-                    startFrame + 200, 
-                    DataReader.FrameType.MS1, 
-                    startScan - 2, 
-                    startScan + 2, 
-                    targetMZ, 
-                    toleranceInMZ, 
-                    out frameVals, 
+                    startFrame - 200,
+                    startFrame + 200,
+                    DataReader.FrameType.MS1,
+                    startScan - 2,
+                    startScan + 2,
+                    targetMZ,
+                    toleranceInMZ,
+                    out frameVals,
                     out intensityVals);
                 sw.Stop();
 

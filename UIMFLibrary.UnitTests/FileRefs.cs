@@ -39,8 +39,8 @@ namespace UIMFLibrary.UnitTests
 
         public static string uimfFileForBinCentricTest2 =
             @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\PepMix_MSMS_4msSA.UIMF";
-            
-        public static string uimfWriterTest10Frames = 
+
+        public static string uimfWriterTest10Frames =
             @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\WriterTest_10Frames.uimf";
 
         #endregion
