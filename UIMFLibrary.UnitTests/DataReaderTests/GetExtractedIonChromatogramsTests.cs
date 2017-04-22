@@ -33,6 +33,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get 3D elution profile_test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void Get3DElutionProfile_test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -85,6 +86,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get 3D elution profile_test 2.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void Get3DElutionProfile_test2()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -187,6 +189,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get drift time profile test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetDriftTimeProfileTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -230,6 +233,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get lc chromatogram test 2.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetLCChromatogramTest2()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -286,6 +290,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get lc chromatogram test 3.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetLCChromatogramTest3()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());

@@ -21,6 +21,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frame type test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetFrameTypeTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -44,6 +45,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get msms test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetMSMSTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -80,6 +82,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The contains msms data test 3.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void containsMSMSDataTest3()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -94,6 +97,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The contains msms data_test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void containsMSMSData_test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -108,6 +112,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The contains msms data_test 2.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void containsMSMSData_test2()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());

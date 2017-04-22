@@ -438,6 +438,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frame parameters test.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetFrameParametersTest()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -456,6 +457,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
+        [Category("PNL_Domain")]
         public void GetBPITest()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -496,6 +498,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
+        [Category("PNL_Domain")]
         public void GetTICTest()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());

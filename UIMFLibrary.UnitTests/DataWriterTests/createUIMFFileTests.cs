@@ -18,6 +18,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     public class createUIMFFileTests
     {
         [Test]
+        [Category("PNL_Domain")]
         public void createDB_test1()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());

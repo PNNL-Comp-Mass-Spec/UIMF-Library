@@ -24,6 +24,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get avg tof length test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getAvgTOFLengthTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -41,6 +42,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frame info_demultiplexed_first frame_ test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getFrameInfo_demultiplexed_firstFrame_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -64,6 +66,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frame info_demultiplexed_last frame_ test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getFrameInfo_demultiplexed_lastFrame_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -90,6 +93,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frame pressure_last frame.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getFramePressure_lastFrame()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -114,6 +118,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get global params_test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getGlobalParams_test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -131,6 +136,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get number of frames test.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void getNumberOfFramesTest()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());

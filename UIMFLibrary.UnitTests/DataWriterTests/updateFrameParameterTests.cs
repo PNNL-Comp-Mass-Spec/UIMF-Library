@@ -19,6 +19,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     public class updateFrameParameterTests
     {
         [Test]
+        [Category("PNL_Domain")]
         public void UpdateCalibrationCoefficients()
         {
             var sourceFile = new FileInfo(FileRefs.uimfStandardDemultiplexedFile1);
