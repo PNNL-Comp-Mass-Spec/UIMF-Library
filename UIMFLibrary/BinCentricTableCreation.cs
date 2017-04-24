@@ -16,6 +16,16 @@ namespace UIMFLibrary
     /// </summary>
     public class BinCentricTableCreation
     {
+        /// <summary>
+        /// Tracks the last time the progress was reported via a Message event for a long-running task
+        /// </summary>
+        private readonly Dictionary<string, DateTime> mTaskProgressMessageTime;
+
+        /// <summary>
+        /// Tracks the start time of a long-running task
+        /// </summary>
+        private readonly Dictionary<string, DateTime> mTaskStartTime;
+
         #region Constants
 
         /// <summary>
@@ -65,6 +75,15 @@ namespace UIMFLibrary
 
         #endregion
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public BinCentricTableCreation()
+        {
+            mTaskProgressMessageTime = new Dictionary<string, DateTime>();
+            mTaskStartTime = new Dictionary<string, DateTime>();
+        }
+
         #region Public Methods and Operators
 
         /// <summary>
@@ -98,6 +117,9 @@ namespace UIMFLibrary
             DataReader uimfReader,
             string workingDirectory)
         {
+            mTaskProgressMessageTime.Clear();
+            mTaskStartTime.Clear();
+
             // Create the temporary database
             var temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
 
@@ -280,7 +302,7 @@ namespace UIMFLibrary
                     if (numBins > 0)
                     {
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-                        var progressMessage = "Creating indices, Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+                        var progressMessage = "Creating indices, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
                         var percentComplete = 37 + (i / (double)numBins) * 30;
                         this.UpdateProgress(percentComplete, progressMessage);
                     }
@@ -360,7 +382,7 @@ namespace UIMFLibrary
                 {
                     for (var frameNumber = 1; frameNumber <= numFrames; frameNumber++)
                     {
-                        var progressMessage = "Processing Frame: " + frameNumber + " / " + numFrames;
+                        var progressMessage = "Create temporary DB, adding frame: " + frameNumber + " / " + numFrames;
                         Console.WriteLine(DateTime.Now + " - " + progressMessage);
 
                         var frameParams = uimfReader.GetFrameParams(frameNumber);
@@ -554,7 +576,7 @@ namespace UIMFLibrary
 
                     if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
                     {
-                        var progressMessage = "Processing Bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+                        var progressMessage = "Adding bin-centric data, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
                         Console.WriteLine(DateTime.Now + " - " + progressMessage);
                         dtLastProgress = DateTime.UtcNow;
 
@@ -667,10 +689,62 @@ namespace UIMFLibrary
         {
             this.OnProgressUpdate(new ProgressEventArgs(percentComplete));
 
-            if (!string.IsNullOrEmpty(currentTask))
+            if (string.IsNullOrEmpty(currentTask))
+                return;
+
+            // Limit the message frequency as the task gets longer
+            // currentTask must have a colon for this option to be used
+            var charIndex = currentTask.IndexOf(':');
+            if (charIndex > 0)
             {
-                this.OnMessage(new MessageEventArgs(currentTask));
+                var taskHeader = currentTask.Substring(0, charIndex);
+                if (!ReportProgressAsMessage(taskHeader))
+                    return;
             }
+
+            this.OnMessage(new MessageEventArgs(currentTask));
+        }
+
+        private bool ReportProgressAsMessage(string taskHeader)
+        {
+
+            if (!mTaskStartTime.ContainsKey(taskHeader))
+            {
+                mTaskStartTime.Add(taskHeader, DateTime.UtcNow);
+                if (mTaskProgressMessageTime.ContainsKey(taskHeader))
+                    mTaskProgressMessageTime[taskHeader] = DateTime.UtcNow;
+                else
+                    mTaskProgressMessageTime.Add(taskHeader, DateTime.UtcNow);
+            }
+            else
+            {
+                if (!mTaskStartTime.TryGetValue(taskHeader, out var taskStartTime))
+                    return true;
+
+                if (!mTaskProgressMessageTime.TryGetValue(taskHeader, out var lastProgressTime))
+                    return true;
+
+                var elapsedSeconds = DateTime.UtcNow.Subtract(taskStartTime).TotalSeconds;
+                int progressInterval;
+
+                if (elapsedSeconds < 300)
+                    progressInterval = 30;
+                else if (elapsedSeconds < 1800)
+                    progressInterval = 60;
+                else if (elapsedSeconds < 3600)
+                    progressInterval = 120;
+                else if (elapsedSeconds < 43200)
+                    progressInterval = 300;
+                else
+                    progressInterval = 900;
+
+                if (DateTime.UtcNow.Subtract(lastProgressTime).TotalSeconds < progressInterval)
+                    return false;
+
+                mTaskProgressMessageTime[taskHeader] = DateTime.UtcNow;
+            }
+
+            return true;
         }
 
         #endregion
