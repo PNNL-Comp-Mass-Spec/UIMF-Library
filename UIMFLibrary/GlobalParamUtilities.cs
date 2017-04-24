@@ -13,31 +13,31 @@ namespace UIMFLibrary
         /// </summary>
         public static readonly Dictionary<string, string> mDataTypeAliasMap =
             new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase)
-        { 
-            {"bool", "System.Boolean"},
-            {"byte", "System.Byte"},
-            {"sbyte", "System.SByte"},
-            {"char", "System.Char"},
-            {"decimal", "System.Decimal"},
-            {"double", "System.Double"},
-            {"float", "System.Single"},
-            {"int", "System.Int32"},
-            {"uint", "System.UInt32"},
-            {"long", "System.Int64"},
-            {"ulong", "System.UInt64"},
-            {"object", "System.Object"},
-            {"short", "System.Int16"},
-            {"ushort", "System.UInt16"},
-            {"string", "System.String"},
-            {"Boolean", "System.Boolean"},
-            {"Single", "System.Single"},
-            {"Int32", "System.Int32"},
-            {"UInt32", "System.UInt32"},
-            {"Int64", "System.Int64"},
-            {"UInt64", "System.UInt64"},
-            {"Int16", "System.Int16"},
-            {"UInt16", "System.UInt16"}
-        };
+            {
+                {"bool", "System.Boolean"},
+                {"byte", "System.Byte"},
+                {"sbyte", "System.SByte"},
+                {"char", "System.Char"},
+                {"decimal", "System.Decimal"},
+                {"double", "System.Double"},
+                {"float", "System.Single"},
+                {"int", "System.Int32"},
+                {"uint", "System.UInt32"},
+                {"long", "System.Int64"},
+                {"ulong", "System.UInt64"},
+                {"object", "System.Object"},
+                {"short", "System.Int16"},
+                {"ushort", "System.UInt16"},
+                {"string", "System.String"},
+                {"Boolean", "System.Boolean"},
+                {"Single", "System.Single"},
+                {"Int32", "System.Int32"},
+                {"UInt32", "System.UInt32"},
+                {"Int64", "System.Int64"},
+                {"UInt64", "System.UInt64"},
+                {"Int16", "System.Int16"},
+                {"UInt16", "System.UInt16"}
+            };
 
         /// <summary>
         /// Create a Global parameter dictionary using a GlobalParameters class instance
@@ -54,7 +54,7 @@ namespace UIMFLibrary
                 prescanContinuous = 1;
 
             var globalParams = new Dictionary<GlobalParamKeyType, string>
-            { 
+            {
                 {GlobalParamKeyType.InstrumentName, globalParameters.InstrumentName},
                 {GlobalParamKeyType.DateStarted, globalParameters.DateStarted},
                 {GlobalParamKeyType.NumFrames, UIMFDataUtilities.IntToString(globalParameters.NumFrames)},

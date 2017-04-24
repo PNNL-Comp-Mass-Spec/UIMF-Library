@@ -263,7 +263,7 @@ namespace UIMFLibrary
 
             return frameParams;
         }
-    
+
 #pragma warning disable 612, 618
         /// <summary>
         /// Obtain a FrameParameters instance from a FrameParams instance
@@ -289,7 +289,7 @@ namespace UIMFLibrary
                 Decoded = frameParameters.GetValueInt32(FrameParamKeyType.Decoded, 0),
                 CalibrationDone = frameParameters.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
                 Scans = frameParameters.Scans,
-                IMFProfile = frameParameters.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, String.Empty),
+                IMFProfile = frameParameters.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, string.Empty),
                 MPBitOrder = (short)frameParameters.GetValueInt32(FrameParamKeyType.MPBitOrder, 0),
                 TOFLosses = frameParameters.GetValueDouble(FrameParamKeyType.TOFLosses, 0),
                 AverageTOFLength = frameParameters.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0),
@@ -331,7 +331,7 @@ namespace UIMFLibrary
                 FloatVoltage = frameParameters.GetValueDouble(FrameParamKeyType.FloatVoltage, 0)
             };
 
-            var fragmentationProfile = frameParameters.GetValue(FrameParamKeyType.FragmentationProfile, String.Empty);
+            var fragmentationProfile = frameParameters.GetValue(FrameParamKeyType.FragmentationProfile, string.Empty);
 
             if (string.IsNullOrEmpty(fragmentationProfile))
             {
@@ -454,7 +454,7 @@ namespace UIMFLibrary
         /// <returns><see cref="FrameParamDef"/> instance</returns>
         public static FrameParamDef GetParamDefByName(string paramName)
         {
-            if (String.IsNullOrWhiteSpace(paramName))
+            if (string.IsNullOrWhiteSpace(paramName))
                 throw new ArgumentOutOfRangeException(nameof(paramName), "paramName is empty");
 
             var paramType = GetParamTypeByName(paramName);

@@ -5102,7 +5102,7 @@ namespace UIMFLibrary
                 throw new Exception("Duplicate Key ID; cannot add " + paramType);
             }
 
-            if (frameParamKeys.Any(existingKey => String.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
+            if (frameParamKeys.Any(existingKey => string.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
             {
                 throw new Exception("Duplicate Key Name; cannot add " + paramType);
             }
@@ -5130,7 +5130,7 @@ namespace UIMFLibrary
                 throw new Exception("Duplicate Key; cannot add " + paramType + " (ID " + (int)paramType + ")");
             }
 
-            if (frameParamKeys.Any(existingKey => String.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
+            if (frameParamKeys.Any(existingKey => string.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
             {
                 throw new Exception("Duplicate Key Name; cannot add " + paramType + " (ID " + (int)paramType + ")");
             }

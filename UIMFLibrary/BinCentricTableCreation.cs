@@ -94,8 +94,8 @@ namespace UIMFLibrary
         /// Working directory
         /// </param>
         public void CreateBinCentricTable(
-            SQLiteConnection uimfWriterConnection, 
-            DataReader uimfReader, 
+            SQLiteConnection uimfWriterConnection,
+            DataReader uimfReader,
             string workingDirectory)
         {
             // Create the temporary database
@@ -191,7 +191,7 @@ namespace UIMFLibrary
                     command.ExecuteNonQuery();
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace UIMFLibrary
             var sqliteFileName = uimfFileInfo.Name.Replace(".UIMF", "_temporary.db3").Replace(".uimf", "_temporary.db3");
             var sqliteFile = new FileInfo(Path.Combine(workingDirectory, sqliteFileName));
 
-            if (String.Equals(uimfFileInfo.FullName, sqliteFile.FullName, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(uimfFileInfo.FullName, sqliteFile.FullName, StringComparison.CurrentCultureIgnoreCase))
             {
                 throw new IOException(
                     "Cannot add bin-centric tables, temporary SqLite file has the same name as the source SqLite file: "
@@ -515,8 +515,8 @@ namespace UIMFLibrary
         /// UIMF reader object
         /// </param>
         private void InsertBinCentricData(
-            SQLiteConnection uimfWriterConnection, 
-            SQLiteConnection temporaryDatabaseConnection, 
+            SQLiteConnection uimfWriterConnection,
+            SQLiteConnection temporaryDatabaseConnection,
             DataReader uimfReader)
         {
             var numBins = uimfReader.GetGlobalParams().Bins;
@@ -568,7 +568,7 @@ namespace UIMFLibrary
             this.CreateBinIntensitiesIndex(uimfWriterConnection);
 
             Console.WriteLine(DateTime.Now + " - Done");
-        }	   
+        }
 
         /// <summary>
         /// Sort data for bin.
@@ -586,9 +586,9 @@ namespace UIMFLibrary
         /// Number of IMS scans
         /// </param>
         private void SortDataForBin(
-            SQLiteConnection inConnection, 
-            SQLiteCommand insertCommand, 
-            int binNumber, 
+            SQLiteConnection inConnection,
+            SQLiteCommand insertCommand,
+            int binNumber,
             int numImsScans)
         {
             var runLengthZeroEncodedData = new List<int>();
