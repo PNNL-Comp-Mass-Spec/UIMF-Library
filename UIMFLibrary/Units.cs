@@ -1,4 +1,6 @@
-﻿namespace UIMFLibrary
+﻿using System;
+
+namespace UIMFLibrary
 {
     /// <summary>
     /// Units of Pressure
@@ -19,6 +21,7 @@
     /// <summary>
     /// Units of Temperature
     /// </summary>
+    /// <remarks>FrameParams AmbientTemperature and DriftTubeTemperature are assumed to be in Celsius</remarks>
     public enum TemperatureUnits
     {
         /// <summary>
@@ -29,6 +32,7 @@
         /// <summary>
         /// Kelvin
         /// </summary>
+        [Obsolete("No fields in this UIMFLibrary track temperature in Kelvin")]
         Kelvin = 1
-    }  
+    }
 }

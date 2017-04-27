@@ -110,7 +110,7 @@ namespace UIMFLibrary
         MassCalibrationCoefficientf2 = 19,
 
         /// <summary>
-        /// Key: Ambient temperature
+        /// Key: Ambient temperature, in Celsius
         /// </summary>
         AmbientTemperature = 20,
 
@@ -267,7 +267,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: Pressure Units
         /// </summary>
-        PressureUnits = 51
+        PressureUnits = 51,
+
+        /// <summary>
+        /// Key: Temperature of the drift tube, in Celsius
+        /// </summary>
+        DriftTubeTemperature = 52,
+
     }
 
     #endregion

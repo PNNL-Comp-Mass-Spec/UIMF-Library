@@ -431,6 +431,9 @@ namespace UIMFLibrary
                 case "Temperature":
                     return FrameParamKeyType.AmbientTemperature;
 
+                case "DriftTubeTemperature":
+                    return FrameParamKeyType.DriftTubeTemperature;
+
                 case "voltEntranceIFTIn":
                     return FrameParamKeyType.VoltEntranceHPFIn;
                 case "voltEntranceIFTOut":
@@ -572,6 +575,11 @@ namespace UIMFLibrary
                     return new FrameParamDef(FrameParamKeyType.AmbientTemperature,
                                           FrameParamKeyType.AmbientTemperature.ToString(), typeof(float),
                                           "Ambient temperature, in Celcius");
+
+                case FrameParamKeyType.DriftTubeTemperature:
+                    return new FrameParamDef(FrameParamKeyType.DriftTubeTemperature,
+                                             FrameParamKeyType.DriftTubeTemperature.ToString(), typeof(float),
+                                             "Drift tube temperature, in Celcius");
 
                 case FrameParamKeyType.VoltHVRack1:
                     return new FrameParamDef(FrameParamKeyType.VoltHVRack1, FrameParamKeyType.VoltHVRack1.ToString(),
