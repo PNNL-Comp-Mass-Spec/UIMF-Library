@@ -101,8 +101,7 @@ namespace UIMFLibrary
         /// <remarks>Returns System.Object if not match</remarks>
         public static string GetDataTypeFromAlias(string alias)
         {
-            string systemDataType;
-            if (mDataTypeAliasMap.TryGetValue(alias, out systemDataType))
+            if (mDataTypeAliasMap.TryGetValue(alias, out var systemDataType))
                 return systemDataType;
 
             Console.WriteLine("Warning: data type alias not recognized: " + alias);

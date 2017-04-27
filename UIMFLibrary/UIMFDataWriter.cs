@@ -1754,8 +1754,7 @@ namespace UIMFLibrary
             IList<int> intensities,
             double binWidth)
         {
-            int nonZeroCount;
-            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out nonZeroCount);
+            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out var nonZeroCount);
         }
 
         /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
@@ -1777,10 +1776,6 @@ namespace UIMFLibrary
             double binWidth,
             out int nonZeroCount)
         {
-            byte[] spectrum;
-            double tic;
-            double bpi;
-            int indexOfMaxIntensity;
 
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
@@ -1801,7 +1796,7 @@ namespace UIMFLibrary
             }
 
             // Convert the intensities array into a zero length encoded byte array, stored in variable spectrum
-            nonZeroCount = IntensityConverterInt32.Encode(intensities, out spectrum, out tic, out bpi, out indexOfMaxIntensity);
+            nonZeroCount = IntensityConverterInt32.Encode(intensities, out var spectrum, out var tic, out var bpi, out var indexOfMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 
@@ -1855,10 +1850,6 @@ namespace UIMFLibrary
             double binWidth,
             int timeOffset)
         {
-            byte[] spectrum;
-            double tic;
-            double bpi;
-            int binNumberMaxIntensity;
 
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
@@ -1894,7 +1885,7 @@ namespace UIMFLibrary
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
             }
 
-            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out spectrum, out tic, out bpi, out binNumberMaxIntensity);
+            var nonZeroCount = IntensityBinConverterInt32.Encode(binToIntensityMap, timeOffset, out var spectrum, out var tic, out var bpi, out var binNumberMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 

@@ -131,8 +131,7 @@ namespace UIMFLibrary
             if (string.IsNullOrWhiteSpace(dateString))
                 return string.Empty;
 
-            DateTime dateValue;
-            if (DateTime.TryParse(dateString, out dateValue))
+            if (DateTime.TryParse(dateString, out var dateValue))
             {
                 return StandardizeDate(dateValue);
             }

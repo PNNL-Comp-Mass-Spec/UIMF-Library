@@ -133,17 +133,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const int scanStart = 5;
                 const int scanStop = 5;
 
-                double[] mzArray;
-                int[] intensityArray;
-
                 reader.GetSpectrum(
                     frameStart,
                     frameStop,
                     DataReader.FrameType.MS1,
                     scanStart,
                     scanStop,
-                    out mzArray,
-                    out intensityArray);
+                    out var mzArray,
+                    out var intensityArray);
 
                 Assert.AreEqual(11.986007612613742, mzArray[0]);
                 Assert.AreEqual(1, intensityArray[0]);
@@ -206,15 +203,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                double[] mzArray;
-                int[] intensityArray;
 
                 var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
                     DataReader.FrameType.MS1,
                     scanNumber,
-                    out mzArray,
-                    out intensityArray);
+                    out var mzArray,
+                    out var intensityArray);
 
                 Assert.AreEqual(nonZeroCount, intensityArray.Length);
                 Assert.AreEqual(692, nonZeroCount);
@@ -263,7 +258,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                double[] mzVals;
 
                 const double testMZ = 627.2655682;
                 for (var frame = startFrame; frame <= stopFrame; frame++)
@@ -277,9 +271,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(44965, sequentialFrameIntensityVals[1][testBin]);
                 Assert.AreEqual(45758, sequentialFrameIntensityVals[2][testBin]);
 
-                var intensities = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
+                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
 
-                Assert.AreEqual(126568, intensities[testBin]);
+                Assert.AreEqual(126568, intensitiesA[testBin]);
 
                 var numZeros = reader.GetSpectrum(
                     startFrame,
@@ -287,19 +281,19 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     DataReader.FrameType.MS1,
                     scan,
                     scan,
-                    out mzVals,
-                    out intensities);
+                    out var mzVals,
+                    out var intensitiesB);
 
                 Assert.AreEqual(764, numZeros);
 
                 var maxIntensityForTestMZ = 0;
-                for (var i = 0; i < intensities.Length; i++)
+                for (var i = 0; i < intensitiesB.Length; i++)
                 {
                     if (mzVals[i] > (testMZ - 0.1) && mzVals[i] < (testMZ + 0.1))
                     {
-                        if (intensities[i] > maxIntensityForTestMZ)
+                        if (intensitiesB[i] > maxIntensityForTestMZ)
                         {
-                            maxIntensityForTestMZ = intensities[i];
+                            maxIntensityForTestMZ = intensitiesB[i];
                         }
                     }
                 }
@@ -323,8 +317,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                double[] mzArray;
-                int[] intensityArray;
 
                 var nonZeroCount = reader.GetSpectrum(
                     frameStart,
@@ -332,8 +324,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     DataReader.FrameType.MS1,
                     scanStart,
                     scanStop,
-                    out mzArray,
-                    out intensityArray);
+                    out var mzArray,
+                    out var intensityArray);
 
                 var totalIntensity = intensityArray.Sum();
                 var totalMz = mzArray.Sum();

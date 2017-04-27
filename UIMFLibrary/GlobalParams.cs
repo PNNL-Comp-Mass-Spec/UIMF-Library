@@ -150,16 +150,14 @@ namespace UIMFLibrary
                 // Make sure the date is in the standard format expected by Proteowizard
                 // Proteowizard requires that it have AM/PM at the end
 
-                DateTime dtDateStarted;
-                if (DateTime.TryParse(value, out dtDateStarted))
+                if (DateTime.TryParse(value, out var dtDateStarted))
                 {
                     value = dtDateStarted.ToString("M/d/yyyy h:mm:ss tt");
                 }
-               
+
             }
 
-            GlobalParam paramEntry;
-            if (mGlobalParameters.TryGetValue(paramType, out paramEntry))
+            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
@@ -191,8 +189,7 @@ namespace UIMFLibrary
         /// <returns>Value (string)</returns>
         public string GetValue(GlobalParamKeyType paramType, string valueIfMissing)
         {
-            GlobalParam paramEntry;
-            if (mGlobalParameters.TryGetValue(paramType, out paramEntry))
+            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
                 return paramEntry.Value;
             }
@@ -219,11 +216,9 @@ namespace UIMFLibrary
         /// <returns>Value (double)</returns>
         public double GetValueDouble(GlobalParamKeyType paramType, double valueIfMissing)
         {
-            GlobalParam paramEntry;
-            if (mGlobalParameters.TryGetValue(paramType, out paramEntry))
+            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
-                double result;
-                if (Double.TryParse(paramEntry.Value, out result))
+                if (Double.TryParse(paramEntry.Value, out var result))
                     return result;
             }
 
@@ -249,11 +244,9 @@ namespace UIMFLibrary
         /// <returns>Value (int)</returns>
         public int GetValueInt32(GlobalParamKeyType paramType, int valueIfMissing)
         {
-            GlobalParam paramEntry;
-            if (mGlobalParameters.TryGetValue(paramType, out paramEntry))
+            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
-                int result;
-                if (Int32.TryParse(paramEntry.Value, out result))
+                if (Int32.TryParse(paramEntry.Value, out var result))
                     return result;
             }
 

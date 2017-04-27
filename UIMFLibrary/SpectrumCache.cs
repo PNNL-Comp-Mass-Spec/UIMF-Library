@@ -44,10 +44,8 @@ namespace UIMFLibrary
             this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
             this.SummedIntensityDictionary = summedIntensityDictionary;
 
-            int firstScan;
-            int lastScan;
 
-            FindFirstLastScan(listOfIntensityDictionaries, out firstScan, out lastScan);
+            FindFirstLastScan(listOfIntensityDictionaries, out var firstScan, out var lastScan);
 
             this.FirstScan = firstScan;
             this.LastScan = lastScan;
@@ -88,9 +86,7 @@ namespace UIMFLibrary
             this.FirstScan = firstScan;
             this.LastScan = lastScan;
 
-            int firstScanComputed;
-            int lastScanComputed;
-            FindFirstLastScan(listOfIntensityDictionaries, out firstScanComputed, out lastScanComputed);
+            FindFirstLastScan(listOfIntensityDictionaries, out var firstScanComputed, out var lastScanComputed);
 
             if (firstScanComputed > 0 || lastScanComputed > 0)
             {

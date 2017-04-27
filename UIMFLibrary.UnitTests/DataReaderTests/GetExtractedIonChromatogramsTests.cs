@@ -52,8 +52,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                int[] frameVals;
-                int[] scanVals;
                 this.m_reader.Get3DElutionProfile(
                     startFrame - 20,
                     startFrame + 20,
@@ -62,8 +60,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     startScan + 20,
                     targetMZ,
                     toleranceInMZ,
-                    out frameVals,
-                    out scanVals,
+                    out var frameVals,
+                    out var scanVals,
                     out intensityVals);
             }
 
@@ -264,8 +262,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     stopScan,
                     targetMZ,
                     toleranceInMZ,
-                    out frameVals,
-                    out intensityVals);
+                    out var frameVals,
+                    out var intensityVals);
                 sw.Stop();
 
                 var sb = new StringBuilder();
@@ -318,8 +316,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     startScan + 2,
                     targetMZ,
                     toleranceInMZ,
-                    out frameVals,
-                    out intensityVals);
+                    out var frameVals,
+                    out var intensityVals);
                 sw.Stop();
 
                 Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);

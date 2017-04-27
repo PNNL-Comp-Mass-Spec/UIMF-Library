@@ -444,8 +444,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetCreateIndexesQuery(int binNumber)
         {
-            int minBin, maxBin;
-            this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "CREATE INDEX Bin_Intensities_" + minBin + "_" + maxBin + "_MZ_BIN_SCAN_LC_SCAN_IMS_IDX ON Bin_Intensities_"
                    + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS);";
@@ -462,8 +461,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetCreateIntensitiesTableQuery(int binNumber)
         {
-            int minBin, maxBin;
-            this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "CREATE TABLE Bin_Intensities_" + minBin + "_" + maxBin + " (" + "MZ_BIN    int(11)," + "SCAN_LC    int(11),"
                    + "SCAN_IMS   int(11)," + "INTENSITY  int(11));";
@@ -480,8 +478,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetInsertIntensityQuery(int binNumber)
         {
-            int minBin, maxBin;
-            this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "INSERT INTO Bin_Intensities_" + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS, INTENSITY)"
                    + "VALUES (:MZ_BIN, :SCAN_LC, :SCAN_IMS, :INTENSITY);";
@@ -517,8 +514,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetReadSingleBinQuery(int binNumber)
         {
-            int minBin, maxBin;
-            this.GetMinAndMaxBin(binNumber, out minBin, out maxBin);
+            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "SELECT * FROM Bin_Intensities_" + minBin + "_" + maxBin + " WHERE MZ_BIN = " + binNumber
                    + " ORDER BY SCAN_LC, SCAN_IMS;";

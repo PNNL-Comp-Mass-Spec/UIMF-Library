@@ -56,16 +56,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const int startScan = 1;
                 const int stopScan = 300;
 
-                int[] intensityArray;
-                double[] mzArray;
                 reader.GetSpectrum(
                     testFrame,
                     testFrame,
                     DataReader.FrameType.MS2,
                     startScan,
                     stopScan,
-                    out mzArray,
-                    out intensityArray);
+                    out var mzArray,
+                    out var intensityArray);
 
                 var sb = new StringBuilder();
                 for (int i = 0; i < mzArray.Length; i++)

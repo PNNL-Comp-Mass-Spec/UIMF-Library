@@ -97,17 +97,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var dr = new DataReader(FileRefs.uimfStandardFile1))
             {
                 var gp = dr.GetGlobalParams();
-                int[] intensities;
-                double[] mzValues;
 
-                int nonZeros = dr.GetSpectrum(
+                var nonZeros = dr.GetSpectrum(
                     this.testFrameScanInfo1.startFrame,
                     this.testFrameScanInfo1.stopFrame,
                     DataReader.FrameType.MS1,
                     this.testFrameScanInfo1.startScan,
                     this.testFrameScanInfo1.stopScan,
-                    out mzValues,
-                    out intensities);
+                    out var mzValues,
+                    out var intensities);
                 TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
             }
         }
@@ -124,20 +122,18 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var dr = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
             {
                 var gp = dr.GetGlobalParams();
-                int[] intensities;
-                double[] mzValues;
 
-                bool bRunTest = false;
+                var bRunTest = false;
                 if (bRunTest)
                 {
-                    int nonZeros = dr.GetSpectrum(
+                    var nonZeros = dr.GetSpectrum(
                         this.testFrameScanInfo1.startFrame,
                         this.testFrameScanInfo1.stopFrame,
                         DataReader.FrameType.MS1,
                         this.testFrameScanInfo1.startScan,
                         this.testFrameScanInfo1.stopScan,
-                        out mzValues,
-                        out intensities);
+                        out var mzValues,
+                        out var intensities);
                     TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
                 }
             }
@@ -161,16 +157,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     var gp = dr.GetGlobalParams();
 
                     int[] intensities;
-                    double[] mzValues;
 
-                    int nonZeros = dr.GetSpectrum(
+                    var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,
                         DataReader.FrameType.MS1,
                         testFrameScanInfo2.startScan,
                         testFrameScanInfo2.stopScan,
-                        out mzValues,
-                        out intensities);
+                        out var mzValues,
+                        out var intensities);
 
                     // jump back
                     nonZeros = dr.GetSpectrum(
@@ -207,17 +202,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var dr = new DataReader(FileRefs.uimfStandardFile1))
             {
                 var gp = dr.GetGlobalParams();
-                int[] intensities;
-                double[] mzValues;
 
-                int nonZeros = dr.GetSpectrum(
+                var nonZeros = dr.GetSpectrum(
                     this.testFrameScanInfo1.startFrame,
                     this.testFrameScanInfo1.stopFrame,
                     DataReader.FrameType.MS1,
                     this.testFrameScanInfo1.startScan,
                     this.testFrameScanInfo1.stopScan,
-                    out mzValues,
-                    out intensities);
+                    out var mzValues,
+                    out var intensities);
 
                 int nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
                 Console.WriteLine("Num xy datapoints = " + nonZeroCount);

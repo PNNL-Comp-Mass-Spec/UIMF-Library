@@ -81,17 +81,15 @@ namespace UIMFLibrary.FunctionalTests
                 sw.Start();
                 for (var frame = frameStart; frame < frameStop; frame++)
                 {
-                    int[] intensities;
-                    double[] mzValues;
 
                     var nonZeros = dr.GetSpectrum(
-                        frame, 
-                        frame, 
-                        DataReader.FrameType.MS1, 
-                        scanStart, 
-                        scanStop, 
-                        out mzValues, 
-                        out intensities);
+                        frame,
+                        frame,
+                        DataReader.FrameType.MS1,
+                        scanStart,
+                        scanStop,
+                        out var mzValues,
+                        out var intensities);
                 }
 
                 sw.Stop();

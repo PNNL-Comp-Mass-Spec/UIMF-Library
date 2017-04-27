@@ -182,8 +182,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (string)</param>
         public FrameParams AddUpdateValue(FrameParamKeyType paramType, string value)
         {
-            FrameParam paramEntry;
-            if (mFrameParameters.TryGetValue(paramType, out paramEntry))
+            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
@@ -225,8 +224,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (string)</param>
         public FrameParams AddUpdateValue(FrameParamDef paramDef, string value)
         {
-            FrameParam paramEntry;
-            if (mFrameParameters.TryGetValue(paramDef.ParamType, out paramEntry))
+            if (mFrameParameters.TryGetValue(paramDef.ParamType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
@@ -258,8 +256,7 @@ namespace UIMFLibrary
         /// <returns>Value (string)</returns>
         public string GetValue(FrameParamKeyType paramType, string valueIfMissing)
         {
-            FrameParam paramEntry;
-            if (mFrameParameters.TryGetValue(paramType, out paramEntry))
+            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
                 return paramEntry.Value;
             }
@@ -286,11 +283,9 @@ namespace UIMFLibrary
         /// <returns>Value (double)</returns>
         public double GetValueDouble(FrameParamKeyType paramType, double valueIfMissing)
         {
-            FrameParam paramEntry;
-            if (mFrameParameters.TryGetValue(paramType, out paramEntry))
+            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
-                double result;
-                if (Double.TryParse(paramEntry.Value, out result))
+                if (Double.TryParse(paramEntry.Value, out var result))
                     return result;
             }
 
@@ -316,11 +311,9 @@ namespace UIMFLibrary
         /// <returns>Value (int)</returns>
         public int GetValueInt32(FrameParamKeyType paramType, int valueIfMissing)
         {
-            FrameParam paramEntry;
-            if (mFrameParameters.TryGetValue(paramType, out paramEntry))
+            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
-                int result;
-                if (Int32.TryParse(paramEntry.Value, out result))
+                if (Int32.TryParse(paramEntry.Value, out var result))
                     return result;
             }
 
@@ -342,8 +335,7 @@ namespace UIMFLibrary
             if (string.IsNullOrWhiteSpace(value))
                 return;
 
-            double numericValue;
-            if (!double.TryParse(value, out numericValue))
+            if (!double.TryParse(value, out var numericValue))
                 return;
 
             // Update cached member variables

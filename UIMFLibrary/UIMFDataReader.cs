@@ -696,9 +696,8 @@ namespace UIMFLibrary
                 try
                 {
                     var reportedDateStarted = globalParameters.DateStarted;
-                    DateTime dtReportedDateStarted;
 
-                    if (DateTime.TryParse(reportedDateStarted, mCultureInfoUS, DateTimeStyles.None, out dtReportedDateStarted))
+                    if (DateTime.TryParse(reportedDateStarted, mCultureInfoUS, DateTimeStyles.None, out var dtReportedDateStarted))
                     {
                         if (dtReportedDateStarted.Year < 450)
                         {
@@ -2066,8 +2065,7 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            FrameParams frameParameters;
-            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParameters))
+            if (m_CachedFrameParameters.TryGetValue(frameNumber, out var frameParameters))
             {
                 return FrameParamUtilities.GetLegacyFrameParameters(frameNumber, frameParameters);
             }
@@ -2235,8 +2233,7 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            FrameParams frameParameters;
-            if (m_CachedFrameParameters.TryGetValue(frameNumber, out frameParameters))
+            if (m_CachedFrameParameters.TryGetValue(frameNumber, out var frameParameters))
             {
                 return frameParameters;
             }
@@ -2391,9 +2388,8 @@ namespace UIMFLibrary
             }
 
             // Check in cache first
-            List<ScanInfo> scansForFrame;
 
-            if (m_CachedScanInfo.TryGetValue(frameNumber, out scansForFrame))
+            if (m_CachedScanInfo.TryGetValue(frameNumber, out var scansForFrame))
             {
                 return scansForFrame;
             }
@@ -3101,8 +3097,7 @@ namespace UIMFLibrary
                                 logEntry.PostedBy = GetString(reader, "Posted_By");
 
                                 var sPostingTime = GetString(reader, "Posting_Time");
-                                DateTime postingTime;
-                                DateTime.TryParse(sPostingTime, mCultureInfoUS, DateTimeStyles.None, out postingTime);
+                                DateTime.TryParse(sPostingTime, mCultureInfoUS, DateTimeStyles.None, out var postingTime);
                                 logEntry.PostingTime = postingTime;
 
                                 logEntry.Type = GetString(reader, "Type");
@@ -3935,9 +3930,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // If we pass the LC Scan number we are interested in, then go ahead and quit
                             if (scanLc > endFrameNumber)
@@ -4166,19 +4159,17 @@ namespace UIMFLibrary
                             // Increment the entry index BEFORE storing the data so that we use the correct index (instead of having all indexes off by 1)
                             entryIndex++;
 
-                            // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            // Calculate LC Scan (aka frame number) and IMS Scan of this entry
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var frameNum, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
-                            if (GetFrameParams(scanLc).FrameType != frameType)
+                            if (GetFrameParams(frameNum).FrameType != frameType)
                             {
                                 continue;
                             }
 
                             // Add intensity to the result
-                            var frameIndex = frameIndexes[scanLc];
+                            var frameIndex = frameIndexes[frameNum];
                             intensityList.Add(new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord));
                         }
                     }
@@ -4265,9 +4256,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4279,8 +4268,7 @@ namespace UIMFLibrary
                             var frameIndex = frameIndexes[scanLc];
                             var newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
-                            IntensityPoint dictionaryValue;
-                            if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
+                            if (pointDictionary.TryGetValue(newPoint, out var dictionaryValue))
                             {
                                 dictionaryValue.Intensity += decodedSpectraRecord;
                             }
@@ -4385,9 +4373,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4412,8 +4398,7 @@ namespace UIMFLibrary
 
                             var newPoint = new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord);
 
-                            IntensityPoint dictionaryValue;
-                            if (pointDictionary.TryGetValue(newPoint, out dictionaryValue))
+                            if (pointDictionary.TryGetValue(newPoint, out var dictionaryValue))
                             {
                                 dictionaryValue.Intensity += decodedSpectraRecord;
                             }
@@ -4504,9 +4489,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4620,9 +4603,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -4709,9 +4690,7 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan and IMS Scan of this entry
-                            int scanLc;
-                            int scanIms;
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out scanLc, out scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var scanLc, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
                             if (GetFrameParams(scanLc).FrameType != frameType)
@@ -5458,8 +5437,7 @@ namespace UIMFLibrary
         /// </returns>
         private double GetLegacyFrameParamOrDefault(IDataRecord reader, string columnName, double defaultValue)
         {
-            bool columnMissing;
-            return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out columnMissing);
+            return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out var columnMissing);
         }
 
         /// <summary>
@@ -5521,8 +5499,7 @@ namespace UIMFLibrary
         /// </returns>
         private int GetLegacyFrameParamOrDefaultInt32(IDataRecord reader, string columnName, int defaultValue)
         {
-            bool columnMissing;
-            return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out columnMissing);
+            return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out var columnMissing);
         }
 
         /// <summary>
@@ -5583,7 +5560,7 @@ namespace UIMFLibrary
         /// The number of IMS scans.
         /// </param>
         /// <param name="scanLc">
-        /// The resulting LC Scan number.
+        /// The resulting LC Scan number (aka frame number).
         /// </param>
         /// <param name="scanIms">
         /// The resulting IMS Scan number.
@@ -5845,8 +5822,7 @@ namespace UIMFLibrary
                             }
                             else
                             {
-                                int currentValue;
-                                if (currentIntensityDictionary.TryGetValue(binIndex, out currentValue))
+                                if (currentIntensityDictionary.TryGetValue(binIndex, out var currentValue))
                                 {
                                     currentIntensityDictionary[binIndex] += decodedSpectraRecord;
                                     summedIntensityDictionary[binIndex] += decodedSpectraRecord;
@@ -6248,9 +6224,8 @@ namespace UIMFLibrary
                 {
                     // StartTime is stored as Ticks in this file
                     // Auto-compute the correct start time
-                    DateTime dtRunStarted;
                     var dateStarted = m_globalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
-                    if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out dtRunStarted))
+                    if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out var dtRunStarted))
                     {
                         var lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;
                         if (lngTickDifference >= 0)
@@ -6429,8 +6404,7 @@ namespace UIMFLibrary
 
             var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
 
-            FrameParamDef paramDef;
-            if (frameParamKeys.TryGetValue(paramType, out paramDef))
+            if (frameParamKeys.TryGetValue(paramType, out var paramDef))
             {
                 frameParameters.AddUpdateValue(paramDef, paramValue);
                 return;
@@ -6510,7 +6484,6 @@ namespace UIMFLibrary
 
         private void WarnFrameDataError(int startFrameNumber, int endFrameNumber, string errorMessage)
         {
-            SortedSet<string> warningList;
             var reportWarning = true;
 
             string frameKey;
@@ -6519,7 +6492,7 @@ namespace UIMFLibrary
             else
                 frameKey = startFrameNumber + "-" + endFrameNumber;
 
-            if (m_FramesWarnedInvalidData.TryGetValue(frameKey, out warningList))
+            if (m_FramesWarnedInvalidData.TryGetValue(frameKey, out var warningList))
             {
                 if (warningList.Contains(errorMessage))
                 {
