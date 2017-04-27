@@ -214,7 +214,7 @@ namespace UIMFLibrary
         /// </summary>
         public int MaxSpectrumCacheMemoryMB
         {
-            get { return m_maxSpectrumCacheMemoryMB; }
+            get => m_maxSpectrumCacheMemoryMB;
             set
             {
                 if (value < 25)
@@ -231,7 +231,7 @@ namespace UIMFLibrary
         /// <remarks>Set this to a smaller value if you are encountering OutOfMemory exceptions</remarks>
         public int SpectraToCache
         {
-            get { return m_spectraToCache; }
+            get => m_spectraToCache;
             set
             {
                 if (value < 2)

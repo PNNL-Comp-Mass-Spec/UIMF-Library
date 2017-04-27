@@ -64,13 +64,13 @@ namespace UIMFLibrary
             {
                 // Start time of frame, in minutes
                 {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.DoubleToString(frameParameters.StartTime)},
-                
+
                 // Duration of frame, in seconds
                 {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.DoubleToString(frameParameters.Duration)},
-                
-                // Number of collected and summed acquisitions in a frame 
+
+                // Number of collected and summed acquisitions in a frame
                 {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
-                
+
                 // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
                 {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
 
@@ -91,7 +91,7 @@ namespace UIMFLibrary
 
                 // Number of TOF Losses
                 {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
-            
+
                 // Average time between TOF trigger pulses
                 {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.DoubleToString(frameParameters.AverageTOFLength)},
 
@@ -102,7 +102,7 @@ namespace UIMFLibrary
                 {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
             };
 
-            // These six parameters are coefficients for residual mass error correction      
+            // These six parameters are coefficients for residual mass error correction
             // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
             if (Math.Abs(frameParameters.a2) > Single.Epsilon ||
                 Math.Abs(frameParameters.b2) > Single.Epsilon ||
@@ -340,10 +340,10 @@ namespace UIMFLibrary
             else
             {
                 // The fragmentation profile was stored as an array of bytes, encoded as base 64
-                
+
                 // Convert back to bytes
                 var byteArray = Convert.FromBase64String(fragmentationProfile);
-                
+
                 // Now convert from array of bytes to array of doubles
                 legacyFrameParams.FragmentationProfile = ConvertByteArrayToFragmentationSequence(byteArray);
             }
@@ -726,7 +726,7 @@ namespace UIMFLibrary
                     throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
             }
 
-        }        
+        }
 
     }
 

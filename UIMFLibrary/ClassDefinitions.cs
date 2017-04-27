@@ -2,7 +2,7 @@
 // <summary>
 //   Global parameters.
 // </summary>
-// 
+//
 // --------------------------------------------------------------------------------------------------------------------
 namespace UIMFLibrary
 {
@@ -29,7 +29,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Type of dataset (HMS/HMSMS/HMS-MSn)
         /// </summary>
-        public string DatasetType; 
+        public string DatasetType;
 
         /// <summary>
         /// Date started.
@@ -63,7 +63,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Prescan Continuous flag
         /// </summary>
-        public bool Prescan_Continuous; 
+        public bool Prescan_Continuous;
 
         /// <summary>
         /// Prescan profile.
@@ -116,9 +116,9 @@ namespace UIMFLibrary
         #region Fields
 
         /// <summary>
-        /// Number of collected and summed acquisitions in a frame 
+        /// Number of collected and summed acquisitions in a frame
         /// </summary>
-        public int Accumulations; 
+        public int Accumulations;
 
         /// <summary>
         /// Average TOF length, in nanoseconds
@@ -144,7 +144,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Calibration slope, k0
         /// </summary>
-        public double CalibrationSlope; 
+        public double CalibrationSlope;
 
         /// <summary>
         /// Tracks whether frame has been decoded
@@ -162,7 +162,7 @@ namespace UIMFLibrary
         /// <summary>
         /// ESI voltage.
         /// </summary>
-        public double ESIVoltage; 
+        public double ESIVoltage;
 
         /// <summary>
         /// Float voltage.
@@ -177,7 +177,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Frame number
         /// </summary>
-        public int FrameNum; 
+        public int FrameNum;
 
         /// <summary>
         /// Frame type
@@ -198,7 +198,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// Stores the name of the sequence used to encode the data when acquiring data multiplexed
         /// </remarks>
-        public string IMFProfile;		     
+        public string IMFProfile;
 
         /// <summary>
         /// Ion funnel trap pressure.
@@ -209,17 +209,17 @@ namespace UIMFLibrary
         /// MP bit order
         /// </summary>
         /// <remarks>
-        /// Determines original size of bit sequence 
+        /// Determines original size of bit sequence
         /// </remarks>
         public short MPBitOrder;
 
         /// <summary>
-        /// Pressure at back of Drift Tube 
+        /// Pressure at back of Drift Tube
         /// </summary>
         public double PressureBack;
 
         /// <summary>
-        ///  Pressure at front of Drift Tube 
+        ///  Pressure at front of Drift Tube
         /// </summary>
         public double PressureFront;
 
@@ -231,7 +231,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Rear ion funnel pressure.
         /// </summary>
-        public double RearIonFunnelPressure; 
+        public double RearIonFunnelPressure;
 
         /// <summary>
         /// Number of TOF scans in a frame
@@ -307,7 +307,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Entrance Cond Limit Voltage
         /// </summary>
-        public double voltEntranceCondLmt; 
+        public double voltEntranceCondLmt;
 
         /// <summary>
         /// HPF In Voltage
@@ -328,7 +328,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Exit Cond Limit Voltage
         /// </summary>
-        public double voltExitCondLmt; 
+        public double voltExitCondLmt;
 
         /// <summary>
         /// HPF In Voltage
@@ -349,7 +349,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Volt hv rack 1.
         /// </summary>
-        public double voltHVRack1; 
+        public double voltHVRack1;
 
         /// <summary>
         /// Volt hv rack 2.
@@ -401,7 +401,7 @@ namespace UIMFLibrary
         #region Constructors and Destructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameParameters"/> class. 
+        /// Initializes a new instance of the <see cref="FrameParameters"/> class.
         /// This constructor assumes the developer will manually store a value in StartTime
         /// </summary>
         public FrameParameters()
@@ -409,7 +409,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrameParameters"/> class. 
+        /// Initializes a new instance of the <see cref="FrameParameters"/> class.
         /// This constructor auto-populates StartTime using Now minutes dtRunStartTime using the correct format
         /// </summary>
         /// <param name="dtRunStartTime">
@@ -428,15 +428,9 @@ namespace UIMFLibrary
         /// </summary>
         public double voltEntranceIFTIn
         {
-            get
-            {
-                return voltEntranceHPFIn;
-            }
+            get => voltEntranceHPFIn;
 
-            set
-            {
-                voltEntranceHPFIn = value;
-            }
+            set => voltEntranceHPFIn = value;
         }
 
         /// <summary>
@@ -444,15 +438,9 @@ namespace UIMFLibrary
         /// </summary>
         public double voltEntranceIFTOut
         {
-            get
-            {
-                return voltEntranceHPFOut;
-            }
+            get => voltEntranceHPFOut;
 
-            set
-            {
-                voltEntranceHPFOut = value;
-            }
+            set => voltEntranceHPFOut = value;
         }
 
         /// <summary>
@@ -460,15 +448,9 @@ namespace UIMFLibrary
         /// </summary>
         public double voltExitIFTIn
         {
-            get
-            {
-                return voltExitHPFIn;
-            }
+            get => voltExitHPFIn;
 
-            set
-            {
-                voltExitHPFIn = value;
-            }
+            set => voltExitHPFIn = value;
         }
 
         /// <summary>
@@ -476,15 +458,9 @@ namespace UIMFLibrary
         /// </summary>
         public double voltExitIFTOut
         {
-            get
-            {
-                return voltExitHPFOut;
-            }
+            get => voltExitHPFOut;
 
-            set
-            {
-                voltExitHPFOut = value;
-            }
+            set => voltExitHPFOut = value;
         }
 
         #endregion

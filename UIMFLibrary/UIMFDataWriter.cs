@@ -144,8 +144,8 @@ namespace UIMFLibrary
         #region Constructor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataWriter"/> class. 
-        /// Constructor for UIMF datawriter that takes the filename and begins the transaction. 
+        /// Initializes a new instance of the <see cref="DataWriter"/> class.
+        /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="fileName">
         /// Full path to the data file
@@ -158,8 +158,8 @@ namespace UIMFLibrary
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataWriter"/> class. 
-        /// Constructor for UIMF datawriter that takes the filename and begins the transaction. 
+        /// Initializes a new instance of the <see cref="DataWriter"/> class.
+        /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="fileName">
         /// Full path to the data file
@@ -822,7 +822,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
+        /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways.
         /// Bin centric data is important for data access speed in informed workflows.
         /// </summary>
         public void CreateBinCentricTables()
@@ -831,7 +831,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways. 
+        /// This function will create tables that are bin centric (as opposed to scan centric) to allow querying of the data in 2 different ways.
         /// Bin centric data is important for data access speed in informed quantitation workflows.
         /// </summary>
         /// <param name="workingDirectory">
@@ -850,7 +850,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Remove the bin centric table and the related indices. Some UIMF write/update operations 
+        /// Remove the bin centric table and the related indices. Some UIMF write/update operations
         /// breaks the bin intensities table. Call this method after these operations to retain
         /// data integrity.
         /// </summary>
@@ -972,7 +972,7 @@ namespace UIMFLibrary
         {
             if (!DataReader.TableExists(m_dbConnection, "Global_Parameters"))
             {
-                // Create the Global_Parameters Table  
+                // Create the Global_Parameters Table
                 var lstFields = GetGlobalParametersFields();
                 dbCommand.CommandText = GetCreateTableSql("Global_Parameters", lstFields);
                 dbCommand.ExecuteNonQuery();
@@ -991,7 +991,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Create the table struture within a UIMF file, assumes 32-bit integers for intensity values 
+        /// Create the table struture within a UIMF file, assumes 32-bit integers for intensity values
         /// </summary>
         /// <remarks>
         /// This must be called after opening a new file to create the default tables that are required for IMS data.
@@ -1020,7 +1020,7 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                // Create the Global_Params Table  
+                // Create the Global_Params Table
                 CreateGlobalParamsTable(dbCommand);
 
                 // Create the Frame_Params tables
@@ -1178,7 +1178,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Delete the given frames from the UIMF file. 
+        /// Delete the given frames from the UIMF file.
         /// </summary>
         /// <param name="frameNums">
         /// </param>
@@ -1470,23 +1470,23 @@ namespace UIMFLibrary
 
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Clear();
 
-            // Frame number (primary key)     
+            // Frame number (primary key)
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));
 
             // Start time of frame, in minutes
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));
 
-            // Duration of frame, in seconds 
+            // Duration of frame, in seconds
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));
 
-            // Number of collected and summed acquisitions in a frame 
+            // Number of collected and summed acquisitions in a frame
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
-            // Number of TOF scans  
+            // Number of TOF scans
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));
 
             // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
@@ -1499,15 +1499,15 @@ namespace UIMFLibrary
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));
 
-            // Value of k0  
+            // Value of k0
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope));
 
-            // Value of t0  
+            // Value of t0
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept));
 
-            // These six parameters below are coefficients for residual mass error correction      
+            // These six parameters below are coefficients for residual mass error correction
             //   ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));
@@ -1582,11 +1582,11 @@ namespace UIMFLibrary
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));
 
-            // Pressure at front of Drift Tube 
+            // Pressure at front of Drift Tube
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(
                 new SQLiteParameter(":PressureFront", frameParameters.PressureFront));
 
-            // Pressure at back of Drift Tube 
+            // Pressure at back of Drift Tube
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));
 
             // Determines original size of bit sequence
@@ -1796,7 +1796,7 @@ namespace UIMFLibrary
                                     " has more entries than the number of bins defined in the global parameters" +
                                     " (" + m_globalParameters.Bins + ")");
 
-                // Future possibility: silently auto-change the Bins value 
+                // Future possibility: silently auto-change the Bins value
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
             }
 
@@ -1890,7 +1890,7 @@ namespace UIMFLibrary
                                     " has more entries than the number of bins defined in the global parameters" +
                                     " (" + m_globalParameters.Bins + ")");
 
-                // Future possibility: silently auto-change the Bins value 
+                // Future possibility: silently auto-change the Bins value
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
             }
 
@@ -2321,7 +2321,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
         {
-            // Construct a Sql Statement of the form 
+            // Construct a Sql Statement of the form
             // CREATE TABLE Frame_Scans (FrameNum INTEGER NOT NULL, ParamID INTEGER NOT NULL, Value TEXT)";
 
             var sbSql = new StringBuilder("CREATE TABLE " + tableName + " ( ");
@@ -2342,7 +2342,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets the field names for the Frame_Parameters table
+        /// Gets the field names for the legacy Frame_Parameters table
         /// </summary>
         /// <returns>
         /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
@@ -3024,7 +3024,7 @@ namespace UIMFLibrary
         /// Assures that several columns exist in the legacy Frame_Parameters table
         /// </summary>
         /// <remarks>
-        /// This method is used when writing data to legacy tables 
+        /// This method is used when writing data to legacy tables
         /// in a UIMF file that was cloned from an old file format
         /// </remarks>
         public void ValidateLegacyHPFColumnsExist()
@@ -3055,7 +3055,7 @@ namespace UIMFLibrary
         /// <param name="binWidth">Bin width (in ns)
         /// </param>
         /// <param name="frameParameters">
-        /// </param>		
+        /// </param>
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
@@ -3086,7 +3086,7 @@ namespace UIMFLibrary
         /// <param name="binWidth">Bin width (in ns)
         /// </param>
         /// <param name="frameParameters">
-        /// </param>		
+        /// </param>
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
