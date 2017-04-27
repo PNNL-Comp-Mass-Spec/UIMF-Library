@@ -81,7 +81,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void containsMSMSDataTest3()
+        public void ContainsMSMSDataTest3()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -96,7 +96,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void containsMSMSData_test1()
+        public void ContainsMSMSData_test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -111,7 +111,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void containsMSMSData_test2()
+        public void ContainsMSMSData_test2()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 

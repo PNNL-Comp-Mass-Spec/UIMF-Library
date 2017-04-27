@@ -16,7 +16,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     /// The update frame parameter tests.
     /// </summary>
     [TestFixture]
-    public class updateFrameParameterTests
+    public class UpdateFrameParameterTests
     {
         [Test]
         [Category("PNL_Domain")]

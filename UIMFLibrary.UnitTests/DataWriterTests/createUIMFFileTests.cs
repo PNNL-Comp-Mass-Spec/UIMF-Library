@@ -15,11 +15,11 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     /// The create uimf file tests.
     /// </summary>
     [TestFixture]
-    public class createUIMFFileTests
+    public class CreateUIMFFileTests
     {
         [Test]
         [Category("PNL_Domain")]
-        public void createDB_test1()
+        public void CreateDB_test1()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 

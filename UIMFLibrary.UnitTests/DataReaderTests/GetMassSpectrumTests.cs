@@ -90,7 +90,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getFrame0_MS_Test1()
+        public void GetFrame0_MS_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -115,7 +115,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getFrame0_MS_demultiplexedData_Test1()
+        public void GetFrame0_MS_demultiplexedData_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -144,7 +144,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getMultipleSummedMassSpectrumsTest1()
+        public void GetMultipleSummedMassSpectrumsTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -194,7 +194,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getSingleSummedMassSpectrumTest1()
+        public void GetSingleSummedMassSpectrumTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 

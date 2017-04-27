@@ -25,7 +25,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getAvgTOFLengthTest1()
+        public void GetAvgTOFLengthTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -43,7 +43,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getFrameInfo_demultiplexed_firstFrame_Test1()
+        public void GetFrameInfo_demultiplexed_firstFrame_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -67,7 +67,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getFrameInfo_demultiplexed_lastFrame_Test1()
+        public void GetFrameInfo_demultiplexed_lastFrame_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -94,7 +94,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getFramePressure_lastFrame()
+        public void GetFramePressure_lastFrame()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -119,7 +119,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getGlobalParams_test1()
+        public void GetGlobalParams_test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -137,7 +137,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void getNumberOfFramesTest()
+        public void GetNumberOfFramesTest()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 

@@ -103,7 +103,7 @@ namespace UIMFLibrary.FunctionalTests
         /// Single summed mass spectrum test 1.
         /// </summary>
         [Test]
-        public void getSingleSummedMassSpectrumTest1()
+        public void GetSingleSummedMassSpectrumTest1()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
