@@ -1025,7 +1025,7 @@ namespace UIMFLibrary
         }
 
         private void AccumulateFrameDataNoCompression(
-            SQLiteDataReader reader,
+            IDataReader reader,
             int width,
             int startScan,
             int startBin,
@@ -1081,7 +1081,7 @@ namespace UIMFLibrary
         }
 
         private void AccumulateFrameDataWithCompression(
-            SQLiteDataReader reader,
+            IDataReader reader,
             int width,
             int height,
             int startScan,
@@ -5093,7 +5093,7 @@ namespace UIMFLibrary
 
         #region Methods
 
-        private static void AddFrameParamKey(Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, FrameParamKeyType paramType)
+        private static void AddFrameParamKey(IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, FrameParamKeyType paramType)
         {
             var paramDef = FrameParamUtilities.GetParamDefByType(paramType);
 
@@ -5110,7 +5110,10 @@ namespace UIMFLibrary
             frameParamKeys.Add(paramType, paramDef);
         }
 
-        private static void AddFrameParamKey(Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, int paramID, string paramName, string paramDataType, string paramDescription)
+        private static void AddFrameParamKey(
+            IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, 
+            int paramID, string paramName, 
+            string paramDataType, string paramDescription)
         {
             if (string.IsNullOrWhiteSpace(paramName))
                 throw new ArgumentOutOfRangeException(nameof(paramName), "paramName cannot be empty");
@@ -5267,7 +5270,7 @@ namespace UIMFLibrary
             }
         }
 
-        private void DeterminePressureUnitsUsingLegacyParameters(SQLiteCommand dbCommand)
+        private void DeterminePressureUnitsUsingLegacyParameters(IDbCommand dbCommand)
         {
             bool isMilliTorr;
 
@@ -5328,7 +5331,7 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the pressure column in the given table is in millitorr<see cref="bool"/>.
         /// </returns>
-        private bool ColumnIsMilliTorr(SQLiteCommand cmd, string tableName, string columnName)
+        private bool ColumnIsMilliTorr(IDbCommand cmd, string tableName, string columnName)
         {
             var isMillitorr = false;
             try
@@ -5371,7 +5374,7 @@ namespace UIMFLibrary
         /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
         /// If the average is greater than 100, then we assume the values are milliTorr
         /// </remarks>
-        private bool ColumnIsMilliTorr(SQLiteCommand cmd, FrameParamKeyType paramType)
+        private bool ColumnIsMilliTorr(IDbCommand cmd, FrameParamKeyType paramType)
         {
             var isMillitorr = false;
 
@@ -5453,7 +5456,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private double GetLegacyFrameParamOrDefault(SQLiteDataReader reader, string columnName, double defaultValue)
+        private double GetLegacyFrameParamOrDefault(IDataRecord reader, string columnName, double defaultValue)
         {
             bool columnMissing;
             return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out columnMissing);
@@ -5478,7 +5481,7 @@ namespace UIMFLibrary
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
         private double GetLegacyFrameParamOrDefault(
-            SQLiteDataReader reader,
+            IDataRecord reader,
             string columnName,
             double defaultValue,
             out bool columnMissing)
@@ -5516,7 +5519,7 @@ namespace UIMFLibrary
         /// <returns>
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
-        private int GetLegacyFrameParamOrDefaultInt32(SQLiteDataReader reader, string columnName, int defaultValue)
+        private int GetLegacyFrameParamOrDefaultInt32(IDataRecord reader, string columnName, int defaultValue)
         {
             bool columnMissing;
             return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out columnMissing);
@@ -5541,7 +5544,7 @@ namespace UIMFLibrary
         /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
         /// </returns>
         private int GetLegacyFrameParamOrDefaultInt32(
-            SQLiteDataReader reader,
+            IDataRecord reader,
             string columnName,
             int defaultValue,
             out bool columnMissing)
@@ -6226,7 +6229,7 @@ namespace UIMFLibrary
         /// <exception cref="Exception">
         /// </exception>
 #pragma warning disable 612, 618
-        private FrameParameters GetLegacyFrameParameters(SQLiteDataReader reader)
+        private FrameParameters GetLegacyFrameParameters(IDataRecord reader)
 #pragma warning restore 612, 618
         {
             try
@@ -6412,10 +6415,10 @@ namespace UIMFLibrary
         /// <param name="frameParamKeys">Frame parameter lookup dictionary</param>
         /// <param name="frameParameters">FrameParams object</param>
         private void ReadFrameParamValue(
-            SQLiteDataReader reader,
+            IDataRecord reader,
             int idColIndex,
             int valueColIndex,
-            Dictionary<FrameParamKeyType, FrameParamDef> frameParamKeys,
+            IReadOnlyDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys,
             FrameParams frameParameters)
         {
             // Columns returned by the reader should be
