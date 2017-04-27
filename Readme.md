@@ -17,7 +17,7 @@ The UIMFLibrary is available on NuGet at:
 ## How to use the UIMFLibrary in C#:
 
 * Use the NuGet package manager to add a reference to the UIMFLibrary
-** Note that it depends on System.Data.SQLite
+  * Note that it depends on System.Data.SQLite
 ```csharp
 using UIMFLibrary;
 ```
@@ -37,8 +37,8 @@ DataWriter.CreateTables();
 ## How to use the UIMFLibrary in C++:
 
 * Copy UIMFLibrary.dll and System.Data.SQLite.DLL from either
-** UIMFLibrary\bin\x86 
-** UIMFLibrary\bin\x64
+  * UIMFLibrary\bin\x86 
+  * UIMFLibrary\bin\x64
 * Open the Solution Explorer, add UIMFLibrary to your Project/References
 * Add this using statement at the top of your code: 
 ```c
