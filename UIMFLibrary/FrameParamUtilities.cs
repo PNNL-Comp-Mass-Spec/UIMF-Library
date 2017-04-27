@@ -104,12 +104,12 @@ namespace UIMFLibrary
 
             // These six parameters are coefficients for residual mass error correction
             // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
-            if (Math.Abs(frameParameters.a2) > Single.Epsilon ||
-                Math.Abs(frameParameters.b2) > Single.Epsilon ||
-                Math.Abs(frameParameters.c2) > Single.Epsilon ||
-                Math.Abs(frameParameters.d2) > Single.Epsilon ||
-                Math.Abs(frameParameters.e2) > Single.Epsilon ||
-                Math.Abs(frameParameters.f2) > Single.Epsilon)
+            if (Math.Abs(frameParameters.a2) > float.Epsilon ||
+                Math.Abs(frameParameters.b2) > float.Epsilon ||
+                Math.Abs(frameParameters.c2) > float.Epsilon ||
+                Math.Abs(frameParameters.d2) > float.Epsilon ||
+                Math.Abs(frameParameters.e2) > float.Epsilon ||
+                Math.Abs(frameParameters.f2) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.MassCalibrationCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
                 frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
@@ -123,10 +123,10 @@ namespace UIMFLibrary
             frameParams.Add(FrameParamKeyType.AmbientTemperature, UIMFDataUtilities.FloatToString(frameParameters.Temperature));
 
             // Voltage settings in the IMS system
-            if (Math.Abs(frameParameters.voltHVRack1) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltHVRack2) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltHVRack3) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltHVRack4) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltHVRack1) > float.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack2) > float.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack3) > float.Epsilon ||
+                Math.Abs(frameParameters.voltHVRack4) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltHVRack1, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack1));
                 frameParams.Add(FrameParamKeyType.VoltHVRack2, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack2));
@@ -138,10 +138,10 @@ namespace UIMFLibrary
             // HPF In Voltage
             // HPF Out Voltage
             // Cond Limit Voltage
-            if (Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltEntranceHPFIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltEntranceHPFOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltEntranceCondLmt) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltEntranceHPFIn) > float.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceHPFIn) > float.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceHPFOut) > float.Epsilon ||
+                Math.Abs(frameParameters.voltEntranceCondLmt) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltCapInlet, UIMFDataUtilities.FloatToString(frameParameters.voltCapInlet));
                 frameParams.Add(FrameParamKeyType.VoltEntranceHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFIn));
@@ -152,9 +152,9 @@ namespace UIMFLibrary
             // Trap Out Voltage
             // Trap In Voltage
             // Jet Disruptor Voltage
-            if (Math.Abs(frameParameters.voltTrapOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltTrapIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltJetDist) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltTrapOut) > float.Epsilon ||
+                Math.Abs(frameParameters.voltTrapIn) > float.Epsilon ||
+                Math.Abs(frameParameters.voltJetDist) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltTrapOut, UIMFDataUtilities.FloatToString(frameParameters.voltTrapOut));
                 frameParams.Add(FrameParamKeyType.VoltTrapIn, UIMFDataUtilities.FloatToString(frameParameters.voltTrapIn));
@@ -163,8 +163,8 @@ namespace UIMFLibrary
 
             // Fragmentation Quadrupole 1 Voltage
             // Fragmentation Conductance 1 Voltage
-            if (Math.Abs(frameParameters.voltQuad1) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltCond1) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltQuad1) > float.Epsilon ||
+                Math.Abs(frameParameters.voltCond1) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltQuad1, UIMFDataUtilities.FloatToString(frameParameters.voltQuad1));
                 frameParams.Add(FrameParamKeyType.VoltCond1, UIMFDataUtilities.FloatToString(frameParameters.voltCond1));
@@ -172,8 +172,8 @@ namespace UIMFLibrary
 
             // Fragmentation Quadrupole 2 Voltage
             // Fragmentation Conductance 2 Voltage
-            if (Math.Abs(frameParameters.voltQuad2) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltCond2) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltQuad2) > float.Epsilon ||
+                Math.Abs(frameParameters.voltCond2) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltQuad2, UIMFDataUtilities.FloatToString(frameParameters.voltQuad2));
                 frameParams.Add(FrameParamKeyType.VoltCond2, UIMFDataUtilities.FloatToString(frameParameters.voltCond2));
@@ -182,10 +182,10 @@ namespace UIMFLibrary
             // IMS Out Voltage
             // HPF In Voltage
             // HPF Out Voltage
-            if (Math.Abs(frameParameters.voltIMSOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltExitHPFIn) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltExitHPFOut) > Single.Epsilon ||
-                Math.Abs(frameParameters.voltExitCondLmt) > Single.Epsilon)
+            if (Math.Abs(frameParameters.voltIMSOut) > float.Epsilon ||
+                Math.Abs(frameParameters.voltExitHPFIn) > float.Epsilon ||
+                Math.Abs(frameParameters.voltExitHPFOut) > float.Epsilon ||
+                Math.Abs(frameParameters.voltExitCondLmt) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.VoltIMSOut, UIMFDataUtilities.FloatToString(frameParameters.voltIMSOut));
                 frameParams.Add(FrameParamKeyType.VoltExitHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFIn));
@@ -195,8 +195,8 @@ namespace UIMFLibrary
 
             // Pressure at front of Drift Tube
             // Pressure at back of Drift Tube
-            if (Math.Abs(frameParameters.PressureFront) > Single.Epsilon ||
-                Math.Abs(frameParameters.PressureBack) > Single.Epsilon)
+            if (Math.Abs(frameParameters.PressureFront) > float.Epsilon ||
+                Math.Abs(frameParameters.PressureBack) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.PressureFront, UIMFDataUtilities.FloatToString(frameParameters.PressureFront));
                 frameParams.Add(FrameParamKeyType.PressureBack, UIMFDataUtilities.FloatToString(frameParameters.PressureBack));
@@ -206,10 +206,10 @@ namespace UIMFLibrary
             // Ion funnel trap pressure
             // Rear ion funnel pressure
             // Quadruple pressure
-            if (Math.Abs(frameParameters.HighPressureFunnelPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.IonFunnelTrapPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.RearIonFunnelPressure) > Single.Epsilon ||
-                Math.Abs(frameParameters.QuadrupolePressure) > Single.Epsilon)
+            if (Math.Abs(frameParameters.HighPressureFunnelPressure) > float.Epsilon ||
+                Math.Abs(frameParameters.IonFunnelTrapPressure) > float.Epsilon ||
+                Math.Abs(frameParameters.RearIonFunnelPressure) > float.Epsilon ||
+                Math.Abs(frameParameters.QuadrupolePressure) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.HighPressureFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.HighPressureFunnelPressure));
                 frameParams.Add(FrameParamKeyType.IonFunnelTrapPressure, UIMFDataUtilities.FloatToString(frameParameters.IonFunnelTrapPressure));
@@ -218,13 +218,13 @@ namespace UIMFLibrary
             }
 
             // ESI Voltage
-            if (Math.Abs(frameParameters.ESIVoltage) > Single.Epsilon)
+            if (Math.Abs(frameParameters.ESIVoltage) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.ESIVoltage, UIMFDataUtilities.FloatToString(frameParameters.ESIVoltage));
             }
 
             // Float Voltage
-            if (Math.Abs(frameParameters.FloatVoltage) > Single.Epsilon)
+            if (Math.Abs(frameParameters.FloatVoltage) > float.Epsilon)
             {
                 frameParams.Add(FrameParamKeyType.FloatVoltage, UIMFDataUtilities.FloatToString(frameParameters.FloatVoltage));
             }

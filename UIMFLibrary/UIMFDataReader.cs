@@ -976,7 +976,7 @@ namespace UIMFLibrary
                     var frameParams = GetFrameParams(currentFrameNumber);
                     var mzCalibrator = GetMzCalibrator(frameParams);
 
-                    if (Math.Abs(frameParams.CalibrationSlope) < Single.Epsilon)
+                    if (Math.Abs(frameParams.CalibrationSlope) < float.Epsilon)
                         Console.WriteLine(" ... Warning, CalibrationSlope is 0 for frame " + currentFrameNumber);
 
                     var mzMin =
