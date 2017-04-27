@@ -30,9 +30,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var gp = reader.GetGlobalParams();
 
-                int checkSum = 0;
+                var checkSum = 0;
 
-                for (int frame = 1; frame <= gp.NumFrames; frame++)
+                for (var frame = 1; frame <= gp.NumFrames; frame++)
                 {
                     checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
                 }
@@ -66,7 +66,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var intensityArray);
 
                 var sb = new StringBuilder();
-                for (int i = 0; i < mzArray.Length; i++)
+                for (var i = 0; i < mzArray.Length; i++)
                 {
                     sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
                 }

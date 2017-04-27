@@ -152,11 +152,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var testFrameScanInfo2 = new FrameAndScanInfo(500, 550, 250, 256);
 
-                for (int frame = testFrameScanInfo2.startFrame; frame <= testFrameScanInfo2.stopFrame; frame++)
+                for (var frame = testFrameScanInfo2.startFrame; frame <= testFrameScanInfo2.stopFrame; frame++)
                 {
                     var gp = dr.GetGlobalParams();
 
-                    int[] intensities;
 
                     var nonZeros = dr.GetSpectrum(
                         frame,
@@ -212,7 +211,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzValues,
                     out var intensities);
 
-                int nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
+                var nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
                 Console.WriteLine("Num xy datapoints = " + nonZeroCount);
 
                 Assert.AreEqual(1137, nonZeros);

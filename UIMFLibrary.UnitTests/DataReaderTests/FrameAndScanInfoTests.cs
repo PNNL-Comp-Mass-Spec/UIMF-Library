@@ -32,7 +32,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
                 var fp = reader.GetFrameParams(1);
-                double avgTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
+                var avgTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
 
                 Assert.AreEqual(162555.56m, (decimal)avgTOFLength);
             }
@@ -73,8 +73,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
             {
-                int numFrames = reader.GetGlobalParams().NumFrames;
-                int lastFrame = numFrames - 1;
+                var numFrames = reader.GetGlobalParams().NumFrames;
+                var lastFrame = numFrames - 1;
 
                 Console.WriteLine("Last frame = " + lastFrame);
 
@@ -103,8 +103,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const int lastFrame = 3219;
                 const int secondToLastFrame = lastFrame - 1;
 
-                double pressureBackLastFrame = reader.GetFrameParams(lastFrame).GetValueDouble(FrameParamKeyType.PressureBack);
-                double pressureBackSecondToLastFrame = reader.GetFrameParams(secondToLastFrame).GetValueDouble(FrameParamKeyType.PressureBack);
+                var pressureBackLastFrame = reader.GetFrameParams(lastFrame).GetValueDouble(FrameParamKeyType.PressureBack);
+                var pressureBackSecondToLastFrame = reader.GetFrameParams(secondToLastFrame).GetValueDouble(FrameParamKeyType.PressureBack);
 
                 // Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
 
@@ -126,7 +126,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
             {
                 var gp = reader.GetGlobalParams();
-                DateTime dt = DateTime.Parse(gp.GetValue(GlobalParamKeyType.DateStarted));
+                var dt = DateTime.Parse(gp.GetValue(GlobalParamKeyType.DateStarted));
 
                 Assert.AreEqual("04/07/2011 06:40:30", dt.ToString(CultureInfo.InvariantCulture));
             }
@@ -143,7 +143,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                int numFrames = reader.GetGlobalParams().NumFrames;
+                var numFrames = reader.GetGlobalParams().NumFrames;
 
                 // Console.WriteLine("Number of frames = " + numFrames);
                 Assert.AreEqual(3220, numFrames);

@@ -67,9 +67,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             sw.Stop();
 
-            int max = TestUtilities.GetMax(intensityVals);
+            var max = TestUtilities.GetMax(intensityVals);
             var normInten = new float[intensityVals.Length];
-            for (int i = 0; i < intensityVals.Length; i++)
+            for (var i = 0; i < intensityVals.Length; i++)
             {
                 normInten[i] = (float)intensityVals[i] / max;
             }
@@ -98,7 +98,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                int[][] values = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
+                var values = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
                     startFrame - 40,
                     startFrame + 40,
                     0,
@@ -109,9 +109,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var sb = new StringBuilder();
 
-                foreach (int[] frameIntensities in values)
+                foreach (var frameIntensities in values)
                 {
-                    foreach (int scanIntensityValue in frameIntensities)
+                    foreach (var scanIntensityValue in frameIntensities)
                     {
                         if (scanIntensityValue > 0)
                             sb.Append(scanIntensityValue + ",");
@@ -175,7 +175,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Console.WriteLine("Time in millisec for extracting 3D profile = " + sw.ElapsedMilliseconds);
 
             var sb = new StringBuilder();
-            for (int i = 0; i < frameVals.Length; i++)
+            for (var i = 0; i < frameVals.Length; i++)
             {
                 sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
             }
@@ -248,8 +248,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const double toleranceInPPM = 20;
                 const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-                int[] frameVals;
-                int[] intensityVals;
 
                 // m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
                 var sw = new Stopwatch();
@@ -267,7 +265,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 sw.Stop();
 
                 var sb = new StringBuilder();
-                for (int i = 0; i < frameVals.Length; i++)
+                for (var i = 0; i < frameVals.Length; i++)
                 {
                     sb.Append(frameVals[i]);
                     sb.Append('\t');
@@ -301,10 +299,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
             using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
             {
-                int[] frameVals;
 
                 // int[] scanVals = null;
-                int[] intensityVals;
 
                 var sw = new Stopwatch();
                 sw.Start();
