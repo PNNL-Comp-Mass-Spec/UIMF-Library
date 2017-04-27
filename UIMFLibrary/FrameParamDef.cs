@@ -23,7 +23,7 @@ namespace UIMFLibrary
         /// Key: Duration of frame
         /// </summary>
         DurationSeconds = 2,
-        
+
         /// <summary>
         /// Key: Number of accumulations in frame
         /// </summary>
@@ -289,25 +289,25 @@ namespace UIMFLibrary
         /// <summary>
         /// Parameter Type
         /// </summary>
-        public FrameParamKeyType ParamType { get; private set; }
+        public FrameParamKeyType ParamType { get; }
 
         /// <summary>
         /// Parameter Name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// .NET data type
         /// </summary>
-        public Type DataType { get; private set; }
+        public Type DataType { get; }
 
         /// <summary>
         /// Parameter Description
         /// </summary>
         public string Description { get; set; }
-    
+
         #endregion
-     
+
         /// <summary>
         /// Constructor
         /// </summary>
