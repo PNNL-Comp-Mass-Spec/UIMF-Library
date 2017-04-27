@@ -18,7 +18,7 @@ namespace UIMFLibrary
 		/// Initializes a new instance of the <see cref="IntensityPoint"/> class.
 		/// </summary>
 		/// <param name="scanLc">
-		/// LC scan
+		/// LC scan (aka frame number)
 		/// </param>
 		/// <param name="scanIms">
 		/// IMS scan
@@ -51,12 +51,12 @@ namespace UIMFLibrary
 		/// <summary>
 		/// Gets the IMS scan
 		/// </summary>
-		public int ScanIms { get; private set; }
+		public int ScanIms { get; }
 
 		/// <summary>
-		/// Gets the LC scan number
+		/// Gets the LC scan number (aka frame number)
 		/// </summary>
-		public int ScanLc { get; private set; }
+		public int ScanLc { get; }
 
 		#endregion
 

@@ -160,7 +160,7 @@ namespace UIMFLibrary
         public double Duration;
 
         /// <summary>
-        /// ESI voltage.
+        /// Electropsray voltage.
         /// </summary>
         public double ESIVoltage;
 
