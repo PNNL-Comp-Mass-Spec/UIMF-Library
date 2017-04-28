@@ -645,7 +645,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
-                Assert.AreEqual(912335, bpi[20], float.Epsilon);
+                Assert.AreEqual(91235, bpi[20], float.Epsilon);
 
                 bpi = reader.GetBPIByFrame(20, 20, 1, 100);
                 Assert.AreEqual(7406, bpi[20], float.Epsilon);
