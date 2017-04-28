@@ -133,6 +133,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get 3D elution profile_test 3.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void Get3DElutionProfile_test3()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
