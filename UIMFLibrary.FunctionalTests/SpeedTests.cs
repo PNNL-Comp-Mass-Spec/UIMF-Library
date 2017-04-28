@@ -60,6 +60,7 @@ namespace UIMFLibrary.FunctionalTests
         /// Summed mass spectrum speed tests.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetSummedMassSpectrumSpeedTests()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -103,6 +104,7 @@ namespace UIMFLibrary.FunctionalTests
         /// Single summed mass spectrum test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetSingleSummedMassSpectrumTest1()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
