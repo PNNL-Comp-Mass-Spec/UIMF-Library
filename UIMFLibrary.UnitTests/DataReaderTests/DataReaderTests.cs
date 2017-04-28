@@ -597,7 +597,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void GetFrameParametersTest(string filePath)
+        public void GetFrameParametersTest()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
