@@ -50,7 +50,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var sw = new Stopwatch();
             sw.Start();
 
-            using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
             {
                 this.m_reader.Get3DElutionProfile(
                     startFrame - 20,
@@ -96,7 +96,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInPPM = 25;
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-            using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var values = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
                     startFrame - 40,
@@ -202,7 +202,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int[] scanVals = null;
             int[] intensityVals = null;
 
-            using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
             {
                 this.m_reader.GetDriftTimeProfile(
                     startFrame - 2,
@@ -242,7 +242,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int startScan = 100;
             const int stopScan = 350;
 
-            using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
             {
                 const double targetMZ = 636.8466; // see frame 1000, scan 170
                 const double toleranceInPPM = 20;
@@ -297,7 +297,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInPPM = 25;
 
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-            using (this.m_reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
             {
 
                 // int[] scanVals = null;

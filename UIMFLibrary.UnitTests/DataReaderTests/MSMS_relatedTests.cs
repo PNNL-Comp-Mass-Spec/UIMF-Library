@@ -26,7 +26,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            using (var reader = new DataReader(FileRefs.MSMSData1))
             {
                 var gp = reader.GetGlobalParams();
 
@@ -50,7 +50,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            using (var reader = new DataReader(FileRefs.MSMSData1))
             {
                 const int testFrame = 2;
                 const int startScan = 1;
@@ -85,7 +85,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfContainingMSMSData1))
+            using (var reader = new DataReader(FileRefs.MSMSData1))
             {
                 Assert.AreEqual(true, reader.HasMSMSData());
             }
@@ -100,7 +100,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 Assert.AreEqual(false, reader.HasMSMSData());
             }
@@ -115,7 +115,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 Assert.AreEqual(false, reader.HasMSMSData());
             }

@@ -29,7 +29,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var fp = reader.GetFrameParams(1);
                 var avgTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
@@ -47,7 +47,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+            using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
                 const int firstFrame = 1;
 
@@ -71,7 +71,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+            using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
                 var numFrames = reader.GetGlobalParams().NumFrames;
                 var lastFrame = numFrames - 1;
@@ -98,7 +98,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 const int lastFrame = 3219;
                 const int secondToLastFrame = lastFrame - 1;
@@ -123,7 +123,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+            using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
                 var gp = reader.GetGlobalParams();
                 var dt = DateTime.Parse(gp.GetValue(GlobalParamKeyType.DateStarted));
@@ -141,7 +141,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var numFrames = reader.GetGlobalParams().NumFrames;
 

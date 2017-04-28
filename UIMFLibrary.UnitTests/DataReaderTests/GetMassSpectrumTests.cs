@@ -94,7 +94,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.uimfStandardFile1))
+            using (var dr = new DataReader(FileRefs.LegacyFile1))
             {
                 var gp = dr.GetGlobalParams();
 
@@ -119,7 +119,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.uimfStandardDemultiplexedFile1))
+            using (var dr = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
                 var gp = dr.GetGlobalParams();
 
@@ -148,7 +148,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.uimfStandardFile1))
+            using (var dr = new DataReader(FileRefs.LegacyFile1))
             {
                 var testFrameScanInfo2 = new FrameAndScanInfo(500, 550, 250, 256);
 
@@ -198,7 +198,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.uimfStandardFile1))
+            using (var dr = new DataReader(FileRefs.LegacyFile1))
             {
                 var gp = dr.GetGlobalParams();
 

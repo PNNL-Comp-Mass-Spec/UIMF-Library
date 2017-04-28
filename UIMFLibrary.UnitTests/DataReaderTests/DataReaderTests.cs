@@ -64,6 +64,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The get frames and scan intensities for a given mz test.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void GetFramesAndScanIntensitiesForAGivenMzTest()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -121,6 +122,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// This unit test is being left in to make sure the bug never surfaces again.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestBinValueGreaterThanMax()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -155,6 +157,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", 1175, 0)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", 1419, 1421)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\SarcCtrl_P21_1mgml_IMS6_AgTOF07_210min_CID_01_05Oct12_Frodo_Precursors_Removed.UIMF", 442, 7058)]
+        [Category("PNL_Domain")]
         public void TestFrameCounts(string filePath, int frameCountExpectedMS1, int frameCountExpectedMS2)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -192,12 +195,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// Tests the GetSpectrum method. Makes sure that output of the method is as expected.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestGetSpectrum()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            const string filePath =
-                @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            var filePath = FileRefs.EncodedUIMF;
             const int frameNumber = 6;
             const int scanNumber = 285;
 
@@ -214,7 +217,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(nonZeroCount, intensityArray.Length);
                 Assert.AreEqual(692, nonZeroCount);
                 Assert.AreEqual(80822, intensityArray.Sum());
-                Assert.AreEqual(708377.857627842, mzArray.Sum());
+                Assert.AreEqual(708377.8576, mzArray.Sum(), 0.0001);
+            }
+        }
             }
         }
 
@@ -222,12 +227,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// Tests the GetSpectrumAsBins method. Makes sure that output of the method is as expected.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestGetSpectrumAsBins()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            const string filePath =
-                @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            var filePath = FileRefs.EncodedUIMF;
             const int frameNumber = 6;
             const int scanNumber = 285;
 
@@ -244,6 +249,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The test get spectrum as bins 2.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestGetSpectrumAsBins2()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -304,12 +310,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The test get spectrum summed 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestGetSpectrumSummed1()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            const string filePath =
-                @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+            var filePath = FileRefs.EncodedUIMF;
             const int frameStart = 6;
             const int frameStop = 8;
             const int scanStart = 285;
@@ -334,7 +340,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(4401, nonZeroCount);
                 Assert.AreEqual(612266, totalIntensity);
-                Assert.AreEqual(4582721.3771488648, totalMz);
+                Assert.AreEqual(4582721.377149, totalMz, 0.0001);
+            }
+        }
             }
         }
 
@@ -342,6 +350,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The test pressure determination 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void TestPressureDetermination1()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -391,6 +400,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The display mz value for each bin_ test 1.
         /// </summary>
         [Test]
+        [Category("PNL_Domain")]
         public void DisplayMZValueForEachBin_Test1()
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -431,11 +441,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void GetFrameParametersTest()
+        public void GetFrameParametersTest(string filePath)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var gp = reader.GetGlobalParams();
                 var fp = reader.GetFrameParams(1);

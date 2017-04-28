@@ -18,12 +18,11 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     public class CreateUIMFFileTests
     {
         [Test]
-        [Category("PNL_Domain")]
         public void CreateDB_test1()
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var fiTarget = new FileInfo(FileRefs.uimfWriterTest10Frames);
+            var fiTarget = new FileInfo(FileRefs.WriterTest10Frames);
 
             if (fiTarget.Exists)
             {

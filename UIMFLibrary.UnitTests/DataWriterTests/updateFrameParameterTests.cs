@@ -22,7 +22,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Category("PNL_Domain")]
         public void UpdateCalibrationCoefficients()
         {
-            var sourceFile = new FileInfo(FileRefs.uimfStandardDemultiplexedFile1);
+            var sourceFile = new FileInfo(FileRefs.LegacyDemultiplexedFile1);
             if (!sourceFile.Exists)
                 Assert.Fail("Test file not found: " + sourceFile.FullName);
 

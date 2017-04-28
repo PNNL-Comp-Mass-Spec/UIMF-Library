@@ -31,7 +31,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
+            var fiSource = new FileInfo(FileRefs.BinCentricTest1);
 
             if (!fiSource.Exists)
             {
@@ -58,7 +58,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest1);
+            var fiSource = new FileInfo(FileRefs.BinCentricTest1);
 
             if (!fiSource.Exists)
                 return;
@@ -112,7 +112,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var fiSource = new FileInfo(FileRefs.uimfFileForBinCentricTest2);
+            var fiSource = new FileInfo(FileRefs.BinCentricTest2);
 
             if (fiSource.Exists)
             {
