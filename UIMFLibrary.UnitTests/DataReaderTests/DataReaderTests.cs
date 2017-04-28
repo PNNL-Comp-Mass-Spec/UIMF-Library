@@ -642,36 +642,33 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
             // File with legacy parameter tables
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
-                var difference = 91235 - bpi[20];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(912335, bpi[20], float.Epsilon);
 
                 bpi = reader.GetBPIByFrame(20, 20, 1, 100);
-                difference = 7406 - bpi[20];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(7406, bpi[20], float.Epsilon);
 
                 bpi = reader.GetBPIByFrame(20, 30, 50, 200);
-                difference = 42828 - bpi[25];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(42828, bpi[25], float.Epsilon);
 
                 // Uncomment this to get a BPI across the entire dataset (typically slow)
                 // bpi = reader.GetBPIByFrame(0, 0, 0, 0);
-                // difference = 83524 - bpi[100];
-                // Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                // Assert.AreEqual(83524, bpi[100], float.Epsilon);
 
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                difference = 2028 - bpiList[70];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(2028, bpiList[70], float.Epsilon);
             }
 
             // File with updated parameter tables
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
+            using (var reader = new DataReader(FileRefs.StandardFile1))
             {
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                var difference = 2028 - bpiList[70];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(2028, bpiList[70], float.Epsilon);
+            }
+
+        }
 
         [Test]
         [Category("Local_Files")]
@@ -706,37 +703,33 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
             // File with legacy parameter tables
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var tic = reader.GetTICByFrame(20, 20, 0, 0);
-                var difference = 2195378 - tic[20];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(2195378, tic[20], float.Epsilon);
 
                 tic = reader.GetTICByFrame(20, 20, 1, 100);
-                difference = 13703 - tic[20];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(13703, tic[20], float.Epsilon);
 
                 tic = reader.GetTICByFrame(20, 30, 50, 200);
-                difference = 1081201 - tic[25];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(1081201, tic[25], float.Epsilon);
 
                 // Uncomment this to get a TIC across the entire dataset (typically slow)
                 //tic = reader.GetTICByFrame(0, 0, 0, 0);
-                //difference = 2026072 - tic[100];
-                //Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                // Assert.AreEqual(2026072, tic[100], float.Epsilon);
 
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                difference = 3649 - ticList[70];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(3649, ticList[70], float.Epsilon);
 
             }
 
             // File with updated parameter tables
-            using (var reader = new DataReader(FileRefs.uimfStandardFile1NewParamTables))
+            using (var reader = new DataReader(FileRefs.StandardFile1))
             {
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
-                var difference = 3649 - ticList[70];
-                Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+                Assert.AreEqual(3649, ticList[70], float.Epsilon);
+            }
+
         }
 
         [Test]
