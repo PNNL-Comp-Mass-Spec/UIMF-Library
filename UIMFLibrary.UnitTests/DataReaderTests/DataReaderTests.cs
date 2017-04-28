@@ -160,6 +160,22 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestFrameCounts(string filePath, int frameCountExpectedMS1, int frameCountExpectedMS2)
         {
+            TestFrameCountsWork(filePath, frameCountExpectedMS1, frameCountExpectedMS2);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void TestFrameCountsLocal()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            TestFrameCountsWork(uimfFile1.FullName, 10, 0);
+            TestFrameCountsWork(uimfFile2.FullName, 25, 0);
+        }
+
+        private void TestFrameCountsWork(string filePath, int frameCountExpectedMS1, int frameCountExpectedMS2)
+        {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(filePath))
@@ -187,7 +203,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(hasMSn, frameCountMS2 > 0, "HasMSMSData result disagrees with frameCountMS2");
             }
-
 
         }
 
@@ -220,6 +235,30 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(708377.8576, mzArray.Sum(), 0.0001);
             }
         }
+
+        [Test]
+        [Category("Local_Files")]
+        public void TestGetSpectrumLocal()
+        {
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            const int frameNumber = 6;
+            const int scanNumber = 100;
+
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+
+                var nonZeroCount = reader.GetSpectrum(
+                    frameNumber,
+                    DataReader.FrameType.MS1,
+                    scanNumber,
+                    out var mzArray,
+                    out var intensityArray);
+
+                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+                Assert.AreEqual(227, nonZeroCount);
+                Assert.AreEqual(79043, intensityArray.Sum());
+                Assert.AreEqual(71034.2399, mzArray.Sum(), 0.0001);
             }
         }
 
@@ -242,6 +281,26 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(148001, intensities.Length);
                 Assert.AreEqual(80822, intensities.Sum());
+            }
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void TestGetSpectrumAsBinsLocal()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            const int frameNumber = 6;
+            const int scanNumber = 105;
+
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+                var intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
+
+                Assert.AreEqual(148001, intensities.Length);
+                Assert.AreEqual(18109, intensities.Sum());
             }
         }
 
@@ -303,6 +362,70 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         }
                     }
                 }
+
+                Assert.AreEqual(126568, maxIntensityForTestMZ);
+            }
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void TestGetSpectrumAsBins2Local()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+            const int startFrame = 5;
+            const int stopFrame = 15;
+            const int scan = 121;
+
+            var sequentialFrameIntensityVals = new List<int[]>();
+
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+
+                const double testMZ = 627.2655682;
+                for (var frame = startFrame; frame <= stopFrame; frame++)
+                {
+                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MS1, scan, scan);
+                    sequentialFrameIntensityVals.Add(intensitiesForFrame);
+                }
+
+                const int testBin = 44527;
+
+                Assert.AreEqual(59, sequentialFrameIntensityVals[0][testBin]);
+                Assert.AreEqual(44, sequentialFrameIntensityVals[1][testBin]);
+                Assert.AreEqual(49, sequentialFrameIntensityVals[2][testBin]);
+                Assert.AreEqual(53, sequentialFrameIntensityVals[3][testBin]);
+                Assert.AreEqual(51, sequentialFrameIntensityVals[4][testBin]);
+
+                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
+
+                Assert.AreEqual(649, intensitiesA[testBin]);
+
+                var numZeros = reader.GetSpectrum(
+                    startFrame,
+                    stopFrame,
+                    DataReader.FrameType.MS1,
+                    scan,
+                    scan,
+                    out var mzVals,
+                    out var intensitiesB);
+
+                Assert.AreEqual(761, numZeros);
+
+                var maxIntensityForTestMZ = 0;
+                for (var i = 0; i < intensitiesB.Length; i++)
+                {
+                    if (mzVals[i] > (testMZ - 0.1) && mzVals[i] < (testMZ + 0.1))
+                    {
+                        if (intensitiesB[i] > maxIntensityForTestMZ)
+                        {
+                            maxIntensityForTestMZ = intensitiesB[i];
+                        }
+                    }
+                }
+
+                Assert.AreEqual(65, maxIntensityForTestMZ);
             }
         }
 
@@ -343,6 +466,39 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(4582721.377149, totalMz, 0.0001);
             }
         }
+
+        [Test]
+        [Category("Local_Files")]
+        public void TestGetSpectrumSummedLocal()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+            const int frameStart = 6;
+            const int frameStop = 8;
+            const int scanStart = 85;
+            const int scanStop = 125;
+
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+
+                var nonZeroCount = reader.GetSpectrum(
+                    frameStart,
+                    frameStop,
+                    DataReader.FrameType.MS1,
+                    scanStart,
+                    scanStop,
+                    out var mzArray,
+                    out var intensityArray);
+
+                var totalIntensity = intensityArray.Sum();
+                var totalMz = mzArray.Sum();
+
+                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+
+                Assert.AreEqual(1686, nonZeroCount);
+                Assert.AreEqual(3514145, totalIntensity);
+                Assert.AreEqual(549104.71709, totalMz, 0.0001);
             }
         }
 
@@ -459,6 +615,27 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
+        [Category("Local_Files")]
+        public void GetFrameParametersTestLocal()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+                var gp = reader.GetGlobalParams();
+                var fp = reader.GetFrameParams(10);
+
+                Assert.AreEqual(1.0, gp.BinWidth);
+                Assert.AreEqual(148000, gp.Bins);
+
+                var tofLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+                Assert.AreEqual(163369.23077, tofLength, 0.0001);
+            }
+        }
+
+        [Test]
         [Category("PNL_Domain")]
         public void GetBPITest()
         {
@@ -495,6 +672,29 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 var difference = 2028 - bpiList[70];
                 Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+
+        [Test]
+        [Category("Local_Files")]
+        public void GetBPITestLocal()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            // File with legacy parameter tables
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+                var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
+                Assert.AreEqual(bpi[20], 1791115, float.Epsilon);
+
+                bpi = reader.GetBPIByFrame(20, 20, 1, 100);
+                Assert.AreEqual(bpi[20], 202560, float.Epsilon);
+
+                bpi = reader.GetBPIByFrame(20, 30, 50, 200);
+                Assert.AreEqual(bpi[25], 2645542, float.Epsilon);
+
+                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 10, 20, 50);
+                Assert.AreEqual(bpiList[7], 831, float.Epsilon);
             }
 
         }
@@ -537,6 +737,31 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
                 var difference = 3649 - ticList[70];
                 Assert.LessOrEqual(Math.Abs(difference), float.Epsilon);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void GetTICTestLocal()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            // File with legacy parameter tables
+            using (var reader = new DataReader(uimfFile.FullName))
+            {
+                var tic = reader.GetTICByFrame(20, 20, 0, 0);
+                Assert.AreEqual(25390718, tic[20], float.Epsilon);
+
+                tic = reader.GetTICByFrame(20, 20, 1, 100);
+                Assert.AreEqual(1665423, tic[20], float.Epsilon);
+
+                tic = reader.GetTICByFrame(20, 30, 50, 200);
+                Assert.AreEqual(34572597, tic[22], float.Epsilon);
+
+                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                Assert.AreEqual(16224, ticList[11], float.Epsilon);
+
             }
 
         }
@@ -550,7 +775,32 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "ParamID", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "NoColumn", false)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "", false)]
+        [Category("PNL_Domain")]
         public void SQLiteTableHasColumn(string filePath, string tableName, string columnName, bool columnExistsExpected)
+        {
+            SQLiteTableHasColumnWork(filePath, tableName, columnName, columnExistsExpected);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void SQLiteTableHasColumnLocal()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            SQLiteTableHasColumnWork(uimfFile1.FullName, "Global_Parameters", "NumFrames", true);
+            SQLiteTableHasColumnWork(uimfFile1.FullName, "Global_Parameters", "NoColumn", false);
+            SQLiteTableHasColumnWork(uimfFile1.FullName, "Frame_Scans", "MZs", false);
+
+            SQLiteTableHasColumnWork(uimfFile2.FullName, "Global_Parameters", "NumFrames", true);
+            SQLiteTableHasColumnWork(uimfFile2.FullName, "Global_Parameters", "NoColumn", false);
+            SQLiteTableHasColumnWork(uimfFile2.FullName, "Global_Params", "ParamID", true);
+            SQLiteTableHasColumnWork(uimfFile2.FullName, "Frame_Param_Keys", "ParamDataType", true);
+            SQLiteTableHasColumnWork(uimfFile2.FullName, "Frame_Scans", "MZs", false);
+
+        }
+
+        private void SQLiteTableHasColumnWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -586,7 +836,30 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "ParamID", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "NoColumn", false)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", "", false)]
+        [Category("PNL_Domain")]
         public void SQLiteColumnExists(string filePath, string tableName, string columnName, bool columnExistsExpected)
+        {
+            SQLiteColumnExistsWork(filePath, tableName, columnName, columnExistsExpected);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void SQLiteColumnExistsLocal()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            SQLiteColumnExistsWork(uimfFile1.FullName, "Global_Parameters", "NumFrames", true);
+            SQLiteColumnExistsWork(uimfFile1.FullName, "Global_Parameters", "NoColumn", false);
+            SQLiteColumnExistsWork(uimfFile1.FullName, "Global_Params", "ParamID", false);
+
+            SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Parameters", "NumFrames", true);
+            SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Parameters", "NoColumn", false);
+            SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Params", "ParamID", true);
+
+        }
+
+        private void SQLiteColumnExistsWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -616,7 +889,28 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Param_Keys", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Frame_Parameters", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Old_Log_Entries", false)]
+        [Category("PNL_Domain")]
         public void SQLiteTableExists(string filePath, string tableName, bool tableExistsExpected)
+        {
+            SQLiteTableExistsWork(filePath, tableName, tableExistsExpected);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void SQLiteTableExistsLocal()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            SQLiteTableExistsWork(uimfFile1.FullName, "Global_Parameters", true);
+            SQLiteTableExistsWork(uimfFile1.FullName, "Temp_Log_Entries", false);
+
+            SQLiteTableExistsWork(uimfFile2.FullName, "Global_Parameters", true);
+            SQLiteTableExistsWork(uimfFile2.FullName, "Global_Params", true);
+            SQLiteTableExistsWork(uimfFile2.FullName, "Frame_Params", true);
+        }
+
+        private void SQLiteTableExistsWork(string filePath, string tableName, bool tableExistsExpected)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -643,7 +937,29 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "V_Frame_Params", "FrameNum,ParamName,ParamID,ParamValue,ParamDescription,ParamDataType")]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Global_Params", "ParamID,ParamName,ParamValue,ParamDataType,ParamDescription")]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\MSMS_Testing\BSA_Frag_1pM_QTOF_20May15_Fir_15-04-02.uimf", "Old_Log_Entries", "")]
+        [Category("PNL_Domain")]
         public void SQLiteTableColumns(string filePath, string tableName, string expectedColumnNames)
+        {
+            SQLiteTableColumnsWork(filePath, tableName, expectedColumnNames);
+        }
+
+        [Test]
+        [Category("Local_Files")]
+        public void SQLiteTableColumnsLocal()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            SQLiteTableColumnsWork(uimfFile1.FullName, "Global_Parameters", "DateStarted,NumFrames,TimeOffset,BinWidth,Bins,TOFCorrectionTime,FrameDataBlobVersion,ScanDataBlobVersion,TOFIntensityType,DatasetType,Prescan_TOFPulses,Prescan_Accumulations,Prescan_TICThreshold,Prescan_Continuous,Prescan_Profile,Instrument_Name");
+            SQLiteTableColumnsWork(uimfFile1.FullName, "Log_Entries", "Entry_ID,Posting_Time,Posted_By,Type,Message");
+            SQLiteTableColumnsWork(uimfFile1.FullName, "Temp_Log_Entries", "");
+
+            SQLiteTableColumnsWork(uimfFile2.FullName, "Global_Params", "ParamID,ParamName,ParamValue,ParamDataType,ParamDescription");
+            SQLiteTableColumnsWork(uimfFile2.FullName, "V_Frame_Params", "FrameNum,ParamName,ParamID,ParamValue,ParamDescription,ParamDataType");
+            SQLiteTableColumnsWork(uimfFile2.FullName, "Old_Log_Entries", "");
+        }
+
+        private void SQLiteTableColumnsWork(string filePath, string tableName, string expectedColumnNames)
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -880,38 +1196,18 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             return columnExists ? "found" : "not found";
         }
 
-        /// <summary>
-        /// The write file.
-        /// </summary>
-        /// <param name="data">
-        /// The data.
-        /// </param>
-        /// <param name="fileName">
-        /// The file name.
-        /// </param>
-        private void WriteFile(byte[] data, string fileName)
+        private FileInfo VerifyLocalUimfFile(string uimfFilePath)
         {
-            StreamWriter writer = null;
-            FileStream ostream = null;
-            try
-            {
-                // Write the text to the file
-                var completeString = Encoding.UTF8.GetString(data);
-                ostream = new FileStream(fileName, FileMode.Create, FileAccess.ReadWrite);
+            var uimfFile = new FileInfo(uimfFilePath);
+            if (uimfFile.Exists)
+                return uimfFile;
 
-                writer = new StreamWriter(ostream, new UnicodeEncoding());
+            var alternateFile = new FileInfo(Path.Combine(FileRefs.SHARE_PATH, uimfFile.Name));
+            if (alternateFile.Exists)
+                return alternateFile;
 
-                writer.Write(completeString);
-
-                // Flush the output stream
-                writer.Flush();
-            }
-            finally
-            {
-                writer?.Close();
-
-                ostream?.Close();
-            }
+            Assert.Fail("File not found: " + uimfFile.FullName);
+            return null;
         }
 
         #endregion
