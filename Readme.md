@@ -217,13 +217,13 @@ The UIMFWriter can optionally populate the legacy tables, but their use was phas
  | Decoded | int | Set to 1 after a frame has been decoded |
 
 ---------------------------------------------------------------------------------------------------------------
-Written by PNNL Staff for the Department of Energy (PNNL, Richland, WA)
+Written by PNNL Staff for the Department of Energy (PNNL, Richland, WA) \
 Copyright 2009, Battelle Memorial Institute.  All Rights Reserved.
 
-Contributors include:
+Contributors include: \
 Kevin Crowell, Bill Danielson, Bryson Gibbons, Matthew Monroe, Spencer Prost, Yan Shi, Anuj Shah, Gordon Slysz
 
-E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
+E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov \
 Website: http://omics.pnl.gov/software/
 ----------------------------------------------------------------------------------------------------------------
 
