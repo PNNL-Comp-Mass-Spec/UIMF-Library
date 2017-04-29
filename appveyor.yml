@@ -1,0 +1,16 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+configuration: Release
+platform: Any CPU
+before_build:
+- cmd: nuget.exe restore UIMFLibrary.sln
+build:
+  project: UIMFLibrary.sln
+  verbosity: minimal
+test:
+  categories:
+    except:
+    - PNL_Domain
+artifacts:
+- path: UIMFLibrary\bin\Release\net461\UIMFLibrary.dll
+- path: UIMFLibrary\bin\Release\UIMFLibrary*.nupkg
