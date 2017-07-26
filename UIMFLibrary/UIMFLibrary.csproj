@@ -3,15 +3,16 @@
     <TargetFrameworks>net45;net461</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
-    <AssemblyVersion>3.4.0.0</AssemblyVersion>
-    <FileVersion>3.4.0.0</FileVersion>
+    <AssemblyVersion>3.4.1.0</AssemblyVersion>
+    <FileVersion>3.4.1.0</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>Used to create, modify and extract data from UIMF files, which are SQLite databases of mass spectrometry data acquired at Pacific Northwest National Laboratory (PNNL)</Description>
     <PackageProjectUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</PackageProjectUrl>
     <RepositoryUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageLicenseUrl>https://opensource.org/licenses/ECL-2.0</PackageLicenseUrl>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Title>UIMF Library</Title>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
