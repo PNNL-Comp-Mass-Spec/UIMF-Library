@@ -133,7 +133,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public double BinToTOF(double bin)
         {
-            return bin / this.binWidth * this.TenthsOfNanoSecondsPerBin;
+            return bin * this.TenthsOfNanoSecondsPerBin;
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public double TOFtoBin(double TOF)
         {
-            return TOF * this.binWidth / this.TenthsOfNanoSecondsPerBin;
+            return TOF / this.TenthsOfNanoSecondsPerBin;
         }
 
         #endregion
