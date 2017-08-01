@@ -26,6 +26,8 @@ namespace UIMFLibrary
         /// </summary>
         private readonly Dictionary<string, DateTime> mTaskStartTime;
 
+        private DateTime mLastProgressNotify = DateTime.UtcNow;
+
         #region Constants
 
         /// <summary>
@@ -153,8 +155,16 @@ namespace UIMFLibrary
         /// </param>
         public void OnErrorMessage(MessageEventArgs e)
         {
-            var errorEvent = this.OnError;
-            errorEvent?.Invoke(this, e);
+            if (OnError != null)
+            {
+                OnError(this, e);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.Message);
+                Console.ResetColor();
+            }
         }
 
         /// <summary>
@@ -165,8 +175,14 @@ namespace UIMFLibrary
         /// </param>
         public void OnMessage(MessageEventArgs e)
         {
-            var messageEvent = this.Message;
-            messageEvent?.Invoke(this, e);
+            if (Message != null)
+            {
+                Message(this, e);
+            }
+            else
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         /// <summary>
@@ -177,8 +193,18 @@ namespace UIMFLibrary
         /// </param>
         public void OnProgressUpdate(ProgressEventArgs e)
         {
-            var progressUpdate = this.OnProgress;
-            progressUpdate?.Invoke(this, e);
+            if (OnProgress != null)
+            {
+                OnProgress(this, e);
+            }
+            else
+            {
+                if (DateTime.UtcNow.Subtract(mLastProgressNotify).TotalSeconds < 2)
+                    return;
+
+                mLastProgressNotify = DateTime.UtcNow;
+                Console.WriteLine(e.PercentComplete);
+            }
         }
 
         #endregion
