@@ -37,7 +37,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Data size
         /// </summary>
-        private const int DATASIZE = 4; // All intensities are stored as 4 byte quantities
+        private const int DATASIZE = sizeof(int); // All intensities are stored as 4 byte quantities
 
         /// <summary>
         /// TIC text
@@ -2841,9 +2841,13 @@ namespace UIMFLibrary
                         m_globalParameters.Bins * DATASIZE);
 
                     var numReturnedBins = outputLength / DATASIZE;
+                    int[] decodedIntensityValueArray = new int[1];
                     for (var i = 0; i < numReturnedBins; i++)
                     {
                         var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        Buffer.BlockCopy(decompSpectraRecord, i * DATASIZE,
+                            decodedIntensityValueArray, 0, 4);
+                        decodedIntensityValue = decodedIntensityValueArray[0];
 
                         if (decodedIntensityValue < 0)
                         {
@@ -5937,14 +5941,8 @@ namespace UIMFLibrary
                 filterByFrameType: true,
                 frameType: frameType);
 
-            var data = new double[dctTicOrBPI.Count];
+            var data = dctTicOrBPI.Values.ToArray();
 
-            var index = 0;
-            foreach (var Value in dctTicOrBPI.Values)
-            {
-                data[index] = Value;
-                index++;
-            }
 
             return data;
         }
