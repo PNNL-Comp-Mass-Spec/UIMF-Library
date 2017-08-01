@@ -10,6 +10,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Collections;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.IO;
@@ -868,6 +870,25 @@ namespace UIMFLibrary
 
             FlushUimf(false);
         }
+
+        /// <summary>
+        /// Renumber frames so that the first frame is frame 1 and to assure that there are no gaps in frame numbers
+        /// </summary>
+        /// <remarks>This method is used by the UIMFDemultiplexer when the first frame to process is not frame 1</remarks>
+        public void RenumberFrames()
+        {
+
+            try
+            {
+                var frameShifter = new FrameNumShifter(m_dbConnection, HasLegacyParameterTables);
+                frameShifter.FrameShiftEvent += FrameShifter_FrameShiftEvent;
+
+                frameShifter.RenumberFrames();
+
+                FlushUimf(true);
+            }
+            catch (Exception ex)
+            {
                 ReportError("Error renumbering frames: " + ex.Message, ex);
                 throw;
             }
@@ -1495,6 +1516,7 @@ namespace UIMFLibrary
                 new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+            // See also the FrameType enum in the DataReader class
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
             // Number of TOF scans
@@ -2873,6 +2895,7 @@ namespace UIMFLibrary
             throw new Exception(errorMessage, ex);
         }
 
+
         /// <summary>
         /// Begin a transaction
         /// </summary>
@@ -3113,5 +3136,17 @@ namespace UIMFLibrary
 
         #endregion
 
+        #region Event Handlers
+
+        private void FrameShifter_FrameShiftEvent(object sender, FrameNumShiftEventArgs e)
+        {
+
+            PostLogEntry(
+                "Normal",
+                string.Format("Decremented frame number by {0} for frames {1}", e.DecrementAmount, e.FrameRanges),
+                "ShiftFramesInBatch");
+        }
+
+        #endregion
     }
 }
