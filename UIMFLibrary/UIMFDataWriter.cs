@@ -856,23 +856,28 @@ namespace UIMFLibrary
         /// </summary>
         public void RemoveBinCentricTables()
         {
-            if (!DataReader.TableExists(this.m_dbConnection, "Bin_Intensities"))
+            if (!DataReader.TableExists(m_dbConnection, "Bin_Intensities"))
                 return;
 
-            using (var dbCommand = this.m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 // Drop the table
                 dbCommand.CommandText = "DROP TABLE Bin_Intensities);";
                 dbCommand.ExecuteNonQuery();
             }
 
-            this.FlushUimf(false);
+            FlushUimf(false);
+        }
+                ReportError("Error renumbering frames: " + ex.Message, ex);
+                throw;
+            }
+
         }
 
         /// <summary>
         /// Create the Frame_Param_Keys and Frame_Params tables
         /// </summary>
-        private void CreateFrameParamsTables(SQLiteCommand dbCommand)
+        private void CreateFrameParamsTables(IDbCommand dbCommand)
         {
 
             if (HasFrameParamsTable &&
@@ -917,7 +922,7 @@ namespace UIMFLibrary
 
         }
 
-        private void CreateFrameScansTable(SQLiteCommand dbCommand, string dataType)
+        private void CreateFrameScansTable(IDbCommand dbCommand, string dataType)
         {
             if (DataReader.TableExists(m_dbConnection, "Frame_Scans"))
             {
@@ -944,7 +949,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Create the Global_Params table
         /// </summary>
-        private void CreateGlobalParamsTable(SQLiteCommand dbCommand)
+        private void CreateGlobalParamsTable(IDbCommand dbCommand)
         {
             if (HasGlobalParamsTable)
             {
@@ -968,7 +973,7 @@ namespace UIMFLibrary
         /// Create legacy parameter tables (Global_Parameters and Frame_Parameters)
         /// </summary>
         /// <param name="dbCommand"></param>
-        private void CreateLegacyParameterTables(SQLiteCommand dbCommand)
+        private void CreateLegacyParameterTables(IDbCommand dbCommand)
         {
             if (!DataReader.TableExists(m_dbConnection, "Global_Parameters"))
             {
@@ -1754,7 +1759,7 @@ namespace UIMFLibrary
             IList<int> intensities,
             double binWidth)
         {
-            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out var nonZeroCount);
+            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out _);
         }
 
         /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>

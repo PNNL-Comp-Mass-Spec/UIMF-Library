@@ -5437,7 +5437,7 @@ namespace UIMFLibrary
         /// </returns>
         private double GetLegacyFrameParamOrDefault(IDataRecord reader, string columnName, double defaultValue)
         {
-            return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out var columnMissing);
+            return GetLegacyFrameParamOrDefault(reader, columnName, defaultValue, out _);
         }
 
         /// <summary>
@@ -5499,7 +5499,7 @@ namespace UIMFLibrary
         /// </returns>
         private int GetLegacyFrameParamOrDefaultInt32(IDataRecord reader, string columnName, int defaultValue)
         {
-            return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out var columnMissing);
+            return GetLegacyFrameParamOrDefaultInt32(reader, columnName, defaultValue, out _);
         }
 
         /// <summary>

@@ -97,7 +97,7 @@ namespace UIMFLibrary
         /// </param>
         public void CreateBinCentricTable(SQLiteConnection uimfWriterConnection, DataReader uimfReader)
         {
-            this.CreateBinCentricTable(uimfWriterConnection, uimfReader, string.Empty);
+            CreateBinCentricTable(uimfWriterConnection, uimfReader, string.Empty);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace UIMFLibrary
             mTaskStartTime.Clear();
 
             // Create the temporary database
-            var temporaryDatabaseLocation = this.CreateTemporaryDatabase(uimfReader, workingDirectory);
+            var temporaryDatabaseLocation = CreateTemporaryDatabase(uimfReader, workingDirectory);
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             var connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
@@ -130,7 +130,7 @@ namespace UIMFLibrary
                 temporaryDatabaseConnection.Open();
 
                 // Write the bin centric tables to UIMF file
-                this.InsertBinCentricData(uimfWriterConnection, temporaryDatabaseConnection, uimfReader);
+                InsertBinCentricData(uimfWriterConnection, temporaryDatabaseConnection, uimfReader);
             }
 
             // Delete the temporary database
@@ -262,7 +262,7 @@ namespace UIMFLibrary
 
                 for (var i = 0; i <= numBins; i += BIN_SIZE)
                 {
-                    using (var sqlCommand = new SQLiteCommand(this.GetCreateIntensitiesTableQuery(i), connection))
+                    using (var sqlCommand = new SQLiteCommand(GetCreateIntensitiesTableQuery(i), connection))
                     {
                         sqlCommand.ExecuteNonQuery();
                     }
@@ -294,7 +294,7 @@ namespace UIMFLibrary
 
                 for (var i = 0; i <= numBins; i += BIN_SIZE)
                 {
-                    using (var sqlCommand = new SQLiteCommand(this.GetCreateIndexesQuery(i), connection))
+                    using (var sqlCommand = new SQLiteCommand(GetCreateIndexesQuery(i), connection))
                     {
                         sqlCommand.ExecuteNonQuery();
                     }
@@ -304,7 +304,7 @@ namespace UIMFLibrary
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
                         var progressMessage = "Creating indices, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
                         var percentComplete = 37 + (i / (double)numBins) * 30;
-                        this.UpdateProgress(percentComplete, progressMessage);
+                        UpdateProgress(percentComplete, progressMessage);
                     }
 
                     if (i > 0 && i % 100 == 0)
@@ -361,7 +361,7 @@ namespace UIMFLibrary
             var numFrames = globalParameters.NumFrames;
             var numBins = globalParameters.Bins;
 
-            var tablesCreated = this.CreateBlankDatabase(sqliteFile.FullName, numBins);
+            var tablesCreated = CreateBlankDatabase(sqliteFile.FullName, numBins);
             System.Threading.Thread.Sleep(150);
 
             using (var connection = new SQLiteConnection(connectionString, true))
@@ -372,7 +372,7 @@ namespace UIMFLibrary
 
                 for (var i = 0; i <= numBins; i += BIN_SIZE)
                 {
-                    var query = this.GetInsertIntensityQuery(i);
+                    var query = GetInsertIntensityQuery(i);
                     var sqlCommand = new SQLiteCommand(query, connection);
 
                     commandDictionary.Add(i, sqlCommand);
@@ -415,7 +415,7 @@ namespace UIMFLibrary
 
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
                         var percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
-                        this.UpdateProgress(percentComplete, progressMessage);
+                        UpdateProgress(percentComplete, progressMessage);
                     }
 
                     transaction.Commit();
@@ -426,7 +426,7 @@ namespace UIMFLibrary
 
             Console.WriteLine(DateTime.Now + " - Indexing " + tablesCreated + " tables");
 
-            this.CreateIndexes(sqliteFile.FullName, numBins);
+            CreateIndexes(sqliteFile.FullName, numBins);
 
             Console.WriteLine(DateTime.Now + " - Done populating temporary DB");
 
@@ -444,7 +444,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetCreateIndexesQuery(int binNumber)
         {
-            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
+            GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "CREATE INDEX Bin_Intensities_" + minBin + "_" + maxBin + "_MZ_BIN_SCAN_LC_SCAN_IMS_IDX ON Bin_Intensities_"
                    + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS);";
@@ -461,7 +461,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetCreateIntensitiesTableQuery(int binNumber)
         {
-            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
+            GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "CREATE TABLE Bin_Intensities_" + minBin + "_" + maxBin + " (" + "MZ_BIN    int(11)," + "SCAN_LC    int(11),"
                    + "SCAN_IMS   int(11)," + "INTENSITY  int(11));";
@@ -478,7 +478,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetInsertIntensityQuery(int binNumber)
         {
-            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
+            GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "INSERT INTO Bin_Intensities_" + minBin + "_" + maxBin + " (MZ_BIN, SCAN_LC, SCAN_IMS, INTENSITY)"
                    + "VALUES (:MZ_BIN, :SCAN_LC, :SCAN_IMS, :INTENSITY);";
@@ -514,7 +514,7 @@ namespace UIMFLibrary
         /// </returns>
         private string GetReadSingleBinQuery(int binNumber)
         {
-            this.GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
+            GetMinAndMaxBin(binNumber, out var minBin, out var maxBin);
 
             return "SELECT * FROM Bin_Intensities_" + minBin + "_" + maxBin + " WHERE MZ_BIN = " + binNumber
                    + " ORDER BY SCAN_LC, SCAN_IMS;";
@@ -555,12 +555,12 @@ namespace UIMFLibrary
             if (DataReader.TableExists(uimfWriterConnection, "Bin_Intensities"))
             {
                 // Clear data from the existing table
-                this.ClearBinIntensitiesTable(uimfWriterConnection);
+                ClearBinIntensitiesTable(uimfWriterConnection);
             }
             else
             {
                 // Create new table in the UIMF file that will be used to store bin-centric data
-                this.CreateBinIntensitiesTable(uimfWriterConnection);
+                CreateBinIntensitiesTable(uimfWriterConnection);
             }
 
 
@@ -568,7 +568,7 @@ namespace UIMFLibrary
             {
                 for (var i = 0; i <= numBins; i++)
                 {
-                    this.SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
+                    SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
 
                     if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
                     {
@@ -578,12 +578,12 @@ namespace UIMFLibrary
 
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
                         var percentComplete = (37 + 30) + (i / (double)numBins) * 33;
-                        this.UpdateProgress(percentComplete, progressMessage);
+                        UpdateProgress(percentComplete, progressMessage);
                     }
                 }
             }
 
-            this.CreateBinIntensitiesIndex(uimfWriterConnection);
+            CreateBinIntensitiesIndex(uimfWriterConnection);
 
             Console.WriteLine(DateTime.Now + " - Done");
         }
@@ -612,7 +612,7 @@ namespace UIMFLibrary
             var runLengthZeroEncodedData = new List<int>();
             insertCommand.Parameters.Clear();
 
-            var query = this.GetReadSingleBinQuery(binNumber);
+            var query = GetReadSingleBinQuery(binNumber);
 
             using (var readCommand = new SQLiteCommand(query, inConnection))
             {
@@ -667,23 +667,12 @@ namespace UIMFLibrary
         /// <param name="percentComplete">
         /// Percent complete; value between 0 and 100
         /// </param>
-        private void UpdateProgress(double percentComplete)
-        {
-            this.OnProgressUpdate(new ProgressEventArgs(percentComplete));
-        }
-
-        /// <summary>
-        /// Update progress.
-        /// </summary>
-        /// <param name="percentComplete">
-        /// Percent complete; value between 0 and 100
-        /// </param>
         /// <param name="currentTask">
         /// Current task.
         /// </param>
-        private void UpdateProgress(double percentComplete, string currentTask)
+        private void UpdateProgress(double percentComplete, string currentTask = "")
         {
-            this.OnProgressUpdate(new ProgressEventArgs(percentComplete));
+            OnProgressUpdate(new ProgressEventArgs(percentComplete));
 
             if (string.IsNullOrEmpty(currentTask))
                 return;
@@ -698,7 +687,7 @@ namespace UIMFLibrary
                     return;
             }
 
-            this.OnMessage(new MessageEventArgs(currentTask));
+            OnMessage(new MessageEventArgs(currentTask));
         }
 
         private bool ReportProgressAsMessage(string taskHeader)
