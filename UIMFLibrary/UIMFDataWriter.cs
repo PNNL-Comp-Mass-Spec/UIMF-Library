@@ -120,7 +120,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region "Properties"
+        #region Properties
 
         /// <summary>
         /// True if the UIMF file has table Frame_Params
@@ -439,19 +439,19 @@ namespace UIMFLibrary
         /// <param name="oConnection">
         /// Database connection object
         /// </param>
-        /// <param name="EntryType">
+        /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
-        /// <param name="Message">
+        /// <param name="message">
         /// Log message
         /// </param>
-        /// <param name="PostedBy">
+        /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
-        public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
+        public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
         {
             // Check whether the Log_Entries table needs to be created
             using (var cmdPostLogEntry = oConnection.CreateCommand())
@@ -470,27 +470,27 @@ namespace UIMFLibrary
                     cmdPostLogEntry.ExecuteNonQuery();
                 }
 
-                if (string.IsNullOrEmpty(EntryType))
+                if (string.IsNullOrEmpty(entryType))
                 {
-                    EntryType = "Normal";
+                    entryType = "Normal";
                 }
 
-                if (string.IsNullOrEmpty(PostedBy))
+                if (string.IsNullOrEmpty(postedBy))
                 {
-                    PostedBy = string.Empty;
+                    postedBy = string.Empty;
                 }
 
-                if (string.IsNullOrEmpty(Message))
+                if (string.IsNullOrEmpty(message))
                 {
-                    Message = string.Empty;
+                    message = string.Empty;
                 }
 
                 // Now add a log entry
                 cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " +
                                               "VALUES ("
-                                              + "datetime('now'), " + "'" + PostedBy + "', " + "'" + EntryType + "', " +
+                                              + "datetime('now'), " + "'" + postedBy + "', " + "'" + entryType + "', " +
                                               "'"
-                                              + Message + "')";
+                                              + message + "')";
 
                 cmdPostLogEntry.ExecuteNonQuery();
             }
@@ -1901,21 +1901,21 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
-        /// <param name="EntryType">
+        /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
-        /// <param name="Message">
+        /// <param name="message">
         /// Log message
         /// </param>
-        /// <param name="PostedBy">
+        /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
-        public void PostLogEntry(string EntryType, string Message, string PostedBy)
+        public void PostLogEntry(string entryType, string message, string postedBy)
         {
-            PostLogEntry(m_dbConnection, EntryType, Message, PostedBy);
+            PostLogEntry(m_dbConnection, entryType, message, postedBy);
         }
 
         /// <summary>

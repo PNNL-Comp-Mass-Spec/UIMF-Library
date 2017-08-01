@@ -6544,10 +6544,9 @@ namespace UIMFLibrary
         /// </param>
         public void OnErrorMessage(MessageEventArgs e)
         {
-            var errorEvent = this.ErrorEvent;
-            if (errorEvent != null)
+            if (ErrorEvent != null)
             {
-                errorEvent(this, e);
+                ErrorEvent(this, e);
             }
             else
             {
@@ -6566,10 +6565,9 @@ namespace UIMFLibrary
         /// </param>
         public void OnMessage(MessageEventArgs e)
         {
-            var messageEvent = this.MessageEvent;
-            if (messageEvent != null)
+            if (MessageEvent != null)
             {
-                messageEvent(this, e);
+                MessageEvent(this, e);
             }
             else
             {
