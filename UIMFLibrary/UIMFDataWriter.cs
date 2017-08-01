@@ -1175,6 +1175,14 @@ namespace UIMFLibrary
                                             "WHERE FrameNum = " + frameNum +
                                              " AND ParamID = " + (int)FrameParamKeyType.Scans + ";";
                     dbCommand.ExecuteNonQuery();
+
+                    if (HasLegacyParameterTables)
+                    {
+                        dbCommand.CommandText = "UPDATE Frame_Parameters " +
+                                                "SET Scans = 0 " +
+                                                "WHERE FrameNum = " + frameNum + ";";
+                        dbCommand.ExecuteNonQuery();
+                    }
                 }
 
             }
@@ -1191,29 +1199,27 @@ namespace UIMFLibrary
         /// </param>
         public void DeleteFrames(List<int> frameNums, bool updateGlobalParameters)
         {
-            var sFrameList = new StringBuilder();
-
             // Construct a comma-separated list of frame numbers
-            foreach (var frameNum in frameNums)
-            {
-                sFrameList.Append(frameNum + ",");
-            }
+            var sFrameList = string.Join(",", frameNums);
 
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" +
-                                        sFrameList.ToString().TrimEnd(',')
-                                        + "); ";
+                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
 
-                dbCommand.CommandText = "DELETE FROM Frame_Params WHERE FrameNum IN ("
-                                        + sFrameList.ToString().TrimEnd(',') + "); ";
+                dbCommand.CommandText = "DELETE FROM Frame_Params WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
+
+                if (HasLegacyParameterTables)
+                {
+                    dbCommand.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN (" + sFrameList + "); ";
+                    dbCommand.ExecuteNonQuery();
+                }
 
                 if (updateGlobalParameters)
                 {
-                    DecrementFrameCount(dbCommand, frameNums.Count());
+                    DecrementFrameCount(dbCommand, frameNums.Count);
                 }
 
             }
