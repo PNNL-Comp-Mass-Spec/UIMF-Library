@@ -172,7 +172,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (int)</param>
         public FrameParams AddUpdateValue(FrameParamKeyType paramType, int value)
         {
-            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));            
+            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace UIMFLibrary
             }
 
             UpdateCachedParam(paramType, value);
-            
+
             return this;
         }
 

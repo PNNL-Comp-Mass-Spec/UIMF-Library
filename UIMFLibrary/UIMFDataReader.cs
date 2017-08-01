@@ -459,14 +459,14 @@ namespace UIMFLibrary
                 var cmd = new SQLiteCommand(uimfConnection)
                 {
                     // Lookup the table creation SQL, for example (newlines added here for readability):
-                    //  CREATE TABLE Global_Parameters ( 
-                    //   DateStarted STRING, 
-                    //   NumFrames INT(4) NOT NULL, 
-                    //   BinWidth DOUBLE NOT NULL, 
-                    //   Bins INT(4) NOT NULL, 
-                    //   TOFCorrectionTime FLOAT NOT NULL, 
-                    //   TOFIntensityType TEXT NOT NULL, 
-                    //   DatasetType TEXT, 
+                    //  CREATE TABLE Global_Parameters (
+                    //   DateStarted STRING,
+                    //   NumFrames INT(4) NOT NULL,
+                    //   BinWidth DOUBLE NOT NULL,
+                    //   Bins INT(4) NOT NULL,
+                    //   TOFCorrectionTime FLOAT NOT NULL,
+                    //   TOFIntensityType TEXT NOT NULL,
+                    //   DatasetType TEXT,
                     //   Prescan_Continuous BOOL)
                     CommandText =
                         "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '"
@@ -584,7 +584,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns the bin value that corresponds to an m/z value.  
+        /// Returns the bin value that corresponds to an m/z value.
         /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
         /// </summary>
         /// <param name="slope">
@@ -893,7 +893,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Retrieves a given frame (or frames) and sums them in order to be viewed on a heatmap view or other 2D representation visually. 
+        /// Retrieves a given frame (or frames) and sums them in order to be viewed on a heatmap view or other 2D representation visually.
         /// </summary>
         /// <param name="startFrameNumber">
         /// </param>
@@ -990,7 +990,7 @@ namespace UIMFLibrary
                     }
                 }
 
-                // This function extracts intensities from selected scans and bins in a single frame 
+                // This function extracts intensities from selected scans and bins in a single frame
                 // and returns a two-dimensional array intensities[scan][bin]
                 // frameNum is mandatory and all other arguments are optional
                 using (var dbCommand = m_dbConnection.CreateCommand())
@@ -1161,7 +1161,7 @@ namespace UIMFLibrary
         /// A list of table names (e.g. Frame_Scans) that should not be copied.
         /// </param>
         /// <param name="frameTypesToAlwaysCopy">
-        /// A list of FrameTypes that should ALWAYS be copied. 
+        /// A list of FrameTypes that should ALWAYS be copied.
         /// 		e.g. If "Frame_Scans" is passed into tablesToSkip, data will still be inserted into "Frame_Scans" for these Frame Types.
         /// </param>
         /// <returns>
@@ -1791,7 +1791,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Method to provide the bytes from tables that store metadata files 
+        /// Method to provide the bytes from tables that store metadata files
         /// </summary>
         /// <param name="tableName">
         /// </param>
@@ -2290,7 +2290,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns the key frame pressure value that is used in the calculation of drift time 
+        /// Returns the key frame pressure value that is used in the calculation of drift time
         /// </summary>
         /// <param name="frameNumber">
         /// </param>
@@ -2313,12 +2313,12 @@ namespace UIMFLibrary
 
             /*
              * [gord, April 2011] A little history..
-             * Earlier UIMF files have the column 'PressureBack' but not the 
+             * Earlier UIMF files have the column 'PressureBack' but not the
              * newer 'RearIonFunnelPressure' or 'IonFunnelTrapPressure'
-             * 
+             *
              * So, will first check for old format
              * if there is a value there, will use it.  If not,
-             * look for newer columns and use these values. 
+             * look for newer columns and use these values.
              */
 
             var pressure = frameParameters.GetValueDouble(FrameParamKeyType.PressureBack);
@@ -3284,7 +3284,7 @@ namespace UIMFLibrary
         /// The frame number of the desired spectrum; must be an MS1 frame
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.  
+        /// The scan number of the desired spectrum.
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="mzArray">
@@ -3318,7 +3318,7 @@ namespace UIMFLibrary
         /// The frame type to consider.
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.  
+        /// The scan number of the desired spectrum.
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="mzArray">
@@ -5090,8 +5090,8 @@ namespace UIMFLibrary
         }
 
         private static void AddFrameParamKey(
-            IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, 
-            int paramID, string paramName, 
+            IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys,
+            int paramID, string paramName,
             string paramDataType, string paramDescription)
         {
             if (string.IsNullOrWhiteSpace(paramName))
@@ -5632,9 +5632,9 @@ namespace UIMFLibrary
 
 
         /// <summary>
-        /// Determines if the MS1 Frames of this file are labeled as 0 or 1. 
+        /// Determines if the MS1 Frames of this file are labeled as 0 or 1.
         /// Note that MS1 frames should recorded as '1'. But we need to
-        /// support legacy UIMF files which have values of '0' for MS1. 
+        /// support legacy UIMF files which have values of '0' for MS1.
         /// The determined value is stored in a class-wide variable for later use.
         /// Exception is thrown if both 0 and 1 are found.
         /// </summary>
@@ -6534,7 +6534,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region "Events"
+        #region Events
 
         /// <summary>
         /// Raise the error event
