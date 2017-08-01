@@ -2677,7 +2677,6 @@ namespace UIMFLibrary
             return m_HasLegacyParameterTables;
         }
 
-
         /// <summary>
         /// Add entries to the legacy Frame_Parameters table
         /// </summary>
@@ -2710,7 +2709,7 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         /// <param name="paramKey"></param>
         /// <param name="paramValue"></param>
-        private void InsertLegacyGlobalParameter(SQLiteCommand dbCommand, GlobalParamKeyType paramKey, string paramValue)
+        private void InsertLegacyGlobalParameter(IDbCommand dbCommand, GlobalParamKeyType paramKey, string paramValue)
         {
             if (!m_LegacyGlobalParametersTableHasData)
             {
@@ -2773,7 +2772,7 @@ namespace UIMFLibrary
             int bpi,
             double bpiMz,
             long tic,
-            byte[] spectraRecord)
+            IEnumerable spectraRecord)
         {
             m_dbCommandInsertScan.Parameters.Clear();
             m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -2899,7 +2898,7 @@ namespace UIMFLibrary
         /// <param name="paramKeyType">Key type</param>
         /// <param name="paramValue">Value</param>
         /// <param name="dbCommand">database command object</param>
-        private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, SQLiteCommand dbCommand)
+        private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, IDbCommand dbCommand)
         {
             // Make sure the Frame_Parameters table has the Decoded column
             ValidateLegacyDecodedColumnExists();
