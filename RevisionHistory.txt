@@ -1,5 +1,15 @@
 UIMFLibrary Revision History
 
+Version 3.4.2; August 31, 2017
+	- Add method RenumberFrames
+
+Version 3.4.1; August 26, 2017
+	- Fix MzCalibrator when used on non-1GHz files
+
+Version 3.4.0; April 27, 2017
+	- Expand unit tests
+	- Configure for Appveyor to auto-build
+
 Version 3.1.0; March 31, 2017
 	- Use new .csproj format and push to NuGet
 

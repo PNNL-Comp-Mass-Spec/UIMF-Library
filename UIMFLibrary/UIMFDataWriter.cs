@@ -10,6 +10,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Collections;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.IO;
@@ -120,7 +122,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region "Properties"
+        #region Properties
 
         /// <summary>
         /// True if the UIMF file has table Frame_Params
@@ -439,19 +441,19 @@ namespace UIMFLibrary
         /// <param name="oConnection">
         /// Database connection object
         /// </param>
-        /// <param name="EntryType">
+        /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
-        /// <param name="Message">
+        /// <param name="message">
         /// Log message
         /// </param>
-        /// <param name="PostedBy">
+        /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
-        public static void PostLogEntry(SQLiteConnection oConnection, string EntryType, string Message, string PostedBy)
+        public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
         {
             // Check whether the Log_Entries table needs to be created
             using (var cmdPostLogEntry = oConnection.CreateCommand())
@@ -470,27 +472,27 @@ namespace UIMFLibrary
                     cmdPostLogEntry.ExecuteNonQuery();
                 }
 
-                if (string.IsNullOrEmpty(EntryType))
+                if (string.IsNullOrEmpty(entryType))
                 {
-                    EntryType = "Normal";
+                    entryType = "Normal";
                 }
 
-                if (string.IsNullOrEmpty(PostedBy))
+                if (string.IsNullOrEmpty(postedBy))
                 {
-                    PostedBy = string.Empty;
+                    postedBy = string.Empty;
                 }
 
-                if (string.IsNullOrEmpty(Message))
+                if (string.IsNullOrEmpty(message))
                 {
-                    Message = string.Empty;
+                    message = string.Empty;
                 }
 
                 // Now add a log entry
                 cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " +
                                               "VALUES ("
-                                              + "datetime('now'), " + "'" + PostedBy + "', " + "'" + EntryType + "', " +
+                                              + "datetime('now'), " + "'" + postedBy + "', " + "'" + entryType + "', " +
                                               "'"
-                                              + Message + "')";
+                                              + message + "')";
 
                 cmdPostLogEntry.ExecuteNonQuery();
             }
@@ -856,23 +858,47 @@ namespace UIMFLibrary
         /// </summary>
         public void RemoveBinCentricTables()
         {
-            if (!DataReader.TableExists(this.m_dbConnection, "Bin_Intensities"))
+            if (!DataReader.TableExists(m_dbConnection, "Bin_Intensities"))
                 return;
 
-            using (var dbCommand = this.m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 // Drop the table
                 dbCommand.CommandText = "DROP TABLE Bin_Intensities);";
                 dbCommand.ExecuteNonQuery();
             }
 
-            this.FlushUimf(false);
+            FlushUimf(false);
+        }
+
+        /// <summary>
+        /// Renumber frames so that the first frame is frame 1 and to assure that there are no gaps in frame numbers
+        /// </summary>
+        /// <remarks>This method is used by the UIMFDemultiplexer when the first frame to process is not frame 1</remarks>
+        public void RenumberFrames()
+        {
+
+            try
+            {
+                var frameShifter = new FrameNumShifter(m_dbConnection, HasLegacyParameterTables);
+                frameShifter.FrameShiftEvent += FrameShifter_FrameShiftEvent;
+
+                frameShifter.RenumberFrames();
+
+                FlushUimf(true);
+            }
+            catch (Exception ex)
+            {
+                ReportError("Error renumbering frames: " + ex.Message, ex);
+                throw;
+            }
+
         }
 
         /// <summary>
         /// Create the Frame_Param_Keys and Frame_Params tables
         /// </summary>
-        private void CreateFrameParamsTables(SQLiteCommand dbCommand)
+        private void CreateFrameParamsTables(IDbCommand dbCommand)
         {
 
             if (HasFrameParamsTable &&
@@ -917,7 +943,7 @@ namespace UIMFLibrary
 
         }
 
-        private void CreateFrameScansTable(SQLiteCommand dbCommand, string dataType)
+        private void CreateFrameScansTable(IDbCommand dbCommand, string dataType)
         {
             if (DataReader.TableExists(m_dbConnection, "Frame_Scans"))
             {
@@ -944,7 +970,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Create the Global_Params table
         /// </summary>
-        private void CreateGlobalParamsTable(SQLiteCommand dbCommand)
+        private void CreateGlobalParamsTable(IDbCommand dbCommand)
         {
             if (HasGlobalParamsTable)
             {
@@ -968,7 +994,7 @@ namespace UIMFLibrary
         /// Create legacy parameter tables (Global_Parameters and Frame_Parameters)
         /// </summary>
         /// <param name="dbCommand"></param>
-        private void CreateLegacyParameterTables(SQLiteCommand dbCommand)
+        private void CreateLegacyParameterTables(IDbCommand dbCommand)
         {
             if (!DataReader.TableExists(m_dbConnection, "Global_Parameters"))
             {
@@ -1170,6 +1196,14 @@ namespace UIMFLibrary
                                             "WHERE FrameNum = " + frameNum +
                                              " AND ParamID = " + (int)FrameParamKeyType.Scans + ";";
                     dbCommand.ExecuteNonQuery();
+
+                    if (HasLegacyParameterTables)
+                    {
+                        dbCommand.CommandText = "UPDATE Frame_Parameters " +
+                                                "SET Scans = 0 " +
+                                                "WHERE FrameNum = " + frameNum + ";";
+                        dbCommand.ExecuteNonQuery();
+                    }
                 }
 
             }
@@ -1186,29 +1220,27 @@ namespace UIMFLibrary
         /// </param>
         public void DeleteFrames(List<int> frameNums, bool updateGlobalParameters)
         {
-            var sFrameList = new StringBuilder();
-
             // Construct a comma-separated list of frame numbers
-            foreach (var frameNum in frameNums)
-            {
-                sFrameList.Append(frameNum + ",");
-            }
+            var sFrameList = string.Join(",", frameNums);
 
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" +
-                                        sFrameList.ToString().TrimEnd(',')
-                                        + "); ";
+                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
 
-                dbCommand.CommandText = "DELETE FROM Frame_Params WHERE FrameNum IN ("
-                                        + sFrameList.ToString().TrimEnd(',') + "); ";
+                dbCommand.CommandText = "DELETE FROM Frame_Params WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
+
+                if (HasLegacyParameterTables)
+                {
+                    dbCommand.CommandText = "DELETE FROM Frame_Parameters WHERE FrameNum IN (" + sFrameList + "); ";
+                    dbCommand.ExecuteNonQuery();
+                }
 
                 if (updateGlobalParameters)
                 {
-                    DecrementFrameCount(dbCommand, frameNums.Count());
+                    DecrementFrameCount(dbCommand, frameNums.Count);
                 }
 
             }
@@ -1484,6 +1516,7 @@ namespace UIMFLibrary
                 new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
+            // See also the FrameType enum in the DataReader class
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
             // Number of TOF scans
@@ -1754,7 +1787,7 @@ namespace UIMFLibrary
             IList<int> intensities,
             double binWidth)
         {
-            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out var nonZeroCount);
+            InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out _);
         }
 
         /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
@@ -1896,21 +1929,21 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
-        /// <param name="EntryType">
+        /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
-        /// <param name="Message">
+        /// <param name="message">
         /// Log message
         /// </param>
-        /// <param name="PostedBy">
+        /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
-        public void PostLogEntry(string EntryType, string Message, string PostedBy)
+        public void PostLogEntry(string entryType, string message, string postedBy)
         {
-            PostLogEntry(m_dbConnection, EntryType, Message, PostedBy);
+            PostLogEntry(m_dbConnection, entryType, message, postedBy);
         }
 
         /// <summary>
@@ -2672,7 +2705,6 @@ namespace UIMFLibrary
             return m_HasLegacyParameterTables;
         }
 
-
         /// <summary>
         /// Add entries to the legacy Frame_Parameters table
         /// </summary>
@@ -2705,7 +2737,7 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         /// <param name="paramKey"></param>
         /// <param name="paramValue"></param>
-        private void InsertLegacyGlobalParameter(SQLiteCommand dbCommand, GlobalParamKeyType paramKey, string paramValue)
+        private void InsertLegacyGlobalParameter(IDbCommand dbCommand, GlobalParamKeyType paramKey, string paramValue)
         {
             if (!m_LegacyGlobalParametersTableHasData)
             {
@@ -2768,7 +2800,7 @@ namespace UIMFLibrary
             int bpi,
             double bpiMz,
             long tic,
-            byte[] spectraRecord)
+            IEnumerable spectraRecord)
         {
             m_dbCommandInsertScan.Parameters.Clear();
             m_dbCommandInsertScan.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -2863,6 +2895,7 @@ namespace UIMFLibrary
             throw new Exception(errorMessage, ex);
         }
 
+
         /// <summary>
         /// Begin a transaction
         /// </summary>
@@ -2894,7 +2927,7 @@ namespace UIMFLibrary
         /// <param name="paramKeyType">Key type</param>
         /// <param name="paramValue">Value</param>
         /// <param name="dbCommand">database command object</param>
-        private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, SQLiteCommand dbCommand)
+        private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, IDbCommand dbCommand)
         {
             // Make sure the Frame_Parameters table has the Decoded column
             ValidateLegacyDecodedColumnExists();
@@ -3103,5 +3136,17 @@ namespace UIMFLibrary
 
         #endregion
 
+        #region Event Handlers
+
+        private void FrameShifter_FrameShiftEvent(object sender, FrameNumShiftEventArgs e)
+        {
+
+            PostLogEntry(
+                "Normal",
+                string.Format("Decremented frame number by {0} for frames {1}", e.DecrementAmount, e.FrameRanges),
+                "ShiftFramesInBatch");
+        }
+
+        #endregion
     }
 }
