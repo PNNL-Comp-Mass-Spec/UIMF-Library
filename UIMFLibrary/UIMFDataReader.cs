@@ -12,6 +12,7 @@
 
 using System.Data;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace UIMFLibrary
 {
@@ -1126,19 +1127,20 @@ namespace UIMFLibrary
                 }
 
                 var indexCurrentBin = 0;
-                var decompressLength = LZFCompressionUtil.Decompress(
-                    ref compressedBinIntensity,
-                    compressedBinIntensity.Length,
-                    ref streamBinIntensity,
-                    m_globalParameters.Bins * DATASIZE);
+               streamBinIntensity = CLZF2.Decompress(compressedBinIntensity);
+
+
 
                 var pixelY = 1;
+                int[] arr = new int[1];
 
                 for (var binValue = 0;
-                    (binValue < decompressLength) && (indexCurrentBin < endBin);
+                    (binValue < streamBinIntensity.Length) && (indexCurrentBin < endBin);
                     binValue += DATASIZE)
                 {
-                    var intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
+                    Buffer.BlockCopy(streamBinIntensity, binValue, arr, 0, 4);
+
+                    var intBinIntensity = arr[0];
 
                     if (intBinIntensity < 0)
                     {
