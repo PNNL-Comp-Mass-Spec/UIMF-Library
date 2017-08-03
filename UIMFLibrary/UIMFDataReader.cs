@@ -103,7 +103,7 @@ namespace UIMFLibrary
         /// <summary>
         /// UIMF database connection
         /// </summary>
-        protected readonly SQLiteConnection m_dbConnection;
+        protected SQLiteConnection m_dbConnection;
 
         /// <summary>
         /// Calibration table
@@ -245,6 +245,8 @@ namespace UIMFLibrary
         /// </summary>
         private readonly string m_uimfFilePath;
 
+        private SQLiteConnection memoryConnection;
+
         #endregion
 
         #region Constructors and Destructors
@@ -255,11 +257,14 @@ namespace UIMFLibrary
         /// <param name="fileName">
         /// Path to the UIMF file
         /// </param>
+        /// <param name="useInMemoryDatabase">
+        /// Whether to load database into memory
+        /// </param>
         /// <exception cref="Exception">
         /// </exception>
         /// <exception cref="FileNotFoundException">
         /// </exception>
-        public DataReader(string fileName)
+        public DataReader(string fileName, bool useInMemoryDatabase=false)
         {
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
@@ -279,12 +284,20 @@ namespace UIMFLibrary
             }
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
-            var connectionString = "Data Source = " + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
+            var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
-
+            
             try
             {
                 m_dbConnection.Open();
+                if (useInMemoryDatabase)
+                {
+                    memoryConnection = new SQLiteConnection("Data Source=:memory:", true);
+                    memoryConnection.Open();
+                    m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null , 100);
+                    m_dbConnection = memoryConnection;
+                }
+              
                 m_uimfFilePath = uimfFileInfo.FullName;
 
                 CacheGlobalParameters();
@@ -351,6 +364,15 @@ namespace UIMFLibrary
             {
                 throw new Exception("Failed to open UIMF file: " + ex);
             }
+        }
+
+        private bool Callback(SQLiteConnection source, string sourceName, SQLiteConnection destination, string destinationName, int pages, int remainingPages, int totalPages, bool retry)
+        {
+            if (remainingPages == 0)
+            {
+                m_dbConnection = memoryConnection;
+            }
+            return true;
         }
 
         #endregion
