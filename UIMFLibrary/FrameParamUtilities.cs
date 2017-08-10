@@ -30,6 +30,76 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Convert a dynamic value to a string
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="convertedValue"></param>
+        /// <returns></returns>
+        public static bool ConvertDynamicToDouble(dynamic value, out double convertedValue)
+        {
+            if (value is double || value is float || value is int || value is short || value is byte)
+            {
+                convertedValue = value;
+                return true;
+            }
+
+            if (value is string)
+            {
+                if (double.TryParse(value, out double result))
+                {
+                    convertedValue = result;
+                    return true;
+                }
+            }
+            else
+            {
+                if (double.TryParse(value.ToString(), out double result))
+                {
+                    convertedValue = result;
+                    return true;
+                }
+            }
+
+            convertedValue = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// Convert a dynamic value to an integer
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="convertedValue"></param>
+        /// <returns></returns>
+        public static bool ConvertDynamicToInt32(dynamic value, out int convertedValue)
+        {
+            if (value is int || value is short || value is byte)
+            {
+                convertedValue = value;
+                return true;
+            }
+
+            if (value is string)
+            {
+                if (int.TryParse(value, out int result))
+                {
+                    convertedValue = result;
+                    return true;
+                }
+            }
+            else
+            {
+                if (int.TryParse(value.ToString(), out int result))
+                {
+                    convertedValue = result;
+                    return true;
+                }
+            }
+
+            convertedValue = 0;
+            return false;
+        }
+
+        /// <summary>
         /// Convert an array of doubles to an array of bytes
         /// </summary>
         /// <param name="frag">
@@ -57,49 +127,49 @@ namespace UIMFLibrary
         /// <param name="frameParameters"></param>
         /// <returns>Frame parameter dictionary</returns>
 #pragma warning disable 612, 618
-        public static Dictionary<FrameParamKeyType, string> ConvertFrameParameters(FrameParameters frameParameters)
+        public static Dictionary<FrameParamKeyType, dynamic> ConvertFrameParameters(FrameParameters frameParameters)
 #pragma warning restore 612, 618
         {
-            var frameParams = new Dictionary<FrameParamKeyType, string>
+            var frameParams = new Dictionary<FrameParamKeyType, dynamic>
             {
                 // Start time of frame, in minutes
-                {FrameParamKeyType.StartTimeMinutes, UIMFDataUtilities.DoubleToString(frameParameters.StartTime)},
+                {FrameParamKeyType.StartTimeMinutes, frameParameters.StartTime},
 
                 // Duration of frame, in seconds
-                {FrameParamKeyType.DurationSeconds, UIMFDataUtilities.DoubleToString(frameParameters.Duration)},
+                {FrameParamKeyType.DurationSeconds, frameParameters.Duration},
 
                 // Number of collected and summed acquisitions in a frame
-                {FrameParamKeyType.Accumulations, UIMFDataUtilities.IntToString(frameParameters.Accumulations)},
+                {FrameParamKeyType.Accumulations, frameParameters.Accumulations},
 
                 // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-                {FrameParamKeyType.FrameType, UIMFDataUtilities.IntToString((int)frameParameters.FrameType)},
+                {FrameParamKeyType.FrameType, (int)frameParameters.FrameType},
 
                 // Set to 1 after a frame has been decoded (added June 27, 2011)
-                {FrameParamKeyType.Decoded, UIMFDataUtilities.IntToString(frameParameters.Decoded)},
+                {FrameParamKeyType.Decoded, frameParameters.Decoded},
 
                 // Set to 1 after a frame has been calibrated
-                {FrameParamKeyType.CalibrationDone, UIMFDataUtilities.IntToString(frameParameters.CalibrationDone)},
+                {FrameParamKeyType.CalibrationDone, frameParameters.CalibrationDone},
 
                 // Number of TOF scans
-                {FrameParamKeyType.Scans, UIMFDataUtilities.IntToString(frameParameters.Scans)},
+                {FrameParamKeyType.Scans, frameParameters.Scans},
 
                 // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
                 {FrameParamKeyType.MultiplexingEncodingSequence, frameParameters.IMFProfile},
 
                 // Original size of bit sequence
-                {FrameParamKeyType.MPBitOrder, UIMFDataUtilities.IntToString(frameParameters.MPBitOrder)},
+                {FrameParamKeyType.MPBitOrder, frameParameters.MPBitOrder},
 
                 // Number of TOF Losses
-                {FrameParamKeyType.TOFLosses, UIMFDataUtilities.IntToString(frameParameters.TOFLosses)},
+                {FrameParamKeyType.TOFLosses, frameParameters.TOFLosses},
 
                 // Average time between TOF trigger pulses
-                {FrameParamKeyType.AverageTOFLength, UIMFDataUtilities.DoubleToString(frameParameters.AverageTOFLength)},
+                {FrameParamKeyType.AverageTOFLength, frameParameters.AverageTOFLength},
 
                 // Calibration slope, k0
-                {FrameParamKeyType.CalibrationSlope, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationSlope)},
+                {FrameParamKeyType.CalibrationSlope, frameParameters.CalibrationSlope},
 
                 // Calibration intercept, t0
-                {FrameParamKeyType.CalibrationIntercept, UIMFDataUtilities.DoubleToString(frameParameters.CalibrationIntercept)}
+                {FrameParamKeyType.CalibrationIntercept, frameParameters.CalibrationIntercept}
             };
 
             // These six parameters are coefficients for residual mass error correction
@@ -111,16 +181,16 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.e2) > float.Epsilon ||
                 Math.Abs(frameParameters.f2) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficienta2, UIMFDataUtilities.DoubleToString(frameParameters.a2));
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientb2, UIMFDataUtilities.DoubleToString(frameParameters.b2));
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientc2, UIMFDataUtilities.DoubleToString(frameParameters.c2));
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientd2, UIMFDataUtilities.DoubleToString(frameParameters.d2));
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficiente2, UIMFDataUtilities.DoubleToString(frameParameters.e2));
-                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientf2, UIMFDataUtilities.DoubleToString(frameParameters.f2));
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficienta2, frameParameters.a2);
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientb2, frameParameters.b2);
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientc2, frameParameters.c2);
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientd2, frameParameters.d2);
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficiente2, frameParameters.e2);
+                frameParams.Add(FrameParamKeyType.MassCalibrationCoefficientf2, frameParameters.f2);
             }
 
             // Ambient temperature
-            frameParams.Add(FrameParamKeyType.AmbientTemperature, UIMFDataUtilities.FloatToString(frameParameters.Temperature));
+            frameParams.Add(FrameParamKeyType.AmbientTemperature, frameParameters.Temperature);
 
             // Voltage settings in the IMS system
             if (Math.Abs(frameParameters.voltHVRack1) > float.Epsilon ||
@@ -128,10 +198,10 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.voltHVRack3) > float.Epsilon ||
                 Math.Abs(frameParameters.voltHVRack4) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltHVRack1, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack1));
-                frameParams.Add(FrameParamKeyType.VoltHVRack2, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack2));
-                frameParams.Add(FrameParamKeyType.VoltHVRack3, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack3));
-                frameParams.Add(FrameParamKeyType.VoltHVRack4, UIMFDataUtilities.FloatToString(frameParameters.voltHVRack4));
+                frameParams.Add(FrameParamKeyType.VoltHVRack1, frameParameters.voltHVRack1);
+                frameParams.Add(FrameParamKeyType.VoltHVRack2, frameParameters.voltHVRack2);
+                frameParams.Add(FrameParamKeyType.VoltHVRack3, frameParameters.voltHVRack3);
+                frameParams.Add(FrameParamKeyType.VoltHVRack4, frameParameters.voltHVRack4);
             }
 
             // Capillary Inlet Voltage
@@ -143,10 +213,10 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.voltEntranceHPFOut) > float.Epsilon ||
                 Math.Abs(frameParameters.voltEntranceCondLmt) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltCapInlet, UIMFDataUtilities.FloatToString(frameParameters.voltCapInlet));
-                frameParams.Add(FrameParamKeyType.VoltEntranceHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFIn));
-                frameParams.Add(FrameParamKeyType.VoltEntranceHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceHPFOut));
-                frameParams.Add(FrameParamKeyType.VoltEntranceCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltEntranceCondLmt));
+                frameParams.Add(FrameParamKeyType.VoltCapInlet, frameParameters.voltCapInlet);
+                frameParams.Add(FrameParamKeyType.VoltEntranceHPFIn, frameParameters.voltEntranceHPFIn);
+                frameParams.Add(FrameParamKeyType.VoltEntranceHPFOut, frameParameters.voltEntranceHPFOut);
+                frameParams.Add(FrameParamKeyType.VoltEntranceCondLmt, frameParameters.voltEntranceCondLmt);
             }
 
             // Trap Out Voltage
@@ -156,9 +226,9 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.voltTrapIn) > float.Epsilon ||
                 Math.Abs(frameParameters.voltJetDist) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltTrapOut, UIMFDataUtilities.FloatToString(frameParameters.voltTrapOut));
-                frameParams.Add(FrameParamKeyType.VoltTrapIn, UIMFDataUtilities.FloatToString(frameParameters.voltTrapIn));
-                frameParams.Add(FrameParamKeyType.VoltJetDist, UIMFDataUtilities.FloatToString(frameParameters.voltJetDist));
+                frameParams.Add(FrameParamKeyType.VoltTrapOut, frameParameters.voltTrapOut);
+                frameParams.Add(FrameParamKeyType.VoltTrapIn, frameParameters.voltTrapIn);
+                frameParams.Add(FrameParamKeyType.VoltJetDist, frameParameters.voltJetDist);
             }
 
             // Fragmentation Quadrupole 1 Voltage
@@ -166,8 +236,8 @@ namespace UIMFLibrary
             if (Math.Abs(frameParameters.voltQuad1) > float.Epsilon ||
                 Math.Abs(frameParameters.voltCond1) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltQuad1, UIMFDataUtilities.FloatToString(frameParameters.voltQuad1));
-                frameParams.Add(FrameParamKeyType.VoltCond1, UIMFDataUtilities.FloatToString(frameParameters.voltCond1));
+                frameParams.Add(FrameParamKeyType.VoltQuad1, frameParameters.voltQuad1);
+                frameParams.Add(FrameParamKeyType.VoltCond1, frameParameters.voltCond1);
             }
 
             // Fragmentation Quadrupole 2 Voltage
@@ -175,8 +245,8 @@ namespace UIMFLibrary
             if (Math.Abs(frameParameters.voltQuad2) > float.Epsilon ||
                 Math.Abs(frameParameters.voltCond2) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltQuad2, UIMFDataUtilities.FloatToString(frameParameters.voltQuad2));
-                frameParams.Add(FrameParamKeyType.VoltCond2, UIMFDataUtilities.FloatToString(frameParameters.voltCond2));
+                frameParams.Add(FrameParamKeyType.VoltQuad2, frameParameters.voltQuad2);
+                frameParams.Add(FrameParamKeyType.VoltCond2, frameParameters.voltCond2);
             }
 
             // IMS Out Voltage
@@ -187,10 +257,10 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.voltExitHPFOut) > float.Epsilon ||
                 Math.Abs(frameParameters.voltExitCondLmt) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.VoltIMSOut, UIMFDataUtilities.FloatToString(frameParameters.voltIMSOut));
-                frameParams.Add(FrameParamKeyType.VoltExitHPFIn, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFIn));
-                frameParams.Add(FrameParamKeyType.VoltExitHPFOut, UIMFDataUtilities.FloatToString(frameParameters.voltExitHPFOut));
-                frameParams.Add(FrameParamKeyType.VoltExitCondLmt, UIMFDataUtilities.FloatToString(frameParameters.voltExitCondLmt));
+                frameParams.Add(FrameParamKeyType.VoltIMSOut, frameParameters.voltIMSOut);
+                frameParams.Add(FrameParamKeyType.VoltExitHPFIn, frameParameters.voltExitHPFIn);
+                frameParams.Add(FrameParamKeyType.VoltExitHPFOut, frameParameters.voltExitHPFOut);
+                frameParams.Add(FrameParamKeyType.VoltExitCondLmt, frameParameters.voltExitCondLmt);
             }
 
             // Pressure at front of Drift Tube
@@ -198,8 +268,8 @@ namespace UIMFLibrary
             if (Math.Abs(frameParameters.PressureFront) > float.Epsilon ||
                 Math.Abs(frameParameters.PressureBack) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.PressureFront, UIMFDataUtilities.FloatToString(frameParameters.PressureFront));
-                frameParams.Add(FrameParamKeyType.PressureBack, UIMFDataUtilities.FloatToString(frameParameters.PressureBack));
+                frameParams.Add(FrameParamKeyType.PressureFront, frameParameters.PressureFront);
+                frameParams.Add(FrameParamKeyType.PressureBack, frameParameters.PressureBack);
             }
 
             // High pressure funnel pressure
@@ -211,24 +281,23 @@ namespace UIMFLibrary
                 Math.Abs(frameParameters.RearIonFunnelPressure) > float.Epsilon ||
                 Math.Abs(frameParameters.QuadrupolePressure) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.HighPressureFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.HighPressureFunnelPressure));
-                frameParams.Add(FrameParamKeyType.IonFunnelTrapPressure, UIMFDataUtilities.FloatToString(frameParameters.IonFunnelTrapPressure));
-                frameParams.Add(FrameParamKeyType.RearIonFunnelPressure, UIMFDataUtilities.FloatToString(frameParameters.RearIonFunnelPressure));
-                frameParams.Add(FrameParamKeyType.QuadrupolePressure, UIMFDataUtilities.FloatToString(frameParameters.QuadrupolePressure));
+                frameParams.Add(FrameParamKeyType.HighPressureFunnelPressure, frameParameters.HighPressureFunnelPressure);
+                frameParams.Add(FrameParamKeyType.IonFunnelTrapPressure, frameParameters.IonFunnelTrapPressure);
+                frameParams.Add(FrameParamKeyType.RearIonFunnelPressure, frameParameters.RearIonFunnelPressure);
+                frameParams.Add(FrameParamKeyType.QuadrupolePressure, frameParameters.QuadrupolePressure);
             }
 
             // ESI Voltage
             if (Math.Abs(frameParameters.ESIVoltage) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.ESIVoltage, UIMFDataUtilities.FloatToString(frameParameters.ESIVoltage));
+                frameParams.Add(FrameParamKeyType.ESIVoltage, frameParameters.ESIVoltage);
             }
 
             // Float Voltage
             if (Math.Abs(frameParameters.FloatVoltage) > float.Epsilon)
             {
-                frameParams.Add(FrameParamKeyType.FloatVoltage, UIMFDataUtilities.FloatToString(frameParameters.FloatVoltage));
+                frameParams.Add(FrameParamKeyType.FloatVoltage, frameParameters.FloatVoltage);
             }
-
 
             // Voltage profile used in fragmentation
             // Legacy parameter, likely never used
@@ -248,10 +317,94 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Convert the string value to a dynamic variable of the given type
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Supports byte, short, int, float, double, and DateTime
+        /// All other types will continue to be strings
+        /// </remarks>
+        public static dynamic ConvertStringToDynamic(Type targetType, string value)
+        {
+            try
+            {
+                if (value == null)
+                    value = string.Empty;
+
+                if (targetType == typeof(byte))
+                {
+                    if (value.EndsWith(".0"))
+                        value = value.Substring(0, value.Length - 2);
+
+                    if (byte.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+
+                if (targetType == typeof(short))
+                {
+                    if (value.EndsWith(".0"))
+                        value = value.Substring(0, value.Length - 2);
+
+                    if (short.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+
+                if (targetType == typeof(int))
+                {
+                    if (value.EndsWith(".0"))
+                        value = value.Substring(0, value.Length - 2);
+
+                    if (int.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+
+                if (targetType == typeof(float))
+                {
+                    if (float.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+
+                if (targetType == typeof(double))
+                {
+                    if (double.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+
+                if (targetType == typeof(DateTime))
+                {
+                    if (DateTime.TryParse(value, out var parsed))
+                        return parsed;
+
+                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Cannot convert {0} to a {1}: {2}", value, targetType, ex);
+            }
+
+            // Continue to store as a string
+            return value;
+        }
+
+        /// <summary>
         /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
         /// </summary>
         /// <param name="frameParamsByType"></param>
         /// <returns></returns>
+        [Obsolete("Superseded by ConvertDynamicParamsToFrameParams")]
         public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
         {
             var frameParams = new FrameParams();
@@ -264,6 +417,22 @@ namespace UIMFLibrary
             return frameParams;
         }
 
+        /// <summary>
+        /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
+        /// </summary>
+        /// <param name="frameParamsByType"></param>
+        /// <returns></returns>
+        public static FrameParams ConvertDynamicParamsToFrameParams(Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
+        {
+            var frameParams = new FrameParams();
+
+            foreach (var paramItem in frameParamsByType)
+            {
+                frameParams.AddUpdateValue(paramItem.Key, paramItem.Value);
+            }
+
+            return frameParams;
+        }
 #pragma warning disable 612, 618
         /// <summary>
         /// Obtain a FrameParameters instance from a FrameParams instance

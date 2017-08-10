@@ -147,7 +147,18 @@ namespace UIMFLibrary
         /// <summary>
         /// Parameter value
         /// </summary>
-        public string Value { get; set; }
+        public dynamic Value { get; set; }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="paramType">Frame parameter definition</param>
+        /// <param name="value">Parameter value</param>
+        public GlobalParam(GlobalParamKeyType paramType, dynamic value)
+        {
+            InitializeByType(paramType);
+            Value = value;
+        }
 
         /// <summary>
         /// Constructor
@@ -157,7 +168,7 @@ namespace UIMFLibrary
         public GlobalParam(GlobalParamKeyType paramType, string value)
         {
             InitializeByType(paramType);
-            Value = value;
+            Value = FrameParamUtilities.ConvertStringToDynamic(DataType, value);
         }
 
         /// <summary>
@@ -169,7 +180,15 @@ namespace UIMFLibrary
             if (Value == null)
                 return ParamType + " (" + DataType + ")";
 
-            return Value;
+            if (ParamType == GlobalParamKeyType.DateStarted && Value is DateTime)
+            {
+                // Make sure the date is in the standard format expected by Proteowizard
+                // Proteowizard requires that it have AM/PM at the end
+
+                return Value.ToString("M/d/yyyy h:mm:ss tt");
+            }
+
+            return Value.ToString();
         }
 
         /// <summary>

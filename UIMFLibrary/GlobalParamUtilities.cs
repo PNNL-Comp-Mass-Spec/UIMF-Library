@@ -8,6 +8,7 @@ namespace UIMFLibrary
     /// </summary>
     public static class GlobalParamUtilities
     {
+
         /// <summary>
         /// Map between .net data type aliases and official data type names
         /// </summary>
@@ -45,7 +46,7 @@ namespace UIMFLibrary
         /// <param name="globalParameters"></param>
         /// <returns>Global parameter dictionary</returns>
 #pragma warning disable 612, 618
-        public static Dictionary<GlobalParamKeyType, string> ConvertGlobalParameters(GlobalParameters globalParameters)
+        public static Dictionary<GlobalParamKeyType, dynamic> ConvertGlobalParameters(GlobalParameters globalParameters)
 #pragma warning restore 612, 618
         {
             var prescanContinuous = 0;
@@ -53,23 +54,23 @@ namespace UIMFLibrary
             if (globalParameters.Prescan_Continuous)
                 prescanContinuous = 1;
 
-            var globalParams = new Dictionary<GlobalParamKeyType, string>
+            var globalParams = new Dictionary<GlobalParamKeyType, dynamic>
             {
                 {GlobalParamKeyType.InstrumentName, globalParameters.InstrumentName},
                 {GlobalParamKeyType.DateStarted, globalParameters.DateStarted},
-                {GlobalParamKeyType.NumFrames, UIMFDataUtilities.IntToString(globalParameters.NumFrames)},
-                {GlobalParamKeyType.TimeOffset, UIMFDataUtilities.IntToString(globalParameters.TimeOffset)},
-                {GlobalParamKeyType.BinWidth, UIMFDataUtilities.DoubleToString(globalParameters.BinWidth)},
-                {GlobalParamKeyType.Bins, UIMFDataUtilities.IntToString(globalParameters.Bins)},
-                {GlobalParamKeyType.TOFCorrectionTime, UIMFDataUtilities.DoubleToString(globalParameters.TOFCorrectionTime)},
-                // Obsolete: {GlobalParamKeyType.FrameDataBlobVersion, UIMFDataUtilities.DoubleToString(globalParameters.FrameDataBlobVersion)},
-                // Obsolete: {GlobalParamKeyType.ScanDataBlobVersion, UIMFDataUtilities.DoubleToString(globalParameters.ScanDataBlobVersion)},
+                {GlobalParamKeyType.NumFrames, globalParameters.NumFrames},
+                {GlobalParamKeyType.TimeOffset, globalParameters.TimeOffset},
+                {GlobalParamKeyType.BinWidth, globalParameters.BinWidth},
+                {GlobalParamKeyType.Bins, globalParameters.Bins},
+                {GlobalParamKeyType.TOFCorrectionTime, globalParameters.TOFCorrectionTime},
+                // Obsolete: {GlobalParamKeyType.FrameDataBlobVersion, globalParameters.FrameDataBlobVersion},
+                // Obsolete: {GlobalParamKeyType.ScanDataBlobVersion, globalParameters.ScanDataBlobVersion},
                 {GlobalParamKeyType.TOFIntensityType, globalParameters.TOFIntensityType},
                 {GlobalParamKeyType.DatasetType, globalParameters.DatasetType},
-                {GlobalParamKeyType.PrescanTOFPulses, UIMFDataUtilities.IntToString(globalParameters.Prescan_TOFPulses)},
-                {GlobalParamKeyType.PrescanAccumulations, UIMFDataUtilities.IntToString(globalParameters.Prescan_Accumulations)},
-                {GlobalParamKeyType.PrescanTICThreshold, UIMFDataUtilities.IntToString(globalParameters.Prescan_TICThreshold)},
-                {GlobalParamKeyType.PrescanContinuous, UIMFDataUtilities.IntToString(prescanContinuous)},
+                {GlobalParamKeyType.PrescanTOFPulses, globalParameters.Prescan_TOFPulses},
+                {GlobalParamKeyType.PrescanAccumulations, globalParameters.Prescan_Accumulations},
+                {GlobalParamKeyType.PrescanTICThreshold, globalParameters.Prescan_TICThreshold},
+                {GlobalParamKeyType.PrescanContinuous, prescanContinuous},
                 {GlobalParamKeyType.PrescanProfile, globalParameters.Prescan_Profile}
             };
 
@@ -81,7 +82,25 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="GlobalParamsByType"></param>
         /// <returns></returns>
+        [Obsolete("Superseded by ConvertDynamicParamsToGlobalParams")]
         public static GlobalParams ConvertStringParamsToGlobalParams(Dictionary<GlobalParamKeyType, string> GlobalParamsByType)
+        {
+            var globalParams = new GlobalParams();
+
+            foreach (var paramItem in GlobalParamsByType)
+            {
+                globalParams.AddUpdateValue(paramItem.Key, paramItem.Value);
+            }
+
+            return globalParams;
+        }
+
+        /// <summary>
+        /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
+        /// </summary>
+        /// <param name="GlobalParamsByType"></param>
+        /// <returns></returns>
+        public static GlobalParams ConvertDynamicParamsToGlobalParams(Dictionary<GlobalParamKeyType, dynamic> GlobalParamsByType)
         {
             var globalParams = new GlobalParams();
 
@@ -107,6 +126,7 @@ namespace UIMFLibrary
             Console.WriteLine("Warning: data type alias not recognized: " + alias);
             return "System.Object";
         }
+
 
 #pragma warning disable 612, 618
         /// <summary>

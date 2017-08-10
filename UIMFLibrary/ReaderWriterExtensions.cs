@@ -16,7 +16,7 @@ namespace UIMFLibrary
         /// <param name="frameNum"></param>
         /// <param name="frameParameters"></param>
         /// <returns></returns>
-        public static async Task InsertFrameAsync(this DataWriter dataWriter, int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
+        public static async Task InsertFrameAsync(this DataWriter dataWriter, int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParameters)
         {
             try
             {
