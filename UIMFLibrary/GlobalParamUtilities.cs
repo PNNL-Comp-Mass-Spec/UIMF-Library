@@ -9,6 +9,12 @@ namespace UIMFLibrary
     public static class GlobalParamUtilities
     {
 
+        #region Member variables
+
+        private static readonly Dictionary<GlobalParamKeyType, Type> mGlobalParamKeyTypes = new Dictionary<GlobalParamKeyType, Type>();
+
+        #endregion
+
         /// <summary>
         /// Map between .net data type aliases and official data type names
         /// </summary>
@@ -127,6 +133,58 @@ namespace UIMFLibrary
             return "System.Object";
         }
 
+
+        /// <summary>
+        /// Get the default value for the data type associated with teh given frame param key
+        /// </summary>
+        /// <param name="paramType"></param>
+        /// <returns></returns>
+        public static dynamic GetDefaultValueByType(GlobalParamKeyType paramType)
+        {
+            var dataType = GetGlobalParamKeyDataType(paramType);
+            return FrameParamUtilities.GetDefaultValueByType(dataType);
+        }
+
+        /// <summary>
+        /// Get the system data type associated with a given global parameter key
+        /// </summary>
+        /// <param name="paramType"></param>
+        /// <returns></returns>
+        public static Type GetGlobalParamKeyDataType(GlobalParamKeyType paramType)
+        {
+            if (mGlobalParamKeyTypes.Count == 0)
+            {
+                var keyTypes = new Dictionary<GlobalParamKeyType, Type>
+                {
+                    {GlobalParamKeyType.InstrumentName, typeof(string)},
+                    {GlobalParamKeyType.DateStarted, typeof(string)},            // Stored as a string to assure the format does not change
+                    {GlobalParamKeyType.NumFrames, typeof(int)},
+                    {GlobalParamKeyType.TimeOffset, typeof(int)},
+                    {GlobalParamKeyType.BinWidth, typeof(double)},               // Tof-bin size (in nanosecods) or ppm bin size (in parts-per-million)
+                    {GlobalParamKeyType.Bins, typeof(int)},
+                    {GlobalParamKeyType.TOFCorrectionTime, typeof(float)},
+                    {GlobalParamKeyType.TOFIntensityType, typeof(string)},
+                    {GlobalParamKeyType.DatasetType, typeof(string)},
+                    {GlobalParamKeyType.PrescanTOFPulses, typeof(int)},
+                    {GlobalParamKeyType.PrescanAccumulations, typeof(int)},
+                    {GlobalParamKeyType.PrescanTICThreshold, typeof(int)},
+                    {GlobalParamKeyType.PrescanContinuous, typeof(int)},
+                    {GlobalParamKeyType.PrescanProfile, typeof(string)},
+                    {GlobalParamKeyType.InstrumentClass, typeof(int)},       // 0 for TOF; 1 for ppm bin-based
+                    {GlobalParamKeyType.PpmBinBasedStartMz, typeof(double)},    // Only used when InstrumentClass is 1 (ppm bin-based)
+                    {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)}
+                };
+
+                foreach (var item in keyTypes)
+                    mGlobalParamKeyTypes.Add(item.Key, item.Value);
+            }
+
+            if (mGlobalParamKeyTypes.TryGetValue(paramType, out var dataType))
+                return dataType;
+
+            throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
+
+        }
 
 #pragma warning disable 612, 618
         /// <summary>
