@@ -14,7 +14,18 @@ namespace UIMFLibrary
         /// <summary>
         /// Parameter value
         /// </summary>
-        public string Value { get; set; }
+        public dynamic Value { get; set; }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition</param>
+        /// <param name="value">Parameter value</param>
+        public FrameParam(FrameParamDef paramDef, dynamic value)
+        {
+            Definition = paramDef;
+            Value = value;
+        }
 
         /// <summary>
         /// Constructor
@@ -24,7 +35,7 @@ namespace UIMFLibrary
         public FrameParam(FrameParamDef paramDef, string value)
         {
             Definition = paramDef;
-            Value = value;
+            Value = FrameParamUtilities.ConvertStringToDynamic(paramDef.DataType, value);
         }
 
         /// <summary>
@@ -33,7 +44,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public override string ToString()
         {
-            return Value ?? Definition.ToString();
+            return Value == null ? Definition.ToString() : Value.ToString();
         }
     }
 }

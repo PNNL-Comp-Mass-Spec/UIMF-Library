@@ -147,7 +147,18 @@ namespace UIMFLibrary
         /// <summary>
         /// Parameter value
         /// </summary>
-        public string Value { get; set; }
+        public dynamic Value { get; set; }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="paramType">Frame parameter definition</param>
+        /// <param name="value">Parameter value</param>
+        public GlobalParam(GlobalParamKeyType paramType, dynamic value)
+        {
+            InitializeByType(paramType);
+            Value = value;
+        }
 
         /// <summary>
         /// Constructor
@@ -157,7 +168,7 @@ namespace UIMFLibrary
         public GlobalParam(GlobalParamKeyType paramType, string value)
         {
             InitializeByType(paramType);
-            Value = value;
+            Value = FrameParamUtilities.ConvertStringToDynamic(DataType, value);
         }
 
         /// <summary>
@@ -169,7 +180,15 @@ namespace UIMFLibrary
             if (Value == null)
                 return ParamType + " (" + DataType + ")";
 
-            return Value;
+            if (ParamType == GlobalParamKeyType.DateStarted && Value is DateTime)
+            {
+                // Make sure the date is in the standard format expected by Proteowizard
+                // Proteowizard requires that it have AM/PM at the end
+
+                return Value.ToString("M/d/yyyy h:mm:ss tt");
+            }
+
+            return Value.ToString();
         }
 
         /// <summary>
@@ -180,77 +199,79 @@ namespace UIMFLibrary
         {
             ParamType = paramType;
 
+            var dataType = GlobalParamUtilities.GetGlobalParamKeyDataType(paramType);
+
             switch (paramType)
             {
 
                 case GlobalParamKeyType.InstrumentName:
-                    InitializeByType("InstrumentName", typeof(string), "Instrument name");
+                    InitializeByType("InstrumentName", dataType, "Instrument name");
                     break;
 
                 case GlobalParamKeyType.DateStarted:
                     // Format has traditionally been M/d/yyyy hh:mm:ss tt
                     // For example, 6/4/2014 12:56:44 PM
-                    InitializeByType("DateStarted", typeof(string), "Time that the data acquisition started");
+                    InitializeByType("DateStarted", dataType, "Time that the data acquisition started");
                     break;
 
                 case GlobalParamKeyType.NumFrames:
-                    InitializeByType("NumFrames", typeof(int), "Number of frames in the dataset");
+                    InitializeByType("NumFrames", dataType, "Number of frames in the dataset");
                     break;
 
                 case GlobalParamKeyType.TimeOffset:
-                    InitializeByType("TimeOffset", typeof(int), "Time offset from 0 (in nanoseconds). All bin numbers must be offset by this amount");
+                    InitializeByType("TimeOffset", dataType, "Time offset from 0 (in nanoseconds). All bin numbers must be offset by this amount");
                     break;
 
                 case GlobalParamKeyType.BinWidth:
-                    InitializeByType("BinWidth", typeof(double), "Width of TOF bins (in ns)");
+                    InitializeByType("BinWidth", dataType, "Width of TOF bins (in ns)");
                     break;
 
                 case GlobalParamKeyType.Bins:
-                    InitializeByType("Bins", typeof(int), "Total number of TOF bins in frame");
+                    InitializeByType("Bins", dataType, "Total number of TOF bins in frame");
                     break;
 
                 case GlobalParamKeyType.TOFCorrectionTime:
-                    InitializeByType("TOFCorrectionTime", typeof(float), "TOF correction time");
+                    InitializeByType("TOFCorrectionTime", dataType, "TOF correction time");
                     break;
 
                 case GlobalParamKeyType.TOFIntensityType:
-                    InitializeByType("TOFIntensityType", typeof(string), "Data type of intensity in each TOF record (ADC is int, TDC is short, FOLDED is float)");
+                    InitializeByType("TOFIntensityType", dataType, "Data type of intensity in each TOF record (ADC is int, TDC is short, FOLDED is float)");
                     break;
 
                 case GlobalParamKeyType.DatasetType:
-                    InitializeByType("DatasetType", typeof(string), "Type of dataset (HMS, HMSn, or HMS-HMSn)");
+                    InitializeByType("DatasetType", dataType, "Type of dataset (HMS, HMSn, or HMS-HMSn)");
                     break;
 
                 case GlobalParamKeyType.PrescanTOFPulses:
-                    InitializeByType("PrescanTOFPulses", typeof(string), "Prescan TOF pulses");
+                    InitializeByType("PrescanTOFPulses", dataType, "Prescan TOF pulses");
                     break;
 
                 case GlobalParamKeyType.PrescanAccumulations:
-                    InitializeByType("PrescanAccumulations", typeof(string), "Number of prescan accumulations");
+                    InitializeByType("PrescanAccumulations", dataType, "Number of prescan accumulations");
                     break;
 
                 case GlobalParamKeyType.PrescanTICThreshold:
-                    InitializeByType("PrescanTICThreshold", typeof(string), "Prescan TIC threshold");
+                    InitializeByType("PrescanTICThreshold", dataType, "Prescan TIC threshold");
                     break;
 
                 case GlobalParamKeyType.PrescanContinuous:
-                    InitializeByType("PrescanContinuous", typeof(int), "Prescan Continuous flag (0 is false, 1 is true)");
+                    InitializeByType("PrescanContinuous", dataType, "Prescan Continuous flag (0 is false, 1 is true)");
                     break;
 
                 case GlobalParamKeyType.PrescanProfile:
-                    InitializeByType("PrescanProfile", typeof(string), "Profile used when PrescanContinuous is 1");
+                    InitializeByType("PrescanProfile", dataType, "Profile used when PrescanContinuous is 1");
                     break;
 
                 case GlobalParamKeyType.InstrumentClass:
-                    InitializeByType("InstrumentClass", typeof(int), "Instrument class (0 for TOF, 1 for ppm bin-based)");
+                    InitializeByType("InstrumentClass", dataType, "Instrument class (0 for TOF, 1 for ppm bin-based)");
                     break;
 
                 case GlobalParamKeyType.PpmBinBasedStartMz:
-                    InitializeByType("PpmBinBasedStartMz", typeof(float), "Starting m/z value for ppm bin-based mode");
+                    InitializeByType("PpmBinBasedStartMz", dataType, "Starting m/z value for ppm bin-based mode");
                     break;
 
                 case GlobalParamKeyType.PpmBinBasedEndMz:
-                    InitializeByType("PpmBinBasedEndMz", typeof(float), "Ending m/z value for ppm bin-based mode");
+                    InitializeByType("PpmBinBasedEndMz", dataType, "Ending m/z value for ppm bin-based mode");
                     break;
 
                 case GlobalParamKeyType.Unknown:

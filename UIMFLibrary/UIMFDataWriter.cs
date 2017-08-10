@@ -333,7 +333,7 @@ namespace UIMFLibrary
                 {
                     var frameParams = frameParamsEntry.Value;
 
-                    var frameParamsLite = new Dictionary<FrameParamKeyType, string>();
+                    var frameParamsLite = new Dictionary<FrameParamKeyType, dynamic>();
                     foreach (var paramEntry in frameParams.Values)
                     {
                         frameParamsLite.Add(paramEntry.Key, paramEntry.Value.Value);
@@ -1382,7 +1382,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameParameters">
         /// </param>
-        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with 'Dictionary<FrameParamKeyType, string> frameParameters'")]
+        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with 'Dictionary<FrameParamKeyType, dynamic> frameParameters'")]
         public void InsertFrame(FrameParameters frameParameters)
         {
             var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
@@ -1406,7 +1406,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">Frame parameters dictionary</param>
-        public DataWriter InsertFrame(int frameNum, Dictionary<FrameParamKeyType, string> frameParameters)
+        public DataWriter InsertFrame(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParameters)
         {
             // Make sure the previous frame's data is committed to the database
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
@@ -2724,9 +2724,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum"></param>
         /// <param name="frameParamsByType"></param>
-        private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, string> frameParamsByType)
+        private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
         {
-            var frameParams = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
+            var frameParams = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
 
             InsertLegacyFrameParams(frameNum, frameParams);
         }

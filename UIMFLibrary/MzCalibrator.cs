@@ -15,10 +15,7 @@ namespace UIMFLibrary
 
         private readonly double binWidth;
 
-        private double TenthsOfNanoSecondsPerBin
-        {
-            get { return this.binWidth * 10; }
-        }
+        private double TenthsOfNanoSecondsPerBin => this.binWidth * 10;
 
         #endregion
 
@@ -53,13 +50,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns the calibration equation
         /// </summary>
-        public string Description
-        {
-            get
-            {
-                return "mz = (k*(t-t0))^2";
-            }
-        }
+        public string Description => "mz = (k*(t-t0))^2";
 
         /// <summary>
         /// Gets or sets the k.

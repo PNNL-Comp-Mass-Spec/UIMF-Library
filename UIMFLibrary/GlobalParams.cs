@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace UIMFLibrary
 {
-   
+
     /// <summary>
     /// Global parameters container
     /// </summary>
@@ -26,10 +26,7 @@ namespace UIMFLibrary
         /// Global parameters dictionary
         /// </summary>
         /// <remarks>Key is parameter type; value is the global parameter container (<see cref="GlobalParam"/> class)</remarks>
-        public Dictionary<GlobalParamKeyType, GlobalParam> Values
-        {
-            get { return mGlobalParameters; }
-        }
+        public Dictionary<GlobalParamKeyType, GlobalParam> Values => mGlobalParameters;
 
         /// <summary>
         /// Total number of TOF bins in frame
@@ -55,7 +52,7 @@ namespace UIMFLibrary
                     return 0;
 
                 return GetValueDouble(GlobalParamKeyType.BinWidth);
-            }           
+            }
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (double)</param>
         public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, double value)
         {
-            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramType, value);
         }
 
         /// <summary>
@@ -125,7 +122,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (int)</param>
         public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, int value)
         {
-            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramType, value);
         }
 
         /// <summary>
@@ -135,7 +132,7 @@ namespace UIMFLibrary
         /// <param name="value"></param>
         public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, DateTime value)
         {
-            return AddUpdateValue(paramType, UIMFDataUtilities.StandardizeDate(value));
+            return AddUpdateValueDynamic(paramType, UIMFDataUtilities.StandardizeDate(value));
         }
 
         /// <summary>
@@ -145,17 +142,26 @@ namespace UIMFLibrary
         /// <param name="value">Value (string)</param>
         public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, string value)
         {
-            if (paramType == GlobalParamKeyType.DateStarted && ! string.IsNullOrWhiteSpace(value))
-            {
-                // Make sure the date is in the standard format expected by Proteowizard
-                // Proteowizard requires that it have AM/PM at the end
+            return AddUpdateValueDynamic(paramType, value);
+        }
 
-                if (DateTime.TryParse(value, out var dtDateStarted))
-                {
-                    value = dtDateStarted.ToString("M/d/yyyy h:mm:ss tt");
-                }
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (dynamic)</param>
+        public GlobalParams AddUpdateValue(GlobalParamKeyType paramType, dynamic value)
+        {
+            return AddUpdateValueDynamic(paramType, value);
+        }
 
-            }
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (string)</param>
+        private GlobalParams AddUpdateValueDynamic(GlobalParamKeyType paramType, dynamic value)
+        {
 
             if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -174,11 +180,12 @@ namespace UIMFLibrary
         /// Get the value for a parameter
         /// </summary>
         /// <param name="paramType">Parameter type</param>
-        /// <returns>Value (string)</returns>
+        /// <returns>Value (dynamic)</returns>
         /// <remarks>Returns an empty string if not defined</remarks>
         public string GetValue(GlobalParamKeyType paramType)
         {
-            return GetValue(paramType, string.Empty);
+            var defaultValue = GlobalParamUtilities.GetDefaultValueByType(paramType);
+            return GetValueDynamic(paramType, defaultValue);
         }
 
         /// <summary>
@@ -188,6 +195,17 @@ namespace UIMFLibrary
         /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
         /// <returns>Value (string)</returns>
         public string GetValue(GlobalParamKeyType paramType, string valueIfMissing)
+        {
+            return GetValueDynamic(paramType, valueIfMissing);
+        }
+
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (string)</returns>
+        public dynamic GetValueDynamic(GlobalParamKeyType paramType, dynamic valueIfMissing)
         {
             if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -218,7 +236,7 @@ namespace UIMFLibrary
         {
             if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
-                if (Double.TryParse(paramEntry.Value, out var result))
+                if (FrameParamUtilities.ConvertDynamicToDouble(paramEntry.Value, out double result))
                     return result;
             }
 
@@ -246,13 +264,13 @@ namespace UIMFLibrary
         {
             if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
-                if (Int32.TryParse(paramEntry.Value, out var result))
+                if (FrameParamUtilities.ConvertDynamicToInt32(paramEntry.Value, out int result))
                     return result;
             }
 
             return valueIfMissing;
         }
-     
+
 
         /// <summary>
         /// Lookup whether or not a global parameter is defined

@@ -156,7 +156,7 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    if (zeroCount == int.MinValue)
+                    if (zeroCount == short.MinValue)
                     {
                         // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add(zeroCount);

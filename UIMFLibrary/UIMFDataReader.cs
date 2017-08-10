@@ -287,7 +287,7 @@ namespace UIMFLibrary
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
-            
+
             try
             {
                 m_dbConnection.Open();
@@ -298,7 +298,7 @@ namespace UIMFLibrary
                     m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null , 100);
                     m_dbConnection = memoryConnection;
                 }
-              
+
                 m_uimfFilePath = uimfFileInfo.FullName;
 
                 CacheGlobalParameters();
@@ -2217,7 +2217,7 @@ namespace UIMFLibrary
 
                         var legacyFrameParams = GetLegacyFrameParameters(reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-                        var frameParameters = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
+                        var frameParameters = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
 
                         var currentFrameNum = legacyFrameParams.FrameNum;
 
@@ -2277,7 +2277,7 @@ namespace UIMFLibrary
                     {
                         var legacyFrameParams = GetLegacyFrameParameters(reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-                        frameParameters = FrameParamUtilities.ConvertStringParamsToFrameParams(frameParamsByType);
+                        frameParameters = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
                     }
                 }
             }
@@ -5171,7 +5171,7 @@ namespace UIMFLibrary
                 var legacyGlobalParameters = GetGlobalParametersFromTable(uimfConnection);
 
                 var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                globalParams = GlobalParamUtilities.ConvertStringParamsToGlobalParams(globalParamsByType);
+                globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
                 return globalParams;
             }
 
@@ -5183,11 +5183,16 @@ namespace UIMFLibrary
 
                 using (var reader = dbCommand.ExecuteReader())
                 {
+                    // ParamID column is index 0
+                    const int idColIndex = 0;
+
+                    // ParamValue column is index 1
+                    const int valueColIndex = 1;
+
                     while (reader.Read())
                     {
-
-                        var paramID = GetInt32(reader, "ParamID");
-                        var paramValue = GetString(reader, "ParamValue");
+                        var paramID = reader.GetInt32(idColIndex);
+                        var paramValue = reader.GetString(valueColIndex);
 
                         var paramType = GlobalParamUtilities.GetParamTypeByID(paramID);
 
@@ -5200,7 +5205,11 @@ namespace UIMFLibrary
                             continue;
                         }
 
-                        globalParams.AddUpdateValue(paramType, paramValue);
+                        var dataType = GlobalParamUtilities.GetGlobalParamKeyDataType(paramType);
+
+                        var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
+
+                        globalParams.AddUpdateValue(paramType, paramValueDynamic);
                     }
                 }
             }
@@ -6425,10 +6434,13 @@ namespace UIMFLibrary
             var paramValue = reader.GetString(valueColIndex);
 
             var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+            var dataType = FrameParamUtilities.GetFrameParamKeyDataType(paramType);
+
+            var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
 
             if (frameParamKeys.TryGetValue(paramType, out var paramDef))
             {
-                frameParameters.AddUpdateValue(paramDef, paramValue);
+                frameParameters.AddUpdateValue(paramDef, paramValueDynamic);
                 return;
             }
 

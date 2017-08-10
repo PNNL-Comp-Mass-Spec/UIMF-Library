@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 
 namespace UIMFLibrary
@@ -162,7 +161,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (double)</param>
         public FrameParams AddUpdateValue(FrameParamKeyType paramType, double value)
         {
-            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramType, value);
         }
 
         /// <summary>
@@ -172,7 +171,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (int)</param>
         public FrameParams AddUpdateValue(FrameParamKeyType paramType, int value)
         {
-            return AddUpdateValue(paramType, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramType, value);
         }
 
         /// <summary>
@@ -181,6 +180,26 @@ namespace UIMFLibrary
         /// <param name="paramType">Parameter type</param>
         /// <param name="value">Value (string)</param>
         public FrameParams AddUpdateValue(FrameParamKeyType paramType, string value)
+        {
+            return AddUpdateValueDynamic(paramType, value);
+        }
+
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (dynamic)</param>
+        public FrameParams AddUpdateValue(FrameParamKeyType paramType, dynamic value)
+        {
+            return AddUpdateValueDynamic(paramType, value);
+        }
+
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="value">Value (dynamic)</param>
+        private FrameParams AddUpdateValueDynamic(FrameParamKeyType paramType, dynamic value)
         {
             if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -204,7 +223,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (double)</param>
         public FrameParams AddUpdateValue(FrameParamDef paramDef, double value)
         {
-            return AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramDef, value);
         }
 
         /// <summary>
@@ -214,7 +233,7 @@ namespace UIMFLibrary
         /// <param name="value">Value (int)</param>
         public FrameParams AddUpdateValue(FrameParamDef paramDef, int value)
         {
-            return AddUpdateValue(paramDef, value.ToString(CultureInfo.InvariantCulture));
+            return AddUpdateValueDynamic(paramDef, value);
         }
 
         /// <summary>
@@ -223,6 +242,26 @@ namespace UIMFLibrary
         /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
         /// <param name="value">Value (string)</param>
         public FrameParams AddUpdateValue(FrameParamDef paramDef, string value)
+        {
+            return AddUpdateValueDynamic(paramDef, value);
+        }
+
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
+        /// <param name="value">Value (dynamic)</param>
+        public FrameParams AddUpdateValue(FrameParamDef paramDef, dynamic value)
+        {
+            return AddUpdateValueDynamic(paramDef, value);
+        }
+
+        /// <summary>
+        /// Add or update a parameter's value
+        /// </summary>
+        /// <param name="paramDef">Frame parameter definition (<see cref="FrameParamDef"/> class)</param>
+        /// <param name="value">Value (dynamic)</param>
+        private FrameParams AddUpdateValueDynamic(FrameParamDef paramDef, dynamic value)
         {
             if (mFrameParameters.TryGetValue(paramDef.ParamType, out var paramEntry))
             {
@@ -241,11 +280,12 @@ namespace UIMFLibrary
         /// Get the value for a parameter
         /// </summary>
         /// <param name="paramType">Parameter type</param>
-        /// <returns>Value (string)</returns>
+        /// <returns>Value (dynamic)</returns>
         /// <remarks>Returns an empty string if not defined</remarks>
         public string GetValue(FrameParamKeyType paramType)
         {
-            return GetValue(paramType, string.Empty);
+            var defaultValue = FrameParamUtilities.GetDefaultValueByType(paramType);
+            return GetValueDynamic(paramType, defaultValue);
         }
 
         /// <summary>
@@ -253,8 +293,19 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
-        /// <returns>Value (string)</returns>
+        /// <returns>Value (dynamic)</returns>
         public string GetValue(FrameParamKeyType paramType, string valueIfMissing)
+        {
+            return GetValueDynamic(paramType, valueIfMissing);
+        }
+
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (dynamic)</returns>
+        public dynamic GetValueDynamic(FrameParamKeyType paramType, dynamic valueIfMissing)
         {
             if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -285,7 +336,7 @@ namespace UIMFLibrary
         {
             if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
-                if (Double.TryParse(paramEntry.Value, out var result))
+                if (FrameParamUtilities.ConvertDynamicToDouble(paramEntry.Value, out double result))
                     return result;
             }
 
@@ -313,7 +364,7 @@ namespace UIMFLibrary
         {
             if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
-                if (Int32.TryParse(paramEntry.Value, out var result))
+                if (FrameParamUtilities.ConvertDynamicToInt32(paramEntry.Value, out int result))
                     return result;
             }
 
@@ -330,12 +381,9 @@ namespace UIMFLibrary
             return mFrameParameters.ContainsKey(paramType);
         }
 
-        private void UpdateCachedParam(FrameParamKeyType paramType, string value)
+        private void UpdateCachedParam(FrameParamKeyType paramType, dynamic value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return;
-
-            if (!double.TryParse(value, out var numericValue))
+            if (value == null)
                 return;
 
             // Update cached member variables
@@ -344,22 +392,22 @@ namespace UIMFLibrary
             switch (paramType)
             {
                 case FrameParamKeyType.MassCalibrationCoefficienta2:
-                    mCachedMassCalibrationCoefficients.a2 = numericValue;
+                    mCachedMassCalibrationCoefficients.a2 = (double)value;
                     break;
                 case FrameParamKeyType.MassCalibrationCoefficientb2:
-                    mCachedMassCalibrationCoefficients.b2 = numericValue;
+                    mCachedMassCalibrationCoefficients.b2 = (double)value;
                     break;
                 case FrameParamKeyType.MassCalibrationCoefficientc2:
-                    mCachedMassCalibrationCoefficients.c2 = numericValue;
+                    mCachedMassCalibrationCoefficients.c2 = (double)value;
                     break;
                 case FrameParamKeyType.MassCalibrationCoefficientd2:
-                    mCachedMassCalibrationCoefficients.d2 = numericValue;
+                    mCachedMassCalibrationCoefficients.d2 = (double)value;
                     break;
                 case FrameParamKeyType.MassCalibrationCoefficiente2:
-                    mCachedMassCalibrationCoefficients.e2 = numericValue;
+                    mCachedMassCalibrationCoefficients.e2 = (double)value;
                     break;
                 case FrameParamKeyType.MassCalibrationCoefficientf2:
-                    mCachedMassCalibrationCoefficients.f2 = numericValue;
+                    mCachedMassCalibrationCoefficients.f2 = (double)value;
                     break;
             }
         }
