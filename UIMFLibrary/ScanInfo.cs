@@ -17,24 +17,12 @@ namespace UIMFLibrary
         /// <summary>
         /// Frame number for scan
         /// </summary>
-        public int Frame 
-        {
-            get
-            {
-                return mFrameNumber;
-            }
-        }
+        public int Frame => mFrameNumber;
 
         /// <summary>
         /// Scan number
         /// </summary>
-        public int Scan
-        {
-            get
-            {
-                return mScanNumber;
-            }
-        }
+        public int Scan => mScanNumber;
 
         /// <summary>
         /// Number of non-zero (positive) intensity values in the scan
