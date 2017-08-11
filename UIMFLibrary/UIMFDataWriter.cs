@@ -1060,7 +1060,7 @@ namespace UIMFLibrary
             dbCommand.ExecuteNonQuery();
 
             // Create the unique index index on Version_Info
-            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_VersionInfo on " + VERSION_INFO_TABLE + "(VersionID);";
+            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_VersionInfo on " + VERSION_INFO_TABLE + "(Version_ID);";
             dbCommand.ExecuteNonQuery();
 
 
