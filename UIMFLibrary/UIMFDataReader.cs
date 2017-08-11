@@ -261,11 +261,14 @@ namespace UIMFLibrary
         /// <param name="useInMemoryDatabase">
         /// Whether to load database into memory
         /// </param>
+        /// <param name="readOnly">
+        /// Whether to open the database as read-only, instead of read/write
+        /// </param>
         /// <exception cref="Exception">
         /// </exception>
         /// <exception cref="FileNotFoundException">
         /// </exception>
-        public DataReader(string fileName, bool useInMemoryDatabase=false)
+        public DataReader(string fileName, bool useInMemoryDatabase=false, bool readOnly = false)
         {
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
@@ -286,6 +289,10 @@ namespace UIMFLibrary
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
             var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
+            if (readOnly)
+            {
+                connectionString += " Read Only=True";
+            }
             m_dbConnection = new SQLiteConnection(connectionString, true);
 
             try
@@ -4942,9 +4949,10 @@ namespace UIMFLibrary
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
+        [Obsolete("Use the PostLogEntry function in the DataWriter class", true)]
         public void PostLogEntry(string entryType, string message, string postedBy)
         {
-            DataWriter.PostLogEntry(m_dbConnection, entryType, message, postedBy);
+            DataWriter.PostLogEntry(m_dbConnection, entryType, message, postedBy); // Obsolete because this writes to the connection, which is now read-only
         }
 
         /// <summary>
@@ -4993,10 +5001,10 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
-        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class")]
+        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class", true)]
         public void UpdateAllCalibrationCoefficients(double slope, double intercept, bool isAutoCalibrating = false)
         {
-            using (var dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand()) // Obsolete because this writes to the connection, which is now read-only
             {
                 if (m_UsingLegacyFrameParameters || m_HasLegacyFrameParameters)
                 {
