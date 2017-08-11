@@ -45,6 +45,23 @@ namespace UIMFLibrary
         /// </summary>
         public const string FRAME_PARAMS_TABLE = "Frame_Params";
 
+        #region Enums and Structs
+
+        private enum UIMFTableType
+        {
+            LegacyGlobalParameters = 0,
+            GlobalParams = 1,
+            FrameParams = 2,
+            FrameScans = 3,
+            VersionInfo = 4
+        }
+
+        private struct TableStatus
+        {
+            public bool Exists;
+            public bool Checked;
+        }
+
         #endregion
 
         #region Fields
@@ -101,7 +118,6 @@ namespace UIMFLibrary
         /// </summary>
         private readonly GlobalParams m_globalParameters;
 
-        private bool m_HasLegacyParameterTables;
         private bool m_LegacyGlobalParametersTableHasData;
 
         private bool m_LegacyFrameParameterTableHasDecodedColumn;
@@ -112,13 +128,10 @@ namespace UIMFLibrary
         /// </summary>
         private readonly SortedSet<int> m_FrameNumsInLegacyFrameParametersTable;
 
-        private bool m_HasGlobalParamsTable;
-        private bool m_HasFrameParamsTable;
-        private bool m_HasFrameScansTable;
-
-        private bool m_FrameParamsTableChecked;
-        private bool m_GlobalParamsTableChecked;
-        private bool m_LegacyParameterTablesChecked;
+        /// <summary>
+        /// This dictionary tracks the existing of key tables, including whether or not we have actually checked for the table
+        /// </summary>
+        private readonly Dictionary<UIMFTableType, TableStatus> m_TableStatus;
 
         #endregion
 
@@ -176,6 +189,12 @@ namespace UIMFLibrary
 
             m_CreateLegacyParametersTables = createLegacyParametersTables;
             m_FrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
+
+            m_TableStatus = new Dictionary<UIMFTableType, TableStatus>();
+            foreach (var tableType in Enum.GetValues(typeof(UIMFTableType)).Cast<UIMFTableType>())
+            {
+                m_TableStatus.Add(tableType, new TableStatus());
+            }
 
             var usingExistingDatabase = File.Exists(m_FilePath);
 
@@ -939,7 +958,7 @@ namespace UIMFLibrary
                 "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
             dbCommand.ExecuteNonQuery();
 
-            m_FrameParamsTableChecked = false;
+            UpdateTableCheckedStatus(UIMFTableType.FrameParams, false);
 
         }
 
@@ -987,7 +1006,9 @@ namespace UIMFLibrary
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on Global_Params(ParamID);";
             dbCommand.ExecuteNonQuery();
 
-            m_GlobalParamsTableChecked = false;
+            UpdateTableCheckedStatus(UIMFTableType.GlobalParams, false);
+
+        }
         }
 
         /// <summary>
@@ -1013,7 +1034,7 @@ namespace UIMFLibrary
                 dbCommand.ExecuteNonQuery();
             }
 
-            m_LegacyParameterTablesChecked = false;
+            UpdateTableCheckedStatus(UIMFTableType.LegacyGlobalParameters, false);
         }
 
         /// <summary>
@@ -2674,35 +2695,34 @@ namespace UIMFLibrary
 
         private bool CheckHasFrameParamsTable()
         {
-            if (!m_HasFrameParamsTable && !m_FrameParamsTableChecked)
-            {
-                m_HasFrameParamsTable = DataReader.TableExists(m_dbConnection, FRAME_PARAMS_TABLE);
-                m_FrameParamsTableChecked = true;
-            }
-
-            return m_HasFrameParamsTable;
+            return CheckHasTable(UIMFTableType.FrameParams, FRAME_PARAMS_TABLE);
         }
 
         private bool CheckHasGlobalParamsTable()
         {
-            if (!m_HasGlobalParamsTable && !m_GlobalParamsTableChecked)
-            {
-                m_HasGlobalParamsTable = DataReader.TableExists(m_dbConnection, "Global_Params");
-                m_GlobalParamsTableChecked = true;
-            }
-
-            return m_HasGlobalParamsTable;
+            return CheckHasTable(UIMFTableType.FrameParams, GLOBAL_PARAMS_TABLE);
         }
 
         private bool CheckHasLegacyParameterTables()
         {
-            if (!m_HasLegacyParameterTables && !m_LegacyParameterTablesChecked)
+            return CheckHasTable(UIMFTableType.LegacyGlobalParameters, GLOBAL_PARAMETERS_TABLE);
+        }
+        /// <summary>
+        /// Check for the existence of the given table
+        /// </summary>
+        /// <param name="tableType"></param>
+        /// <param name="tableName"></param>
+        /// <returns>True if the table exists, false if missing</returns>
+        private bool CheckHasTable(UIMFTableType tableType, string tableName)
+        {
+            var table = m_TableStatus[tableType];
+            if (!table.Exists && !table.Checked)
             {
-                m_HasLegacyParameterTables = DataReader.TableExists(m_dbConnection, "Global_Parameters");
-                m_LegacyParameterTablesChecked = true;
+                var tableExists = DataReader.TableExists(m_dbConnection, tableName);
+                UpdateTableExists(tableType, tableExists);
             }
 
-            return m_HasLegacyParameterTables;
+            return m_TableStatus[tableType].Exists;
         }
 
         /// <summary>
@@ -2948,6 +2968,23 @@ namespace UIMFLibrary
 
         }
 
+        private void UpdateTableCheckedStatus(UIMFTableType tableType, bool checkedForTable = true)
+        {
+            var status = m_TableStatus[tableType];
+            status.Checked = checkedForTable;
+
+            m_TableStatus[tableType] = status;
+        }
+
+        private void UpdateTableExists(UIMFTableType tableType, bool tableExists = true)
+        {
+            var status = m_TableStatus[tableType];
+            status.Checked = true;
+            status.Exists = tableExists;
+
+            m_TableStatus[tableType] = status;
+        }
+
         /// <summary>
         /// Assures that the Frame_Params_Keys table contains an entry for paramKeyType
         /// </summary>
@@ -3019,12 +3056,10 @@ namespace UIMFLibrary
         /// <param name="callingMethod"></param>
         protected void ValidateFrameScansExists(string callingMethod)
         {
-            if (!m_HasFrameScansTable)
+            var tableExists = CheckHasTable(UIMFTableType.FrameScans, "Frame_Scans");
+            if (!tableExists)
             {
-                m_HasFrameScansTable = DataReader.TableExists(m_dbConnection, "Frame_Scans");
-                if (!m_HasFrameScansTable)
-                    throw new Exception(
-                        "The Frame_Scans table does not exist; call method CreateTables before calling " + callingMethod);
+                throw new Exception("The Frame_Scans table does not exist; call method CreateTables before calling " + callingMethod);
             }
         }
 
