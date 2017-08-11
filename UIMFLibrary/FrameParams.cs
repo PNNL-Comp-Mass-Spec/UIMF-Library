@@ -281,11 +281,10 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <returns>Value (dynamic)</returns>
-        /// <remarks>Returns an empty string if not defined</remarks>
-        public string GetValue(FrameParamKeyType paramType)
+        public dynamic GetValue(FrameParamKeyType paramType)
         {
             var defaultValue = FrameParamUtilities.GetDefaultValueByType(paramType);
-            return GetValueDynamic(paramType, defaultValue);
+            return GetValue(paramType, defaultValue);
         }
 
         /// <summary>
@@ -294,18 +293,7 @@ namespace UIMFLibrary
         /// <param name="paramType">Parameter type</param>
         /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
         /// <returns>Value (dynamic)</returns>
-        public string GetValue(FrameParamKeyType paramType, string valueIfMissing)
-        {
-            return GetValueDynamic(paramType, valueIfMissing);
-        }
-
-        /// <summary>
-        /// Get the value for a parameter
-        /// </summary>
-        /// <param name="paramType">Parameter type</param>
-        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
-        /// <returns>Value (dynamic)</returns>
-        public dynamic GetValueDynamic(FrameParamKeyType paramType, dynamic valueIfMissing)
+        public dynamic GetValue(FrameParamKeyType paramType, dynamic valueIfMissing)
         {
             if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -369,6 +357,17 @@ namespace UIMFLibrary
             }
 
             return valueIfMissing;
+        }
+
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (dynamic)</returns>
+        public string GetValueString(FrameParamKeyType paramType, string valueIfMissing = "")
+        {
+            return GetValue(paramType, valueIfMissing);
         }
 
         /// <summary>
