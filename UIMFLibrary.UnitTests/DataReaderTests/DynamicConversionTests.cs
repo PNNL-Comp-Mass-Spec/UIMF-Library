@@ -146,42 +146,66 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var startTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
             Assert.AreEqual(frameParameters.StartTime, startTime, 0.00001);
 
-            var startTimeDynamicInt = frameParams.GetValueDynamic(FrameParamKeyType.StartTimeMinutes, 0);
+            var startTimeDynamicInt = frameParams.GetValue(FrameParamKeyType.StartTimeMinutes, 0);
             Assert.AreEqual(frameParameters.StartTime, startTimeDynamicInt, 0.00001);
 
-            var startTimeDynamicDouble = frameParams.GetValueDynamic(FrameParamKeyType.StartTimeMinutes, 0.0);
+            var startTimeDynamicDouble = frameParams.GetValue(FrameParamKeyType.StartTimeMinutes, 0.0);
             Assert.AreEqual(frameParameters.StartTime, startTimeDynamicDouble, 0.00001);
+
+            var startTimeDynamic= frameParams.GetValue(FrameParamKeyType.StartTimeMinutes);
+            Assert.AreEqual(frameParameters.StartTime, startTimeDynamic, 0.00001);
 
 
             var scans = frameParams.GetValueInt32(FrameParamKeyType.Scans);
             Assert.AreEqual(frameParameters.Scans, scans);
 
-            var scansDynamicInt = frameParams.GetValueDynamic(FrameParamKeyType.Scans, 0);
+            var scansDynamicInt = frameParams.GetValue(FrameParamKeyType.Scans, 0);
             Assert.AreEqual(frameParameters.Scans, scansDynamicInt);
 
-            var scansDynamicDouble = frameParams.GetValueDynamic(FrameParamKeyType.Scans, 0.0);
+            var scansDynamicDouble = frameParams.GetValue(FrameParamKeyType.Scans, 0.0);
             Assert.AreEqual(frameParameters.Scans, scansDynamicDouble, 0.00001);
 
 
             var calibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope);
             Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlope, 0.00001);
 
-            var calibrationSlopeInt = frameParams.GetValueDynamic(FrameParamKeyType.CalibrationSlope, 0);
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeInt);
+            var calibrationSlopeDynamicInt = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 0);
+            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDynamicInt);
 
-            var calibrationSlopeDouble = frameParams.GetValueDynamic(FrameParamKeyType.CalibrationSlope, 0.0);
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDouble, 0.00001);
+            var calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 0.0);
+            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDynamicDouble, 0.00001);
+
+
+            // Remove the slope and try again
+            frameParams.Values.Remove(FrameParamKeyType.CalibrationSlope);
+            calibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope, 3.4);
+            Assert.AreEqual(3.4, calibrationSlope, 0.00001);
+
+            calibrationSlopeDynamicInt = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 2);
+            Assert.AreEqual(2, calibrationSlopeDynamicInt);
+
+            calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 2.5);
+            Assert.AreEqual(2.5, calibrationSlopeDynamicDouble, 0.00001);
 
 
             var frameType = frameParams.GetValueInt32(FrameParamKeyType.FrameType);
             Assert.AreEqual((int)frameParameters.FrameType, frameType);
 
-            var frameTypeInt = frameParams.GetValueDynamic(FrameParamKeyType.FrameType, 0);
-            Assert.AreEqual((int)frameParameters.FrameType, frameTypeInt);
+            var frameTypeDynamic = frameParams.GetValue(FrameParamKeyType.FrameType, 0);
+            Assert.AreEqual((int)frameParameters.FrameType, frameTypeDynamic);
 
-            var frameTypeDouble = frameParams.GetValueDynamic(FrameParamKeyType.FrameType, 0.0);
-            Assert.AreEqual((double)frameParameters.FrameType, frameTypeDouble, 0.00001);
+            var frameTypeDynamicDouble = frameParams.GetValue(FrameParamKeyType.FrameType, 0.0);
+            Assert.AreEqual((double)frameParameters.FrameType, frameTypeDynamicDouble, 0.00001);
 
+
+            var imfProfile = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence);
+            Assert.AreEqual(imfProfile, "Seq");
+
+            var imfProfileWithDefault = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, "");
+            Assert.AreEqual(imfProfileWithDefault, "Seq");
+
+            var imfProfileString = frameParams.GetValueString(FrameParamKeyType.MultiplexingEncodingSequence);
+            Assert.AreEqual(imfProfileString, "Seq");
 
         }
 
@@ -214,30 +238,49 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
 
 
-            var instName = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
+            var instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
             Assert.AreEqual(globalParameters.InstrumentName, instName);
 
-            var instNameDynamic = globalParams.GetValueDynamic(GlobalParamKeyType.InstrumentName, "");
+            var instNameDynamic = globalParams.GetValue(GlobalParamKeyType.InstrumentName, "");
             Assert.AreEqual(globalParameters.InstrumentName, instNameDynamic);
+
+            var instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
+            Assert.AreEqual(globalParameters.InstrumentName, instNameDynamicWithDefault);
+
+
+            // Remove the instrument name then test again
+            globalParams.Values.Remove(GlobalParamKeyType.InstrumentName);
+
+            instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
+            Assert.AreEqual("", instName);
+
+            instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName, "Undefined");
+            Assert.AreEqual("Undefined", instName);
+
+            instNameDynamic = globalParams.GetValue(GlobalParamKeyType.InstrumentName, "Undefined");
+            Assert.AreEqual("Undefined", instNameDynamic);
+
+            instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
+            Assert.AreEqual("", instNameDynamicWithDefault);
 
 
             var numFrames = globalParams.GetValueInt32(GlobalParamKeyType.NumFrames);
             Assert.AreEqual(globalParameters.NumFrames, numFrames);
 
-            var numFramesDynamic = globalParams.GetValueDynamic(GlobalParamKeyType.NumFrames, 0);
+            var numFramesDynamic = globalParams.GetValue(GlobalParamKeyType.NumFrames, 0);
             Assert.AreEqual(globalParameters.NumFrames, numFramesDynamic);
 
-            var numFramesDynamicDouble = globalParams.GetValueDynamic(GlobalParamKeyType.NumFrames, 0.0);
+            var numFramesDynamicDouble = globalParams.GetValue(GlobalParamKeyType.NumFrames, 0.0);
             Assert.AreEqual(globalParameters.NumFrames, numFramesDynamicDouble, 0.00001);
 
 
             var binWidth = globalParams.GetValueInt32(GlobalParamKeyType.BinWidth);
             Assert.AreEqual(globalParameters.BinWidth, binWidth);
 
-            var binWidthDynamic = globalParams.GetValueDynamic(GlobalParamKeyType.BinWidth, 0);
+            var binWidthDynamic = globalParams.GetValue(GlobalParamKeyType.BinWidth, 0);
             Assert.AreEqual(globalParameters.BinWidth, binWidthDynamic);
 
-            var binWidthDynamicDouble = globalParams.GetValueDynamic(GlobalParamKeyType.BinWidth, 0.0);
+            var binWidthDynamicDouble = globalParams.GetValue(GlobalParamKeyType.BinWidth, 0.0);
             Assert.AreEqual(globalParameters.BinWidth, binWidthDynamicDouble, 0.00001);
 
         }

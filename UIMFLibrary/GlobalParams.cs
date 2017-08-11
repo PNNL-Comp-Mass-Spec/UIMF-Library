@@ -182,10 +182,10 @@ namespace UIMFLibrary
         /// <param name="paramType">Parameter type</param>
         /// <returns>Value (dynamic)</returns>
         /// <remarks>Returns an empty string if not defined</remarks>
-        public string GetValue(GlobalParamKeyType paramType)
+        public dynamic GetValue(GlobalParamKeyType paramType)
         {
             var defaultValue = GlobalParamUtilities.GetDefaultValueByType(paramType);
-            return GetValueDynamic(paramType, defaultValue);
+            return GetValue(paramType, defaultValue);
         }
 
         /// <summary>
@@ -193,19 +193,8 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Parameter type</param>
         /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
-        /// <returns>Value (string)</returns>
-        public string GetValue(GlobalParamKeyType paramType, string valueIfMissing)
-        {
-            return GetValueDynamic(paramType, valueIfMissing);
-        }
-
-        /// <summary>
-        /// Get the value for a parameter
-        /// </summary>
-        /// <param name="paramType">Parameter type</param>
-        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
-        /// <returns>Value (string)</returns>
-        public dynamic GetValueDynamic(GlobalParamKeyType paramType, dynamic valueIfMissing)
+        /// <returns>Value (dynamic)</returns>
+        public dynamic GetValue(GlobalParamKeyType paramType, dynamic valueIfMissing)
         {
             if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
             {
@@ -271,6 +260,16 @@ namespace UIMFLibrary
             return valueIfMissing;
         }
 
+        /// <summary>
+        /// Get the value for a parameter
+        /// </summary>
+        /// <param name="paramType">Parameter type</param>
+        /// <param name="valueIfMissing">Value to return if the parameter is not defined</param>
+        /// <returns>Value (string)</returns>
+        public string GetValueString(GlobalParamKeyType paramType, string valueIfMissing = "")
+        {
+            return GetValue(paramType, valueIfMissing);
+        }
 
         /// <summary>
         /// Lookup whether or not a global parameter is defined
