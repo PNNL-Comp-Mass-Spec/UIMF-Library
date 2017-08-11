@@ -171,6 +171,12 @@ namespace UIMFLibrary
         /// </summary>
         public bool HasLegacyParameterTables => CheckHasLegacyParameterTables();
 
+        /// <summary>
+        /// True if the UIMF file has table Version_Info
+        /// </summary>
+        /// <remarks>When opening a .UIMF file without the Version_Info table, the writer will auto-add it</remarks>
+        public bool HasVersionInfoTable => CheckHasVersionInfoTable();
+
         #endregion
 
         #region Constructor
@@ -248,6 +254,15 @@ namespace UIMFLibrary
 
                 // If table Frame_Parameters exists and table Frame_Params does not exist, then create Frame_Params using Frame_Parameters
                 ConvertLegacyFrameParameters();
+
+                // Make sure the Version_Info table exists
+                if (!HasVersionInfoTable)
+                {
+                    using (var dbCommand = m_dbConnection.CreateCommand())
+                    {
+                        CreateVersionInfoTable(dbCommand);
+                    }
+                }
 
             }
             catch (Exception ex)
@@ -1030,6 +1045,27 @@ namespace UIMFLibrary
             UpdateTableCheckedStatus(UIMFTableType.GlobalParams, false);
 
         }
+
+        private void CreateVersionInfoTable(IDbCommand dbCommand)
+        {
+            if (HasVersionInfoTable)
+            {
+                // The table already exists
+                return;
+            }
+
+            // Create the Version_Info Table
+            var lstFields = GetVersionInfoFields();
+            dbCommand.CommandText = GetCreateTableSql(VERSION_INFO_TABLE, lstFields);
+            dbCommand.ExecuteNonQuery();
+
+            // Create the unique index index on Version_Info
+            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_VersionInfo on " + VERSION_INFO_TABLE + "(VersionID);";
+            dbCommand.ExecuteNonQuery();
+
+
+            UpdateTableCheckedStatus(UIMFTableType.VersionInfo, false);
+
         }
 
         /// <summary>
@@ -1096,6 +1132,9 @@ namespace UIMFLibrary
 
                 // Create the Frame_Scans table
                 CreateFrameScansTable(dbCommand, dataType);
+
+                // Create the Version_Info table
+                CreateVersionInfoTable(dbCommand);
 
                 if (m_CreateLegacyParametersTables)
                 {
@@ -2621,6 +2660,27 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Gets the field names for the Version_Info table
+        /// </summary>
+        /// <returns>
+        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// </returns>
+        private List<Tuple<string, string, string>> GetVersionInfoFields()
+        {
+            var lstFields = new List<Tuple<string, string, string>>
+            {
+                Tuple.Create("Version_ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
+                Tuple.Create("File_Version", "TEXT NOT NULL", "string"),
+                Tuple.Create("Calling_Assembly_Name", "TEXT", "string"),
+                Tuple.Create("Calling_Assembly_Version", "TEXT", "string"),
+                Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
+            };
+
+            return lstFields;
+
+        }
+
+        /// <summary>
         /// Gets the mapping between legacy frame_parameters strings and FrameParamKeyType enum type
         /// </summary>
         /// <returns>
@@ -2730,6 +2790,12 @@ namespace UIMFLibrary
         {
             return CheckHasTable(UIMFTableType.LegacyGlobalParameters, GLOBAL_PARAMETERS_TABLE);
         }
+
+        private bool CheckHasVersionInfoTable()
+        {
+            return CheckHasTable(UIMFTableType.VersionInfo, VERSION_INFO_TABLE);
+        }
+
         /// <summary>
         /// Check for the existence of the given table
         /// </summary>
