@@ -5179,7 +5179,7 @@ namespace UIMFLibrary
 
             using (var dbCommand = uimfConnection.CreateCommand())
             {
-                dbCommand.CommandText = "SELECT ParamID, ParamValue FROM Global_Params";
+                dbCommand.CommandText = "SELECT ParamID, ParamValue FROM " + DataWriter.GLOBAL_PARAMS_TABLE;
 
                 using (var reader = dbCommand.ExecuteReader())
                 {
@@ -6256,7 +6256,7 @@ namespace UIMFLibrary
                     // StartTime is stored as Ticks in this file
                     // Auto-compute the correct start time
                     var dateStarted = m_globalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
-                    if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out var dtRunStarted))
+                    if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out DateTime dtRunStarted))
                     {
                         var lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;
                         if (lngTickDifference >= 0)
@@ -6499,7 +6499,7 @@ namespace UIMFLibrary
         {
             var usingLegacyParams = TableExists(uimfConnection, "Global_Parameters");
 
-            if (TableExists(uimfConnection, "Global_Params"))
+            if (TableExists(uimfConnection, DataWriter.GLOBAL_PARAMS_TABLE))
                 usingLegacyParams = false;
 
             return usingLegacyParams;
