@@ -462,7 +462,9 @@ namespace UIMFLibrary
         public static dynamic GetDefaultValueByType(Type dataType)
         {
             if (!dataType.IsValueType)
-                return null;
+            {
+                return dataType == typeof(string) ? string.Empty : null;
+            }
 
             if (mDefaultValuesByType.TryGetValue(dataType, out var defaultValue))
                 return defaultValue;
