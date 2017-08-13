@@ -3822,13 +3822,10 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectraRecord,
-                        spectraRecord.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                    var outputLength = CLZF2.Decompress(
+                        spectraRecord);
 
-                    var numBins = outputLength / DATASIZE;
+                    var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
                         var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
