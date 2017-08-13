@@ -60,6 +60,22 @@ namespace UIMFLibrary.FunctionalTests
         [Test]
         public void CompressionComparisonSpeedTest()
         {
+
+            /*
+             * Example run on core i9 7900X @ 4GHz.
+Name                                    Milliseconds        Percent                       
+LZ4 Compress                            163                 193.3%                        
+ZRLE LZ4 Compress                       84                  100%                          
+CLZF2 Compress                          945                 1118.5%                       
+ZREL CLZF2 Compress                     91                  107.7%                        
+Name                                    Milliseconds        Percent                       
+LZ4 Decompress                          325                 16880.7%                      
+ZRLE LZ4 Decompress                     1                   100%                          
+CLZF2 Decompress                        1176                61106.9%                      
+ZREL CLZF2 Decompress                   8                   448.4%                        
+                   
+             */
+
             var intensities = new int[148000];
             var randGenerator = new Random();
             for (var i = 0; i < intensities.Length; i++)
@@ -94,7 +110,7 @@ namespace UIMFLibrary.FunctionalTests
             {
                 IntensityConverterInt32.Encode(intensities, out zrleClzf2Result, out var tic, out var bpi,
                     out var indexOfMaxIntensity);
-            }).WithWarmup(100).For(1000).Iterations().PrintComparison();
+            }).WithWarmup(100).For(100).Iterations().PrintComparison();
 
             Benchmark.This("LZ4 Decompress", () =>
             {
@@ -108,7 +124,7 @@ namespace UIMFLibrary.FunctionalTests
             }).WithWarmup(100).Against.This("ZREL CLZF2 Decompress", () =>
             {
                 var result = CLZF2.Decompress(zrleClzf2Result);
-            }).WithWarmup(100).For(1000).Iterations().PrintComparison();
+            }).WithWarmup(100).For(100).Iterations().PrintComparison();
 
         }
 
