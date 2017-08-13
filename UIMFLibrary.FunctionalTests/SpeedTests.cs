@@ -53,7 +53,7 @@ namespace UIMFLibrary.FunctionalTests
                 methodDescriptor += className + "." + methodInfo.Name;
             }
 
-            Console.WriteLine("\n\n===== " + methodDescriptor + " =====");
+            Console.WriteLine($"{Environment.NewLine}{Environment.NewLine}===== " + methodDescriptor + " =====");
 
         }
 

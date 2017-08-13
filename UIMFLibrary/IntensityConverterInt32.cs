@@ -37,10 +37,9 @@ namespace UIMFLibrary
             const int dataTypeSize = 4;
 
             // Calculate TIC and BPI while run length zero encoding
-            var i = -1;
-            foreach (var intensity in intensities)
+            for (int i = 0; i < intensities.Count; i++)
             {
-                i++;
+                var intensity = intensities[i];
                 if (intensity > 0)
                 {
                     // TIC is just the sum of all intensities
@@ -122,10 +121,9 @@ namespace UIMFLibrary
             const int dataTypeSize = 4;
 
             // Calculate TIC and BPI while run length zero encoding
-            var i = -1;
-            foreach (var intensity in intensities)
+            for (int i = 0; i < intensities.Count; i++)
             {
-                i++;
+                var intensity = intensities[i];
                 if (intensity > 0)
                 {
                     // TIC is just the sum of all intensities
