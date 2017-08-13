@@ -17,7 +17,7 @@ namespace UIMFLibrary
         /// Number of non-zero data points
         /// </returns>
         public static int Encode(
-            IEnumerable<int> intensities,
+            IList<int> intensities,
             out byte[] spectra,
             out double tic,
             out double bpi,
@@ -75,26 +75,15 @@ namespace UIMFLibrary
             }
 
             // Compress intensities
-            var nlzf = 0;
             var nrlze = rlzeDataList.Count;
             var runLengthZeroEncodedData = rlzeDataList.ToArray();
 
-            var compressedData = new byte[nrlze * dataTypeSize * 5];
             if (nrlze > 0)
             {
-                var byteBuffer = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, byteBuffer, 0, nrlze * dataTypeSize);
-                nlzf = LZFCompressionUtil.Compress(
-                    ref byteBuffer,
-                    nrlze * dataTypeSize,
-                    ref compressedData,
-                    compressedData.Length);
-            }
-
-            if (nlzf != 0)
-            {
-                spectra = new byte[nlzf];
-                Array.Copy(compressedData, spectra, nlzf);
+                spectra = new byte[nrlze * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = CLZF2.Compress(
+                     spectra);
             }
 
             return nonZeroCount;
