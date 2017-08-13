@@ -29,7 +29,7 @@ namespace UIMFLibrary
             indexOfMaxIntensity = 0;
 
             // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            short zeroCount = 0;
+            int zeroCount = 0;
             var rlzeDataList = new List<int>();
             var nonZeroCount = 0;
 
@@ -61,7 +61,7 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    if (zeroCount == short.MinValue)
+                    if (zeroCount == int.MinValue)
                     {
                         // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add(zeroCount);
@@ -113,7 +113,7 @@ namespace UIMFLibrary
             indexOfMaxIntensity = 0;
 
             // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            short zeroCount = 0;
+            int zeroCount = 0;
             var rlzeDataList = new List<int>();
             var nonZeroCount = 0;
 
@@ -145,11 +145,11 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    if (zeroCount == short.MinValue)
+                    if (zeroCount == int.MinValue)
                     {
                         // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add(zeroCount);
-                        rlzeDataList.Add((short)0);
+                        rlzeDataList.Add(0);
                         zeroCount = 0;
                     }
 
