@@ -5029,8 +5029,9 @@ namespace UIMFLibrary
 
             // Update any cached frame parameters
             var framesToUpdate = m_CachedFrameParameters.Keys.ToList();
-            foreach (var frameNumber in framesToUpdate)
+            for (int i = 0; i < framesToUpdate.Count; i++)
             {
+                var frameNumber = framesToUpdate[i];
                 var frameParams = m_CachedFrameParameters[frameNumber];
 
                 frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, slope);
@@ -5040,7 +5041,6 @@ namespace UIMFLibrary
                 {
                     frameParams.AddUpdateValue(FrameParamKeyType.CalibrationDone, intercept);
                 }
-
             }
 
         }

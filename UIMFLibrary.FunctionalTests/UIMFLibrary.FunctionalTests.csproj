@@ -111,6 +111,9 @@
     <PackageReference Include="NUnit">
       <Version>3.6.1</Version>
     </PackageReference>
+    <PackageReference Include="Snappy.NET">
+      <Version>1.1.1.8</Version>
+    </PackageReference>
     <PackageReference Include="System.Data.SQLite.Core">
       <Version>1.0.97</Version>
     </PackageReference>

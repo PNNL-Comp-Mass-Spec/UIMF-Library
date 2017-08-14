@@ -95,6 +95,8 @@ ZREL CLZF2 Decompress                   8                   448.4%
             byte[] zrleLz4Result = new byte[] { };
             byte[] clzf2Result = new byte[] { };
             byte[] zrleClzf2Result = new byte[] { };
+            byte[] snappyResult = new byte[] { };
+            byte[] zrleSnappyResult = new byte[] { };
 
             Benchmark.This("LZ4 Compress", () =>
             {
@@ -110,7 +112,22 @@ ZREL CLZF2 Decompress                   8                   448.4%
             {
                 IntensityConverterInt32.Encode(intensities, out zrleClzf2Result, out var tic, out var bpi,
                     out var indexOfMaxIntensity);
-            }).WithWarmup(100).For(100).Iterations().PrintComparison();
+            }).WithWarmup(100).Against.This("Snappy", () =>
+                {
+                    snappyResult = Snappy.SnappyCodec.Compress(spectra);
+                }).WithWarmup(100).Against.This("ZRLE Snappy", () =>
+                {
+                    IntensityConverterInt32.EncodeSnappy(intensities, out zrleSnappyResult, out var tic, out var bpi,
+                        out var indexOfMaxIntensity);
+                }).WithWarmup(100)
+            
+            .For(100).Iterations().PrintComparison();
+
+            Console.WriteLine($"LZ4 Compress Size: {lz4Result.Length}");
+            Console.WriteLine($"ZREL LZ4 Compress Size: {zrleLz4Result.Length}");
+            Console.WriteLine($"CLZF2 Compress Size: {clzf2Result.Length}");
+            Console.WriteLine($"ZRLE CLZF2 Compress Size: {zrleClzf2Result.Length}");
+            Console.WriteLine();
 
             Benchmark.This("LZ4 Decompress", () =>
             {
