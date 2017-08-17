@@ -329,12 +329,13 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="targetType"></param>
         /// <param name="value"></param>
+        /// <param name="returnNullOnError">When true, return null if the conversion fails; when false, return the value as a string</param>
         /// <returns></returns>
         /// <remarks>
         /// Supports byte, short, int, float, double, and DateTime
         /// All other types will continue to be strings
         /// </remarks>
-        public static dynamic ConvertStringToDynamic(Type targetType, string value)
+        public static dynamic ConvertStringToDynamic(Type targetType, string value, bool returnNullOnError = true)
         {
             try
             {
@@ -349,7 +350,8 @@ namespace UIMFLibrary
                     if (byte.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
 
                 if (targetType == typeof(short))
@@ -360,7 +362,8 @@ namespace UIMFLibrary
                     if (short.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
 
                 if (targetType == typeof(int))
@@ -371,7 +374,8 @@ namespace UIMFLibrary
                     if (int.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
 
                 if (targetType == typeof(float))
@@ -379,7 +383,8 @@ namespace UIMFLibrary
                     if (float.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
 
                 if (targetType == typeof(double))
@@ -387,7 +392,8 @@ namespace UIMFLibrary
                     if (double.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
 
                 if (targetType == typeof(DateTime))
@@ -395,16 +401,22 @@ namespace UIMFLibrary
                     if (DateTime.TryParse(value, out var parsed))
                         return parsed;
 
-                    Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
+                    if (!returnNullOnError)
+                        Console.WriteLine("Warning: cannot convert {0} to a {1}; will store as a string", value, targetType);
                 }
+
+                if (targetType == typeof(string))
+                {
+                    return value;
+                }
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Cannot convert {0} to a {1}: {2}", value, targetType, ex);
             }
 
-            // Continue to store as a string
-            return value;
+            return returnNullOnError ? null : value;
         }
 
         /// <summary>
