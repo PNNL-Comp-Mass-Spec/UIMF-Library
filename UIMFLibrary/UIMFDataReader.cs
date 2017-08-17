@@ -233,7 +233,6 @@ namespace UIMFLibrary
         /// </exception>
         public DataReader(string fileName, bool useInMemoryDatabase=false) : base(fileName)
         {
-            m_errMessageCounter = 0;
             m_spectraToCache = 10;
             m_maxSpectrumCacheMemoryMB = 750;
 
@@ -4562,7 +4561,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "HighPressureFunnelPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, FRAME_PARAMETERS_TABLE, "HighPressureFunnelPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4572,7 +4571,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("PressureBack"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "PressureBack");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, FRAME_PARAMETERS_TABLE, "PressureBack");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4583,7 +4582,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("IonFunnelTrapPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "IonFunnelTrapPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, FRAME_PARAMETERS_TABLE, "IonFunnelTrapPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -4594,7 +4593,7 @@ namespace UIMFLibrary
 
             if (!m_LegacyFrameParametersMissingColumns.Contains("RearIonFunnelPressure"))
             {
-                isMilliTorr = ColumnIsMilliTorr(dbCommand, DataWriter.FRAME_PARAMETERS_TABLE, "RearIonFunnelPressure");
+                isMilliTorr = ColumnIsMilliTorr(dbCommand, FRAME_PARAMETERS_TABLE, "RearIonFunnelPressure");
                 if (isMilliTorr)
                 {
                     PressureIsMilliTorr = true;
@@ -5760,9 +5759,9 @@ namespace UIMFLibrary
 
         private bool UsingLegacyFrameParams(SQLiteConnection uimfConnection, out bool hasLegacyFrameParameters)
         {
-            hasLegacyFrameParameters = TableExists(uimfConnection, DataWriter.FRAME_PARAMETERS_TABLE);
+            hasLegacyFrameParameters = TableExists(uimfConnection, FRAME_PARAMETERS_TABLE);
 
-            if (TableExists(uimfConnection, DataWriter.FRAME_PARAMS_TABLE))
+            if (TableExists(uimfConnection, FRAME_PARAMS_TABLE))
                 return false;
 
             return true;

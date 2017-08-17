@@ -157,7 +157,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Global parameters object
         /// </summary>
-        protected GlobalParams m_globalParameters;
+        protected GlobalParams m_globalParameters { get; private set; }
 
         /// <summary>
         /// This dictionary tracks the existing of key tables, including whether or not we have actually checked for the table
@@ -205,6 +205,7 @@ namespace UIMFLibrary
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public UIMFDataBase(string fileName)
         {
+            m_errMessageCounter = 0;
             m_FilePath = fileName;
             m_globalParameters = new GlobalParams();
 
@@ -664,76 +665,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Read either the global params (or the legacy global parameters) and return a GlobalParams object with the parameters
-        /// </summary>
-        /// <param name="uimfConnection"></param>
-        /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
-        /// <returns></returns>
-        internal static GlobalParams CacheGlobalParameters(SQLiteConnection uimfConnection)
-        {
-            var usingLegacyGlobalParameters = UsingLegacyGlobalParams(uimfConnection);
-            GlobalParams globalParams;
-
-            if (usingLegacyGlobalParameters)
-            {
-                // Populate the global parameters object
-                var legacyGlobalParameters = GetGlobalParametersFromTable(uimfConnection);
-
-                var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
-                return globalParams;
-            }
-
-            globalParams = new GlobalParams();
-
-            using (var dbCommand = uimfConnection.CreateCommand())
-            {
-                dbCommand.CommandText = "SELECT ParamID, ParamValue FROM " + DataWriter.GLOBAL_PARAMS_TABLE;
-
-                using (var reader = dbCommand.ExecuteReader())
-                {
-                    // ParamID column is index 0
-                    const int idColIndex = 0;
-
-                    // ParamValue column is index 1
-                    const int valueColIndex = 1;
-
-                    while (reader.Read())
-                    {
-                        var paramID = reader.GetInt32(idColIndex);
-                        var paramValue = reader.GetString(valueColIndex);
-
-                        var paramType = GlobalParamUtilities.GetParamTypeByID(paramID);
-
-                        if (paramType == GlobalParamKeyType.Unknown)
-                        {
-                            // Unrecognized global parameter type; ignore it
-                            Console.WriteLine("Ignoring global parameter ID " + paramID + "; " +
-                                              "you need an updated copy of the UIMFLibary that supports this new parameter");
-
-                            continue;
-                        }
-
-                        var dataType = GlobalParamUtilities.GetGlobalParamKeyDataType(paramType);
-
-                        var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
-
-                        if (paramValueDynamic == null)
-                        {
-                            throw new InvalidCastException(
-                                string.Format("CacheGlobalParameters could not convert value of '{0}' for global parameter {1} to {2}",
-                                    paramValue, paramType, dataType));
-                        }
-
-                        globalParams.AddUpdateValue(paramType, paramValueDynamic);
-                    }
-                }
-            }
-
-            return globalParams;
-        }
-
-        /// <summary>
         /// Get global parameters from table.
         /// </summary>
         /// <param name="uimfConnection">
@@ -965,20 +896,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns true if the legacy global parameters table exists and the Global_Params table does not
-        /// </summary>
-        /// <returns></returns>
-        private static bool UsingLegacyGlobalParams(SQLiteConnection uimfConnection)
-        {
-            var usingLegacyParams = TableExists(uimfConnection, "Global_Parameters");
-
-            if (TableExists(uimfConnection, DataWriter.GLOBAL_PARAMS_TABLE))
-                usingLegacyParams = false;
-
-            return usingLegacyParams;
-        }
-
-        /// <summary>
         /// Print a warning for unrecognized frame parameter IDs
         /// </summary>
         /// <param name="paramID"></param>
@@ -1001,9 +918,66 @@ namespace UIMFLibrary
         /// <summary>
         /// Read either the global params (or the legacy global parameters) and store them to m_globalParameters
         /// </summary>
-        protected internal void CacheGlobalParameters()
+        /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
+        protected void CacheGlobalParameters()
         {
-            m_globalParameters = CacheGlobalParameters(m_dbConnection);
+            var usingLegacyGlobalParameters = UsingLegacyGlobalParams();
+
+            if (usingLegacyGlobalParameters)
+            {
+                // Populate the global parameters object
+                var legacyGlobalParameters = GetGlobalParametersFromTable(m_dbConnection);
+
+                var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
+                m_globalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+                return;
+            }
+
+            m_globalParameters = new GlobalParams();
+
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+                dbCommand.CommandText = "SELECT ParamID, ParamValue FROM " + GLOBAL_PARAMS_TABLE;
+
+                using (var reader = dbCommand.ExecuteReader())
+                {
+                    // ParamID column is index 0
+                    const int idColIndex = 0;
+
+                    // ParamValue column is index 1
+                    const int valueColIndex = 1;
+
+                    while (reader.Read())
+                    {
+                        var paramID = reader.GetInt32(idColIndex);
+                        var paramValue = reader.GetString(valueColIndex);
+
+                        var paramType = GlobalParamUtilities.GetParamTypeByID(paramID);
+
+                        if (paramType == GlobalParamKeyType.Unknown)
+                        {
+                            // Unrecognized global parameter type; ignore it
+                            Console.WriteLine("Ignoring global parameter ID " + paramID + "; " +
+                                              "you need an updated copy of the UIMFLibary that supports this new parameter");
+
+                            continue;
+                        }
+
+                        var dataType = GlobalParamUtilities.GetGlobalParamKeyDataType(paramType);
+
+                        var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
+
+                        if (paramValueDynamic == null)
+                        {
+                            throw new InvalidCastException(
+                                string.Format("CacheGlobalParameters could not convert value of '{0}' for global parameter {1} to {2}",
+                                              paramValue, paramType, dataType));
+                        }
+
+                        m_globalParameters.AddUpdateValue(paramType, paramValueDynamic);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1044,7 +1018,7 @@ namespace UIMFLibrary
             var table = m_TableStatus[tableType];
             if (!table.Exists && !table.Checked)
             {
-                var tableExists = DataReader.TableExists(m_dbConnection, tableName);
+                var tableExists = TableExists(m_dbConnection, tableName);
                 UpdateTableExists(tableType, tableExists);
             }
 
@@ -1482,6 +1456,20 @@ namespace UIMFLibrary
             status.Exists = tableExists;
 
             m_TableStatus[tableType] = status;
+        }
+
+        /// <summary>
+        /// Returns true if the legacy global parameters table exists and the Global_Params table does not
+        /// </summary>
+        /// <returns></returns>
+        private bool UsingLegacyGlobalParams()
+        {
+            var usingLegacyParams = TableExists(m_dbConnection, "Global_Parameters");
+
+            if (TableExists(m_dbConnection, GLOBAL_PARAMS_TABLE))
+                usingLegacyParams = false;
+
+            return usingLegacyParams;
         }
 
         /// <summary>

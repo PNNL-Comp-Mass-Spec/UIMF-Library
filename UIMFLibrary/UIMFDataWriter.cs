@@ -140,7 +140,7 @@ namespace UIMFLibrary
 
                 if (usingExistingDatabase && m_globalParameters.Values.Count == 0)
                 {
-                    m_globalParameters = DataReader.CacheGlobalParameters(m_dbConnection);
+                    CacheGlobalParameters();
                 }
 
                 // Read the frame numbers in the legacy Frame_Parameters table to make sure that m_FrameNumsInLegacyFrameParametersTable is up to date
@@ -219,7 +219,7 @@ namespace UIMFLibrary
                     return;
                 }
 
-                if (!DataReader.TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
+                if (!TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
                 {
                     // Legacy tables do not exist; nothing to do
                     return;
@@ -405,7 +405,7 @@ namespace UIMFLibrary
             using (var cmdPostLogEntry = oConnection.CreateCommand())
             {
 
-                if (!DataReader.TableExists(oConnection, "Log_Entries"))
+                if (!TableExists(oConnection, "Log_Entries"))
                 {
                     // Log_Entries not found; need to create it
                     cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " +
@@ -790,7 +790,7 @@ namespace UIMFLibrary
         /// </param>
         public void CreateBinCentricTables(string workingDirectory)
         {
-            if (DataReader.TableExists(m_dbConnection, "Bin_Intensities"))
+            if (TableExists(m_dbConnection, "Bin_Intensities"))
                 return;
 
             using (var uimfReader = new DataReader(m_FilePath))
@@ -807,7 +807,7 @@ namespace UIMFLibrary
         /// </summary>
         public void RemoveBinCentricTables()
         {
-            if (!DataReader.TableExists(m_dbConnection, "Bin_Intensities"))
+            if (!TableExists(m_dbConnection, "Bin_Intensities"))
                 return;
 
             using (var dbCommand = m_dbConnection.CreateCommand())
@@ -850,8 +850,7 @@ namespace UIMFLibrary
         private void CreateFrameParamsTables(IDbCommand dbCommand)
         {
 
-            if (HasFrameParamsTable &&
-                DataReader.TableExists(m_dbConnection, "Frame_Param_Keys"))
+            if (HasFrameParamsTable && TableExists(m_dbConnection, "Frame_Param_Keys"))
             {
                 // The tables already exist
                 return;
@@ -894,7 +893,7 @@ namespace UIMFLibrary
 
         private void CreateFrameScansTable(IDbCommand dbCommand, string dataType)
         {
-            if (DataReader.TableExists(m_dbConnection, "Frame_Scans"))
+            if (TableExists(m_dbConnection, "Frame_Scans"))
             {
                 // The tables already exist
                 return;
@@ -967,7 +966,7 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         private void CreateLegacyParameterTables(IDbCommand dbCommand)
         {
-            if (!DataReader.TableExists(m_dbConnection, GLOBAL_PARAMETERS_TABLE))
+            if (!TableExists(m_dbConnection, GLOBAL_PARAMETERS_TABLE))
             {
                 // Create the Global_Parameters Table
                 var lstFields = GetGlobalParametersFields();
@@ -976,7 +975,7 @@ namespace UIMFLibrary
 
             }
 
-            if (!DataReader.TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
+            if (!TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
             {
                 // Create the Frame_parameters Table
                 var lstFields = GetFrameParametersFields();
@@ -1438,7 +1437,7 @@ namespace UIMFLibrary
                 new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-            // See also the FrameType enum in the DataReader class
+            // See also the FrameType enum in the UIMFDataBase class
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
             // Number of TOF scans
@@ -1909,8 +1908,8 @@ namespace UIMFLibrary
             double intercept,
             bool isAutoCalibrating = false)
         {
-            var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            var hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+            var hasLegacyFrameParameters = TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            var hasFrameParamsTable = TableExists(dBconnection, FRAME_PARAMS_TABLE);
 
             using (var dbCommand = dBconnection.CreateCommand())
             {
@@ -2001,8 +2000,8 @@ namespace UIMFLibrary
             double intercept,
             bool isAutoCalibrating = false)
         {
-            var hasLegacyFrameParameters = DataReader.TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            var hasFrameParamsTable = DataReader.TableExists(dBconnection, FRAME_PARAMS_TABLE);
+            var hasLegacyFrameParameters = TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
+            var hasFrameParamsTable = TableExists(dBconnection, FRAME_PARAMS_TABLE);
 
             using (var dbCommand = dBconnection.CreateCommand())
             {
@@ -2173,7 +2172,7 @@ namespace UIMFLibrary
         {
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
-                if (!DataReader.TableExists(m_dbConnection, tableName))
+                if (!TableExists(m_dbConnection, tableName))
                 {
                     // Create the table
                     dbCommand.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
@@ -2554,7 +2553,7 @@ namespace UIMFLibrary
 
             // Assure that m_frameParameterKeys is synchronized with the .UIMF file
             // Obtain the current contents of Frame_Param_Keys
-            m_frameParameterKeys = DataReader.GetFrameParameterKeys(m_dbConnection);
+            m_frameParameterKeys = GetFrameParameterKeys(m_dbConnection);
 
             // Add any new keys not yet in Frame_Param_Keys
             foreach (var newKey in paramKeys)
@@ -2593,7 +2592,7 @@ namespace UIMFLibrary
             if (m_LegacyFrameParameterTableHasDecodedColumn)
                 return;
 
-            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
+            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
             {
                 AddFrameParameter("Decoded", "INT", 0);
             }
@@ -2613,13 +2612,13 @@ namespace UIMFLibrary
             if (m_LegacyFrameParameterTableHaHPFColumns)
                 return;
 
-            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
+            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
             {
                 AddFrameParameter("voltEntranceHPFIn", "DOUBLE", 0);
                 AddFrameParameter("VoltEntranceHPFOut", "DOUBLE", 0);
             }
 
-            if (!DataReader.TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltExitHPFIn"))
+            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltExitHPFIn"))
             {
                 AddFrameParameter("voltExitHPFIn", "DOUBLE", 0);
                 AddFrameParameter("voltExitHPFOut", "DOUBLE", 0);
