@@ -169,6 +169,13 @@ namespace UIMFLibrary
         {
             InitializeByType(paramType);
             Value = FrameParamUtilities.ConvertStringToDynamic(DataType, value);
+
+            if (Value == null)
+            {
+                throw new InvalidCastException(
+                    string.Format("GlobalParam constructor could not convert value of '{0}' for global parameter {1} to {2}",
+                                  value, paramType, DataType));
+            }
         }
 
         /// <summary>

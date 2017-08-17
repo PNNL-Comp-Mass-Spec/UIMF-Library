@@ -5217,6 +5217,13 @@ namespace UIMFLibrary
 
                         var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
 
+                        if (paramValueDynamic == null)
+                        {
+                            throw new InvalidCastException(
+                                string.Format("CacheGlobalParameters could not convert value of '{0}' for global parameter {1} to {2}",
+                                              paramValue, paramType, dataType));
+                        }
+
                         globalParams.AddUpdateValue(paramType, paramValueDynamic);
                     }
                 }
@@ -6445,6 +6452,13 @@ namespace UIMFLibrary
             var dataType = FrameParamUtilities.GetFrameParamKeyDataType(paramType);
 
             var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
+
+            if (paramValueDynamic == null)
+            {
+                throw new InvalidCastException(
+                    string.Format("TestConvertStringToDynamic could not convert value of '{0}' for frame parameter {1} to {2}",
+                                  paramValue, paramType, dataType));
+            }
 
             if (frameParamKeys.TryGetValue(paramType, out var paramDef))
             {

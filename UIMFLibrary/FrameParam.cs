@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace UIMFLibrary
 {
     /// <summary>
@@ -36,6 +38,13 @@ namespace UIMFLibrary
         {
             Definition = paramDef;
             Value = FrameParamUtilities.ConvertStringToDynamic(paramDef.DataType, value);
+
+            if (Value == null)
+            {
+                throw new InvalidCastException(
+                    string.Format("FrameParam constructor could not convert value of '{0}' for frame parameter {1} to {2}",
+                                  value, paramDef.ParamType, paramDef.DataType));
+            }
         }
 
         /// <summary>
