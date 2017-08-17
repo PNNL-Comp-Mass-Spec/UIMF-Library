@@ -4,8 +4,6 @@ using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UIMFLibrary
 {
@@ -44,6 +42,32 @@ namespace UIMFLibrary
         #endregion
 
         #region Enums and Structs
+
+        /// <summary>
+        /// Frame type.
+        /// </summary>
+        public enum FrameType
+        {
+            /// <summary>
+            /// MS1
+            /// </summary>
+            MS1 = 1,
+
+            /// <summary>
+            /// MS2
+            /// </summary>
+            MS2 = 2,
+
+            /// <summary>
+            /// Calibration
+            /// </summary>
+            Calibration = 3,
+
+            /// <summary>
+            /// Prescan
+            /// </summary>
+            Prescan = 4
+        }
 
         /// <summary>
         /// Type of the table
@@ -94,12 +118,31 @@ namespace UIMFLibrary
 
         #endregion
 
+        #region Static Fields
+
+        /// <summary>
+        /// Number of error messages that have been caught
+        /// </summary>
+        protected internal static int m_errMessageCounter;
+
+        /// <summary>
+        /// Tracks the frame parameter types that were not recognized
+        /// </summary>
+        private static readonly SortedSet<int> m_UnrecognizedFrameParamTypes = new SortedSet<int>();
+
+        #endregion
+
         #region Fields
 
         /// <summary>
         /// Frame parameter keys
         /// </summary>
         protected Dictionary<FrameParamKeyType, FrameParamDef> m_frameParameterKeys;
+
+        /// <summary>
+        /// U.S. Culture Info
+        /// </summary>
+        protected static readonly CultureInfo mCultureInfoUS = new CultureInfo("en-US");
 
         /// <summary>
         /// Connection to the database
@@ -222,7 +265,35 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Get global parameters
+        /// Get frame parameter keys
+        /// </summary>
+        /// <returns>
+        /// Frame Parameter Keys.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// </exception>
+        public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh)
+        {
+            if (m_dbConnection == null)
+            {
+                return m_frameParameterKeys;
+            }
+
+            if (!forceRefresh && m_frameParameterKeys != null)
+                return m_frameParameterKeys;
+
+            if (m_frameParameterKeys == null)
+                m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
+            else
+                m_frameParameterKeys.Clear();
+
+            m_frameParameterKeys = GetFrameParameterKeys(m_dbConnection);
+
+            return m_frameParameterKeys;
+        }
+
+        /// <summary>
+        /// Return the global parameters using the legacy GlobalParameters object
         /// </summary>
         /// <returns>
         /// Global parameters class<see cref="GlobalParameters"/>.
@@ -247,9 +318,810 @@ namespace UIMFLibrary
             return m_globalParameters;
         }
 
+        /// <summary>
+        /// Check whether a table exists.
+        /// </summary>
+        /// <param name="tableName">
+        /// Table name.
+        /// </param>
+        /// <returns>
+        /// True if the table or view exists<see cref="bool"/>.
+        /// </returns>
+        public bool TableExists(string tableName)
+        {
+            return TableExists(m_dbConnection, tableName);
+        }
+
+        /// <summary>
+        /// Check whether a table has a specific column
+        /// </summary>
+        /// <param name="tableName">
+        /// Table name.
+        /// </param>
+        /// <param name="columnName">
+        /// Column name.
+        /// </param>
+        /// <returns>
+        /// True if the table or view has the specified column<see cref="bool"/>.
+        /// </returns>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// </remarks>
+        public bool TableHasColumn(string tableName, string columnName)
+        {
+            return TableHasColumn(m_dbConnection, tableName, columnName);
+        }
+
+        #endregion
+
+        #region Public static methods
+
+        /// <summary>
+        /// Convert bin to mz.
+        /// </summary>
+        /// <param name="slope">
+        /// Slope.
+        /// </param>
+        /// <param name="intercept">
+        /// Intercept.
+        /// </param>
+        /// <param name="binWidth">
+        /// Bin width (in ns)
+        /// </param>
+        /// <param name="correctionTimeForTOF">
+        /// Correction time for tof.
+        /// </param>
+        /// <param name="bin">
+        /// Bin number
+        /// </param>
+        /// <returns>
+        /// m/z<see cref="double"/>.
+        /// </returns>
+        public static double ConvertBinToMZ(
+            double slope,
+            double intercept,
+            double binWidth,
+            double correctionTimeForTOF,
+            int bin)
+        {
+            var t = bin * binWidth / 1000;
+            var term1 = slope * (t - correctionTimeForTOF / 1000 - intercept);
+            return term1 * term1;
+        }
+
+        /// <summary>
+        /// Returns the bin value that corresponds to an m/z value.
+        /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
+        /// </summary>
+        /// <param name="slope">
+        /// </param>
+        /// <param name="intercept">
+        /// </param>
+        /// <param name="binWidth">Bin width (in ns)
+        /// </param>
+        /// <param name="correctionTimeForTOF">
+        /// </param>
+        /// <param name="targetMZ">
+        /// </param>
+        /// <returns>
+        /// Bin number<see cref="double"/>.
+        /// </returns>
+        public static double GetBinClosestToMZ(
+            double slope,
+            double intercept,
+            double binWidth,
+            double correctionTimeForTOF,
+            double targetMZ)
+        {
+            // NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
+            var binCorrection = (correctionTimeForTOF / 1000) / binWidth;
+            var bin = (Math.Sqrt(targetMZ) / slope + intercept) / binWidth * 1000;
+
+            // TODO:  have a test case with a TOFCorrectionTime > 0 and verify the binCorrection adjustment
+            return bin + binCorrection;
+        }
+
+        /// <summary>
+        /// Get frame parameter keys
+        /// </summary>
+        /// <returns>
+        /// Frame Parameter Keys.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// </exception>
+        public static Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(SQLiteConnection uimfConnection)
+        {
+            var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
+
+            if (!TableExists(uimfConnection, "Frame_Param_Keys"))
+            {
+                return GetLegacyFrameParameterKeys();
+            }
+
+            const string sqlQuery = "Select ParamID, ParamName, ParamDataType, ParamDescription From Frame_Param_Keys;";
+
+            using (var dbCommand = new SQLiteCommand(uimfConnection)
+            {
+                CommandText = sqlQuery
+            })
+            {
+                using (var reader = dbCommand.ExecuteReader())
+                {
+                    var cultureInfoUS = new CultureInfo("en-US");
+
+                    while (reader.Read())
+                    {
+                        var paramID = Convert.ToInt32(reader["ParamID"], cultureInfoUS);
+                        var paramName = Convert.ToString(reader["ParamName"], cultureInfoUS);
+                        var paramDataType = Convert.ToString(reader["ParamDataType"], cultureInfoUS);
+                        var paramDescription = Convert.ToString(reader["ParamDescription"], cultureInfoUS);
+
+                        try
+                        {
+                            AddFrameParamKey(frameParamKeys, paramID, paramName, paramDataType, paramDescription);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Frame_Param_Keys table contains invalid entries: " + ex.Message, ex);
+                        }
+
+                    }
+                }
+            }
+
+            return frameParamKeys;
+        }
+
+        /// <summary>
+        /// Determine the columns in a table or view
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// Sqlite connection
+        /// </param>
+        /// <param name="tableName">
+        /// Table name
+        /// </param>
+        /// <returns>
+        /// List of column names in the table.
+        /// </returns>
+        public static List<string> GetTableColumnNames(SQLiteConnection uimfConnection, string tableName)
+        {
+            var columns = new List<string>();
+
+            var tableExists = TableExists(uimfConnection, tableName);
+            if (!tableExists)
+                return columns;
+
+            using (
+                var cmd = new SQLiteCommand(uimfConnection)
+                {
+                    CommandText = "Select * From '" + tableName + "' Limit 1;"
+                })
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    for (var i = 0; i < reader.FieldCount; i++)
+                    {
+                        columns.Add(reader.GetName(i));
+                    }
+                }
+            }
+
+            return columns;
+        }
+
+        /// <summary>
+        /// Looks for the given index in the SqLite database
+        /// Note that index names are case sensitive
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// </param>
+        /// <param name="indexName">
+        /// </param>
+        /// <returns>
+        /// True if the index exists<see cref="bool"/>.
+        /// </returns>
+        public static bool IndexExists(SQLiteConnection uimfConnection, string indexName)
+        {
+            bool hasRows;
+
+            using (
+                var cmd = new SQLiteCommand(uimfConnection)
+                {
+                    CommandText = "SELECT name FROM " +
+                                  "sqlite_master " +
+                                  "WHERE type='index' AND " + "name = '" + indexName + "'"
+                })
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    hasRows = reader.HasRows;
+                }
+            }
+
+            return hasRows;
+        }
+
+        /// <summary>
+        /// Looks for the given table in the SqLite database
+        /// Note that table names are case sensitive
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// </param>
+        /// <param name="tableName">
+        /// </param>
+        /// <returns>
+        /// True if the table or view exists<see cref="bool"/>.
+        /// </returns>
+        public static bool TableExists(SQLiteConnection uimfConnection, string tableName)
+        {
+            bool hasRows;
+
+            using (var cmd = new SQLiteCommand(uimfConnection)
+            {
+                CommandText = "SELECT name " +
+                              "FROM sqlite_master " +
+                              "WHERE type IN ('table','view') And tbl_name = '" + tableName + "'"
+            })
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    hasRows = reader.HasRows;
+                }
+            }
+
+            return hasRows;
+        }
+
+        /// <summary>
+        /// Check whether a table has a column
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// Sqlite connection
+        /// </param>
+        /// <param name="tableName">
+        /// Table name
+        /// </param>
+        /// <param name="columnName">
+        /// Column name.
+        /// </param>
+        /// <returns>
+        /// True if the table or view has the specified column<see cref="bool"/>.
+        /// </returns>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// </remarks>
+        public static bool TableHasColumn(SQLiteConnection uimfConnection, string tableName, string columnName)
+        {
+            bool hasColumn;
+
+            using (
+                var cmd = new SQLiteCommand(uimfConnection)
+                {
+                    CommandText = "Select * From '" + tableName + "' Limit 1;"
+                })
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    hasColumn = reader.GetOrdinal(columnName) >= 0;
+                }
+            }
+
+            return hasColumn;
+        }
+
+        #endregion
+
+        #region Static methods
+
+        private static void AddFrameParamKey(IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys, FrameParamKeyType paramType)
+        {
+            var paramDef = FrameParamUtilities.GetParamDefByType(paramType);
+
+            if (frameParamKeys.ContainsKey(paramDef.ParamType))
+            {
+                throw new Exception("Duplicate Key ID; cannot add " + paramType);
+            }
+
+            if (frameParamKeys.Any(existingKey => string.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
+            {
+                throw new Exception("Duplicate Key Name; cannot add " + paramType);
+            }
+
+            frameParamKeys.Add(paramType, paramDef);
+        }
+
+        private static void AddFrameParamKey(
+            IDictionary<FrameParamKeyType, FrameParamDef> frameParamKeys,
+            int paramID, string paramName,
+            string paramDataType, string paramDescription)
+        {
+            if (string.IsNullOrWhiteSpace(paramName))
+                throw new ArgumentOutOfRangeException(nameof(paramName), "paramName cannot be empty");
+
+            var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
+            if (paramType == FrameParamKeyType.Unknown)
+            {
+                // Unrecognized parameter ID; ignore this key
+                WarnUnrecognizedFrameParamID(paramID, paramName);
+                return;
+            }
+
+            var paramDef = new FrameParamDef(paramType, paramName, paramDataType, paramDescription);
+
+            if (frameParamKeys.ContainsKey(paramDef.ParamType))
+            {
+                throw new Exception("Duplicate Key; cannot add " + paramType + " (ID " + (int)paramType + ")");
+            }
+
+            if (frameParamKeys.Any(existingKey => string.CompareOrdinal(existingKey.Value.Name, paramDef.Name) == 0))
+            {
+                throw new Exception("Duplicate Key Name; cannot add " + paramType + " (ID " + (int)paramType + ")");
+            }
+
+            frameParamKeys.Add(paramType, paramDef);
+
+        }
+
+        /// <summary>
+        /// Read either the global params (or the legacy global parameters) and return a GlobalParams object with the parameters
+        /// </summary>
+        /// <param name="uimfConnection"></param>
+        /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
+        /// <returns></returns>
+        internal static GlobalParams CacheGlobalParameters(SQLiteConnection uimfConnection)
+        {
+            var usingLegacyGlobalParameters = UsingLegacyGlobalParams(uimfConnection);
+            GlobalParams globalParams;
+
+            if (usingLegacyGlobalParameters)
+            {
+                // Populate the global parameters object
+                var legacyGlobalParameters = GetGlobalParametersFromTable(uimfConnection);
+
+                var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
+                globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+                return globalParams;
+            }
+
+            globalParams = new GlobalParams();
+
+            using (var dbCommand = uimfConnection.CreateCommand())
+            {
+                dbCommand.CommandText = "SELECT ParamID, ParamValue FROM " + DataWriter.GLOBAL_PARAMS_TABLE;
+
+                using (var reader = dbCommand.ExecuteReader())
+                {
+                    // ParamID column is index 0
+                    const int idColIndex = 0;
+
+                    // ParamValue column is index 1
+                    const int valueColIndex = 1;
+
+                    while (reader.Read())
+                    {
+                        var paramID = reader.GetInt32(idColIndex);
+                        var paramValue = reader.GetString(valueColIndex);
+
+                        var paramType = GlobalParamUtilities.GetParamTypeByID(paramID);
+
+                        if (paramType == GlobalParamKeyType.Unknown)
+                        {
+                            // Unrecognized global parameter type; ignore it
+                            Console.WriteLine("Ignoring global parameter ID " + paramID + "; " +
+                                              "you need an updated copy of the UIMFLibary that supports this new parameter");
+
+                            continue;
+                        }
+
+                        var dataType = GlobalParamUtilities.GetGlobalParamKeyDataType(paramType);
+
+                        var paramValueDynamic = FrameParamUtilities.ConvertStringToDynamic(dataType, paramValue);
+
+                        if (paramValueDynamic == null)
+                        {
+                            throw new InvalidCastException(
+                                string.Format("CacheGlobalParameters could not convert value of '{0}' for global parameter {1} to {2}",
+                                    paramValue, paramType, dataType));
+                        }
+
+                        globalParams.AddUpdateValue(paramType, paramValueDynamic);
+                    }
+                }
+            }
+
+            return globalParams;
+        }
+
+        /// <summary>
+        /// Get global parameters from table.
+        /// </summary>
+        /// <param name="uimfConnection">
+        /// UIMF database connection.
+        /// </param>
+        /// <returns>
+        /// Global parameters object
+        /// </returns>
+        /// <exception cref="Exception">
+        /// </exception>
+#pragma warning disable 612, 618
+        private static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection uimfConnection)
+        {
+            var globalParameters = new GlobalParameters();
+#pragma warning restore 612, 618
+
+            using (var dbCommand = uimfConnection.CreateCommand())
+            {
+                dbCommand.CommandText = "SELECT * FROM Global_Parameters";
+
+                using (var reader = dbCommand.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
+                            globalParameters.DateStarted = GetString(reader, "DateStarted");
+                            globalParameters.NumFrames = GetInt32(reader, "NumFrames");
+                            globalParameters.TimeOffset = GetInt32(reader, "TimeOffset");
+                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
+                            globalParameters.Bins = GetInt32(reader, "Bins");
+                            try
+                            {
+                                globalParameters.TOFCorrectionTime = GetSingle(reader, "TOFCorrectionTime");
+                            }
+                            catch
+                            {
+                                m_errMessageCounter++;
+                                Console.WriteLine(
+                                    "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
+                            }
+
+                            globalParameters.Prescan_TOFPulses = GetInt32(reader, "Prescan_TOFPulses");
+                            globalParameters.Prescan_Accumulations = GetInt32(reader, "Prescan_Accumulations");
+                            globalParameters.Prescan_TICThreshold = GetInt32(reader, "Prescan_TICThreshold");
+                            globalParameters.Prescan_Continuous = GetBoolean(reader, "Prescan_Continuous");
+                            globalParameters.Prescan_Profile = GetString(reader, "Prescan_Profile");
+                            globalParameters.FrameDataBlobVersion =
+                                GetSingle(reader, "FrameDataBlobVersion");
+                            globalParameters.ScanDataBlobVersion =
+                                GetSingle(reader, "ScanDataBlobVersion");
+                            globalParameters.TOFIntensityType = GetString(reader, "TOFIntensityType");
+                            globalParameters.DatasetType = GetString(reader, "DatasetType");
+                            try
+                            {
+                                globalParameters.InstrumentName = GetString(reader, "Instrument_Name");
+                            }
+                            // ReSharper disable once EmptyGeneralCatchClause
+                            catch
+                            {
+                                // Likely an old .UIMF file that does not have column Instrument_Name
+                                globalParameters.InstrumentName = string.Empty;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Failed to get global parameters " + ex);
+                        }
+                    }
+                }
+
+                // Examine globalParameters.DateStarted; it should be one of these forms:
+                //   A text-based date, like "5/2/2011 4:26:59 PM"; example: Sarc_MS2_26_2Apr11_Cheetah_11-02-18_inverse.uimf
+                //   A text-based date (no time info), like "Thursday, January 13, 2011"; example: QC_Shew_11_01_pt5_c2_030311_earth_4ms_0001
+                //   A tick-based date, like 129272890050787740 (number of ticks since January 1, 1601); example: BATs_TS_01_c4_Eagle_10-02-06_0000
+
+                try
+                {
+                    var reportedDateStarted = globalParameters.DateStarted;
+
+                    if (DateTime.TryParse(reportedDateStarted, mCultureInfoUS, DateTimeStyles.None, out var dtReportedDateStarted))
+                    {
+                        if (dtReportedDateStarted.Year < 450)
+                        {
+                            // Some .UIMF files have DateStarted values represented by huge integers, e.g. 127805472000000000 or 129145004045937500; example: BATs_TS_01_c4_Eagle_10-02-06_0000
+                            //  These numbers are the number of ticks since 1 January 1601 (where each tick is 100 ns)
+                            //  This value is returned by function GetSystemTimeAsFileTime (see http://en.wikipedia.org/wiki/System_time)
+
+                            //  When SQLite parses these numbers, it converts them to years around 0410
+                            //  To get the correct year, simply add 1600
+
+                            dtReportedDateStarted = dtReportedDateStarted.AddYears(1600);
+                            globalParameters.DateStarted = UIMFDataUtilities.StandardizeDate(dtReportedDateStarted);
+                        }
+                    }
+
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                    // Ignore errors here
+                }
+            }
+
+            return globalParameters;
+        }
+
+        /// <summary>
+        /// Convert object read from database to boolean
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static bool GetBoolean(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToBoolean(reader[fieldName], mCultureInfoUS);
+        }
+
+        /// <summary>
+        /// Convert object read from database to double
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static double GetDouble(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToDouble(reader[fieldName], mCultureInfoUS);
+        }
+
+        /// <summary>
+        /// Convert object read from database to int16
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static short GetInt16(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToInt16(reader[fieldName], mCultureInfoUS);
+        }
+
+        /// <summary>
+        /// Convert object read from database to int32
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static int GetInt32(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToInt32(reader[fieldName], mCultureInfoUS);
+        }
+
+        /// <summary>
+        /// Convert object read from database to single/float
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static float GetSingle(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToSingle(reader[fieldName], mCultureInfoUS);
+        }
+
+        /// <summary>
+        /// Convert object read from database to string
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        protected internal static string GetString(IDataRecord reader, string fieldName)
+        {
+            return Convert.ToString(reader[fieldName], mCultureInfoUS);
+        }
+
+        private static Dictionary<FrameParamKeyType, FrameParamDef> GetLegacyFrameParameterKeys()
+        {
+            var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
+
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.StartTimeMinutes);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.DurationSeconds);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.Accumulations);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.FrameType);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.Decoded);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.CalibrationDone);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.Scans);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MultiplexingEncodingSequence);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MPBitOrder);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.TOFLosses);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.AverageTOFLength);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.CalibrationSlope);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.CalibrationIntercept);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficienta2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientb2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientc2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientd2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficiente2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.MassCalibrationCoefficientf2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.AmbientTemperature);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack1);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack3);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltHVRack4);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltCapInlet);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltEntranceHPFIn);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltEntranceHPFOut);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltEntranceCondLmt);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltTrapOut);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltTrapIn);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltJetDist);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltQuad1);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltCond1);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltQuad2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltCond2);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltIMSOut);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltExitHPFIn);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltExitHPFOut);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.VoltExitCondLmt);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.PressureFront);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.PressureBack);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.HighPressureFunnelPressure);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.IonFunnelTrapPressure);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.RearIonFunnelPressure);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.QuadrupolePressure);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.ESIVoltage);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.FloatVoltage);
+            AddFrameParamKey(frameParamKeys, FrameParamKeyType.FragmentationProfile);
+
+            return frameParamKeys;
+        }
+
+        /// <summary>
+        /// Returns true if the legacy global parameters table exists and the Global_Params table does not
+        /// </summary>
+        /// <returns></returns>
+        private static bool UsingLegacyGlobalParams(SQLiteConnection uimfConnection)
+        {
+            var usingLegacyParams = TableExists(uimfConnection, "Global_Parameters");
+
+            if (TableExists(uimfConnection, DataWriter.GLOBAL_PARAMS_TABLE))
+                usingLegacyParams = false;
+
+            return usingLegacyParams;
+        }
+
+        /// <summary>
+        /// Print a warning for unrecognized frame parameter IDs
+        /// </summary>
+        /// <param name="paramID"></param>
+        /// <param name="paramName"></param>
+        protected internal static void WarnUnrecognizedFrameParamID(int paramID, string paramName)
+        {
+            if (!m_UnrecognizedFrameParamTypes.Contains(paramID))
+            {
+                m_UnrecognizedFrameParamTypes.Add(paramID);
+                Console.WriteLine("Ignoring frame parameter " + paramName + " (ID " + paramID + "); " +
+                                  "you need an updated copy of the UIMFLibary that supports this new parameter");
+            }
+
+        }
+
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Read either the global params (or the legacy global parameters) and store them to m_globalParameters
+        /// </summary>
+        protected internal void CacheGlobalParameters()
+        {
+            m_globalParameters = CacheGlobalParameters(m_dbConnection);
+        }
+
+        /// <summary>
+        /// Returns true if the Frame_Params table exists
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckHasFrameParamsTable()
+        {
+            return CheckHasTable(UIMFTableType.FrameParams, FRAME_PARAMS_TABLE);
+        }
+
+        /// <summary>
+        /// Returns true if the Global_Params table exists
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckHasGlobalParamsTable()
+        {
+            return CheckHasTable(UIMFTableType.GlobalParams, GLOBAL_PARAMS_TABLE);
+        }
+
+        /// <summary>
+        /// Returns true if the Global_Parameters table exists
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckHasLegacyParameterTables()
+        {
+            return CheckHasTable(UIMFTableType.LegacyGlobalParameters, GLOBAL_PARAMETERS_TABLE);
+        }
+
+        /// <summary>
+        /// Check for the existence of the given table
+        /// </summary>
+        /// <param name="tableType"></param>
+        /// <param name="tableName"></param>
+        /// <returns>True if the table exists, false if missing</returns>
+        private bool CheckHasTable(UIMFTableType tableType, string tableName)
+        {
+            var table = m_TableStatus[tableType];
+            if (!table.Exists && !table.Checked)
+            {
+                var tableExists = DataReader.TableExists(m_dbConnection, tableName);
+                UpdateTableExists(tableType, tableExists);
+            }
+
+            return m_TableStatus[tableType].Exists;
+        }
+
+        /// <summary>
+        /// Returns true if the Version_Info table exists
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckHasVersionInfoTable()
+        {
+            return CheckHasTable(UIMFTableType.VersionInfo, VERSION_INFO_TABLE);
+        }
+
+        /// <summary>
+        /// Convert bin number to m/z value
+        /// </summary>
+        /// <param name="binNumber">
+        /// </param>
+        /// <param name="binWidth">Bin width (in ns)
+        /// </param>
+        /// <param name="frameParameters">
+        /// </param>
+        /// <returns>
+        /// m/z<see cref="double"/>.
+        /// </returns>
+        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object")]
+        public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
+        {
+            // mz = (k * (t-t0))^2
+            var t = binNumber * binWidth / 1000;
+
+            var resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3) +
+                             frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7) +
+                             frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
+
+            var mz =
+                frameParameters.CalibrationSlope *
+                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+
+            mz = (mz * mz) + resMassErr;
+
+            return mz;
+        }
+
+        /// <summary>
+        /// Convert bin number to m/z value
+        /// </summary>
+        /// <param name="binNumber">
+        /// </param>
+        /// <param name="binWidth">Bin width (in ns)
+        /// </param>
+        /// <param name="frameParameters">
+        /// </param>
+        /// <returns>
+        /// m/z<see cref="double"/>.
+        /// </returns>
+        public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParameters)
+        {
+            // mz = (k * (t-t0))^2
+            var t = binNumber * binWidth / 1000;
+
+            var massCalCoefficients = frameParameters.MassCalibrationCoefficients;
+
+            var resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3) +
+                             massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7) +
+                             massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
+
+            var mz =
+                frameParameters.CalibrationSlope *
+                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+
+            mz = (mz * mz) + resMassErr;
+
+            return mz;
+        }
 
         /// <summary>
         /// Gets the field names for the legacy Frame_Parameters table
@@ -360,28 +1232,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets the field names for the Global_Params table
-        /// </summary>
-        /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
-        /// </returns>
-        protected internal List<Tuple<string, string, string>> GetGlobalParamsFields()
-        {
-
-            var lstFields = new List<Tuple<string, string, string>>
-            {
-                Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
-                Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
-                Tuple.Create("ParamValue", "TEXT", "string"),
-                Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
-                Tuple.Create("ParamDescription", "TEXT NULL", "string"),
-            };
-
-            return lstFields;
-
-        }
-
-        /// <summary>
         /// Gets the field names for the Frame_Scans table
         /// </summary>
         /// <param name="dataType">
@@ -463,20 +1313,21 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets the field names for the Version_Info table
+        /// Gets the field names for the Global_Params table
         /// </summary>
         /// <returns>
         /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
         /// </returns>
-        protected internal List<Tuple<string, string, string>> GetVersionInfoFields()
+        protected internal List<Tuple<string, string, string>> GetGlobalParamsFields()
         {
+
             var lstFields = new List<Tuple<string, string, string>>
             {
-                Tuple.Create("Version_ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
-                Tuple.Create("File_Version", "TEXT NOT NULL", "string"),
-                Tuple.Create("Calling_Assembly_Name", "TEXT", "string"),
-                Tuple.Create("Calling_Assembly_Version", "TEXT", "string"),
-                Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
+                Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
+                Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
+                Tuple.Create("ParamValue", "TEXT", "string"),
+                Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
+                Tuple.Create("ParamDescription", "TEXT NULL", "string"),
             };
 
             return lstFields;
@@ -580,57 +1431,24 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns true if the Frame_Params table exists
+        /// Gets the field names for the Version_Info table
         /// </summary>
-        /// <returns></returns>
-        private bool CheckHasFrameParamsTable()
+        /// <returns>
+        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// </returns>
+        protected internal List<Tuple<string, string, string>> GetVersionInfoFields()
         {
-            return CheckHasTable(UIMFTableType.FrameParams, FRAME_PARAMS_TABLE);
-        }
-
-        /// <summary>
-        /// Returns true if the Global_Params table exists
-        /// </summary>
-        /// <returns></returns>
-        private bool CheckHasGlobalParamsTable()
-        {
-            return CheckHasTable(UIMFTableType.GlobalParams, GLOBAL_PARAMS_TABLE);
-        }
-
-        /// <summary>
-        /// Returns true if the Global_Parameters table exists
-        /// </summary>
-        /// <returns></returns>
-        private bool CheckHasLegacyParameterTables()
-        {
-            return CheckHasTable(UIMFTableType.LegacyGlobalParameters, GLOBAL_PARAMETERS_TABLE);
-        }
-
-        /// <summary>
-        /// Returns true if the Version_Info table exists
-        /// </summary>
-        /// <returns></returns>
-        private bool CheckHasVersionInfoTable()
-        {
-            return CheckHasTable(UIMFTableType.VersionInfo, VERSION_INFO_TABLE);
-        }
-
-        /// <summary>
-        /// Check for the existence of the given table
-        /// </summary>
-        /// <param name="tableType"></param>
-        /// <param name="tableName"></param>
-        /// <returns>True if the table exists, false if missing</returns>
-        private bool CheckHasTable(UIMFTableType tableType, string tableName)
-        {
-            var table = m_TableStatus[tableType];
-            if (!table.Exists && !table.Checked)
+            var lstFields = new List<Tuple<string, string, string>>
             {
-                var tableExists = DataReader.TableExists(m_dbConnection, tableName);
-                UpdateTableExists(tableType, tableExists);
-            }
+                Tuple.Create("Version_ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
+                Tuple.Create("File_Version", "TEXT NOT NULL", "string"),
+                Tuple.Create("Calling_Assembly_Name", "TEXT", "string"),
+                Tuple.Create("Calling_Assembly_Version", "TEXT", "string"),
+                Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
+            };
 
-            return m_TableStatus[tableType].Exists;
+            return lstFields;
+
         }
 
         /// <summary>
@@ -677,69 +1495,6 @@ namespace UIMFLibrary
             {
                 throw new Exception("The Frame_Scans table does not exist; call method CreateTables before calling " + callingMethod);
             }
-        }
-
-        /// <summary>
-        /// Convert bin number to m/z value
-        /// </summary>
-        /// <param name="binNumber">
-        /// </param>
-        /// <param name="binWidth">Bin width (in ns)
-        /// </param>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <returns>
-        /// m/z<see cref="double"/>.
-        /// </returns>
-        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object")]
-        public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
-        {
-            // mz = (k * (t-t0))^2
-            var t = binNumber * binWidth / 1000;
-
-            var resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3) +
-                             frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7) +
-                             frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
-
-            var mz =
-                frameParameters.CalibrationSlope *
-                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
-
-            mz = (mz * mz) + resMassErr;
-
-            return mz;
-        }
-
-        /// <summary>
-        /// Convert bin number to m/z value
-        /// </summary>
-        /// <param name="binNumber">
-        /// </param>
-        /// <param name="binWidth">Bin width (in ns)
-        /// </param>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <returns>
-        /// m/z<see cref="double"/>.
-        /// </returns>
-        public double ConvertBinToMz(int binNumber, double binWidth, FrameParams frameParameters)
-        {
-            // mz = (k * (t-t0))^2
-            var t = binNumber * binWidth / 1000;
-
-            var massCalCoefficients = frameParameters.MassCalibrationCoefficients;
-
-            var resMassErr = massCalCoefficients.a2 * t + massCalCoefficients.b2 * Math.Pow(t, 3) +
-                             massCalCoefficients.c2 * Math.Pow(t, 5) + massCalCoefficients.d2 * Math.Pow(t, 7) +
-                             massCalCoefficients.e2 * Math.Pow(t, 9) + massCalCoefficients.f2 * Math.Pow(t, 11);
-
-            var mz =
-                frameParameters.CalibrationSlope *
-                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
-
-            mz = (mz * mz) + resMassErr;
-
-            return mz;
         }
 
         #endregion
