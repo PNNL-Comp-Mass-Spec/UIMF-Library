@@ -2783,7 +2783,7 @@ namespace UIMFLibrary
 
         private bool CheckHasGlobalParamsTable()
         {
-            return CheckHasTable(UIMFTableType.FrameParams, GLOBAL_PARAMS_TABLE);
+            return CheckHasTable(UIMFTableType.GlobalParams, GLOBAL_PARAMS_TABLE);
         }
 
         private bool CheckHasLegacyParameterTables()
