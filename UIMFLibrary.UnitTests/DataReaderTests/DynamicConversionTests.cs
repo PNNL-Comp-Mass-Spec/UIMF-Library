@@ -33,13 +33,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             var result = FrameParamUtilities.ConvertStringToDynamic(targetType, value);
 
-            if (targetType == typeof(string))
-            {
-                Assert.AreEqual(value, (string)result);
-                return;
-            }
-
-            if (result is string)
+            if (result == null)
             {
                 // Conversion failed
                 if (convertible)
@@ -49,6 +43,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 return;
             }
 
+            if (targetType == typeof(string))
+            {
+                Assert.AreEqual(value, (string)result);
+                return;
+            }
 
             Console.WriteLine("Converted {0} to {1}", value, targetType);
 
