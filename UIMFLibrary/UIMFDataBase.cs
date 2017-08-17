@@ -194,7 +194,7 @@ namespace UIMFLibrary
         /// <summary>
         /// The format version of the UIMF file
         /// </summary>
-        public string UimfFormatVersion { get; private set; }
+        public Version UimfFormatVersion { get; private set; }
 
         #endregion
 
@@ -221,7 +221,7 @@ namespace UIMFLibrary
             }
 
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            UimfFormatVersion = version.ToString(2);
+            UimfFormatVersion = version;
         }
 
         #endregion
@@ -1515,7 +1515,7 @@ namespace UIMFLibrary
         protected internal void ReadUimfFormatVersion()
         {
             var versions = GetVersionInfo();
-            UimfFormatVersion = versions.Last().UimfVersion.ToString(2);
+            UimfFormatVersion = versions.Last().UimfVersion;
         }
 
         /// <summary>
