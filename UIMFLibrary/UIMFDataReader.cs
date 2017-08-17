@@ -2654,8 +2654,6 @@ namespace UIMFLibrary
 
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
-                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
                 while (reader.Read())
                 {
                     var frameNum = GetInt32(reader, "FrameNum");
@@ -2676,7 +2674,7 @@ namespace UIMFLibrary
                     var numBins = output.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
-                        var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedIntensityValue = BitConverter.ToInt32(output, i * DATASIZE);
                         if (decodedIntensityValue < 0)
                         {
                             binIndex += -decodedIntensityValue;
@@ -3817,8 +3815,6 @@ namespace UIMFLibrary
 
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
-                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
                 while (reader.Read())
                 {
                     var binIndex = 0;
@@ -3835,7 +3831,7 @@ namespace UIMFLibrary
                     var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(outputLength, i * DATASIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             binIndex += -decodedSpectraRecord;
@@ -5808,7 +5804,6 @@ namespace UIMFLibrary
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
 
-                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
                 var recordIndex = 0;
 
                 while (reader.Read())
@@ -5849,7 +5844,7 @@ namespace UIMFLibrary
 
                         for (var i = 0; i < numBins; i++)
                         {
-                            var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                            var decodedSpectraRecord = BitConverter.ToInt32(outputLength, i * DATASIZE);
                             if (decodedSpectraRecord < 0)
                             {
                                 binIndex += -decodedSpectraRecord;
