@@ -266,6 +266,8 @@ namespace UIMFLibrary
 
                 m_uimfFilePath = uimfFileInfo.FullName;
 
+                ReadUimfFormatVersion();
+
                 CacheGlobalParameters();
 
                 // Initialize the frame parameters and scan info caches

@@ -191,6 +191,11 @@ namespace UIMFLibrary
         /// <remarks>When opening a .UIMF file without the Version_Info table, the writer will auto-add it</remarks>
         public bool HasVersionInfoTable => CheckHasVersionInfoTable();
 
+        /// <summary>
+        /// The format version of the UIMF file
+        /// </summary>
+        public string UimfFormatVersion { get; private set; }
+
         #endregion
 
         #region Constructor
@@ -214,6 +219,9 @@ namespace UIMFLibrary
             {
                 m_TableStatus.Add(tableType, new TableStatus());
             }
+
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            UimfFormatVersion = version.ToString(2);
         }
 
         #endregion
@@ -1423,6 +1431,91 @@ namespace UIMFLibrary
 
             return lstFields;
 
+        }
+
+        /// <summary>
+        /// Get the last VersionInfo row stored in the Version_Info table
+        /// </summary>
+        /// <returns></returns>
+        public VersionInfo GetLastVersionInfo()
+        {
+            return GetVersionInfo().Last();
+        }
+
+        /// <summary>
+        /// Get version info from table.
+        /// </summary>
+        /// <returns>
+        /// List of version info
+        /// </returns>
+        /// <exception cref="Exception">
+        /// </exception>
+        protected List<VersionInfo> GetVersionInfo()
+        {
+            var versions = new List<VersionInfo>();
+            if (HasVersionInfoTable)
+            {
+                using (var dbCommand = m_dbConnection.CreateCommand())
+                {
+                    dbCommand.CommandText = "SELECT * FROM " + VERSION_INFO_TABLE;
+
+                    using (var reader = dbCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            try
+                            {
+                                var uimfVersion = new VersionInfo();
+                                uimfVersion.VersionId = GetInt32(reader, "Version_ID");
+                                uimfVersion.UimfVersion = Version.Parse(GetString(reader, "File_Version"));
+                                uimfVersion.SoftwareName = GetString(reader, "Calling_Assembly_Name");
+                                uimfVersion.SoftwareVersion = Version.Parse(GetString(reader, "Calling_Assembly_Version"));
+                                uimfVersion.DateEntered = DateTime.MaxValue;
+                                // Add 'Z' to the date entered, since it is in UTC time
+                                uimfVersion.DateEntered = DateTime.ParseExact(GetString(reader, "Entered") + "Z", "yyyy-MM-dd HH:mm:ssK", mCultureInfoUS);
+                                versions.Add(uimfVersion);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("Failed to get version info " + ex);
+                            }
+                        }
+                    }
+                }
+                return versions;
+            }
+
+            var pseudoVersion = new VersionInfo()
+            {
+                VersionId = 1,
+                UimfVersion = new Version(0, 0, 0, 0),
+                SoftwareName = "Unknown",
+                SoftwareVersion = new Version(0, 0, 0, 0),
+                DateEntered = DateTime.Now
+            };
+
+            versions.Add(pseudoVersion);
+
+            if (HasFrameParamsTable)
+            {
+                pseudoVersion.UimfVersion = new Version(3, 0, 0, 0);
+            }
+            else if (HasLegacyParameterTables)
+            {
+                // Version 1: only has the legacy frame_parameters and global_parameters tables
+                pseudoVersion.UimfVersion = new Version(1, 0, 0, 0);
+            }
+
+            return versions;
+        }
+
+        /// <summary>
+        /// Reads the UIMF format version from the database and stores it to <see cref="UimfFormatVersion"/>
+        /// </summary>
+        protected internal void ReadUimfFormatVersion()
+        {
+            var versions = GetVersionInfo();
+            UimfFormatVersion = versions.Last().UimfVersion.ToString(2);
         }
 
         /// <summary>

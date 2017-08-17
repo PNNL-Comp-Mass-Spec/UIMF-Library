@@ -157,6 +157,10 @@ namespace UIMFLibrary
                         CreateVersionInfoTable(dbCommand);
                     }
                 }
+                else
+                {
+                    AddVersionInfo();
+                }
 
             }
             catch (Exception ex)
@@ -687,6 +691,49 @@ namespace UIMFLibrary
             return this;
         }
 
+        private void AddVersionInfo()
+        {
+            var softwareName = "Unknown";
+            var softwareVersion = new Version(0, 0, 0, 0);
+            try
+            {
+                // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
+                var software = System.Reflection.Assembly.GetEntryAssembly().GetName();
+                softwareName = software.Name;
+                softwareVersion = software.Version;
+            }
+            catch
+            {
+            }
+
+            AddVersionInfo(softwareName, softwareVersion);
+        }
+
+        /// <summary>
+        /// Add version information to the version table
+        /// </summary>
+        /// <param name="softwareName">Name of the data acquisition software</param>
+        /// <param name="softwareVersion">Version of the data acquisition software</param>
+        public void AddVersionInfo(string softwareName, Version softwareVersion)
+        {
+            // File version is dependent on the major.minor version of the uimf library
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var fileFormatVersion = version.ToString(2);
+
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+                dbCommand.CommandText = "INSERT INTO " + VERSION_INFO_TABLE + " "
+                                        + "(File_Version, Calling_Assembly_Name, Calling_Assembly_Version) "
+                                        + "VALUES(:Version, :SoftwareName, :SoftwareVersion);";
+
+                dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareName", softwareName));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersion));
+
+                dbCommand.ExecuteNonQuery();
+            }
+        }
+
         /// <summary>
         /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
         /// </summary>
@@ -958,6 +1005,7 @@ namespace UIMFLibrary
 
             UpdateTableCheckedStatus(UIMFTableType.VersionInfo, false);
 
+            AddVersionInfo();
         }
 
         /// <summary>
