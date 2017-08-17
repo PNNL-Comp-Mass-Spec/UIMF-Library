@@ -261,14 +261,11 @@ namespace UIMFLibrary
         /// <param name="useInMemoryDatabase">
         /// Whether to load database into memory
         /// </param>
-        /// <param name="readOnly">
-        /// Whether to open the database as read-only, instead of read/write
-        /// </param>
         /// <exception cref="Exception">
         /// </exception>
         /// <exception cref="FileNotFoundException">
         /// </exception>
-        public DataReader(string fileName, bool useInMemoryDatabase=false, bool readOnly = false)
+        public DataReader(string fileName, bool useInMemoryDatabase=false)
         {
             m_errMessageCounter = 0;
             m_spectraToCache = 10;
@@ -288,11 +285,7 @@ namespace UIMFLibrary
             }
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
-            var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks;";
-            if (readOnly)
-            {
-                connectionString += " Read Only=True";
-            }
+            var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks; Read Only=True;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
 
             try
