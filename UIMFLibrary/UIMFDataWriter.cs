@@ -2011,17 +2011,29 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Update the slope and intercept for the given frame
         /// </summary>
         /// <param name="frameNumber">
+        /// The frame number to update.
         /// </param>
         /// <param name="slope">
+        /// The slope value for the calibration.
         /// </param>
         /// <param name="intercept">
+        /// The intercept for the calibration.
         /// </param>
-        public void UpdateCalibrationCoefficients(int frameNumber, double slope, double intercept)
+        /// <param name="isAutoCalibrating">
+        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// </param>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        public void UpdateCalibrationCoefficients(int frameNumber, double slope, double intercept, bool isAutoCalibrating = false)
         {
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
+            if (isAutoCalibrating)
+            {
+                AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationDone, "1");
+            }
         }
 
         /// <summary>

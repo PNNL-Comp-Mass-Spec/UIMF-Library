@@ -858,10 +858,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                var uimfConnection = reader.DBConnection;
-#pragma warning disable CS0618 // Type or member is obsolete
-                var columnExists = DataReader.ColumnExists(uimfConnection, tableName, columnName);
-#pragma warning restore CS0618 // Type or member is obsolete
+                var columnExists = reader.TableHasColumn(tableName, columnName);
 
                 Assert.AreEqual(columnExistsExpected, columnExists,
                     "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
@@ -962,7 +959,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                var columnNames = DataReader.GetTableColumnNames(reader.DBConnection, tableName);
+                var columnNames = reader.GetTableColumnNames(tableName);
 
                 for (var i = 0; i < columnNames.Count; i++)
                 {

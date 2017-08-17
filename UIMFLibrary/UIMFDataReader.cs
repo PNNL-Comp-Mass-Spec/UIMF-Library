@@ -370,6 +370,7 @@ namespace UIMFLibrary
         /// <summary>
         /// The connection to the SQLite database
         /// </summary>
+        [Obsolete("Use a DataWriter to write!", true)]
         public SQLiteConnection DBConnection => m_dbConnection;
 
         /// <summary>

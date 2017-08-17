@@ -281,7 +281,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh)
+        public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh = false)
         {
             if (m_dbConnection == null)
             {
@@ -325,6 +325,34 @@ namespace UIMFLibrary
             }
 
             return m_globalParameters;
+        }
+
+        /// <summary>
+        /// Determine the columns in a table or view
+        /// </summary>
+        /// <param name="tableName">
+        /// Table name
+        /// </param>
+        /// <returns>
+        /// List of column names in the table.
+        /// </returns>
+        public List<string> GetTableColumnNames(string tableName)
+        {
+            return GetTableColumnNames(m_dbConnection, tableName);
+        }
+
+        /// <summary>
+        /// Looks for the given index in the SqLite database
+        /// Note that index names are case sensitive
+        /// </summary>
+        /// <param name="indexName">
+        /// </param>
+        /// <returns>
+        /// True if the index exists<see cref="bool"/>.
+        /// </returns>
+        public bool IndexExists(string indexName)
+        {
+            return IndexExists(m_dbConnection, indexName);
         }
 
         /// <summary>
