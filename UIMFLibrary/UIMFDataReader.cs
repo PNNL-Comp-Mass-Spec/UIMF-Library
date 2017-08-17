@@ -1076,14 +1076,11 @@ namespace UIMFLibrary
                 }
 
                 var indexCurrentBin = 0;
-                var decompressLength = LZFCompressionUtil.Decompress(
-                    ref compressedBinIntensity,
-                    compressedBinIntensity.Length,
-                    ref streamBinIntensity,
-                    m_globalParameters.Bins * DATASIZE);
+                var decompressLength = CLZF2.Decompress(
+                    compressedBinIntensity);
 
                 for (var binValue = 0;
-                    (binValue < decompressLength) && (indexCurrentBin <= endBin);
+                    (binValue < decompressLength.Length) && (indexCurrentBin <= endBin);
                     binValue += DATASIZE)
                 {
                     var intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
@@ -2673,13 +2670,10 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectra,
-                        spectra.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                    var output = CLZF2.Decompress(
+                         spectra);
 
-                    var numBins = outputLength / DATASIZE;
+                    var numBins = output.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
                         var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
@@ -2865,13 +2859,10 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectra,
-                        spectra.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                    var output = CLZF2.Decompress(
+                         spectra);
 
-                    var numReturnedBins = outputLength / DATASIZE;
+                    var numReturnedBins = output.Length / DATASIZE;
                     int[] decodedIntensityValueArray = new int[1];
                     for (var i = 0; i < numReturnedBins; i++)
                     {
@@ -2956,13 +2947,10 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectra,
-                        spectra.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                    var outputLength = CLZF2.Decompress(
+                         spectra);
 
-                    var numBins = outputLength / DATASIZE;
+                    var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
                         var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
@@ -3841,13 +3829,10 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = LZFCompressionUtil.Decompress(
-                        ref spectraRecord,
-                        spectraRecord.Length,
-                        ref decompSpectraRecord,
-                        m_globalParameters.Bins * DATASIZE);
+                    var outputLength = CLZF2.Decompress(
+                        spectraRecord);
 
-                    var numBins = outputLength / DATASIZE;
+                    var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
                     {
                         var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
@@ -5052,8 +5037,9 @@ namespace UIMFLibrary
 
             // Update any cached frame parameters
             var framesToUpdate = m_CachedFrameParameters.Keys.ToList();
-            foreach (var frameNumber in framesToUpdate)
+            for (int i = 0; i < framesToUpdate.Count; i++)
             {
+                var frameNumber = framesToUpdate[i];
                 var frameParams = m_CachedFrameParameters[frameNumber];
 
                 frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, slope);
@@ -5063,7 +5049,6 @@ namespace UIMFLibrary
                 {
                     frameParams.AddUpdateValue(FrameParamKeyType.CalibrationDone, intercept);
                 }
-
             }
 
         }
@@ -5846,13 +5831,10 @@ namespace UIMFLibrary
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
 
-                        var outputLength = LZFCompressionUtil.Decompress(
-                            ref spectraRecord,
-                            spectraRecord.Length,
-                            ref decompSpectraRecord,
-                            m_globalParameters.Bins * DATASIZE);
+                        var outputLength = CLZF2.Decompress(
+                             spectraRecord);
 
-                        var numBins = outputLength / DATASIZE;
+                        var numBins = outputLength.Length / DATASIZE;
 
                         while (true)
                         {

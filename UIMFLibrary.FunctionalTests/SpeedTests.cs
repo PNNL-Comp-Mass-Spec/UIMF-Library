@@ -6,6 +6,7 @@
 
 using System;
 using System.Diagnostics;
+using BenchmarkIt;
 using NUnit.Framework;
 
 namespace UIMFLibrary.FunctionalTests
@@ -52,7 +53,95 @@ namespace UIMFLibrary.FunctionalTests
                 methodDescriptor += className + "." + methodInfo.Name;
             }
 
-            Console.WriteLine("\n\n===== " + methodDescriptor + " =====");
+            Console.WriteLine($"{Environment.NewLine}{Environment.NewLine}===== " + methodDescriptor + " =====");
+
+        }
+
+        [Test]
+        public void CompressionComparisonSpeedTest()
+        {
+
+            /*
+             * Example run on core i9 7900X @ 4GHz.
+Name                                    Milliseconds        Percent                       
+LZ4 Compress                            163                 193.3%                        
+ZRLE LZ4 Compress                       84                  100%                          
+CLZF2 Compress                          945                 1118.5%                       
+ZREL CLZF2 Compress                     91                  107.7%                        
+Name                                    Milliseconds        Percent                       
+LZ4 Decompress                          325                 16880.7%                      
+ZRLE LZ4 Decompress                     1                   100%                          
+CLZF2 Decompress                        1176                61106.9%                      
+ZREL CLZF2 Decompress                   8                   448.4%                        
+                   
+             */
+
+            var intensities = new int[148000];
+            var randGenerator = new Random();
+            for (var i = 0; i < intensities.Length; i++)
+            {
+                var nextRandom = randGenerator.Next(0, 255);
+                if (nextRandom < 250)
+                    intensities[i] = 0;
+                else
+                    intensities[i] = nextRandom;
+
+            }
+
+            var spectra = new byte[intensities.Length * sizeof(int)];
+            Buffer.BlockCopy(intensities, 0, spectra, 0, spectra.Length);
+            var decompressedIntensities = new int[intensities.Length];
+            byte[] lz4Result = new byte[] { };
+            byte[] zrleLz4Result = new byte[] { };
+            byte[] clzf2Result = new byte[] { };
+            byte[] zrleClzf2Result = new byte[] { };
+            byte[] snappyResult = new byte[] { };
+            byte[] zrleSnappyResult = new byte[] { };
+
+            Benchmark.This("LZ4 Compress", () =>
+            {
+                lz4Result = LZ4.LZ4Codec.Wrap(spectra);
+            }).WithWarmup(100).Against.This("ZRLE LZ4 Compress", () =>
+                {
+                    IntensityConverterInt32.EncodeLz4(intensities, out zrleLz4Result, out var tic, out var bpi,
+                        out var indexOfMaxIntensity);
+                }).WithWarmup(100).Against.This("CLZF2 Compress", () =>
+            {
+                clzf2Result = CLZF2.Compress(spectra);
+            }).WithWarmup(100).Against.This("ZREL CLZF2 Compress", () =>
+            {
+                IntensityConverterInt32.Encode(intensities, out zrleClzf2Result, out var tic, out var bpi,
+                    out var indexOfMaxIntensity);
+            }).WithWarmup(100).Against.This("Snappy", () =>
+                {
+                    snappyResult = Snappy.SnappyCodec.Compress(spectra);
+                }).WithWarmup(100).Against.This("ZRLE Snappy", () =>
+                {
+                    IntensityConverterInt32.EncodeSnappy(intensities, out zrleSnappyResult, out var tic, out var bpi,
+                        out var indexOfMaxIntensity);
+                }).WithWarmup(100)
+            
+            .For(100).Iterations().PrintComparison();
+
+            Console.WriteLine($"LZ4 Compress Size: {lz4Result.Length}");
+            Console.WriteLine($"ZREL LZ4 Compress Size: {zrleLz4Result.Length}");
+            Console.WriteLine($"CLZF2 Compress Size: {clzf2Result.Length}");
+            Console.WriteLine($"ZRLE CLZF2 Compress Size: {zrleClzf2Result.Length}");
+            Console.WriteLine();
+
+            Benchmark.This("LZ4 Decompress", () =>
+            {
+                var result = LZ4.LZ4Codec.Unwrap(lz4Result);
+            }).WithWarmup(100).Against.This("ZRLE LZ4 Decompress", () =>
+            {
+                var result = LZ4.LZ4Codec.Unwrap(zrleLz4Result);
+            }).WithWarmup(100).Against.This("CLZF2 Decompress", () =>
+            {
+                var result = CLZF2.Decompress(clzf2Result);
+            }).WithWarmup(100).Against.This("ZREL CLZF2 Decompress", () =>
+            {
+                var result = CLZF2.Decompress(zrleClzf2Result);
+            }).WithWarmup(100).For(100).Iterations().PrintComparison();
 
         }
 
