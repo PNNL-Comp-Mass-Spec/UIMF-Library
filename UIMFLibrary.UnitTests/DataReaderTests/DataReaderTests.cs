@@ -858,6 +858,17 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
+                var tableExists = reader.TableExists(tableName);
+                if (!tableExists)
+                {
+
+                    Assert.AreEqual(columnExistsExpected, false,
+                                    "Table " + tableName + " not found in the UIMF file, but column " + columnName + " was expected to exist" +
+                                    "; See file " + Path.GetFileName(filePath));
+
+                    return;
+                }
+
                 var columnExists = reader.TableHasColumn(tableName, columnName);
 
                 Assert.AreEqual(columnExistsExpected, columnExists,
