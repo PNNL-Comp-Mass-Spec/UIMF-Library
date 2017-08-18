@@ -135,6 +135,12 @@ namespace UIMFLibrary
 
                 m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
+                if (HasLegacyParameterTables)
+                {
+                    // The tables exist, so
+                    m_CreateLegacyParametersTables = true;
+                }
+
                 // If table Global_Parameters exists and table Global_Params does not exist, create Global_Params using Global_Parameters
                 ConvertLegacyGlobalParameters();
 
@@ -223,7 +229,7 @@ namespace UIMFLibrary
                     return;
                 }
 
-                if (!TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
+                if (!HasLegacyParameterTables)
                 {
                     // Legacy tables do not exist; nothing to do
                     return;
@@ -388,9 +394,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
-        /// <param name="oConnection">
-        /// Database connection object
-        /// </param>
         /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
@@ -403,13 +406,13 @@ namespace UIMFLibrary
         /// <remarks>
         /// The Log_Entries table will be created if it doesn't exist
         /// </remarks>
-        public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
+        public void PostLogEntry(string entryType, string message, string postedBy)
         {
             // Check whether the Log_Entries table needs to be created
-            using (var cmdPostLogEntry = oConnection.CreateCommand())
+            using (var cmdPostLogEntry = m_dbConnection.CreateCommand())
             {
 
-                if (!TableExists(oConnection, "Log_Entries"))
+                if (!TableExists(m_dbConnection, "Log_Entries"))
                 {
                     // Log_Entries not found; need to create it
                     cmdPostLogEntry.CommandText = "CREATE TABLE Log_Entries ( " +
@@ -446,6 +449,30 @@ namespace UIMFLibrary
 
                 cmdPostLogEntry.ExecuteNonQuery();
             }
+        }
+
+        /// <summary>
+        /// Post a new log entry to table Log_Entries
+        /// </summary>
+        /// <param name="oConnection">
+        /// Database connection object
+        /// </param>
+        /// <param name="entryType">
+        /// Log entry type (typically Normal, Error, or Warning)
+        /// </param>
+        /// <param name="message">
+        /// Log message
+        /// </param>
+        /// <param name="postedBy">
+        /// Process or application posting the log message
+        /// </param>
+        /// <remarks>
+        /// The Log_Entries table will be created if it doesn't exist
+        /// </remarks>
+        [Obsolete("Use the non-static PostLogEntry function", true)]
+        public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
+        {
+            throw new Exception("Static PostLogEntry is obsolete, use non-static PostLogEntry");
         }
 
         /// <summary>
@@ -761,14 +788,13 @@ namespace UIMFLibrary
         /// <param name="paramKeyType"></param>
         /// <param name="paramValue"></param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
-        internal static int AssureAllFramesHaveFrameParam(
+        private static int AssureAllFramesHaveFrameParam(
             SQLiteCommand dbCommand,
             FrameParamKeyType paramKeyType,
             string paramValue)
         {
             return AssureAllFramesHaveFrameParam(dbCommand, paramKeyType, paramValue, 0, 0);
         }
-
 
         /// <summary>
         /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
@@ -779,7 +805,7 @@ namespace UIMFLibrary
         /// <param name="frameNumStart">Optional: Starting frame number; ignored if frameNumEnd is 0 or negative</param>
         /// <param name="frameNumEnd">Optional: Ending frame number; ignored if frameNumEnd is 0 or negative</param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
-        internal static int AssureAllFramesHaveFrameParam(
+        private static int AssureAllFramesHaveFrameParam(
             SQLiteCommand dbCommand,
             FrameParamKeyType paramKeyType,
             string paramValue,
@@ -837,7 +863,7 @@ namespace UIMFLibrary
         /// </param>
         public void CreateBinCentricTables(string workingDirectory)
         {
-            if (TableExists(m_dbConnection, "Bin_Intensities"))
+            if (TableExists("Bin_Intensities"))
                 return;
 
             using (var uimfReader = new DataReader(m_FilePath))
@@ -854,7 +880,7 @@ namespace UIMFLibrary
         /// </summary>
         public void RemoveBinCentricTables()
         {
-            if (!TableExists(m_dbConnection, "Bin_Intensities"))
+            if (!TableExists("Bin_Intensities"))
                 return;
 
             using (var dbCommand = m_dbConnection.CreateCommand())
@@ -897,7 +923,7 @@ namespace UIMFLibrary
         private void CreateFrameParamsTables(IDbCommand dbCommand)
         {
 
-            if (HasFrameParamsTable && TableExists(m_dbConnection, "Frame_Param_Keys"))
+            if (HasFrameParamsTable && TableExists(FRAME_PARAM_KEYS_TABLE))
             {
                 // The tables already exist
                 return;
@@ -905,7 +931,7 @@ namespace UIMFLibrary
 
             // Create table Frame_Param_Keys
             var lstFields = GetFrameParamKeysFields();
-            dbCommand.CommandText = GetCreateTableSql("Frame_Param_Keys", lstFields);
+            dbCommand.CommandText = GetCreateTableSql(FRAME_PARAM_KEYS_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
             // Create table Frame_Params
@@ -914,7 +940,7 @@ namespace UIMFLibrary
             dbCommand.ExecuteNonQuery();
 
             // Create the unique index index on Frame_Param_Keys
-            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on Frame_Param_Keys(ParamID);";
+            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on " + FRAME_PARAM_KEYS_TABLE + "(ParamID);";
             dbCommand.ExecuteNonQuery();
 
             // Create the unique index index on Frame_Params
@@ -931,7 +957,7 @@ namespace UIMFLibrary
                 "CREATE VIEW V_Frame_Params AS " +
                 "SELECT FP.FrameNum, FPK.ParamName, FP.ParamID, FP.ParamValue, FPK.ParamDescription, FPK.ParamDataType " +
                 "FROM " + FRAME_PARAMS_TABLE + " FP INNER JOIN " +
-                "Frame_Param_Keys FPK ON FP.ParamID = FPK.ParamID";
+                FRAME_PARAM_KEYS_TABLE + " FPK ON FP.ParamID = FPK.ParamID";
             dbCommand.ExecuteNonQuery();
 
             UpdateTableCheckedStatus(UIMFTableType.FrameParams, false);
@@ -940,7 +966,7 @@ namespace UIMFLibrary
 
         private void CreateFrameScansTable(IDbCommand dbCommand, string dataType)
         {
-            if (TableExists(m_dbConnection, "Frame_Scans"))
+            if (TableExists(FRAME_SCANS_TABLE))
             {
                 // The tables already exist
                 return;
@@ -948,7 +974,7 @@ namespace UIMFLibrary
 
             // Create the Frame_Scans Table
             var lstFields = GetFrameScansFields(dataType);
-            dbCommand.CommandText = GetCreateTableSql("Frame_Scans", lstFields);
+            dbCommand.CommandText = GetCreateTableSql(FRAME_SCANS_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
             // Create the unique constraint indices
@@ -956,7 +982,7 @@ namespace UIMFLibrary
             // thus, we'll use unique constraint indices to prevent duplicates
 
             // Create the unique index on Frame_Scans
-            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on Frame_Scans(FrameNum, ScanNum);";
+            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on " + FRAME_SCANS_TABLE + "(FrameNum, ScanNum);";
             dbCommand.ExecuteNonQuery();
 
 
@@ -1014,7 +1040,7 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         private void CreateLegacyParameterTables(IDbCommand dbCommand)
         {
-            if (!TableExists(m_dbConnection, GLOBAL_PARAMETERS_TABLE))
+            if (!TableExists(GLOBAL_PARAMETERS_TABLE))
             {
                 // Create the Global_Parameters Table
                 var lstFields = GetGlobalParametersFields();
@@ -1023,7 +1049,7 @@ namespace UIMFLibrary
 
             }
 
-            if (!TableExists(m_dbConnection, FRAME_PARAMETERS_TABLE))
+            if (!TableExists(FRAME_PARAMETERS_TABLE))
             {
                 // Create the Frame_parameters Table
                 var lstFields = GetFrameParametersFields();
@@ -1128,7 +1154,7 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans " +
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " " +
                                         "WHERE FrameNum IN " +
                                         "   (SELECT DISTINCT FrameNum " +
                                         "    FROM " + FRAME_PARAMS_TABLE +
@@ -1178,7 +1204,7 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum + "; ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
                 dbCommand.ExecuteNonQuery();
 
                 dbCommand.CommandText = "DELETE FROM " + FRAME_PARAMS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
@@ -1207,7 +1233,7 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum = " + frameNum + "; ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
                 dbCommand.ExecuteNonQuery();
 
                 if (updateScanCountInFrameParams)
@@ -1247,7 +1273,7 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "DELETE FROM Frame_Scans WHERE FrameNum IN (" + sFrameList + "); ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
 
                 dbCommand.CommandText = "DELETE FROM " + FRAME_PARAMS_TABLE + " WHERE FrameNum IN (" + sFrameList + "); ";
@@ -1896,26 +1922,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Post a new log entry to table Log_Entries
-        /// </summary>
-        /// <param name="entryType">
-        /// Log entry type (typically Normal, Error, or Warning)
-        /// </param>
-        /// <param name="message">
-        /// Log message
-        /// </param>
-        /// <param name="postedBy">
-        /// Process or application posting the log message
-        /// </param>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
-        public void PostLogEntry(string entryType, string message, string postedBy)
-        {
-            PostLogEntry(m_dbConnection, entryType, message, postedBy);
-        }
-
-        /// <summary>
         /// Update the slope and intercept for all frames
         /// </summary>
         /// <param name="slope">
@@ -1933,33 +1939,10 @@ namespace UIMFLibrary
             double intercept,
             bool isAutoCalibrating = false)
         {
-            UpdateAllCalibrationCoefficients(m_dbConnection, slope, intercept, isAutoCalibrating);
-        }
+            var hasLegacyFrameParameters = TableExists(FRAME_PARAMETERS_TABLE);
+            var hasFrameParamsTable = TableExists(FRAME_PARAMS_TABLE);
 
-        /// <summary>
-        /// Update the slope and intercept for all frames
-        /// </summary>
-        /// <param name="dBconnection"></param>
-        /// <param name="slope">
-        /// The slope value for the calibration.
-        /// </param>
-        /// <param name="intercept">
-        /// The intercept for the calibration.
-        /// </param>
-        /// <param name="isAutoCalibrating">
-        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
-        /// </param>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
-        public static void UpdateAllCalibrationCoefficients(
-            SQLiteConnection dBconnection,
-            double slope,
-            double intercept,
-            bool isAutoCalibrating = false)
-        {
-            var hasLegacyFrameParameters = TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            var hasFrameParamsTable = TableExists(dBconnection, FRAME_PARAMS_TABLE);
-
-            using (var dbCommand = dBconnection.CreateCommand())
+            using (var dbCommand = m_dbConnection.CreateCommand())
             {
                 if (hasLegacyFrameParameters)
                 {
@@ -1993,9 +1976,9 @@ namespace UIMFLibrary
 
                 // Add new values for any frames that do not have slope or intercept defined as frame params
                 AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope,
-                                                         slope.ToString(CultureInfo.InvariantCulture));
+                    slope.ToString(CultureInfo.InvariantCulture));
                 AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept,
-                                                         intercept.ToString(CultureInfo.InvariantCulture));
+                    intercept.ToString(CultureInfo.InvariantCulture));
 
                 if (isAutoCalibrating)
                 {
@@ -2008,6 +1991,30 @@ namespace UIMFLibrary
                     AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1");
                 }
             }
+        }
+
+        /// <summary>
+        /// Update the slope and intercept for all frames
+        /// </summary>
+        /// <param name="dBconnection"></param>
+        /// <param name="slope">
+        /// The slope value for the calibration.
+        /// </param>
+        /// <param name="intercept">
+        /// The intercept for the calibration.
+        /// </param>
+        /// <param name="isAutoCalibrating">
+        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// </param>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateAllCalibrationCoefficients.", true)]
+        public static void UpdateAllCalibrationCoefficients(
+            SQLiteConnection dBconnection,
+            double slope,
+            double intercept,
+            bool isAutoCalibrating = false)
+        {
+            throw new Exception("Static UpdateAllCalibrationCoefficients is obsolete, use non-static UpdateAllCalibrationCoefficients");
         }
 
         /// <summary>
@@ -2053,6 +2060,7 @@ namespace UIMFLibrary
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
+        [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateCalibrationCoefficients.")]
         public static void UpdateCalibrationCoefficients(
             SQLiteConnection dBconnection,
             int frameNumber,
@@ -2060,66 +2068,7 @@ namespace UIMFLibrary
             double intercept,
             bool isAutoCalibrating = false)
         {
-            var hasLegacyFrameParameters = TableExists(dBconnection, FRAME_PARAMETERS_TABLE);
-            var hasFrameParamsTable = TableExists(dBconnection, FRAME_PARAMS_TABLE);
-
-            using (var dbCommand = dBconnection.CreateCommand())
-            {
-                if (hasLegacyFrameParameters)
-                {
-                    dbCommand.CommandText =
-                        "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
-                        "SET CalibrationSlope = " + slope + ", " +
-                        "CalibrationIntercept = " + intercept;
-
-                    if (isAutoCalibrating)
-                    {
-                        dbCommand.CommandText += ", CalibrationDone = 1";
-                    }
-
-                    dbCommand.CommandText += " WHERE FrameNum = " + frameNumber;
-                    dbCommand.ExecuteNonQuery();
-                }
-
-                if (!hasFrameParamsTable)
-                {
-                    return;
-                }
-
-                // Update existing values
-                dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                        "SET ParamValue = " + slope + " " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope +
-                                        " AND FrameNum = " + frameNumber;
-                dbCommand.ExecuteNonQuery();
-
-                dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                        "SET ParamValue = " + intercept + " " +
-                                        "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept +
-                                        " AND FrameNum = " + frameNumber;
-                dbCommand.ExecuteNonQuery();
-
-                // Add a new value if the frame does not have slope or intercept defined as frame params
-                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope,
-                                              slope.ToString(CultureInfo.InvariantCulture), frameNumber,
-                                              frameNumber);
-                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept,
-                                              intercept.ToString(CultureInfo.InvariantCulture),
-                                              frameNumber, frameNumber);
-
-                if (isAutoCalibrating)
-                {
-                    dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                            "SET ParamValue = 1 " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone +
-                                            " AND FrameNum = " + frameNumber;
-                    dbCommand.ExecuteNonQuery();
-
-                    // Add a new value if the frame does not have CalibrationDone defined as a frame params
-                    AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1",
-                                                  frameNumber, frameNumber);
-                }
-            }
+            throw new Exception("Static UpdateCalibrationCoefficients is obsolete, use non-static UpdateCalibrationCoefficients");
         }
 
         /// <summary>
@@ -2232,7 +2181,7 @@ namespace UIMFLibrary
         {
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
-                if (!TableExists(m_dbConnection, tableName))
+                if (!TableExists(tableName))
                 {
                     // Create the table
                     dbCommand.CommandText = "CREATE TABLE " + tableName + " (FileText BLOB);";
@@ -2460,7 +2409,7 @@ namespace UIMFLibrary
         {
             m_dbCommandInsertFrameParamKey = m_dbConnection.CreateCommand();
 
-            m_dbCommandInsertFrameParamKey.CommandText = "INSERT INTO Frame_Param_Keys (ParamID, ParamName, ParamDataType, ParamDescription) " +
+            m_dbCommandInsertFrameParamKey.CommandText = "INSERT INTO " + FRAME_PARAM_KEYS_TABLE + " (ParamID, ParamName, ParamDataType, ParamDescription) " +
                                                          "VALUES (:ParamID, :ParamName, :ParamDataType, :ParamDescription);";
         }
 
@@ -2522,7 +2471,7 @@ namespace UIMFLibrary
             // This function should be called before looping through each frame and scan
             m_dbCommandInsertScan = m_dbConnection.CreateCommand();
             m_dbCommandInsertScan.CommandText =
-                "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
+                "INSERT INTO " + FRAME_SCANS_TABLE + " (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
                 + "VALUES(:FrameNum, :ScanNum, :NonZeroCount, :BPI, :BPI_MZ, :TIC, :Intensities);";
 
         }
@@ -2634,7 +2583,7 @@ namespace UIMFLibrary
                     }
                     catch (Exception ex)
                     {
-                        ReportError("Exception adding parameter " + paramDef.Name + " to table Frame_Param_Keys: " + ex.Message, ex);
+                        ReportError("Exception adding parameter " + paramDef.Name + " to table " + FRAME_PARAM_KEYS_TABLE + ": " + ex.Message, ex);
                         throw;
                     }
 
@@ -2652,7 +2601,7 @@ namespace UIMFLibrary
             if (m_LegacyFrameParameterTableHasDecodedColumn)
                 return;
 
-            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "Decoded"))
+            if (!TableHasColumn(FRAME_PARAMETERS_TABLE, "Decoded"))
             {
                 AddFrameParameter("Decoded", "INT", 0);
             }
@@ -2672,13 +2621,13 @@ namespace UIMFLibrary
             if (m_LegacyFrameParameterTableHaHPFColumns)
                 return;
 
-            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
+            if (!TableHasColumn(FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
             {
                 AddFrameParameter("voltEntranceHPFIn", "DOUBLE", 0);
                 AddFrameParameter("VoltEntranceHPFOut", "DOUBLE", 0);
             }
 
-            if (!TableHasColumn(m_dbConnection, FRAME_PARAMETERS_TABLE, "voltExitHPFIn"))
+            if (!TableHasColumn(FRAME_PARAMETERS_TABLE, "voltExitHPFIn"))
             {
                 AddFrameParameter("voltExitHPFIn", "DOUBLE", 0);
                 AddFrameParameter("voltExitHPFOut", "DOUBLE", 0);

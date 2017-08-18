@@ -12,7 +12,6 @@
 
 using System.Data;
 using System.Globalization;
-using System.Threading.Tasks;
 
 namespace UIMFLibrary
 {
@@ -279,7 +278,7 @@ namespace UIMFLibrary
                 m_LegacyFrameParametersMissingColumns = new SortedSet<string>();
 
                 // Look for the Frame_Parameters and Frame_Params tables
-                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(m_dbConnection, out m_HasLegacyFrameParameters);
+                m_UsingLegacyFrameParameters = UsingLegacyFrameParams(out m_HasLegacyFrameParameters);
 
                 LoadPrepStmts();
 
@@ -417,7 +416,7 @@ namespace UIMFLibrary
         /// True if the column exists<see cref="bool"/>.
         /// </returns>
         /// <remarks>This function does not work with Views; use method TableHasColumn instead</remarks>
-        [Obsolete("Use method TableHasColumn")]
+        [Obsolete("Use method TableHasColumn", true)]
         public static bool ColumnExists(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
             using (
@@ -875,7 +874,7 @@ namespace UIMFLibrary
                                 }
                                 else
                                 {
-                                    if (!string.Equals(sCurrentObject, "Frame_Scans", StringComparison.InvariantCultureIgnoreCase) ||
+                                    if (!string.Equals(sCurrentObject, FRAME_SCANS_TABLE, StringComparison.InvariantCultureIgnoreCase) ||
                                         frameTypesToAlwaysCopy == null ||
                                         frameTypesToAlwaysCopy.Count <= 0)
                                         continue;
@@ -4367,7 +4366,8 @@ namespace UIMFLibrary
         [Obsolete("Use the PostLogEntry function in the DataWriter class", true)]
         public void PostLogEntry(string entryType, string message, string postedBy)
         {
-            DataWriter.PostLogEntry(m_dbConnection, entryType, message, postedBy); // Obsolete because this writes to the connection, which is now read-only
+            // Obsolete because this writes to the connection, which is now read-only
+            throw new Exception("DataReader.PostLogEntry is obsolete, use DataWriter.PostLogEntry");
         }
 
         /// <summary>
@@ -4385,68 +4385,8 @@ namespace UIMFLibrary
         [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class", true)]
         public void UpdateAllCalibrationCoefficients(double slope, double intercept, bool isAutoCalibrating = false)
         {
-            using (var dbCommand = m_dbConnection.CreateCommand()) // Obsolete because this writes to the connection, which is now read-only
-            {
-                if (m_UsingLegacyFrameParameters || m_HasLegacyFrameParameters)
-                {
-                    dbCommand.CommandText = "UPDATE Frame_Parameters " +
-                                            "SET CalibrationSlope = " + slope + ", " +
-                                                "CalibrationIntercept = " + intercept;
-
-                    if (isAutoCalibrating)
-                    {
-                        dbCommand.CommandText += ", CalibrationDone = 1";
-                    }
-
-                    dbCommand.ExecuteNonQuery();
-                }
-
-                if (!m_UsingLegacyFrameParameters)
-                {
-                    // Update existing values
-                    dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET ParamValue = " + slope + " " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationSlope;
-                    dbCommand.ExecuteNonQuery();
-
-                    dbCommand.CommandText = "UPDATE Frame_Params " +
-                                            "SET ParamValue = " + intercept + " " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationIntercept;
-                    dbCommand.ExecuteNonQuery();
-
-                    // Add new values for any frames that do not have slope or intercept defined as frame params
-                    DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
-                    DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept, intercept.ToString(CultureInfo.InvariantCulture));
-
-                    if (isAutoCalibrating)
-                    {
-                        dbCommand.CommandText = "UPDATE Frame_Params " +
-                                                "SET ParamValue = 1 " +
-                                                "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone;
-                        dbCommand.ExecuteNonQuery();
-
-                        // Add new values for any frames that do not have slope or intercept defined as frame params
-                        DataWriter.AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1");
-                    }
-                }
-            }
-
-            // Update any cached frame parameters
-            var framesToUpdate = m_CachedFrameParameters.Keys.ToList();
-            for (int i = 0; i < framesToUpdate.Count; i++)
-            {
-                var frameNumber = framesToUpdate[i];
-                var frameParams = m_CachedFrameParameters[frameNumber];
-
-                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, slope);
-                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, intercept);
-
-                if (isAutoCalibrating)
-                {
-                    frameParams.AddUpdateValue(FrameParamKeyType.CalibrationDone, intercept);
-                }
-            }
-
+            // Obsolete because this writes to the connection, which is now read-only
+            throw new Exception("DataReader.UpdateAllCalibrationCoefficients is obsolete, use DataWriter.UpdateAllCalibrationCoefficients");
         }
 
         /// <summary>
@@ -4471,18 +4411,8 @@ namespace UIMFLibrary
             double intercept,
             bool isAutoCalibrating = false)
         {
-
-            DataWriter.UpdateCalibrationCoefficients(DBConnection, frameNumber, slope, intercept, isAutoCalibrating);
-
-            var frameParams = GetFrameParams(frameNumber);
-            frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, slope);
-            frameParams.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, intercept);
-
-            if (isAutoCalibrating)
-            {
-                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationDone, 1);
-            }
-
+            // Obsolete because this writes to the connection, which is now read-only
+            throw new Exception("DataReader.UpdateCalibrationCoefficients is obsolete, use DataWriter.UpdateCalibrationCoefficients");
         }
 
         #endregion
@@ -5760,11 +5690,11 @@ namespace UIMFLibrary
                                 "use the DataWriter class to add it by calling function CreateBinCentricTables");
         }
 
-        private bool UsingLegacyFrameParams(SQLiteConnection uimfConnection, out bool hasLegacyFrameParameters)
+        private bool UsingLegacyFrameParams(out bool hasLegacyFrameParameters)
         {
-            hasLegacyFrameParameters = TableExists(uimfConnection, FRAME_PARAMETERS_TABLE);
+            hasLegacyFrameParameters = TableExists(FRAME_PARAMETERS_TABLE);
 
-            if (TableExists(uimfConnection, FRAME_PARAMS_TABLE))
+            if (TableExists(FRAME_PARAMS_TABLE))
                 return false;
 
             return true;

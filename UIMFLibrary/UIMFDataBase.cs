@@ -20,9 +20,19 @@ namespace UIMFLibrary
         public const string FRAME_PARAMETERS_TABLE = "Frame_Parameters";
 
         /// <summary>
+        /// Name of table containing frame param keys
+        /// </summary>
+        public const string FRAME_PARAM_KEYS_TABLE = "Frame_Param_Keys";
+
+        /// <summary>
         /// Name of table containing frame parameters - new format
         /// </summary>
         public const string FRAME_PARAMS_TABLE = "Frame_Params";
+
+        /// <summary>
+        /// Name of table containing frame scan information
+        /// </summary>
+        public const string FRAME_SCANS_TABLE = "Frame_Scans";
 
         /// <summary>
         /// Name of table containing global parameters - legacy format
@@ -470,12 +480,12 @@ namespace UIMFLibrary
         {
             var frameParamKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
 
-            if (!TableExists(uimfConnection, "Frame_Param_Keys"))
+            if (!TableExists(uimfConnection, FRAME_PARAM_KEYS_TABLE))
             {
                 return GetLegacyFrameParameterKeys();
             }
 
-            const string sqlQuery = "Select ParamID, ParamName, ParamDataType, ParamDescription From Frame_Param_Keys;";
+            const string sqlQuery = "Select ParamID, ParamName, ParamDataType, ParamDescription From " + FRAME_PARAM_KEYS_TABLE + ";";
 
             using (var dbCommand = new SQLiteCommand(uimfConnection)
             {
@@ -1054,7 +1064,7 @@ namespace UIMFLibrary
             var table = m_TableStatus[tableType];
             if (!table.Exists && !table.Checked)
             {
-                var tableExists = TableExists(m_dbConnection, tableName);
+                var tableExists = TableExists(tableName);
                 UpdateTableExists(tableType, tableExists);
             }
 
@@ -1585,7 +1595,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         private bool UsingLegacyGlobalParams()
         {
-            var usingLegacyParams = TableExists(m_dbConnection, "Global_Parameters");
+            var usingLegacyParams = TableExists(GLOBAL_PARAMETERS_TABLE);
 
             if (TableExists(m_dbConnection, GLOBAL_PARAMS_TABLE))
                 usingLegacyParams = false;
@@ -1599,7 +1609,7 @@ namespace UIMFLibrary
         /// <param name="callingMethod"></param>
         protected void ValidateFrameScansExists(string callingMethod)
         {
-            var tableExists = CheckHasTable(UIMFTableType.FrameScans, "Frame_Scans");
+            var tableExists = CheckHasTable(UIMFTableType.FrameScans, FRAME_SCANS_TABLE);
             if (!tableExists)
             {
                 throw new Exception("The Frame_Scans table does not exist; call method CreateTables before calling " + callingMethod);
