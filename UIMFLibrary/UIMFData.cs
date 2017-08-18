@@ -10,7 +10,7 @@ namespace UIMFLibrary
     /// <summary>
     /// Base class for UIMFDataReader and UIMFDataWriter. Contains common functionality and resources. Does not contain any functionality that writes to the database.
     /// </summary>
-    public abstract class UIMFDataBase : IDisposable
+    public abstract class UIMFData : IDisposable
     {
         #region Constants
 
@@ -211,14 +211,14 @@ namespace UIMFLibrary
         #region Constructor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UIMFDataBase"/> class.
+        /// Initializes a new instance of the <see cref="UIMFData"/> class.
         /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="fileName">
         /// Full path to the data file
         /// </param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        protected UIMFDataBase(string fileName)
+        protected UIMFData(string fileName)
         {
             m_errMessageCounter = 0;
             m_FilePath = fileName;

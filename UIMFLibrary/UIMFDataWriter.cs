@@ -26,7 +26,7 @@ namespace UIMFLibrary
     /// <summary>
     /// UIMF Data Writer class
     /// </summary>
-    public class DataWriter : UIMFDataBase
+    public class DataWriter : UIMFData
     {
         #region Constants
 
@@ -1497,7 +1497,7 @@ namespace UIMFLibrary
                 new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
-            // See also the FrameType enum in the UIMFDataBase class
+            // See also the FrameType enum in the UIMFData class
             m_dbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameType", (int)frameParameters.FrameType));
 
             // Number of TOF scans

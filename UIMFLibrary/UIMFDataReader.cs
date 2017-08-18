@@ -25,7 +25,7 @@ namespace UIMFLibrary
     /// <summary>
     /// UIMF Data Reader Class
     /// </summary>
-    public class DataReader : UIMFDataBase
+    public class DataReader : UIMFData
     {
         #region Constants
 
@@ -1903,7 +1903,7 @@ namespace UIMFLibrary
         /// <param name="frameNumber">
         /// </param>
         /// <returns>
-        /// Frame type of the frame<see cref="UIMFDataBase.FrameType"/>.
+        /// Frame type of the frame<see cref="UIMFData.FrameType"/>.
         /// </returns>
         public FrameType GetFrameTypeForFrame(int frameNumber)
         {

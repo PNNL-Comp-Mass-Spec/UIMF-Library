@@ -104,21 +104,21 @@ namespace UIMFLibrary
         /// Frame type
         /// </summary>
         /// <remarks>Returns MS1 if not defined</remarks>
-        public UIMFDataBase.FrameType FrameType
+        public UIMFData.FrameType FrameType
         {
             get
             {
                 if (!HasParameter(FrameParamKeyType.FrameType))
-                    return UIMFDataBase.FrameType.MS1;
+                    return UIMFData.FrameType.MS1;
 
                 var frameType = GetValueInt32(FrameParamKeyType.FrameType);
                 if (frameType == 0)
                 {
                     // This is an older UIMF file where the MS1 frames were labeled as 0
-                    return UIMFDataBase.FrameType.MS1;
+                    return UIMFData.FrameType.MS1;
                 }
 
-                return (UIMFDataBase.FrameType)frameType;
+                return (UIMFData.FrameType)frameType;
             }
         }
 
