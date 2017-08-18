@@ -393,6 +393,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <remarks>
         /// This method works properly with tables that have no rows of data
+        /// However, an exception is thrown if the table does not exist
         /// </remarks>
         public bool TableHasColumn(string tableName, string columnName)
         {
@@ -637,6 +638,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <remarks>
         /// This method works properly with tables that have no rows of data
+        /// However, an exception is thrown if the table does not exist
         /// </remarks>
         public static bool TableHasColumn(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
