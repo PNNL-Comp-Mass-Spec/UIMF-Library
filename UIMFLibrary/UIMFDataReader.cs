@@ -206,11 +206,6 @@ namespace UIMFLibrary
             }
         }
 
-        /// <summary>
-        /// UIMF file path
-        /// </summary>
-        private readonly string m_uimfFilePath;
-
         #endregion
 
         #region Constructors and Destructors
@@ -260,8 +255,6 @@ namespace UIMFLibrary
                     m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null , 100);
                     m_dbConnection = memoryConnection;
                 }
-
-                m_uimfFilePath = uimfFileInfo.FullName;
 
                 ReadUimfFormatVersion();
 
@@ -380,11 +373,6 @@ namespace UIMFLibrary
         /// Gets the tenths of nano seconds per bin.
         /// </summary>
         public double TenthsOfNanoSecondsPerBin => m_globalParameters.BinWidth * 10.0;
-
-        /// <summary>
-        /// Gets the uimf file path.
-        /// </summary>
-        public string UimfFilePath => m_uimfFilePath;
 
         #endregion
 
@@ -845,7 +833,7 @@ namespace UIMFLibrary
 
                         try
                         {
-                            cmdTargetDB.CommandText = "ATTACH DATABASE '" + m_uimfFilePath + "' AS SourceDB;";
+                            cmdTargetDB.CommandText = "ATTACH DATABASE '" + m_FilePath + "' AS SourceDB;";
                             cmdTargetDB.ExecuteNonQuery();
 
                             // Populate each table

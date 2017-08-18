@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace UIMFLibrary
@@ -202,6 +203,11 @@ namespace UIMFLibrary
         public bool HasVersionInfoTable => CheckHasVersionInfoTable();
 
         /// <summary>
+        /// Gets the uimf file path.
+        /// </summary>
+        public string UimfFilePath => m_FilePath;
+
+        /// <summary>
         /// The format version of the UIMF file
         /// </summary>
         public Version UimfFormatVersion { get; private set; }
@@ -221,7 +227,10 @@ namespace UIMFLibrary
         protected UIMFData(string fileName)
         {
             m_errMessageCounter = 0;
-            m_FilePath = fileName;
+
+            FileSystemInfo uimfFileInfo = new FileInfo(fileName);
+            m_FilePath = uimfFileInfo.FullName;
+
             m_globalParameters = new GlobalParams();
 
             m_TableStatus = new Dictionary<UIMFTableType, TableStatus>();
