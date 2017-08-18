@@ -29,7 +29,7 @@ namespace UIMFLibrary
             indexOfMaxIntensity = 0;
 
             // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            int zeroCount = 0;
+            var zeroCount = 0;
             var rlzeDataList = new List<int>();
             var nonZeroCount = 0;
 
@@ -37,7 +37,7 @@ namespace UIMFLibrary
             const int dataTypeSize = 4;
 
             // Calculate TIC and BPI while run length zero encoding
-            for (int i = 0; i < intensities.Count; i++)
+            for (var i = 0; i < intensities.Count; i++)
             {
                 var intensity = intensities[i];
                 if (intensity > 0)
@@ -113,7 +113,7 @@ namespace UIMFLibrary
             indexOfMaxIntensity = 0;
 
             // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            int zeroCount = 0;
+            var zeroCount = 0;
             var rlzeDataList = new List<int>();
             var nonZeroCount = 0;
 
@@ -121,7 +121,7 @@ namespace UIMFLibrary
             const int dataTypeSize = 4;
 
             // Calculate TIC and BPI while run length zero encoding
-            for (int i = 0; i < intensities.Count; i++)
+            for (var i = 0; i < intensities.Count; i++)
             {
                 var intensity = intensities[i];
                 if (intensity > 0)
@@ -196,7 +196,7 @@ namespace UIMFLibrary
             indexOfMaxIntensity = 0;
 
             // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            int zeroCount = 0;
+            var zeroCount = 0;
             var rlzeDataList = new List<int>();
             var nonZeroCount = 0;
 
@@ -204,7 +204,7 @@ namespace UIMFLibrary
             const int dataTypeSize = 4;
 
             // Calculate TIC and BPI while run length zero encoding
-            for (int i = 0; i < intensities.Count; i++)
+            for (var i = 0; i < intensities.Count; i++)
             {
                 var intensity = intensities[i];
                 if (intensity > 0)

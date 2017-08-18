@@ -218,7 +218,7 @@ namespace UIMFLibrary
         /// Full path to the data file
         /// </param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        public UIMFDataBase(string fileName)
+        protected UIMFDataBase(string fileName)
         {
             m_errMessageCounter = 0;
             m_FilePath = fileName;
@@ -1503,12 +1503,15 @@ namespace UIMFLibrary
                         {
                             try
                             {
-                                var uimfVersion = new VersionInfo();
-                                uimfVersion.VersionId = GetInt32(reader, "Version_ID");
-                                uimfVersion.UimfVersion = Version.Parse(GetString(reader, "File_Version"));
-                                uimfVersion.SoftwareName = GetString(reader, "Calling_Assembly_Name");
-                                uimfVersion.SoftwareVersion = Version.Parse(GetString(reader, "Calling_Assembly_Version"));
-                                uimfVersion.DateEntered = DateTime.MaxValue;
+                                var uimfVersion = new VersionInfo
+                                {
+                                    VersionId = GetInt32(reader, "Version_ID"),
+                                    UimfVersion = Version.Parse(GetString(reader, "File_Version")),
+                                    SoftwareName = GetString(reader, "Calling_Assembly_Name"),
+                                    SoftwareVersion = Version.Parse(GetString(reader, "Calling_Assembly_Version")),
+                                    DateEntered = DateTime.MaxValue
+                                };
+
                                 // Add 'Z' to the date entered, since it is in UTC time
                                 uimfVersion.DateEntered = DateTime.ParseExact(GetString(reader, "Entered") + "Z", "yyyy-MM-dd HH:mm:ssK", mCultureInfoUS);
                                 versions.Add(uimfVersion);

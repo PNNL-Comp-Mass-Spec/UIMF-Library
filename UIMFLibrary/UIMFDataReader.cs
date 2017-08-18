@@ -25,7 +25,7 @@ namespace UIMFLibrary
     /// <summary>
     /// UIMF Data Reader Class
     /// </summary>
-    public class DataReader : UIMFDataBase, IDisposable
+    public class DataReader : UIMFDataBase
     {
         #region Constants
 
@@ -211,8 +211,6 @@ namespace UIMFLibrary
         /// </summary>
         private readonly string m_uimfFilePath;
 
-        private SQLiteConnection memoryConnection;
-
         #endregion
 
         #region Constructors and Destructors
@@ -257,7 +255,7 @@ namespace UIMFLibrary
                 m_dbConnection.Open();
                 if (useInMemoryDatabase)
                 {
-                    memoryConnection = new SQLiteConnection("Data Source=:memory:", true);
+                    var memoryConnection = new SQLiteConnection("Data Source=:memory:", true);
                     memoryConnection.Open();
                     m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null , 100);
                     m_dbConnection = memoryConnection;
@@ -331,15 +329,6 @@ namespace UIMFLibrary
             {
                 throw new Exception("Failed to open UIMF file: " + ex);
             }
-        }
-
-        private bool Callback(SQLiteConnection source, string sourceName, SQLiteConnection destination, string destinationName, int pages, int remainingPages, int totalPages, bool retry)
-        {
-            if (remainingPages == 0)
-            {
-                m_dbConnection = memoryConnection;
-            }
-            return true;
         }
 
         #endregion
@@ -727,7 +716,7 @@ namespace UIMFLibrary
 
 
                 var pixelY = 1;
-                int[] arr = new int[1];
+                var arr = new int[1];
 
                 for (var binValue = 0;
                     (binValue < streamBinIntensity.Length) && (indexCurrentBin < endBin);
@@ -1601,7 +1590,7 @@ namespace UIMFLibrary
         {
             try
             {
-                var frameParamKeys = GetFrameParameterKeys(false);
+                var frameParamKeys = GetFrameParameterKeys();
                 var frameParameters = new FrameParams();
                 var currentFrameNum = -1;
 
@@ -1741,7 +1730,7 @@ namespace UIMFLibrary
             }
             else
             {
-                var frameParamKeys = GetFrameParameterKeys(false);
+                var frameParamKeys = GetFrameParameterKeys();
                 frameParameters = new FrameParams();
 
                 m_getFrameParamsCommand.Parameters.Clear();
@@ -2294,13 +2283,15 @@ namespace UIMFLibrary
                          spectra);
 
                     var numReturnedBins = output.Length / DATASIZE;
-                    int[] decodedIntensityValueArray = new int[1];
+                    var decodedIntensityValueArray = new int[1];
                     for (var i = 0; i < numReturnedBins; i++)
                     {
-                        var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        // var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+
                         Buffer.BlockCopy(decompSpectraRecord, i * DATASIZE,
                             decodedIntensityValueArray, 0, 4);
-                        decodedIntensityValue = decodedIntensityValueArray[0];
+
+                        var decodedIntensityValue = decodedIntensityValueArray[0];
 
                         if (decodedIntensityValue < 0)
                         {

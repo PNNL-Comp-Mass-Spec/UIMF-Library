@@ -6,7 +6,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
@@ -53,7 +52,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             {
                 Console.WriteLine("Calling UpdateAllCalibrationCoefficients");
 
-                writer.UpdateAllCalibrationCoefficients(slope, intercept, false);
+                writer.UpdateAllCalibrationCoefficients(slope, intercept);
 
                 Console.WriteLine("Updated all frames to have slope {0} and intercept {1}", slope, intercept);
             }

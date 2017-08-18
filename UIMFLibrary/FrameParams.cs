@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
 
 namespace UIMFLibrary
 {
@@ -105,21 +104,21 @@ namespace UIMFLibrary
         /// Frame type
         /// </summary>
         /// <remarks>Returns MS1 if not defined</remarks>
-        public DataReader.FrameType FrameType
+        public UIMFDataBase.FrameType FrameType
         {
             get
             {
                 if (!HasParameter(FrameParamKeyType.FrameType))
-                    return DataReader.FrameType.MS1;
+                    return UIMFDataBase.FrameType.MS1;
 
                 var frameType = GetValueInt32(FrameParamKeyType.FrameType);
                 if (frameType == 0)
                 {
                     // This is an older UIMF file where the MS1 frames were labeled as 0
-                    return DataReader.FrameType.MS1;
+                    return UIMFDataBase.FrameType.MS1;
                 }
 
-                return (DataReader.FrameType)frameType;
+                return (UIMFDataBase.FrameType)frameType;
             }
         }
 

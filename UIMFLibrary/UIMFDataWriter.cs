@@ -26,7 +26,7 @@ namespace UIMFLibrary
     /// <summary>
     /// UIMF Data Writer class
     /// </summary>
-    public class DataWriter : UIMFDataBase, IDisposable
+    public class DataWriter : UIMFDataBase
     {
         #region Constants
 
@@ -731,6 +731,7 @@ namespace UIMFLibrary
             }
             catch
             {
+                // Ignore errors here
             }
 
             AddVersionInfo(softwareName, softwareVersion);
@@ -787,30 +788,15 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         /// <param name="paramKeyType"></param>
         /// <param name="paramValue"></param>
-        /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
-        private static int AssureAllFramesHaveFrameParam(
-            SQLiteCommand dbCommand,
-            FrameParamKeyType paramKeyType,
-            string paramValue)
-        {
-            return AssureAllFramesHaveFrameParam(dbCommand, paramKeyType, paramValue, 0, 0);
-        }
-
-        /// <summary>
-        /// Makes sure that all entries in the Frame_Params table have the given frame parameter defined
-        /// </summary>
-        /// <param name="dbCommand"></param>
-        /// <param name="paramKeyType"></param>
-        /// <param name="paramValue"></param>
         /// <param name="frameNumStart">Optional: Starting frame number; ignored if frameNumEnd is 0 or negative</param>
         /// <param name="frameNumEnd">Optional: Ending frame number; ignored if frameNumEnd is 0 or negative</param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
         private static int AssureAllFramesHaveFrameParam(
-            SQLiteCommand dbCommand,
+            IDbCommand dbCommand,
             FrameParamKeyType paramKeyType,
             string paramValue,
-            int frameNumStart,
-            int frameNumEnd)
+            int frameNumStart = 0,
+            int frameNumEnd = 0)
         {
 
             if (string.IsNullOrEmpty(paramValue))
