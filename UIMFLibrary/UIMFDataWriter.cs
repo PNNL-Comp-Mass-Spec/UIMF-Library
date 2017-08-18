@@ -2587,6 +2587,9 @@ namespace UIMFLibrary
             if (m_LegacyFrameParameterTableHasDecodedColumn)
                 return;
 
+            if (!HasLegacyParameterTables)
+                return;
+
             if (!TableHasColumn(FRAME_PARAMETERS_TABLE, "Decoded"))
             {
                 AddFrameParameter("Decoded", "INT", 0);
@@ -2605,6 +2608,9 @@ namespace UIMFLibrary
         public void ValidateLegacyHPFColumnsExist()
         {
             if (m_LegacyFrameParameterTableHaHPFColumns)
+                return;
+
+            if (!HasLegacyParameterTables)
                 return;
 
             if (!TableHasColumn(FRAME_PARAMETERS_TABLE, "voltEntranceHPFIn"))
