@@ -216,7 +216,8 @@ The UIMFWriter can optionally populate the legacy tables, but their use was phas
  | CALIBRATIONDONE | int | Set to 1 after a frame has been calibrated |
  | Decoded | int | Set to 1 after a frame has been decoded |
 
----------------------------------------------------------------------------------------------------------------
+## Contacts
+
 Written by PNNL Staff for the Department of Energy (PNNL, Richland, WA) \
 Copyright 2009, Battelle Memorial Institute.  All Rights Reserved.
 
@@ -225,7 +226,8 @@ Kevin Crowell, Bill Danielson, Bryson Gibbons, Matthew Monroe, Spencer Prost, Ya
 
 E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov \
 Website: http://omics.pnl.gov/software/
-----------------------------------------------------------------------------------------------------------------
+
+## License
 
 Licensed under the Educational Community License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
