@@ -31,5 +31,14 @@ namespace UIMFLibrary
         /// Date the row was entered
         /// </summary>
         public DateTime DateEntered { get; set; }
+
+        /// <summary>
+        /// Report the UimfVersion
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return UimfVersion.ToString();
+        }
     }
 }
