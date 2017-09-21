@@ -3,8 +3,9 @@
     <TargetFrameworks>net45;net461;net47</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
-    <AssemblyVersion>3.5.7.1</AssemblyVersion>
-    <FileVersion>3.5.7.1</FileVersion>
+    <Version>3.5.7.2</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>Used to create, modify and extract data from UIMF files, which are SQLite databases of mass spectrometry data acquired at Pacific Northwest National Laboratory (PNNL)</Description>
