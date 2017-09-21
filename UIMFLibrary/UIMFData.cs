@@ -1567,7 +1567,8 @@ namespace UIMFLibrary
         protected internal void ReadUimfFormatVersion()
         {
             var versions = GetVersionInfo();
-            UimfFormatVersion = versions.Last().UimfVersion;
+            if (versions.Count > 0)
+                UimfFormatVersion = versions.Last().UimfVersion;
         }
 
         /// <summary>
