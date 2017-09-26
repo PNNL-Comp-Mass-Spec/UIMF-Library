@@ -172,7 +172,9 @@ namespace UIMFLibrary
                     {GlobalParamKeyType.PrescanProfile, typeof(string)},
                     {GlobalParamKeyType.InstrumentClass, typeof(int)},       // 0 for TOF; 1 for ppm bin-based
                     {GlobalParamKeyType.PpmBinBasedStartMz, typeof(double)},    // Only used when InstrumentClass is 1 (ppm bin-based)
-                    {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)}
+                    {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)},    // Only used when InstrumentClass is 1 (ppm bin-based)
+                    {GlobalParamKeyType.DriftTubeLength, typeof(double)},    // Only used for IMS
+                    {GlobalParamKeyType.DriftGas, typeof(string)}
                 };
 
                 foreach (var item in keyTypes)

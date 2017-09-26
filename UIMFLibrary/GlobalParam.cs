@@ -97,7 +97,17 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: PPM Bin Base End m/z
         /// </summary>
-        PpmBinBasedEndMz = 17       // Only used when InstrumentClass is 1 (ppm bin-based)
+        PpmBinBasedEndMz = 17,      // Only used when InstrumentClass is 1 (ppm bin-based)
+
+        /// <summary>
+        /// Key: Drift tube length in centimeters (for IMS)
+        /// </summary>
+        DriftTubeLength = 18,       // Only used for IMS
+
+        /// <summary>
+        /// Key: Drift Gas (for IMS)
+        /// </summary>
+        DriftGas = 19,
     }
 
     /// <summary>
@@ -279,6 +289,14 @@ namespace UIMFLibrary
 
                 case GlobalParamKeyType.PpmBinBasedEndMz:
                     InitializeByType("PpmBinBasedEndMz", dataType, "Ending m/z value for ppm bin-based mode");
+                    break;
+
+                case GlobalParamKeyType.DriftTubeLength:
+                    InitializeByType("DriftTubeLength", dataType, "IMS Drift tube length in centimeters");
+                    break;
+
+                case GlobalParamKeyType.DriftGas:
+                    InitializeByType("DriftGas", dataType, "Drift gas (i.e., N2)");
                     break;
 
                 case GlobalParamKeyType.Unknown:
