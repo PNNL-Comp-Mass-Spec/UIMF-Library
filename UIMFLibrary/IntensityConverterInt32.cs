@@ -68,7 +68,7 @@ namespace UIMFLibrary
                     {
                         // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add(zeroCount);
-                        rlzeDataList.Add((short)0);
+                        rlzeDataList.Add((short) 0);
                         zeroCount = 0;
                     }
 
@@ -84,12 +84,10 @@ namespace UIMFLibrary
             {
                 spectra = new byte[nrlze * dataTypeSize];
                 Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
-                spectra = CLZF2.Compress(
-                     spectra);
+                spectra = CLZF2.Compress(spectra);
             }
 
             return nonZeroCount;
-
         }
 
         /// <summary>
@@ -172,8 +170,6 @@ namespace UIMFLibrary
             }
 
             return nonZeroCount;
-
         }
-
     }
 }

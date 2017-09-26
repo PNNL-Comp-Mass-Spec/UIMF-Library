@@ -644,8 +644,7 @@ namespace UIMFLibrary
                 }
 
                 var indexCurrentBin = 0;
-                var decompressLength = CLZF2.Decompress(
-                    compressedBinIntensity);
+                var decompressLength = CLZF2.Decompress(compressedBinIntensity);
 
                 for (var binValue = 0;
                     (binValue < decompressLength.Length) && (indexCurrentBin <= endBin);
@@ -2078,8 +2077,7 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(
-                         spectra);
+                    var output = CLZF2.Decompress(spectra);
 
                     var numBins = output.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
@@ -2267,8 +2265,7 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(
-                         spectra);
+                    var output = CLZF2.Decompress(spectra);
 
                     var numReturnedBins = output.Length / DATASIZE;
                     var decodedIntensityValueArray = new int[1];
@@ -2357,8 +2354,7 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = CLZF2.Decompress(
-                         spectra);
+                    var outputLength = CLZF2.Decompress(spectra);
 
                     var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
@@ -3237,8 +3233,7 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var outputLength = CLZF2.Decompress(
-                        spectraRecord);
+                    var outputLength = CLZF2.Decompress(spectraRecord);
 
                     var numBins = outputLength.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
@@ -5011,8 +5006,7 @@ namespace UIMFLibrary
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
 
-                        var outputLength = CLZF2.Decompress(
-                             spectraRecord);
+                        var outputLength = CLZF2.Decompress(spectraRecord);
 
                         var numBins = outputLength.Length / DATASIZE;
 

@@ -109,13 +109,11 @@ namespace UIMFLibrary
             {
                 spectra = new byte[nrlze * dataTypeSize];
                 Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
-                spectra = CLZF2.Compress(
-                     spectra);
+                spectra = CLZF2.Compress(spectra);
             }
-
             return nonZeroCount;
-
         }
+
 #if NET47
         /// <summary>
         /// Convert a list of intensity information by bin to a zero length encoded byte array
@@ -190,16 +188,11 @@ namespace UIMFLibrary
             {
                 spectra = new byte[nrlze * dataTypeSize];
                 Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
-                spectra = CLZF2.Compress(
-                    spectra);
+                spectra = CLZF2.Compress(spectra);
             }
 
             return nonZeroCount;
-
         }
 #endif
-
     }
 }
-
-
