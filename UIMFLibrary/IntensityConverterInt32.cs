@@ -90,6 +90,7 @@ namespace UIMFLibrary
             return nonZeroCount;
         }
 
+#if (EXPERIMENTAL)
         /// <summary>
         /// Convert an array of intensities to a zero length encoded byte array
         /// </summary>
@@ -171,5 +172,6 @@ namespace UIMFLibrary
 
             return nonZeroCount;
         }
+#endif
     }
 }

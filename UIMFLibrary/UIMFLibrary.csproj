@@ -15,13 +15,13 @@
     <PackageLicenseUrl>https://opensource.org/licenses/ECL-2.0</PackageLicenseUrl>
     <Title>UIMF Library</Title>
     <PackageReleaseNotes></PackageReleaseNotes>
+    <Configurations>Debug;Release;Experimental_Release</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;</DefineConstants>
-    <OutputPath></OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)'=='Experimental_Release'">
+    <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net45' OR '$(TargetFramework)'=='net461' OR '$(TargetFramework)'=='net47'">
     <Reference Include="Microsoft.CSharp" />
@@ -29,9 +29,11 @@
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.97" />
+  <ItemGroup Condition="'$(Configuration)'=='Experimental_Release'">
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.97" />
   </ItemGroup>
 </Project>

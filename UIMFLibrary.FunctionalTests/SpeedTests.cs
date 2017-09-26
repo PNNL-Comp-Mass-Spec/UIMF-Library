@@ -57,23 +57,23 @@ namespace UIMFLibrary.FunctionalTests
 
         }
 
+#if (EXPERIMENTAL)
         [Test]
         public void CompressionComparisonSpeedTest()
         {
 
             /*
              * Example run on core i9 7900X @ 4GHz.
-Name                                    Milliseconds        Percent                       
-LZ4 Compress                            163                 193.3%                        
-ZRLE LZ4 Compress                       84                  100%                          
-CLZF2 Compress                          945                 1118.5%                       
-ZREL CLZF2 Compress                     91                  107.7%                        
-Name                                    Milliseconds        Percent                       
-LZ4 Decompress                          325                 16880.7%                      
-ZRLE LZ4 Decompress                     1                   100%                          
-CLZF2 Decompress                        1176                61106.9%                      
-ZREL CLZF2 Decompress                   8                   448.4%                        
-                   
+             * Name                                    Milliseconds        Percent
+             * LZ4 Compress                            163                 193.3%
+             * ZRLE LZ4 Compress                       84                  100%
+             * CLZF2 Compress                          945                 1118.5%
+             * ZREL CLZF2 Compress                     91                  107.7%
+             * Name                                    Milliseconds        Percent
+             * LZ4 Decompress                          325                 16880.7%
+             * ZRLE LZ4 Decompress                     1                   100%
+             * CLZF2 Decompress                        1176                61106.9%
+             * ZREL CLZF2 Decompress                   8                   448.4%
              */
 
             var intensities = new int[148000];
@@ -112,7 +112,7 @@ ZREL CLZF2 Decompress                   8                   448.4%
                     IntensityConverterInt32.EncodeSnappy(intensities, out zrleSnappyResult, out var tic, out var bpi,
                         out var indexOfMaxIntensity);
                 }).WithWarmup(100)
-            
+
             .For(100).Iterations().PrintComparison();
 
             Console.WriteLine($"Snappy Compress Size: {snappyResult.Length}");
@@ -136,6 +136,7 @@ ZREL CLZF2 Decompress                   8                   448.4%
             }).WithWarmup(100).For(100).Iterations().PrintComparison();
 
         }
+#endif
 
         /// <summary>
         /// Summed mass spectrum speed tests.
