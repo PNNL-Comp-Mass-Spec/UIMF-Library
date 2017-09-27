@@ -87,7 +87,6 @@ namespace UIMFLibrary.FunctionalTests
             Console.WriteLine("Demultiplexing to create " + newFile.FullName);
 
             var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-
             using (var uimfWriter = new DataWriter(newFile.FullName, executingAssembly))
             {
                 uimfWriter.CreateTables(globalParams.GetValue(GlobalParamKeyType.DatasetType));

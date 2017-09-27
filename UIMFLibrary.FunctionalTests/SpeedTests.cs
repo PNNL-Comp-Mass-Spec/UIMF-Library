@@ -160,6 +160,10 @@ namespace UIMFLibrary.FunctionalTests
                 const int scanStart = 250;
                 const int scanStop = scanStart + numIMSScansToSum - 1;
 
+                long nonZeroValues = 0;
+                long mzValuesRead = 0;
+                long intensityValuesRead = 0;
+
                 var sw = new Stopwatch();
                 sw.Start();
                 for (var frame = frameStart; frame < frameStop; frame++)
@@ -168,17 +172,26 @@ namespace UIMFLibrary.FunctionalTests
                     var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,
-                        DataReader.FrameType.MS1,
+                        UIMFData.FrameType.MS1,
                         scanStart,
                         scanStop,
                         out var mzValues,
                         out var intensities);
+
+                    nonZeroValues += nonZeros;
+                    mzValuesRead += mzValues.Length;
+                    intensityValuesRead += intensities.Length;
                 }
 
                 sw.Stop();
 
+                Assert.AreEqual(mzValuesRead, intensityValuesRead, "Read a differing number of m/z versus intensity values");
+
                 Console.WriteLine($"Total time to read {numIterations} scans = {sw.ElapsedMilliseconds} msec");
                 Console.WriteLine($"Average time/scan = {sw.ElapsedMilliseconds / (double)numIterations} msec");
+
+                Console.WriteLine("Read {0} data points, of which {1} were non-zero", mzValuesRead, nonZeroValues);
+
             }
         }
 
