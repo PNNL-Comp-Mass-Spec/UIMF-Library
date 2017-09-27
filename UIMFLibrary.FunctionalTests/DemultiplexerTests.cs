@@ -5,6 +5,7 @@ using System.Linq;
 using IMSDemultiplexer;
 using MathNet.Numerics.LinearAlgebra.Double;
 using NUnit.Framework;
+using UIMFLibrary.UnitTests.DataReaderTests;
 
 namespace UIMFLibrary.FunctionalTests
 {
@@ -26,21 +27,14 @@ namespace UIMFLibrary.FunctionalTests
             var scaledMatrix = (DenseMatrix)multiplierMatrix.Multiply(2.0 / 16.0);
             var inversedScaledMatrix = (DenseMatrix)scaledMatrix.Inverse();
 
-            const string sourceFileName = @"9pep_mix_1uM_4bit_50_12Dec11_encoded.uimf";
-            var uimfFile = new FileInfo(@"..\..\..\Test_Data\" + sourceFileName);
-            var altFilePath = @"\\proto-2\UnitTest_Files\IMSDemultiplexer\" + sourceFileName;
+            var uimfFile = DataReaderTests.VerifyLocalUimfFile(@"Test_Data\9pep_mix_1uM_4bit_50_12Dec11_encoded.uimf");
 
-            if (!uimfFile.Exists && File.Exists(altFilePath))
+            if (uimfFile == null)
             {
-                Console.WriteLine("File not found: " + uimfFile);
-                Console.WriteLine("Checking alternate path");
-                uimfFile = new FileInfo(altFilePath);
+                var currentDirectory = new DirectoryInfo(".");
+                Assert.Fail("UIMF file not found; Current working directory is " + currentDirectory.FullName);
             }
 
-            if (!uimfFile.Exists)
-            {
-                Assert.Fail("File not found: " + uimfFile.FullName);
-            }
             Console.WriteLine("Opening " + uimfFile.FullName);
 
             var uimfReader = new DataReader(uimfFile.FullName);
