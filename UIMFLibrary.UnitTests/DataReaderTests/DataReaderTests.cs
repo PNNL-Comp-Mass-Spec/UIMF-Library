@@ -1320,17 +1320,59 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             return columnExists ? "found" : "not found";
         }
 
-        private FileInfo VerifyLocalUimfFile(string uimfFilePath)
+        public static FileInfo VerifyLocalUimfFile(string relativeFilePath)
         {
-            var uimfFile = new FileInfo(uimfFilePath);
+            var uimfFile = new FileInfo(relativeFilePath);
             if (uimfFile.Exists)
+            {
+                Console.WriteLine("Found file " + uimfFile.FullName);
+                Console.WriteLine();
                 return uimfFile;
+            }
 
-            var alternateFile = new FileInfo(Path.Combine(FileRefs.SHARE_PATH, uimfFile.Name));
-            if (alternateFile.Exists)
-                return alternateFile;
+            Console.WriteLine("Could not find " + relativeFilePath);
+            Console.WriteLine("Checking alternative locations");
 
-            Assert.Fail("File not found: " + uimfFile.FullName);
+            var relativePathsToCheck = new List<string>
+            {
+                uimfFile.Name
+            };
+
+            if (!Path.IsPathRooted(relativeFilePath) &&
+                (relativeFilePath.Contains(Path.DirectorySeparatorChar) || relativeFilePath.Contains(Path.AltDirectorySeparatorChar)))
+            {
+                relativePathsToCheck.Add(relativeFilePath);
+            }
+            var parentToCheck = uimfFile.Directory.Parent;
+            while (parentToCheck != null)
+            {
+                foreach (var relativePath in relativePathsToCheck)
+                {
+                    var alternateFile = new FileInfo(Path.Combine(parentToCheck.FullName, relativePath));
+                    if (alternateFile.Exists)
+                    {
+                        Console.WriteLine("... found at " + alternateFile.FullName);
+                        Console.WriteLine();
+                        return alternateFile;
+                    }
+                }
+
+                parentToCheck = parentToCheck.Parent;
+            }
+
+            foreach (var relativePath in relativePathsToCheck)
+            {
+                var serverPathFile = new FileInfo(Path.Combine(FileRefs.SHARE_PATH, relativePath));
+                if (serverPathFile.Exists)
+                {
+                    Console.WriteLine("... found at " + serverPathFile);
+                    Console.WriteLine();
+                    return serverPathFile;
+                }
+            }
+            var currentDirectory = new DirectoryInfo(".");
+
+            Assert.Fail("Could not find " + relativeFilePath + "; current working directory: " + currentDirectory.FullName);
             return null;
         }
 
