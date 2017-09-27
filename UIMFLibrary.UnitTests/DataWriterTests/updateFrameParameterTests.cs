@@ -50,7 +50,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         {
             Console.WriteLine("Opening file " + uimfPath);
 
-            using (var writer = new DataWriter(uimfPath))
+            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var writer = new DataWriter(uimfPath, executingAssembly))
             {
                 Console.WriteLine("Calling UpdateAllCalibrationCoefficients");
 

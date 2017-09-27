@@ -41,7 +41,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             if (fiTarget == null)
                 return;
 
-            using (var uimfWriter = new DataWriter(fiTarget.FullName))
+            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var uimfWriter = new DataWriter(fiTarget.FullName, executingAssembly))
             {
                 uimfWriter.CreateBinCentricTables();
             }
@@ -128,6 +129,10 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             if (fiTarget == null)
                 return;
 
+            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var uimfWriter = new DataWriter(fiTarget.FullName, executingAssembly))
+            {
+                uimfWriter.CreateBinCentricTables();
             }
 
             Console.WriteLine("Added bin centric tables to " + fiTarget.FullName);

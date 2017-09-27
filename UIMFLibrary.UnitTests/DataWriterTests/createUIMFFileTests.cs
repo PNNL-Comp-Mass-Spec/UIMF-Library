@@ -29,7 +29,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 fiTarget.Delete();
             }
 
-            using (var writer = new DataWriter(fiTarget.FullName))
+            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var writer = new DataWriter(fiTarget.FullName, executingAssembly))
             {
                 writer.CreateTables("int");
 
