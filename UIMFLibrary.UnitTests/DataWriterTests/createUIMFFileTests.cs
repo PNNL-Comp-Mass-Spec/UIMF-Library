@@ -88,7 +88,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 }
 
                 writer.UpdateGlobalFrameCount();
-                Console.WriteLine("Wrote 10 frames of data to " + fiTarget.Name);
+
+                Console.WriteLine("Wrote 10 frames of data to " + fiTarget.FullName);
 
             }
 

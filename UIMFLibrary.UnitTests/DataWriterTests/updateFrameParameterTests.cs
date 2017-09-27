@@ -42,6 +42,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             sourceFile.CopyTo(targetFilePath, true);
 
             UpdateCalibrationCoefficients(targetFilePath, 0.3476655, 0.03313236);
+
+            Console.WriteLine("Updated calibration coefficients in " + targetFilePath);
         }
 
         public void UpdateCalibrationCoefficients(string uimfPath, double slope, double intercept)
@@ -54,7 +56,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 writer.UpdateAllCalibrationCoefficients(slope, intercept);
 
-                Console.WriteLine("Updated all frames to have slope {0} and intercept {1}", slope, intercept);
+                Console.WriteLine("Updated {0} to have slope {1} and intercept {2}", uimfPath, slope, intercept);
             }
 
         }

@@ -45,6 +45,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             {
                 uimfWriter.CreateBinCentricTables();
             }
+
+            Console.WriteLine("Added bin centric tables to " + fiTarget.FullName);
         }
 
         /// <summary>
@@ -101,6 +103,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                     dbConnection.Close();
                 }
             }
+
+            Console.WriteLine("Added bin centric tables to " + fiTarget.FullName);
         }
 
         /// <summary>
@@ -114,17 +118,19 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
             var fiSource = new FileInfo(FileRefs.BinCentricTest2);
 
-            if (fiSource.Exists)
+            if (!fiSource.Exists)
             {
-                var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
-                if (fiTarget == null)
-                    return;
-
-                using (var uimfWriter = new DataWriter(fiTarget.FullName))
-                {
-                    uimfWriter.CreateBinCentricTables();
-                }
+                Console.WriteLine("Source file not found: " + fiSource.FullName);
+                return;
             }
+
+            var fiTarget = DuplicateUIMF(fiSource, "_BinCentric");
+            if (fiTarget == null)
+                return;
+
+            }
+
+            Console.WriteLine("Added bin centric tables to " + fiTarget.FullName);
         }
 
         /// <summary>
@@ -163,12 +169,14 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             try
             {
                 fiSource.CopyTo(fiTarget.FullName, true);
+                Console.WriteLine("Copied {0} to create {1} ", fiSource.FullName, fiTarget.FullName);
+
                 return fiTarget;
             }
             catch (Exception ex)
             {
                 // File copy error; probably in use by another process
-                Console.WriteLine("Exception duplication " + fiSource.FullName + ": " + ex.Message);
+                Console.WriteLine("Exception duplicating " + fiSource.FullName + ": " + ex.Message);
             }
 
             return null;
