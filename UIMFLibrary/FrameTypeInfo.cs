@@ -24,8 +24,8 @@ namespace UIMFLibrary
         /// </param>
         public FrameSetContainer(int numFramesInFile)
         {
-            this.NumFrames = 0;
-            this.FrameIndexes = new Dictionary<int, int>(numFramesInFile+1);
+            NumFrames = 0;
+            FrameIndexes = new Dictionary<int, int>(numFramesInFile+1);
         }
 
         #endregion
@@ -55,11 +55,11 @@ namespace UIMFLibrary
         /// </param>
         public void AddFrame(int frameNumber)
         {
-            if (this.FrameIndexes.ContainsKey(frameNumber))
+            if (FrameIndexes.ContainsKey(frameNumber))
                 throw new Exception("Frame " + frameNumber + " was sent to FrameSetContainer.AddFrame more than 1 time; likely a programming bug");
 
-            this.FrameIndexes.Add(frameNumber, this.NumFrames);			
-            this.NumFrames++;
+            FrameIndexes.Add(frameNumber, NumFrames);			
+            NumFrames++;
         }
 
         #endregion

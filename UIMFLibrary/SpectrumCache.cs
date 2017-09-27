@@ -39,16 +39,16 @@ namespace UIMFLibrary
             IList<SortedList<int, int>> listOfIntensityDictionaries, 
             IDictionary<int, int> summedIntensityDictionary)
         {
-            this.StartFrameNumber = startFrameNumber;
-            this.EndFrameNumber = endFrameNumber;
-            this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
-            this.SummedIntensityDictionary = summedIntensityDictionary;
+            StartFrameNumber = startFrameNumber;
+            EndFrameNumber = endFrameNumber;
+            ListOfIntensityDictionaries = listOfIntensityDictionaries;
+            SummedIntensityDictionary = summedIntensityDictionary;
 
 
             FindFirstLastScan(listOfIntensityDictionaries, out var firstScan, out var lastScan);
 
-            this.FirstScan = firstScan;
-            this.LastScan = lastScan;
+            FirstScan = firstScan;
+            LastScan = lastScan;
             
             UpdateMemoryUsageEstimate();
         }
@@ -78,23 +78,23 @@ namespace UIMFLibrary
             int firstScan,
             int lastScan)
         {
-            this.StartFrameNumber = startFrameNumber;
-            this.EndFrameNumber = endFrameNumber;
-            this.ListOfIntensityDictionaries = listOfIntensityDictionaries;
-            this.SummedIntensityDictionary = summedIntensityDictionary;
+            StartFrameNumber = startFrameNumber;
+            EndFrameNumber = endFrameNumber;
+            ListOfIntensityDictionaries = listOfIntensityDictionaries;
+            SummedIntensityDictionary = summedIntensityDictionary;
 
-            this.FirstScan = firstScan;
-            this.LastScan = lastScan;
+            FirstScan = firstScan;
+            LastScan = lastScan;
 
             FindFirstLastScan(listOfIntensityDictionaries, out var firstScanComputed, out var lastScanComputed);
 
             if (firstScanComputed > 0 || lastScanComputed > 0)
             {
-                if (this.FirstScan < firstScanComputed)
-                    this.FirstScan = firstScanComputed;
+                if (FirstScan < firstScanComputed)
+                    FirstScan = firstScanComputed;
 
-                if (this.LastScan > lastScanComputed)
-                    this.LastScan = lastScanComputed;
+                if (LastScan > lastScanComputed)
+                    LastScan = lastScanComputed;
             }
 
             UpdateMemoryUsageEstimate();
@@ -181,13 +181,13 @@ namespace UIMFLibrary
         /// Each entry nominally takes up 8 bytes, but in reality each entry takes up 16 bytes.</remarks>
         private void UpdateMemoryUsageEstimate()
         {
-            System.Int64 byteEstimate = SummedIntensityDictionary.Count * 8 * 5;
+            Int64 byteEstimate = SummedIntensityDictionary.Count * 8 * 5;
             foreach (var item in ListOfIntensityDictionaries)
             {
                 byteEstimate += item.Count * 8 * 2;
             }
 
-            this.MemoryUsageEstimateMB = (int)(byteEstimate / 1024.0 / 1024.0);
+            MemoryUsageEstimateMB = (int)(byteEstimate / 1024.0 / 1024.0);
         }
 
         #endregion

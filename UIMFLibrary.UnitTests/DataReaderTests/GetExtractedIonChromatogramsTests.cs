@@ -50,9 +50,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var sw = new Stopwatch();
             sw.Start();
 
-            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
+            using (m_reader = new DataReader(FileRefs.LegacyFile1))
             {
-                this.m_reader.Get3DElutionProfile(
+                m_reader.Get3DElutionProfile(
                     startFrame - 20,
                     startFrame + 20,
                     0,
@@ -96,9 +96,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInPPM = 25;
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
+            using (m_reader = new DataReader(FileRefs.LegacyFile1))
             {
-                var values = this.m_reader.GetFramesAndScanIntensitiesForAGivenMz(
+                var values = m_reader.GetFramesAndScanIntensitiesForAGivenMz(
                     startFrame - 40,
                     startFrame + 40,
                     0,
@@ -157,9 +157,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var sw = new Stopwatch();
             sw.Start();
 
-            using (this.m_reader = new DataReader(filePath))
+            using (m_reader = new DataReader(filePath))
             {
-                this.m_reader.Get3DElutionProfile(
+                m_reader.Get3DElutionProfile(
                     startFrame,
                     stopFrame,
                     0,
@@ -203,9 +203,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             int[] scanVals = null;
             int[] intensityVals = null;
 
-            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
+            using (m_reader = new DataReader(FileRefs.LegacyFile1))
             {
-                this.m_reader.GetDriftTimeProfile(
+                m_reader.GetDriftTimeProfile(
                     startFrame - 2,
                     startFrame + 2,
                     UIMFData.FrameType.MS1,
@@ -243,7 +243,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int startScan = 100;
             const int stopScan = 350;
 
-            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
+            using (m_reader = new DataReader(FileRefs.LegacyFile1))
             {
                 const double targetMZ = 636.8466; // see frame 1000, scan 170
                 const double toleranceInPPM = 20;
@@ -253,7 +253,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 // m_reader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
                 var sw = new Stopwatch();
                 sw.Start();
-                this.m_reader.GetLCProfile(
+                m_reader.GetLCProfile(
                     startFrame,
                     endFrame,
                     UIMFData.FrameType.MS1,
@@ -298,14 +298,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInPPM = 25;
 
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-            using (this.m_reader = new DataReader(FileRefs.LegacyFile1))
+            using (m_reader = new DataReader(FileRefs.LegacyFile1))
             {
 
                 // int[] scanVals = null;
 
                 var sw = new Stopwatch();
                 sw.Start();
-                this.m_reader.GetLCProfile(
+                m_reader.GetLCProfile(
                     startFrame - 200,
                     startFrame + 200,
                     UIMFData.FrameType.MS1,

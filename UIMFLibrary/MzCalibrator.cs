@@ -15,7 +15,7 @@ namespace UIMFLibrary
 
         private readonly double binWidth;
 
-        private double TenthsOfNanoSecondsPerBin => this.binWidth * 10;
+        private double TenthsOfNanoSecondsPerBin => binWidth * 10;
 
         #endregion
 
@@ -38,9 +38,9 @@ namespace UIMFLibrary
         /// </remarks>
         public MzCalibrator(double k, double t0, double binWidthNs = 1)
         {
-            this.K = k;
-            this.T0 = t0;
-            this.binWidth = binWidthNs;
+            K = k;
+            T0 = t0;
+            binWidth = binWidthNs;
         }
 
         #endregion
@@ -78,7 +78,7 @@ namespace UIMFLibrary
         public virtual int MZtoTOF(double mz)
         {
             var r = Math.Sqrt(mz);
-            return (int)Math.Round(((r / this.K) + this.T0));
+            return (int)Math.Round(((r / K) + T0));
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace UIMFLibrary
         /// </returns>
         public virtual double TOFtoMZ(double TOFValue)
         {
-            var r = this.K * (TOFValue - this.T0);
+            var r = K * (TOFValue - T0);
             return Math.Pow(r, 2);
         }
 
@@ -104,7 +104,7 @@ namespace UIMFLibrary
         public double MZtoBin(double mz)
         {
             // TODO: Add TOFCorrectionTime?
-            return this.TOFtoBin(this.MZtoTOF(mz));
+            return TOFtoBin(MZtoTOF(mz));
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace UIMFLibrary
         /// <returns>m/z</returns>
         public double BinToMZ(double bin)
         {
-            return this.TOFtoMZ(this.BinToTOF(bin));
+            return TOFtoMZ(BinToTOF(bin));
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public double BinToTOF(double bin)
         {
-            return bin * this.TenthsOfNanoSecondsPerBin;
+            return bin * TenthsOfNanoSecondsPerBin;
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public double TOFtoBin(double TOF)
         {
-            return TOF / this.TenthsOfNanoSecondsPerBin;
+            return TOF / TenthsOfNanoSecondsPerBin;
         }
 
         #endregion

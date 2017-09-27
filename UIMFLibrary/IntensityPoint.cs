@@ -28,10 +28,10 @@ namespace UIMFLibrary
 		/// </param>
 		public IntensityPoint(int scanLc, int scanIms, double intensity)
 		{
-			this.ScanLc = scanLc;
-			this.ScanIms = scanIms;
-			this.Intensity = intensity;
-			this.IsSaturated = false;
+			ScanLc = scanLc;
+			ScanIms = scanIms;
+			Intensity = intensity;
+			IsSaturated = false;
 		}
 
 		#endregion
@@ -107,7 +107,7 @@ namespace UIMFLibrary
 		/// </returns>
 		public int CompareTo(IntensityPoint other)
 		{
-			return this.ScanLc != other.ScanLc ? this.ScanLc.CompareTo(other.ScanLc) : this.ScanIms.CompareTo(other.ScanIms);
+			return ScanLc != other.ScanLc ? ScanLc.CompareTo(other.ScanLc) : ScanIms.CompareTo(other.ScanIms);
 		}
 
 		/// <summary>
@@ -131,7 +131,7 @@ namespace UIMFLibrary
 				return true;
 			}
 
-			return other.ScanLc == this.ScanLc && other.ScanIms == this.ScanIms;
+			return other.ScanLc == ScanLc && other.ScanIms == ScanIms;
 		}
 
 		/// <summary>
@@ -160,7 +160,7 @@ namespace UIMFLibrary
 				return false;
 			}
 
-			return this.Equals((IntensityPoint)obj);
+			return Equals((IntensityPoint)obj);
 		}
 
 		/// <summary>
@@ -176,7 +176,7 @@ namespace UIMFLibrary
 			{
 				// Compute the hash code using a bitwise exclusive between ScanLc and ScanIMS
 				// This method effectively generates a wide distribution of hash codes
-				return (this.ScanLc * 397) ^ this.ScanIms;
+				return (ScanLc * 397) ^ ScanIms;
 
 				// Alternative method from http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode
 				// This method produces a comparable distribution of hash codes

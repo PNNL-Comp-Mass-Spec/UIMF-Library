@@ -59,10 +59,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </param>
         public FrameAndScanInfo(int iStartFrame, int iStopFrame, int iStartScan, int iStopScan)
         {
-            this.startFrame = iStartFrame;
-            this.stopFrame = iStopFrame;
-            this.startScan = iStartScan;
-            this.stopScan = iStopScan;
+            startFrame = iStartFrame;
+            stopFrame = iStopFrame;
+            startScan = iStartScan;
+            stopScan = iStopScan;
         }
 
         #endregion
@@ -99,11 +99,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var gp = dr.GetGlobalParams();
 
                 var nonZeros = dr.GetSpectrum(
-                    this.testFrameScanInfo1.startFrame,
-                    this.testFrameScanInfo1.stopFrame,
-                    this.testFrameScanInfo1.startScan,
-                    this.testFrameScanInfo1.stopScan,
+                    testFrameScanInfo1.startFrame,
+                    testFrameScanInfo1.stopFrame,
                     UIMFData.FrameType.MS1,
+                    testFrameScanInfo1.startScan,
+                    testFrameScanInfo1.stopScan,
                     out var mzValues,
                     out var intensities);
                 TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
@@ -127,11 +127,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 if (bRunTest)
                 {
                     var nonZeros = dr.GetSpectrum(
-                        this.testFrameScanInfo1.startFrame,
-                        this.testFrameScanInfo1.stopFrame,
-                        this.testFrameScanInfo1.startScan,
-                        this.testFrameScanInfo1.stopScan,
+                        testFrameScanInfo1.startFrame,
+                        testFrameScanInfo1.stopFrame,
                         UIMFData.FrameType.MS1,
+                        testFrameScanInfo1.startScan,
+                        testFrameScanInfo1.stopScan,
                         out var mzValues,
                         out var intensities);
                     TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
@@ -203,11 +203,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var gp = dr.GetGlobalParams();
 
                 var nonZeros = dr.GetSpectrum(
-                    this.testFrameScanInfo1.startFrame,
-                    this.testFrameScanInfo1.stopFrame,
-                    this.testFrameScanInfo1.startScan,
-                    this.testFrameScanInfo1.stopScan,
+                    testFrameScanInfo1.startFrame,
+                    testFrameScanInfo1.stopFrame,
                     UIMFData.FrameType.MS1,
+                    testFrameScanInfo1.startScan,
+                    testFrameScanInfo1.stopScan,
                     out var mzValues,
                     out var intensities);
 
