@@ -2250,8 +2250,6 @@ namespace UIMFLibrary
 
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
-                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
-
                 while (reader.Read())
                 {
                     var binIndex = 0;
@@ -2271,9 +2269,7 @@ namespace UIMFLibrary
                     var decodedIntensityValueArray = new int[1];
                     for (var i = 0; i < numReturnedBins; i++)
                     {
-                        // var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
-
-                        Buffer.BlockCopy(decompSpectraRecord, i * DATASIZE,
+                        Buffer.BlockCopy(output, i * DATASIZE,
                             decodedIntensityValueArray, 0, 4);
 
                         var decodedIntensityValue = decodedIntensityValueArray[0];
