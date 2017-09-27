@@ -223,7 +223,7 @@ namespace UIMFLibrary
         /// </exception>
         /// <exception cref="FileNotFoundException">
         /// </exception>
-        public DataReader(string filePath, bool useInMemoryDatabase=false) : base(filePath)
+        public DataReader(string filePath, bool useInMemoryDatabase = false) : base(filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("UIMF file path cannot be empty", nameof(filePath));
@@ -255,7 +255,7 @@ namespace UIMFLibrary
                 {
                     var memoryConnection = new SQLiteConnection("Data Source=:memory:", true);
                     memoryConnection.Open();
-                    m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null , 100);
+                    m_dbConnection.BackupDatabase(memoryConnection, "main", "main", -1, null, 100);
                     m_dbConnection = memoryConnection;
                 }
 
@@ -560,7 +560,6 @@ namespace UIMFLibrary
 
             for (var currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
             {
-                var streamBinIntensity = new byte[m_globalParameters.Bins * 4];
 
                 // Create a calibration lookup table -- for speed
                 m_calibrationTable = new double[height];
@@ -609,13 +608,11 @@ namespace UIMFLibrary
                         // accumulate the data into the plot_data
                         if (yCompression <= 1)
                         {
-                            AccumulateFrameDataNoCompression(reader, width, startScan, startBin, endBin, ref frameData,
-                                                             ref streamBinIntensity);
+                            AccumulateFrameDataNoCompression(reader, width, startScan, startBin, endBin, ref frameData);
                         }
                         else
                         {
-                            AccumulateFrameDataWithCompression(reader, width, height, startScan, startBin, endBin,
-                                                               ref frameData, ref streamBinIntensity);
+                            AccumulateFrameDataWithCompression(reader, width, height, startScan, startBin, endBin, ref frameData);
                         }
                     }
                 }
@@ -630,8 +627,7 @@ namespace UIMFLibrary
             int startScan,
             int startBin,
             int endBin,
-            ref double[,] frameData,
-            ref byte[] streamBinIntensity)
+            ref double[,] frameData)
         {
             for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
             {
@@ -646,31 +642,35 @@ namespace UIMFLibrary
                     continue;
                 }
 
-                var indexCurrentBin = 0;
-                var decompressLength = CLZF2.Decompress(compressedBinIntensity);
+                var binIndex = 0;
 
-                for (var binValue = 0;
-                    (binValue < decompressLength.Length) && (indexCurrentBin <= endBin);
-                    binValue += DATASIZE)
+                var output = CLZF2.Decompress(compressedBinIntensity);
+
+                var numReturnedBins = output.Length / DATASIZE;
+                var decodedIntensityValueArray = new int[1];
+
+                for (var i = 0; i < numReturnedBins; i++)
                 {
-                    var intBinIntensity = BitConverter.ToInt32(streamBinIntensity, binValue);
+                    Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
 
-                    if (intBinIntensity < 0)
+                    var decodedIntensityValue = decodedIntensityValueArray[0];
+
+                    if (decodedIntensityValue < 0)
                     {
-                        indexCurrentBin += -intBinIntensity; // concurrent zeros
+                        binIndex += -decodedIntensityValue; // sequential zeros
                     }
-                    else if (indexCurrentBin < startBin)
+                    else if (binIndex < startBin)
                     {
-                        indexCurrentBin++;
+                        binIndex++;
                     }
-                    else if (indexCurrentBin > endBin)
+                    else if (binIndex > endBin)
                     {
                         break;
                     }
                     else
                     {
-                        frameData[currentScan, indexCurrentBin - startBin] += intBinIntensity;
-                        indexCurrentBin++;
+                        frameData[currentScan, binIndex - startBin] += decodedIntensityValue;
+                        binIndex++;
                     }
                 }
             }
@@ -683,11 +683,10 @@ namespace UIMFLibrary
             int startScan,
             int startBin,
             int endBin,
-            ref double[,] frameData,
-            ref byte[] streamBinIntensity)
+            ref double[,] frameData)
         {
             // each pixel accumulates more than 1 bin of data
-            for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
+            for (var scansData = 0; scansData < width && reader.Read(); scansData++)
             {
                 var scanNum = GetInt32(reader, "ScanNum");
                 ValidateScanNumber(scanNum);
@@ -700,49 +699,48 @@ namespace UIMFLibrary
                     continue;
                 }
 
-                var indexCurrentBin = 0;
-               streamBinIntensity = CLZF2.Decompress(compressedBinIntensity);
+                var binIndex = 0;
 
+                var output = CLZF2.Decompress(compressedBinIntensity);
 
+                var numReturnedBins = output.Length / DATASIZE;
+                var decodedIntensityValueArray = new int[1];
 
                 var pixelY = 1;
-                var arr = new int[1];
 
-                for (var binValue = 0;
-                    (binValue < streamBinIntensity.Length) && (indexCurrentBin < endBin);
-                    binValue += DATASIZE)
+                for (var i = 0; i < numReturnedBins; i++)
                 {
-                    Buffer.BlockCopy(streamBinIntensity, binValue, arr, 0, 4);
+                    Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
 
-                    var intBinIntensity = arr[0];
+                    var decodedIntensityValue = decodedIntensityValueArray[0];
 
-                    if (intBinIntensity < 0)
+                    if (decodedIntensityValue < 0)
                     {
-                        indexCurrentBin += -intBinIntensity; // concurrent zeros
+                        binIndex += -decodedIntensityValue; // sequential zeros
                     }
-                    else if (indexCurrentBin < startBin)
+                    else if (binIndex < startBin)
                     {
-                        indexCurrentBin++;
+                        binIndex++;
                     }
-                    else if (indexCurrentBin > endBin)
+                    else if (binIndex > endBin)
                     {
                         break;
                     }
                     else
                     {
-                        double calibratedBin = indexCurrentBin;
+                        double calibratedBin = binIndex;
 
-                        for (var i = pixelY; i < height; i++)
+                        for (var j = pixelY; j < height; j++)
                         {
-                            if (m_calibrationTable[i] > calibratedBin)
+                            if (m_calibrationTable[j] > calibratedBin)
                             {
-                                pixelY = i;
-                                frameData[currentScan, pixelY] += intBinIntensity;
+                                pixelY = j;
+                                frameData[currentScan, pixelY] += decodedIntensityValue;
                                 break;
                             }
                         }
 
-                        indexCurrentBin++;
+                        binIndex++;
                     }
                 }
             }
@@ -2071,16 +2069,16 @@ namespace UIMFLibrary
                     var frameNum = GetInt32(reader, "FrameNum");
                     var binIndex = 0;
 
-                    var spectra = (byte[])reader["Intensities"];
+                    var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
 
-                    if (spectra.Length <= 0)
+                    if (compressedBinIntensity.Length <= 0)
                     {
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(spectra);
+                    var output = CLZF2.Decompress(compressedBinIntensity);
 
                     var numBins = output.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
@@ -2257,23 +2255,23 @@ namespace UIMFLibrary
                 {
                     var binIndex = 0;
 
-                    var spectra = (byte[])reader["Intensities"];
+                    var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
 
-                    if (spectra.Length <= 0)
+                    if (compressedBinIntensity.Length <= 0)
                     {
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(spectra);
+                    var output = CLZF2.Decompress(compressedBinIntensity);
 
                     var numReturnedBins = output.Length / DATASIZE;
                     var decodedIntensityValueArray = new int[1];
+
                     for (var i = 0; i < numReturnedBins; i++)
                     {
-                        Buffer.BlockCopy(output, i * DATASIZE,
-                            decodedIntensityValueArray, 0, 4);
+                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
 
                         var decodedIntensityValue = decodedIntensityValueArray[0];
 
@@ -2341,24 +2339,28 @@ namespace UIMFLibrary
                 {
                     var binIndex = 0;
 
-                    var spectra = (byte[])reader["Intensities"];
+                    var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
 
                     var currentBinDictionary = dictionaryArray[scanNum];
 
-
-                    if (spectra.Length <= 0)
+                    if (compressedBinIntensity.Length <= 0)
                     {
                         continue;
                     }
 
-                    var outputLength = CLZF2.Decompress(spectra);
+                    var output = CLZF2.Decompress(compressedBinIntensity);
 
-                    var numBins = outputLength.Length / DATASIZE;
-                    for (var i = 0; i < numBins; i++)
+                    var numReturnedBins = output.Length / DATASIZE;
+                    var decodedIntensityValueArray = new int[1];
+
+                    for (var i = 0; i < numReturnedBins; i++)
                     {
-                        var decodedIntensityValue = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
+
+                        var decodedIntensityValue = decodedIntensityValueArray[0];
+
                         if (decodedIntensityValue < 0)
                         {
                             binIndex += -decodedIntensityValue;
@@ -3225,22 +3227,27 @@ namespace UIMFLibrary
                 while (reader.Read())
                 {
                     var binIndex = 0;
-                    var spectraRecord = (byte[])reader["Intensities"];
+                    var compressedBinIntensity = (byte[])reader["Intensities"];
 
-                    if (spectraRecord.Length <= 0)
+                    if (compressedBinIntensity.Length <= 0)
                     {
                         continue;
                     }
 
-                    var outputLength = CLZF2.Decompress(spectraRecord);
+                    var output = CLZF2.Decompress(compressedBinIntensity);
 
-                    var numBins = outputLength.Length / DATASIZE;
-                    for (var i = 0; i < numBins; i++)
+                    var numReturnedBins = output.Length / DATASIZE;
+                    var decodedIntensityValueArray = new int[1];
+
+                    for (var i = 0; i < numReturnedBins; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(outputLength, i * DATASIZE);
-                        if (decodedSpectraRecord < 0)
+                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
+
+                        var decodedIntensityValue = decodedIntensityValueArray[0];
+
+                        if (decodedIntensityValue < 0)
                         {
-                            binIndex += -decodedSpectraRecord;
+                            binIndex += -decodedIntensityValue;
                         }
                         else
                         {
@@ -3251,7 +3258,7 @@ namespace UIMFLibrary
                                 break;
                             }
 
-                            intensityArray[binIndex] += decodedSpectraRecord;
+                            intensityArray[binIndex] += decodedIntensityValue;
                             binIndex++;
                         }
                     }
@@ -4992,9 +4999,9 @@ namespace UIMFLibrary
                     try
                     {
 
-                        var spectraRecord = (byte[])reader["Intensities"];
+                        var compressedBinIntensity = (byte[])reader["Intensities"];
 
-                        if (spectraRecord.Length <= 0)
+                        if (compressedBinIntensity.Length <= 0)
                         {
                             continue;
                         }
@@ -5005,9 +5012,9 @@ namespace UIMFLibrary
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
 
-                        var outputLength = CLZF2.Decompress(spectraRecord);
+                        var output = CLZF2.Decompress(compressedBinIntensity);
 
-                        var numBins = outputLength.Length / DATASIZE;
+                        var numReturnedBins = output.Length / DATASIZE;
 
                         while (true)
                         {
@@ -5019,33 +5026,37 @@ namespace UIMFLibrary
                         }
 
                         var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
+                        var decodedIntensityValueArray = new int[1];
 
-                        for (var i = 0; i < numBins; i++)
+                        for (var i = 0; i < numReturnedBins; i++)
                         {
-                            var decodedSpectraRecord = BitConverter.ToInt32(outputLength, i * DATASIZE);
-                            if (decodedSpectraRecord < 0)
+                            Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
+
+                            var decodedIntensityValue = decodedIntensityValueArray[0];
+
+                            if (decodedIntensityValue < 0)
                             {
-                                binIndex += -decodedSpectraRecord;
+                                binIndex += -decodedIntensityValue;
                             }
                             else
                             {
                                 if (currentIntensityDictionary.TryGetValue(binIndex, out var currentValue))
                                 {
-                                    currentIntensityDictionary[binIndex] += decodedSpectraRecord;
-                                    summedIntensityDictionary[binIndex] += decodedSpectraRecord;
+                                    currentIntensityDictionary[binIndex] = currentValue + decodedIntensityValue;
+                                    summedIntensityDictionary[binIndex] += decodedIntensityValue;
                                 }
                                 else
                                 {
-                                    currentIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+                                    currentIntensityDictionary.Add(binIndex, decodedIntensityValue);
 
                                     // Check the summed dictionary
-                                    if (summedIntensityDictionary.TryGetValue(binIndex, out currentValue))
+                                    if (summedIntensityDictionary.TryGetValue(binIndex, out var summedIntensityValue))
                                     {
-                                        summedIntensityDictionary[binIndex] += decodedSpectraRecord;
+                                        summedIntensityDictionary[binIndex] = summedIntensityValue + decodedIntensityValue;
                                     }
                                     else
                                     {
-                                        summedIntensityDictionary.Add(binIndex, decodedSpectraRecord);
+                                        summedIntensityDictionary.Add(binIndex, decodedIntensityValue);
                                     }
                                 }
 
