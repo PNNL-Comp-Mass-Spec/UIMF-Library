@@ -1325,13 +1325,17 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var uimfFile = new FileInfo(relativeFilePath);
             if (uimfFile.Exists)
             {
+#if DEBUG
                 Console.WriteLine("Found file " + uimfFile.FullName);
                 Console.WriteLine();
+#endif
                 return uimfFile;
             }
 
+#if DEBUG
             Console.WriteLine("Could not find " + relativeFilePath);
             Console.WriteLine("Checking alternative locations");
+#endif
 
             var relativePathsToCheck = new List<string>
             {
@@ -1351,8 +1355,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     var alternateFile = new FileInfo(Path.Combine(parentToCheck.FullName, relativePath));
                     if (alternateFile.Exists)
                     {
+#if DEBUG
                         Console.WriteLine("... found at " + alternateFile.FullName);
                         Console.WriteLine();
+#endif
                         return alternateFile;
                     }
                 }
@@ -1365,17 +1371,20 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var serverPathFile = new FileInfo(Path.Combine(FileRefs.SHARE_PATH, relativePath));
                 if (serverPathFile.Exists)
                 {
+#if DEBUG
                     Console.WriteLine("... found at " + serverPathFile);
                     Console.WriteLine();
+#endif
                     return serverPathFile;
                 }
             }
+
             var currentDirectory = new DirectoryInfo(".");
 
             Assert.Fail("Could not find " + relativeFilePath + "; current working directory: " + currentDirectory.FullName);
             return null;
         }
 
-        #endregion
+#endregion
     }
 }
