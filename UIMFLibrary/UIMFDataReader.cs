@@ -213,7 +213,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Initializes a new instance of the <see cref="DataReader"/> class.
         /// </summary>
-        /// <param name="fileName">
+        /// <param name="filePath">
         /// Path to the UIMF file
         /// </param>
         /// <param name="useInMemoryDatabase">
@@ -223,8 +223,11 @@ namespace UIMFLibrary
         /// </exception>
         /// <exception cref="FileNotFoundException">
         /// </exception>
-        public DataReader(string fileName, bool useInMemoryDatabase=false) : base(fileName)
+        public DataReader(string filePath, bool useInMemoryDatabase=false) : base(filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("UIMF file path cannot be empty", nameof(filePath));
+
             m_spectraToCache = 10;
             m_maxSpectrumCacheMemoryMB = 750;
 
@@ -234,7 +237,7 @@ namespace UIMFLibrary
 
             m_FramesWarnedInvalidData = new Dictionary<string, SortedSet<string>>();
 
-            FileSystemInfo uimfFileInfo = new FileInfo(fileName);
+            FileSystemInfo uimfFileInfo = new FileInfo(filePath);
 
             if (!uimfFileInfo.Exists)
             {
@@ -320,7 +323,7 @@ namespace UIMFLibrary
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to open UIMF file: " + ex);
+                throw new Exception(string.Format("Failed to open UIMF file {0}: {1}", filePath, ex.Message), ex);
             }
         }
 

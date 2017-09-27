@@ -90,11 +90,11 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
-        /// <param name="fileName">Full path to the data file</param>
+        /// <param name="filePath">Full path to the data file</param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        public DataWriter(string fileName, Assembly entryAssembly)
-            : this(fileName, true, entryAssembly)
+        public DataWriter(string filePath, Assembly entryAssembly)
+            : this(filePath, true, entryAssembly)
         {
         }
 
@@ -102,20 +102,23 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
-        /// <param name="fileName">Full path to the data file</param>
+        /// <param name="filePath">Full path to the data file</param>
         /// <param name="createLegacyParametersTables">When true, create and populate legacy tables Global_Parameters and Frame_Parameters</param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        public DataWriter(string fileName, bool createLegacyParametersTables = true, Assembly entryAssembly = null)
-            : base(fileName)
+        public DataWriter(string filePath, bool createLegacyParametersTables = true, Assembly entryAssembly = null)
+            : base(filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("UIMF file path cannot be empty", nameof(filePath));
+
             m_CreateLegacyParametersTables = createLegacyParametersTables;
             m_FrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
 
             var usingExistingDatabase = File.Exists(m_FilePath);
 
             // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
-            var connectionString = "Data Source = " + fileName + "; Version=3; DateTimeFormat=Ticks;";
+            var connectionString = "Data Source = " + filePath + "; Version=3; DateTimeFormat=Ticks;";
             m_dbConnection = new SQLiteConnection(connectionString, true);
             m_LastFlush = DateTime.UtcNow;
 
@@ -169,7 +172,7 @@ namespace UIMFLibrary
             }
             catch (Exception ex)
             {
-                ReportError("Exception opening the UIMF file: " + ex.Message, ex);
+                ReportError(string.Format("Failed to open UIMF file {0}: {1}", filePath, ex.Message), ex);
                 throw;
             }
         }
