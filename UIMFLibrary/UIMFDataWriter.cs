@@ -15,6 +15,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.IO;
+using System.Reflection;
 
 namespace UIMFLibrary
 {
@@ -89,12 +90,11 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
-        /// <param name="fileName">
-        /// Full path to the data file
-        /// </param>
+        /// <param name="fileName">Full path to the data file</param>
+        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        public DataWriter(string fileName)
-            : this(fileName, true)
+        public DataWriter(string fileName, Assembly entryAssembly)
+            : this(fileName, true, entryAssembly)
         {
         }
 
@@ -102,14 +102,12 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
         /// </summary>
-        /// <param name="fileName">
-        /// Full path to the data file
-        /// </param>
-        /// <param name="createLegacyParametersTables">
-        /// When true, then will create and populate legacy tables Global_Parameters and Frame_Parameters
-        /// </param>
+        /// <param name="fileName">Full path to the data file</param>
+        /// <param name="createLegacyParametersTables">When true, create and populate legacy tables Global_Parameters and Frame_Parameters</param>
+        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
-        public DataWriter(string fileName, bool createLegacyParametersTables) : base(fileName)
+        public DataWriter(string fileName, bool createLegacyParametersTables = true, Assembly entryAssembly = null)
+            : base(fileName)
         {
             m_CreateLegacyParametersTables = createLegacyParametersTables;
             m_FrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
@@ -160,12 +158,12 @@ namespace UIMFLibrary
                 {
                     using (var dbCommand = m_dbConnection.CreateCommand())
                     {
-                        CreateVersionInfoTable(dbCommand);
+                        CreateVersionInfoTable(dbCommand, entryAssembly);
                     }
                 }
                 else
                 {
-                    AddVersionInfo();
+                    AddVersionInfo(entryAssembly);
                 }
 
             }
@@ -718,14 +716,25 @@ namespace UIMFLibrary
             return this;
         }
 
-        private void AddVersionInfo()
+        private void AddVersionInfo(Assembly entryAssembly = null)
         {
             var softwareName = "Unknown";
             var softwareVersion = new Version(0, 0, 0, 0);
+
+            // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
             try
             {
-                // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
-                var software = System.Reflection.Assembly.GetEntryAssembly().GetName();
+                AssemblyName software;
+
+                if (entryAssembly == null)
+                {
+                    software = Assembly.GetEntryAssembly().GetName();
+                }
+                else
+                {
+                    software = entryAssembly.GetName();
+                }
+
                 softwareName = software.Name;
                 softwareVersion = software.Version;
             }
@@ -745,7 +754,7 @@ namespace UIMFLibrary
         public void AddVersionInfo(string softwareName, Version softwareVersion)
         {
             // File version is dependent on the major.minor version of the uimf library
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
             var fileFormatVersion = version.ToString(2);
 
             using (var dbCommand = m_dbConnection.CreateCommand())
@@ -998,7 +1007,7 @@ namespace UIMFLibrary
 
         }
 
-        private void CreateVersionInfoTable(IDbCommand dbCommand)
+        private void CreateVersionInfoTable(IDbCommand dbCommand, Assembly entryAssembly)
         {
             if (HasVersionInfoTable)
             {
@@ -1017,7 +1026,7 @@ namespace UIMFLibrary
 
             UpdateTableCheckedStatus(UIMFTableType.VersionInfo, false);
 
-            AddVersionInfo();
+            AddVersionInfo(entryAssembly);
         }
 
         /// <summary>
@@ -1047,28 +1056,14 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Create the table struture within a UIMF file, assumes 32-bit integers for intensity values
-        /// </summary>
-        /// <remarks>
-        /// This must be called after opening a new file to create the default tables that are required for IMS data.
-        /// </remarks>
-        public void CreateTables()
-        {
-            const string dataType = "int";
-
-            CreateTables(dataType);
-        }
-
-        /// <summary>
         /// Create the table structure within a UIMF file
         /// </summary>
-        /// <param name="dataType">
-        /// Data type of intensity in the Frame_Scans table: double, float, short, or int
-        /// </param>
+        /// <param name="dataType">Data type of intensity in the Frame_Scans table: double, float, short, or int </param>
+        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>
         /// This must be called after opening a new file to create the default tables that are required for IMS data.
         /// </remarks>
-        public void CreateTables(string dataType)
+        public void CreateTables(string dataType = "int", Assembly entryAssembly = null)
         {
             // Detailed information on columns is at
             // https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
@@ -1086,7 +1081,7 @@ namespace UIMFLibrary
                 CreateFrameScansTable(dbCommand, dataType);
 
                 // Create the Version_Info table
-                CreateVersionInfoTable(dbCommand);
+                CreateVersionInfoTable(dbCommand, entryAssembly);
 
                 if (m_CreateLegacyParametersTables)
                 {
