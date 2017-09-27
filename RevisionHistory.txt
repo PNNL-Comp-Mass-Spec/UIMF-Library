@@ -1,7 +1,15 @@
 UIMFLibrary Revision History
 
+Version 3.5.7.5; September 26, 2017
+	- Add drift tube length and drift tube gas global parameters
+
+Version 3.5.7.1; September 7, 2017 	
+	- Use CLZF2 instead of custom class LZFCompressionUtil
+	- Add NetStandard 2.0 support
+
 Version 3.4.2; August 31, 2017
 	- Add method RenumberFrames
+	- Add Version_Info table
 
 Version 3.4.1; August 26, 2017
 	- Fix MzCalibrator when used on non-1GHz files

@@ -3,7 +3,7 @@
 //   UIMF Data Reader Class
 //
 //   Written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
-//   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, and Bill Danielson
+//   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, Bill Danielson, Spencer Prost, and Bryson Gibbons
 //   E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
 //   Website: http://omics.pnl.gov/software/
 //
