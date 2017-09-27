@@ -1534,7 +1534,9 @@ namespace UIMFLibrary
                         }
                     }
                 }
-                return versions;
+
+                if (versions.Count > 0)
+                    return versions;
             }
 
             var pseudoVersion = new VersionInfo()
