@@ -117,6 +117,129 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
+        /// Test of AccumulateFrameData
+        /// </summary>
+        [Test]
+        [Category("Local_Files")]
+        public void TestAccumulateFrameData()
+        {
+            var uimfFile1 = VerifyLocalUimfFile(FileRefs.LocalUimfFileLegacyTables);
+            var uimfFile2 = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
+
+            TestAccumulateFrameDataWork(
+                uimfFile1.FullName, 1, 1, 1, 300, 299, 148000, 19730, 19614,
+                new List<int> { 66, 22, 255, 11, 295, 170, 161, 255, 172, 295 },
+                new List<int> { 295, 172, 255, 161, 170, 295, 11, 255, 22, 66 });
+
+            TestAccumulateFrameDataWork(
+                uimfFile2.FullName, 1, 1, 1, 300, 299, 148000, 2044, 2044,
+                new List<int> { 112, 48, 36, 4, 102, 66, 73, 41, 11, 62 },
+                new List<int> { 62, 11, 41, 73, 66, 102, 4, 36, 48, 112 });
+
+            TestAccumulateFrameDataWork(
+                uimfFile2.FullName, 6, 10, 75, 150, 75, 148000, 6606, 6606,
+                new List<int> { 26, 412, 657, 17, 23, 22, 55, 56, 99, 28 },
+                new List<int> { 28, 99, 56, 55, 22, 23, 17, 657, 412, 26 });
+        }
+
+        private void TestAccumulateFrameDataWork(
+            string filePath,
+            int startFrame, int endFrame,
+            int startScan, int endScan,
+            int sizeDimension1, int sizeDimension2,
+            int expectedNonZeroDataCount,
+            int expectedDataCountOverOne,
+            IReadOnlyList<int> expectedFirstNValuesOverOne,
+            IReadOnlyList<int> expectedLastNValuesOverOne
+            )
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            Console.WriteLine("Opening " + filePath);
+
+            using (var reader = new DataReader(filePath))
+            {
+                const int startBin = 0;
+                var endBin = reader.GetGlobalParams().Bins;
+
+                var result = reader.AccumulateFrameData(startFrame, endFrame, true, startScan, endScan, startBin, endBin, 1, 1);
+
+                var dim1 = result.GetUpperBound(0);
+                var dim2 = result.GetUpperBound(1);
+
+                Console.WriteLine("Array of size {0} by {1}", dim1, dim2);
+
+                Assert.AreEqual(sizeDimension1, dim1, "Dimension 1 size mismatch");
+                Assert.AreEqual(sizeDimension2, dim2, "Dimension 1 size mismatch");
+
+                var nonZeroCount = 0;
+                var valuesOverOne = 0;
+                var lastNValuesToKeep = expectedLastNValuesOverOne.Count;
+
+                var firstNValues = new List<int>(expectedFirstNValuesOverOne.Count);
+                var lastNValues = new Stack<int>(lastNValuesToKeep + 1);
+
+                for (var i = 0; i < dim1; i++)
+                {
+                    for (var j = 0; j < dim2; j++)
+                    {
+                        var intensity = (int)result[i, j];
+
+                        if (!(intensity > 0))
+                            continue;
+
+                        nonZeroCount++;
+
+                        if (!(intensity > 1))
+                            continue;
+
+                        valuesOverOne++;
+
+                        if (valuesOverOne <= expectedFirstNValuesOverOne.Count)
+                        {
+                            firstNValues.Add(intensity);
+                        }
+
+                        lastNValues.Push(intensity);
+                        if (lastNValues.Count > lastNValuesToKeep)
+                            lastNValues.Pop();
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Non-zero count: " + nonZeroCount);
+                Assert.AreEqual(expectedNonZeroDataCount, nonZeroCount, "Non-zero count mismatch");
+
+                Console.WriteLine("Values over 1: " + valuesOverOne);
+                Assert.AreEqual(expectedDataCountOverOne, valuesOverOne, "Count mismatch of values over 1");
+
+                Console.WriteLine();
+                Console.WriteLine("First values greater than 1: ");
+
+                for (var i = 0; i < expectedFirstNValuesOverOne.Count; i++)
+                {
+                    Console.Write(firstNValues[i] + ", ");
+                    Assert.AreEqual(expectedFirstNValuesOverOne[i], firstNValues[i], "Expected value mismatch (at the start of the results)");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine("Last values greater than 1: ");
+
+                var lastNValueList = lastNValues.ToArray();
+
+                for (var i = 0; i < expectedLastNValuesOverOne.Count; i++)
+                {
+                    Console.Write(lastNValueList[i] + ", ");
+                    Assert.AreEqual(expectedLastNValuesOverOne[i], lastNValueList[i], "Expected value mismatch (at the end of the results)");
+                }
+
+
+            }
+
+        }
+
+        /// <summary>
         /// We found a bug in some UIMF Files generated on IMS2 where the bin value exceeded the maximum bin value.
         /// We added a check in the UIMF Reader to make sure that this case is taken care of.
         /// This unit test is being left in to make sure the bug never surfaces again.
