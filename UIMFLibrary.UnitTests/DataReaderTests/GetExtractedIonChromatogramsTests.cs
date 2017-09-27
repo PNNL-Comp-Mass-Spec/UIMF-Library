@@ -208,7 +208,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 this.m_reader.GetDriftTimeProfile(
                     startFrame - 2,
                     startFrame + 2,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     startScan - 100,
                     startScan + 100,
                     targetMZ,
@@ -256,7 +256,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 this.m_reader.GetLCProfile(
                     startFrame,
                     endFrame,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     startScan,
                     stopScan,
                     targetMZ,
@@ -308,7 +308,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 this.m_reader.GetLCProfile(
                     startFrame - 200,
                     startFrame + 200,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     startScan - 2,
                     startScan + 2,
                     targetMZ,

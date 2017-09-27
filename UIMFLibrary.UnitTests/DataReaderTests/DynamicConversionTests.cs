@@ -295,7 +295,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 StartTime = 266.95178,
                 Duration = 0,
                 Accumulations = 18,
-                FrameType = DataReader.FrameType.MS1,
+                FrameType = UIMFData.FrameType.MS1,
                 Scans = 360,
                 IMFProfile = "Seq",
                 TOFLosses = 61,

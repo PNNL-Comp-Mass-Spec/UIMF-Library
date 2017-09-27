@@ -106,7 +106,7 @@ namespace UIMFLibrary
                     " ORDER BY FrameNum " +
                     " LIMIT 1;",
                     (int)FrameParamKeyType.FrameType,
-                    (int)DataReader.FrameType.Calibration);
+                    (int)UIMFData.FrameType.Calibration);
 
                 using (var reader = dbCommand.ExecuteReader())
                 {

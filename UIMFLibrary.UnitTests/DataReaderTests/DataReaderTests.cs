@@ -138,7 +138,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 reader.GetSpectrum(
                     frameStart,
                     frameStop,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scanStart,
                     scanStop,
                     out var mzArray,
@@ -181,11 +181,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(filePath))
             {
                 var allFrames = reader.GetMasterFrameList();
-                var frameNumbersMS1 = reader.GetFrameNumbers(DataReader.FrameType.MS1);
-                var frameNumbersMS2 = reader.GetFrameNumbers(DataReader.FrameType.MS2);
+                var frameNumbersMS1 = reader.GetFrameNumbers(UIMFData.FrameType.MS1);
+                var frameNumbersMS2 = reader.GetFrameNumbers(UIMFData.FrameType.MS2);
 
-                var frameCountMS1 = reader.GetNumberOfFrames(DataReader.FrameType.MS1);
-                var frameCountMS2 = reader.GetNumberOfFrames(DataReader.FrameType.MS2);
+                var frameCountMS1 = reader.GetNumberOfFrames(UIMFData.FrameType.MS1);
+                var frameCountMS2 = reader.GetNumberOfFrames(UIMFData.FrameType.MS2);
 
                 var hasMSn = reader.HasMSMSData();
 
@@ -224,7 +224,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scanNumber,
                     out var mzArray,
                     out var intensityArray);
@@ -250,7 +250,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scanNumber,
                     out var mzArray,
                     out var intensityArray);
@@ -277,7 +277,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-                var intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
+                var intensities = reader.GetSpectrumAsBins(frameNumber, UIMFData.FrameType.MS1, scanNumber);
 
                 Assert.AreEqual(148001, intensities.Length);
                 Assert.AreEqual(80822, intensities.Sum());
@@ -297,7 +297,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
-                var intensities = reader.GetSpectrumAsBins(frameNumber, DataReader.FrameType.MS1, scanNumber);
+                var intensities = reader.GetSpectrumAsBins(frameNumber, UIMFData.FrameType.MS1, scanNumber);
 
                 Assert.AreEqual(148001, intensities.Length);
                 Assert.AreEqual(18109, intensities.Sum());
@@ -327,7 +327,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const double testMZ = 627.2655682;
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
-                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MS1, scan, scan);
+                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, UIMFData.FrameType.MS1, scan, scan);
                     sequentialFrameIntensityVals.Add(intensitiesForFrame);
                 }
 
@@ -336,14 +336,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(44965, sequentialFrameIntensityVals[1][testBin]);
                 Assert.AreEqual(45758, sequentialFrameIntensityVals[2][testBin]);
 
-                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
+                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
                 Assert.AreEqual(126568, intensitiesA[testBin]);
 
                 var numZeros = reader.GetSpectrum(
                     startFrame,
                     stopFrame,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scan,
                     scan,
                     out var mzVals,
@@ -386,7 +386,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const double testMZ = 627.2655682;
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
-                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, DataReader.FrameType.MS1, scan, scan);
+                    var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, UIMFData.FrameType.MS1, scan, scan);
                     sequentialFrameIntensityVals.Add(intensitiesForFrame);
                 }
 
@@ -398,14 +398,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(53, sequentialFrameIntensityVals[3][testBin]);
                 Assert.AreEqual(51, sequentialFrameIntensityVals[4][testBin]);
 
-                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, DataReader.FrameType.MS1, scan, scan);
+                var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
                 Assert.AreEqual(649, intensitiesA[testBin]);
 
                 var numZeros = reader.GetSpectrum(
                     startFrame,
                     stopFrame,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scan,
                     scan,
                     out var mzVals,
@@ -450,7 +450,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var nonZeroCount = reader.GetSpectrum(
                     frameStart,
                     frameStop,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scanStart,
                     scanStop,
                     out var mzArray,
@@ -485,7 +485,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var nonZeroCount = reader.GetSpectrum(
                     frameStart,
                     frameStop,
-                    DataReader.FrameType.MS1,
+                    UIMFData.FrameType.MS1,
                     scanStart,
                     scanStop,
                     out var mzArray,
@@ -657,14 +657,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 // bpi = reader.GetBPIByFrame(0, 0, 0, 0);
                 // Assert.AreEqual(83524, bpi[100], float.Epsilon);
 
-                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(2028, bpiList[70], float.Epsilon);
             }
 
             // File with updated parameter tables
             using (var reader = new DataReader(FileRefs.StandardFile1))
             {
-                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(2028, bpiList[70], float.Epsilon);
             }
 
@@ -690,7 +690,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 bpi = reader.GetBPIByFrame(20, 30, 50, 200);
                 Assert.AreEqual(bpi[25], 2645542, float.Epsilon);
 
-                var bpiList = reader.GetBPI(DataReader.FrameType.MS1, 1, 10, 20, 50);
+                var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 10, 20, 50);
                 Assert.AreEqual(bpiList[7], 831, float.Epsilon);
             }
 
@@ -718,7 +718,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 //tic = reader.GetTICByFrame(0, 0, 0, 0);
                 // Assert.AreEqual(2026072, tic[100], float.Epsilon);
 
-                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(3649, ticList[70], float.Epsilon);
 
             }
@@ -726,7 +726,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             // File with updated parameter tables
             using (var reader = new DataReader(FileRefs.StandardFile1))
             {
-                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(3649, ticList[70], float.Epsilon);
             }
 
@@ -752,7 +752,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 tic = reader.GetTICByFrame(20, 30, 50, 200);
                 Assert.AreEqual(34572597, tic[22], float.Epsilon);
 
-                var ticList = reader.GetTIC(DataReader.FrameType.MS1, 1, 100, 20, 50);
+                var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(16224, ticList[11], float.Epsilon);
 
             }

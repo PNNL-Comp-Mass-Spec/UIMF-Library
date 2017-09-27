@@ -101,9 +101,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var nonZeros = dr.GetSpectrum(
                     this.testFrameScanInfo1.startFrame,
                     this.testFrameScanInfo1.stopFrame,
-                    DataReader.FrameType.MS1,
                     this.testFrameScanInfo1.startScan,
                     this.testFrameScanInfo1.stopScan,
+                    UIMFData.FrameType.MS1,
                     out var mzValues,
                     out var intensities);
                 TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
@@ -129,9 +129,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     var nonZeros = dr.GetSpectrum(
                         this.testFrameScanInfo1.startFrame,
                         this.testFrameScanInfo1.stopFrame,
-                        DataReader.FrameType.MS1,
                         this.testFrameScanInfo1.startScan,
                         this.testFrameScanInfo1.stopScan,
+                        UIMFData.FrameType.MS1,
                         out var mzValues,
                         out var intensities);
                     TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
@@ -160,7 +160,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,
-                        DataReader.FrameType.MS1,
+                        UIMFData.FrameType.MS1,
                         testFrameScanInfo2.startScan,
                         testFrameScanInfo2.stopScan,
                         out var mzValues,
@@ -170,7 +170,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     nonZeros = dr.GetSpectrum(
                         frame - 1,
                         frame - 1,
-                        DataReader.FrameType.MS1,
+                        UIMFData.FrameType.MS1,
                         testFrameScanInfo2.startScan,
                         testFrameScanInfo2.stopScan,
                         out mzValues,
@@ -180,7 +180,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     nonZeros = dr.GetSpectrum(
                         frame + 2,
                         frame + 2,
-                        DataReader.FrameType.MS1,
+                        UIMFData.FrameType.MS1,
                         testFrameScanInfo2.startScan,
                         testFrameScanInfo2.stopScan,
                         out mzValues,
@@ -205,9 +205,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var nonZeros = dr.GetSpectrum(
                     this.testFrameScanInfo1.startFrame,
                     this.testFrameScanInfo1.stopFrame,
-                    DataReader.FrameType.MS1,
                     this.testFrameScanInfo1.startScan,
                     this.testFrameScanInfo1.stopScan,
+                    UIMFData.FrameType.MS1,
                     out var mzValues,
                     out var intensities);
 

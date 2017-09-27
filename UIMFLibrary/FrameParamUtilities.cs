@@ -795,7 +795,7 @@ namespace UIMFLibrary
                                           "Number of collected and summed acquisitions in a frame");
 
                 case FrameParamKeyType.FrameType:
-                    // Allowed values defined by DataReader.FrameType
+                    // Allowed values are defined by UIMFData.FrameType
                     return new FrameParamDef(FrameParamKeyType.FrameType, FrameParamKeyType.FrameType.ToString(), targetType,
                                           "Frame Type: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan");
 

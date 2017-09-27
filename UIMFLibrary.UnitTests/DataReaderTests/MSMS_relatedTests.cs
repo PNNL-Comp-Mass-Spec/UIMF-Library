@@ -59,7 +59,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 reader.GetSpectrum(
                     testFrame,
                     testFrame,
-                    DataReader.FrameType.MS2,
+                    UIMFData.FrameType.MS2,
                     startScan,
                     stopScan,
                     out var mzArray,

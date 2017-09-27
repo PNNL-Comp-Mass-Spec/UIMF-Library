@@ -53,7 +53,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var fp = reader.GetFrameParams(firstFrame);
 
-                Assert.AreEqual(DataReader.FrameType.MS1, fp.FrameType);
+                Assert.AreEqual(UIMFData.FrameType.MS1, fp.FrameType);
                 Assert.AreEqual(0.03313236, fp.CalibrationIntercept);
                 Assert.AreEqual(0.3476655, fp.CalibrationSlope);
                 Assert.AreEqual(360, fp.Scans);
@@ -80,7 +80,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var fp = reader.GetFrameParams(lastFrame);
 
-                Assert.AreEqual(DataReader.FrameType.MS1, fp.FrameType);
+                Assert.AreEqual(UIMFData.FrameType.MS1, fp.FrameType);
                 Assert.AreEqual(0.03313236, fp.CalibrationIntercept);
                 Assert.AreEqual(0.3476655, fp.CalibrationSlope);
                 Assert.AreEqual(360, fp.Scans);

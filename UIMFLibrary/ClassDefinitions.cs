@@ -185,7 +185,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
         /// </remarks>
-        public DataReader.FrameType FrameType;
+        public UIMFData.FrameType FrameType;
 
         /// <summary>
         /// High pressure funnel pressure.
