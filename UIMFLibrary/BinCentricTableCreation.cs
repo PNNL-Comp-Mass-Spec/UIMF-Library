@@ -196,15 +196,14 @@ namespace UIMFLibrary
             if (OnProgress != null)
             {
                 OnProgress(this, e);
+                return;
             }
-            else
-            {
-                if (DateTime.UtcNow.Subtract(mLastProgressNotify).TotalSeconds < 2)
-                    return;
 
-                mLastProgressNotify = DateTime.UtcNow;
-                Console.WriteLine(e.PercentComplete);
-            }
+            if (DateTime.UtcNow.Subtract(mLastProgressNotify).TotalSeconds < 5)
+                return;
+
+            mLastProgressNotify = DateTime.UtcNow;
+            Console.WriteLine("{0:F2}% complete", e.PercentComplete);
         }
 
         #endregion
@@ -232,7 +231,7 @@ namespace UIMFLibrary
         /// </param>
         private void CreateBinIntensitiesIndex(SQLiteConnection uimfWriterConnection)
         {
-            if (!DataReader.IndexExists(uimfWriterConnection, "Bin_Intensities_MZ_BIN_IDX"))
+            if (!UIMFData.IndexExists(uimfWriterConnection, "Bin_Intensities_MZ_BIN_IDX"))
             {
                 using (var command = new SQLiteCommand(CREATE_BINS_INDEX, uimfWriterConnection))
                 {
@@ -333,12 +332,6 @@ namespace UIMFLibrary
                         UpdateProgress(percentComplete, progressMessage);
                     }
 
-                    if (i > 0 && i % 100 == 0)
-                    {
-                        var progressMessage = "Indexing bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
-                        Console.WriteLine(DateTime.Now + " - " + progressMessage);
-                    }
-
                 }
             }
         }
@@ -409,7 +402,6 @@ namespace UIMFLibrary
                     for (var frameNumber = 1; frameNumber <= numFrames; frameNumber++)
                     {
                         var progressMessage = "Create temporary DB, adding frame: " + frameNumber + " / " + numFrames;
-                        Console.WriteLine(DateTime.Now + " - " + progressMessage);
 
                         var frameParams = uimfReader.GetFrameParams(frameNumber);
                         var numScans = frameParams.Scans;
@@ -576,9 +568,8 @@ namespace UIMFLibrary
             }
 
             Console.WriteLine(DateTime.Now + " - Adding bin-centric data to " + targetFile);
-            var dtLastProgress = DateTime.UtcNow;
 
-            if (DataReader.TableExists(uimfWriterConnection, "Bin_Intensities"))
+            if (UIMFData.TableExists(uimfWriterConnection, "Bin_Intensities"))
             {
                 // Clear data from the existing table
                 ClearBinIntensitiesTable(uimfWriterConnection);
@@ -589,23 +580,20 @@ namespace UIMFLibrary
                 CreateBinIntensitiesTable(uimfWriterConnection);
             }
 
-
             using (var insertCommand = new SQLiteCommand(INSERT_BIN_INTENSITIES, uimfWriterConnection))
             {
                 for (var i = 0; i <= numBins; i++)
                 {
                     SortDataForBin(temporaryDatabaseConnection, insertCommand, i, numImsScans);
 
-                    if (DateTime.UtcNow.Subtract(dtLastProgress).TotalSeconds >= 5)
-                    {
-                        var progressMessage = "Adding bin-centric data, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
-                        Console.WriteLine(DateTime.Now + " - " + progressMessage);
-                        dtLastProgress = DateTime.UtcNow;
+                    if (numBins == 0)
+                        continue;
 
-                        // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-                        var percentComplete = (37 + 30) + (i / (double)numBins) * 33;
-                        UpdateProgress(percentComplete, progressMessage);
-                    }
+                    var progressMessage = "Adding bin-centric data, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
+
+                    // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
+                    var percentComplete = (37 + 30) + (i / (double)numBins) * 33;
+                    UpdateProgress(percentComplete, progressMessage);
                 }
             }
 
@@ -690,18 +678,15 @@ namespace UIMFLibrary
         /// <summary>
         /// Update progress.
         /// </summary>
-        /// <param name="percentComplete">
-        /// Percent complete; value between 0 and 100
-        /// </param>
-        /// <param name="currentTask">
-        /// Current task.
-        /// </param>
+        /// <param name="percentComplete">Percent complete; value between 0 and 100</param>
+        /// <param name="currentTask">Current task</param>
         private void UpdateProgress(double percentComplete, string currentTask = "")
         {
-            OnProgressUpdate(new ProgressEventArgs(percentComplete));
-
-            if (string.IsNullOrEmpty(currentTask))
+            if (OnProgress != null || string.IsNullOrEmpty(currentTask))
+            {
+                OnProgressUpdate(new ProgressEventArgs(percentComplete));
                 return;
+            }
 
             // Limit the message frequency as the task gets longer
             // currentTask must have a colon for this option to be used
@@ -738,7 +723,11 @@ namespace UIMFLibrary
                 var elapsedSeconds = DateTime.UtcNow.Subtract(taskStartTime).TotalSeconds;
                 int progressInterval;
 
-                if (elapsedSeconds < 300)
+                if (elapsedSeconds < 20)
+                    progressInterval = 5;
+                else if (elapsedSeconds < 60)
+                    progressInterval = 15;
+                else if (elapsedSeconds < 300)
                     progressInterval = 30;
                 else if (elapsedSeconds < 1800)
                     progressInterval = 60;
