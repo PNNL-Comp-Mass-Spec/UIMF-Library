@@ -1916,12 +1916,18 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
+        /// When true, sets CalibrationDone to 1
+        /// </param>
+        /// <param name="manuallyCalibrating">
+        /// Optional argument that should be set to true if manually defining the calibration slope and intercept. Defaults to false.
+        /// When true, sets CalibrationDone to -1
         /// </param>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public void UpdateAllCalibrationCoefficients(
             double slope,
             double intercept,
-            bool isAutoCalibrating = false)
+            bool isAutoCalibrating = false,
+            bool manuallyCalibrating = false)
         {
             var hasLegacyFrameParameters = TableExists(FRAME_PARAMETERS_TABLE);
             var hasFrameParamsTable = TableExists(FRAME_PARAMS_TABLE);
@@ -1937,6 +1943,10 @@ namespace UIMFLibrary
                     if (isAutoCalibrating)
                     {
                         dbCommand.CommandText += ", CalibrationDone = 1";
+                    }
+                    else if (manuallyCalibrating)
+                    {
+                        dbCommand.CommandText += ", CalibrationDone = -1";
                     }
 
                     dbCommand.ExecuteNonQuery();
@@ -1961,19 +1971,32 @@ namespace UIMFLibrary
                 // Add new values for any frames that do not have slope or intercept defined as frame params
                 AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationSlope,
                     slope.ToString(CultureInfo.InvariantCulture));
+
                 AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationIntercept,
                     intercept.ToString(CultureInfo.InvariantCulture));
 
+                string newCalibrationDone;
                 if (isAutoCalibrating)
                 {
-                    dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                            "SET ParamValue = 1 " +
-                                            "WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone;
-                    dbCommand.ExecuteNonQuery();
-
-                    // Add new values for any frames that do not have slope or intercept defined as frame params
-                    AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, "1");
+                    newCalibrationDone = "1";
                 }
+                else if (manuallyCalibrating)
+                {
+                    newCalibrationDone = "-1";
+                }
+                else
+                {
+                    return;
+                }
+
+                dbCommand.CommandText = " UPDATE " + FRAME_PARAMS_TABLE +
+                                        " SET ParamValue = " + newCalibrationDone +
+                                        " WHERE ParamID = " + (int)FrameParamKeyType.CalibrationDone;
+                dbCommand.ExecuteNonQuery();
+
+                // Add new values for any frames that do not have slope or intercept defined as frame params
+                AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, newCalibrationDone);
+
             }
         }
 
