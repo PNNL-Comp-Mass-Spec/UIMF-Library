@@ -648,6 +648,7 @@ namespace UIMFLibrary
 
                 var numReturnedBins = output.Length / DATASIZE;
                 var decodedIntensityValueArray = new int[1];
+                var previousValue = 0;
 
                 for (var i = 0; i < numReturnedBins; i++)
                 {
@@ -659,7 +660,7 @@ namespace UIMFLibrary
                     {
                         binIndex += -decodedIntensityValue; // sequential zeros
                     }
-                    else if (decodedIntensityValue == 0)
+                    else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                     {
                         // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                         // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -679,6 +680,7 @@ namespace UIMFLibrary
                         frameData[currentScan, binIndex - startBin] += decodedIntensityValue;
                         binIndex++;
                     }
+                    previousValue = decodedIntensityValue;
                 }
             }
         }
@@ -712,6 +714,7 @@ namespace UIMFLibrary
 
                 var numReturnedBins = output.Length / DATASIZE;
                 var decodedIntensityValueArray = new int[1];
+                var previousValue = 0;
 
                 var pixelY = 1;
 
@@ -725,7 +728,7 @@ namespace UIMFLibrary
                     {
                         binIndex += -decodedIntensityValue; // sequential zeros
                     }
-                    else if (decodedIntensityValue == 0)
+                    else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                     {
                         // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                         // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -756,6 +759,7 @@ namespace UIMFLibrary
 
                         binIndex++;
                     }
+                    previousValue = decodedIntensityValue;
                 }
             }
         }
@@ -2093,6 +2097,7 @@ namespace UIMFLibrary
                     }
 
                     var output = CLZF2.Decompress(compressedBinIntensity);
+                    var previousValue = 0;
 
                     var numBins = output.Length / DATASIZE;
                     for (var i = 0; i < numBins; i++)
@@ -2102,7 +2107,7 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
-                        else if (decodedIntensityValue == 0)
+                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                         {
                             // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                             // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -2119,6 +2124,7 @@ namespace UIMFLibrary
 
                             binIndex++;
                         }
+                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -2289,6 +2295,7 @@ namespace UIMFLibrary
 
                     var numReturnedBins = output.Length / DATASIZE;
                     var decodedIntensityValueArray = new int[1];
+                    var previousValue = 0;
 
                     for (var i = 0; i < numReturnedBins; i++)
                     {
@@ -2300,7 +2307,7 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
-                        else if (decodedIntensityValue == 0)
+                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                         {
                             // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                             // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -2324,6 +2331,7 @@ namespace UIMFLibrary
                             }
                             binIndex++;
                         }
+                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -2382,6 +2390,7 @@ namespace UIMFLibrary
 
                     var numReturnedBins = output.Length / DATASIZE;
                     var decodedIntensityValueArray = new int[1];
+                    var previousValue = 0;
 
                     for (var i = 0; i < numReturnedBins; i++)
                     {
@@ -2393,7 +2402,7 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
-                        else if (decodedIntensityValue == 0)
+                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                         {
                             // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                             // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -2405,6 +2414,7 @@ namespace UIMFLibrary
                             currentBinDictionary.Add(binIndex, decodedIntensityValue);
                             binIndex++;
                         }
+                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -3273,6 +3283,7 @@ namespace UIMFLibrary
 
                     var numReturnedBins = output.Length / DATASIZE;
                     var decodedIntensityValueArray = new int[1];
+                    var previousValue = 0;
 
                     for (var i = 0; i < numReturnedBins; i++)
                     {
@@ -3284,7 +3295,7 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
-                        else if (decodedIntensityValue == 0)
+                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                         {
                             // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                             // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -3303,6 +3314,7 @@ namespace UIMFLibrary
                             intensityArray[binIndex] += decodedIntensityValue;
                             binIndex++;
                         }
+                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -5069,6 +5081,7 @@ namespace UIMFLibrary
 
                         var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
                         var decodedIntensityValueArray = new int[1];
+                        var previousValue = 0;
 
                         for (var i = 0; i < numReturnedBins; i++)
                         {
@@ -5080,7 +5093,7 @@ namespace UIMFLibrary
                             {
                                 binIndex += -decodedIntensityValue;
                             }
-                            else if (decodedIntensityValue == 0)
+                            else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                             {
                                 // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                                 // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -5111,6 +5124,7 @@ namespace UIMFLibrary
 
                                 binIndex++;
                             }
+                            previousValue = decodedIntensityValue;
                         }
 
                     }

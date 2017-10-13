@@ -102,6 +102,7 @@ namespace UIMFLibrary.UnitTests
         {
             var intensityArray = new int[binCount];
             var binIndex = 0;
+            var previousValue = 0;
 
             for (var i = 0; i < rlzData.Count; i++)
             {
@@ -111,7 +112,7 @@ namespace UIMFLibrary.UnitTests
                 {
                     binIndex += -decodedIntensityValue;
                 }
-                else if (decodedIntensityValue == 0)
+                else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
@@ -130,6 +131,7 @@ namespace UIMFLibrary.UnitTests
                     intensityArray[binIndex] += decodedIntensityValue;
                     binIndex++;
                 }
+                previousValue = decodedIntensityValue;
             }
             return intensityArray;
         }
