@@ -659,6 +659,13 @@ namespace UIMFLibrary
                     {
                         binIndex += -decodedIntensityValue; // sequential zeros
                     }
+                    else if (decodedIntensityValue == 0)
+                    {
+                        // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                        // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                        // consecutive zeroes to hit the underflow limit
+                        // Really, the encoding we are using should never output a zero.
+                    }
                     else if (binIndex < startBin)
                     {
                         binIndex++;
@@ -717,6 +724,13 @@ namespace UIMFLibrary
                     if (decodedIntensityValue < 0)
                     {
                         binIndex += -decodedIntensityValue; // sequential zeros
+                    }
+                    else if (decodedIntensityValue == 0)
+                    {
+                        // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                        // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                        // consecutive zeroes to hit the underflow limit
+                        // Really, the encoding we are using should never output a zero.
                     }
                     else if (binIndex < startBin)
                     {
@@ -2088,6 +2102,13 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
+                        else if (decodedIntensityValue == 0)
+                        {
+                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                            // consecutive zeroes to hit the underflow limit
+                            // Really, the encoding we are using should never output a zero.
+                        }
                         else
                         {
                             if (startBin <= binIndex && binIndex <= endBin)
@@ -2279,6 +2300,13 @@ namespace UIMFLibrary
                         {
                             binIndex += -decodedIntensityValue;
                         }
+                        else if (decodedIntensityValue == 0)
+                        {
+                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                            // consecutive zeroes to hit the underflow limit
+                            // Really, the encoding we are using should never output a zero.
+                        }
                         else
                         {
                             if (binIndex >= startBin && binIndex <= endBin)
@@ -2364,6 +2392,13 @@ namespace UIMFLibrary
                         if (decodedIntensityValue < 0)
                         {
                             binIndex += -decodedIntensityValue;
+                        }
+                        else if (decodedIntensityValue == 0)
+                        {
+                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                            // consecutive zeroes to hit the underflow limit
+                            // Really, the encoding we are using should never output a zero.
                         }
                         else
                         {
@@ -3248,6 +3283,13 @@ namespace UIMFLibrary
                         if (decodedIntensityValue < 0)
                         {
                             binIndex += -decodedIntensityValue;
+                        }
+                        else if (decodedIntensityValue == 0)
+                        {
+                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                            // consecutive zeroes to hit the underflow limit
+                            // Really, the encoding we are using should never output a zero.
                         }
                         else
                         {
@@ -5037,6 +5079,13 @@ namespace UIMFLibrary
                             if (decodedIntensityValue < 0)
                             {
                                 binIndex += -decodedIntensityValue;
+                            }
+                            else if (decodedIntensityValue == 0)
+                            {
+                                // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
+                                // double-output of a zero (output a zero, and add it to the zero count) if there were enough
+                                // consecutive zeroes to hit the underflow limit
+                                // Really, the encoding we are using should never output a zero.
                             }
                             else
                             {

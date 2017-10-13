@@ -66,15 +66,16 @@ namespace UIMFLibrary
                 {
                     if (zeroCount == int.MinValue)
                     {
-                        // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
+                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
                         rlzeDataList.Add(zeroCount);
-                        rlzeDataList.Add((short) 0);
                         zeroCount = 0;
                     }
 
+                    // Always count the zero
                     zeroCount--;
                 }
             }
+            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             // Compress intensities
             var nrlze = rlzeDataList.Count;

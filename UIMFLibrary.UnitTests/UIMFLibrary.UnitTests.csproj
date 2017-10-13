@@ -124,6 +124,7 @@
     <Compile Include="DataWriterTests\createUIMFFileTests.cs" />
     <Compile Include="DataWriterTests\updateFrameParameterTests.cs" />
     <Compile Include="DataReaderTests\DynamicConversionTests.cs" />
+    <Compile Include="EncodingTests.cs" />
     <Compile Include="FileRefs.cs" />
     <Compile Include="TestUtilities.cs" />
     <Compile Include="DataReaderTests\DataReaderTests.cs" />
