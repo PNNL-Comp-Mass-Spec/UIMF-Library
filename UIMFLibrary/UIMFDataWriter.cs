@@ -1808,7 +1808,7 @@ namespace UIMFLibrary
             }
 
             // Convert the intensities array into a zero length encoded byte array, stored in variable spectrum
-            nonZeroCount = IntensityConverterInt32.Encode(intensities, out var spectrum, out var tic, out var bpi, out var indexOfMaxIntensity);
+            nonZeroCount = IntensityConverterCLZF.Compress(intensities.ToList(), out var spectrum, out var tic, out var bpi, out var indexOfMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 

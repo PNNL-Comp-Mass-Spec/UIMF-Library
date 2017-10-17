@@ -101,115 +101,31 @@ namespace UIMFLibrary.UnitTests
         private static int[] RlzDecode(IReadOnlyList<int> rlzData, int binCount)
         {
             var intensityArray = new int[binCount];
-            var binIndex = 0;
-            var previousValue = 0;
-
-            for (var i = 0; i < rlzData.Count; i++)
+            var decoded = UIMFLibrary.RlzEncode.Decode(rlzData);
+            foreach (var nzPoint in decoded)
             {
-                var decodedIntensityValue = rlzData[i];
-
-                if (decodedIntensityValue < 0)
+                if (nzPoint.Item1 < binCount)
                 {
-                    binIndex += -decodedIntensityValue;
-                }
-                else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                {
-                    // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                    // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                    // consecutive zeroes to hit the underflow limit
-                    // Really, the encoding we are using should never output a zero.
+                    intensityArray[nzPoint.Item1] = nzPoint.Item2;
                 }
                 else
                 {
-                    if (binIndex > binCount)
-                    {
-                        Console.WriteLine("Warning: index out of bounds in RlzDecode: {0} > {1} ",
-                            binIndex, binCount);
-                        break;
-                    }
-
-                    intensityArray[binIndex] += decodedIntensityValue;
-                    binIndex++;
+                    Console.WriteLine("Warning: index out of bounds in RlzDecode: {0} > {1} ", nzPoint.Item1, binCount);
+                    break;
                 }
-                previousValue = decodedIntensityValue;
             }
+
             return intensityArray;
         }
 
         private static int[] RlzEncode(IReadOnlyList<int> intensities)
         {
-            var rlzeDataList = new List<int>();
-            var zeroCount = 0;
-            var nonZeroCount = 0;
-
-            // run length zero encoding
-            for (var i = 0; i < intensities.Count; i++)
-            {
-                var intensity = intensities[i];
-                if (intensity > 0)
-                {
-                    if (zeroCount < 0)
-                    {
-                        rlzeDataList.Add(zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    rlzeDataList.Add(intensity);
-                    nonZeroCount++;
-                }
-                else
-                {
-                    if (zeroCount == int.MinValue)
-                    {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add(zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    // Always count the zero
-                    zeroCount--;
-                }
-            }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
-
-            return rlzeDataList.ToArray();
+            return UIMFLibrary.RlzEncode.Encode(intensities);
         }
 
-        private static short[] RlzEncode(IList<short> intensities)
+        private static short[] RlzEncode(IReadOnlyList<short> intensities)
         {
-            var rlzeDataList = new List<short>();
-            var zeroCount = 0;
-
-            // run length zero encoding
-            for (var i = 0; i < intensities.Count; i++)
-            {
-                var intensity = intensities[i];
-                if (intensity > 0)
-                {
-                    if (zeroCount < 0)
-                    {
-                        rlzeDataList.Add((short)zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    rlzeDataList.Add(intensity);
-                }
-                else
-                {
-                    if (zeroCount == short.MinValue)
-                    {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add((short)zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    // Always count the zero
-                    zeroCount--;
-                }
-            }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
-
-            return rlzeDataList.ToArray();
+            return UIMFLibrary.RlzEncode.Encode(intensities);
         }
 
         private short[] RlzEncodeOld(IList<short> intensities)

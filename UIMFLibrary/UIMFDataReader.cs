@@ -642,45 +642,20 @@ namespace UIMFLibrary
                     continue;
                 }
 
-                var binIndex = 0;
+                var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
 
-                var output = CLZF2.Decompress(compressedBinIntensity);
-
-                var numReturnedBins = output.Length / DATASIZE;
-                var decodedIntensityValueArray = new int[1];
-                var previousValue = 0;
-
-                for (var i = 0; i < numReturnedBins; i++)
+                foreach (var binIntensity in binIntensities)
                 {
-                    Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
-
-                    var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                    if (decodedIntensityValue < 0)
+                    var binIndex = binIntensity.Item1;
+                    if (binIndex < startBin)
                     {
-                        binIndex += -decodedIntensityValue; // sequential zeros
+                        continue;
                     }
-                    else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                    {
-                        // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                        // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                        // consecutive zeroes to hit the underflow limit
-                        // Really, the encoding we are using should never output a zero.
-                    }
-                    else if (binIndex < startBin)
-                    {
-                        binIndex++;
-                    }
-                    else if (binIndex > endBin)
+                    if (binIndex > endBin)
                     {
                         break;
                     }
-                    else
-                    {
-                        frameData[currentScan, binIndex - startBin] += decodedIntensityValue;
-                        binIndex++;
-                    }
-                    previousValue = decodedIntensityValue;
+                    frameData[currentScan, binIndex - startBin] += binIntensity.Item2;
                 }
             }
         }
@@ -708,58 +683,33 @@ namespace UIMFLibrary
                     continue;
                 }
 
-                var binIndex = 0;
-
-                var output = CLZF2.Decompress(compressedBinIntensity);
-
-                var numReturnedBins = output.Length / DATASIZE;
-                var decodedIntensityValueArray = new int[1];
-                var previousValue = 0;
-
                 var pixelY = 1;
 
-                for (var i = 0; i < numReturnedBins; i++)
+                var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
+
+                foreach (var binIntensity in binIntensities)
                 {
-                    Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
-
-                    var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                    if (decodedIntensityValue < 0)
+                    var binIndex = binIntensity.Item1;
+                    if (binIndex < startBin)
                     {
-                        binIndex += -decodedIntensityValue; // sequential zeros
+                        continue;
                     }
-                    else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                    {
-                        // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                        // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                        // consecutive zeroes to hit the underflow limit
-                        // Really, the encoding we are using should never output a zero.
-                    }
-                    else if (binIndex < startBin)
-                    {
-                        binIndex++;
-                    }
-                    else if (binIndex > endBin)
+                    if (binIndex > endBin)
                     {
                         break;
                     }
-                    else
+
+                    double calibratedBin = binIndex;
+
+                    for (var j = pixelY; j < height; j++)
                     {
-                        double calibratedBin = binIndex;
-
-                        for (var j = pixelY; j < height; j++)
+                        if (m_calibrationTable[j] > calibratedBin)
                         {
-                            if (m_calibrationTable[j] > calibratedBin)
-                            {
-                                pixelY = j;
-                                frameData[currentScan, pixelY] += decodedIntensityValue;
-                                break;
-                            }
+                            pixelY = j;
+                            frameData[currentScan, pixelY] += binIntensity.Item2;
+                            break;
                         }
-
-                        binIndex++;
                     }
-                    previousValue = decodedIntensityValue;
                 }
             }
         }
@@ -2085,7 +2035,6 @@ namespace UIMFLibrary
                 while (reader.Read())
                 {
                     var frameNum = GetInt32(reader, "FrameNum");
-                    var binIndex = 0;
 
                     var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
@@ -2096,35 +2045,15 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(compressedBinIntensity);
-                    var previousValue = 0;
+                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
 
-                    var numBins = output.Length / DATASIZE;
-                    for (var i = 0; i < numBins; i++)
+                    foreach (var binIntensity in binIntensities)
                     {
-                        var decodedIntensityValue = BitConverter.ToInt32(output, i * DATASIZE);
-                        if (decodedIntensityValue < 0)
+                        var binIndex = binIntensity.Item1;
+                        if (startBin <= binIndex && binIndex <= endBin)
                         {
-                            binIndex += -decodedIntensityValue;
+                            intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] = binIntensity.Item2;
                         }
-                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                        {
-                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                            // consecutive zeroes to hit the underflow limit
-                            // Really, the encoding we are using should never output a zero.
-                        }
-                        else
-                        {
-                            if (startBin <= binIndex && binIndex <= endBin)
-                            {
-                                intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] =
-                                    decodedIntensityValue;
-                            }
-
-                            binIndex++;
-                        }
-                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -2280,8 +2209,6 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-                    var binIndex = 0;
-
                     var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
@@ -2291,47 +2218,24 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(compressedBinIntensity);
+                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
 
-                    var numReturnedBins = output.Length / DATASIZE;
-                    var decodedIntensityValueArray = new int[1];
-                    var previousValue = 0;
-
-                    for (var i = 0; i < numReturnedBins; i++)
+                    foreach (var binIntensity in binIntensities)
                     {
-                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
+                        var binIndex = binIntensity.Item1;
+                        if (binIndex >= startBin && binIndex <= endBin)
+                        {
+                            var targetBinIndex = binIndex - startBin;
 
-                        var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                        if (decodedIntensityValue < 0)
-                        {
-                            binIndex += -decodedIntensityValue;
-                        }
-                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                        {
-                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                            // consecutive zeroes to hit the underflow limit
-                            // Really, the encoding we are using should never output a zero.
-                        }
-                        else
-                        {
-                            if (binIndex >= startBin && binIndex <= endBin)
+                            if (doReorder)
                             {
-                                var targetBinIndex = binIndex - startBin;
-
-                                if (doReorder)
-                                {
-                                    intensities[targetBinIndex][scanToIndexMap[scanNum]] += decodedIntensityValue * divisionFactor;
-                                }
-                                else
-                                {
-                                    intensities[targetBinIndex][scanNum] += decodedIntensityValue * divisionFactor;
-                                }
+                                intensities[targetBinIndex][scanToIndexMap[scanNum]] += binIntensity.Item2 * divisionFactor;
                             }
-                            binIndex++;
+                            else
+                            {
+                                intensities[targetBinIndex][scanNum] += binIntensity.Item2 * divisionFactor;
+                            }
                         }
-                        previousValue = decodedIntensityValue;
                     }
                 }
             }
@@ -2373,8 +2277,6 @@ namespace UIMFLibrary
 
                 while (reader.Read())
                 {
-                    var binIndex = 0;
-
                     var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
@@ -2386,35 +2288,12 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(compressedBinIntensity);
+                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
 
-                    var numReturnedBins = output.Length / DATASIZE;
-                    var decodedIntensityValueArray = new int[1];
-                    var previousValue = 0;
-
-                    for (var i = 0; i < numReturnedBins; i++)
+                    foreach (var binIntensity in binIntensities)
                     {
-                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
-
-                        var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                        if (decodedIntensityValue < 0)
-                        {
-                            binIndex += -decodedIntensityValue;
-                        }
-                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                        {
-                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                            // consecutive zeroes to hit the underflow limit
-                            // Really, the encoding we are using should never output a zero.
-                        }
-                        else
-                        {
-                            currentBinDictionary.Add(binIndex, decodedIntensityValue);
-                            binIndex++;
-                        }
-                        previousValue = decodedIntensityValue;
+                        var binIndex = binIntensity.Item1;
+                        currentBinDictionary.Add(binIndex, binIntensity.Item2);
                     }
                 }
             }
@@ -3271,7 +3150,6 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-                    var binIndex = 0;
                     var compressedBinIntensity = (byte[])reader["Intensities"];
 
                     if (compressedBinIntensity.Length <= 0)
@@ -3279,42 +3157,19 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    var output = CLZF2.Decompress(compressedBinIntensity);
+                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
 
-                    var numReturnedBins = output.Length / DATASIZE;
-                    var decodedIntensityValueArray = new int[1];
-                    var previousValue = 0;
-
-                    for (var i = 0; i < numReturnedBins; i++)
+                    foreach (var binIntensity in binIntensities)
                     {
-                        Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
-
-                        var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                        if (decodedIntensityValue < 0)
+                        var binIndex = binIntensity.Item1;
+                        if (binIndex > maxIndex)
                         {
-                            binIndex += -decodedIntensityValue;
+                            Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ",
+                                startFrameNumber, startScanNumber, binIndex, maxIndex);
+                            break;
                         }
-                        else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                        {
-                            // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                            // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                            // consecutive zeroes to hit the underflow limit
-                            // Really, the encoding we are using should never output a zero.
-                        }
-                        else
-                        {
-                            if (binIndex > maxIndex)
-                            {
-                                Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ",
-                                    startFrameNumber, startScanNumber, binIndex, maxIndex);
-                                break;
-                            }
 
-                            intensityArray[binIndex] += decodedIntensityValue;
-                            binIndex++;
-                        }
-                        previousValue = decodedIntensityValue;
+                        intensityArray[binIndex] += binIntensity.Item2;
                     }
                 }
             }
@@ -5066,10 +4921,6 @@ namespace UIMFLibrary
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
 
-                        var output = CLZF2.Decompress(compressedBinIntensity);
-
-                        var numReturnedBins = output.Length / DATASIZE;
-
                         while (true)
                         {
                             // Possibly add one or more additional items to listOfIntensityDictionaries
@@ -5080,51 +4931,31 @@ namespace UIMFLibrary
                         }
 
                         var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
-                        var decodedIntensityValueArray = new int[1];
-                        var previousValue = 0;
 
-                        for (var i = 0; i < numReturnedBins; i++)
+                        var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
+
+                        foreach (var binIntensity in binIntensities)
                         {
-                            Buffer.BlockCopy(output, i * DATASIZE, decodedIntensityValueArray, 0, 4);
-
-                            var decodedIntensityValue = decodedIntensityValueArray[0];
-
-                            if (decodedIntensityValue < 0)
+                            binIndex = binIntensity.Item1;
+                            if (currentIntensityDictionary.TryGetValue(binIndex, out var currentValue))
                             {
-                                binIndex += -decodedIntensityValue;
-                            }
-                            else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
-                            {
-                                // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
-                                // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                                // consecutive zeroes to hit the underflow limit
-                                // Really, the encoding we are using should never output a zero.
+                                currentIntensityDictionary[binIndex] = currentValue + binIntensity.Item2;
+                                summedIntensityDictionary[binIndex] += binIntensity.Item2;
                             }
                             else
                             {
-                                if (currentIntensityDictionary.TryGetValue(binIndex, out var currentValue))
+                                currentIntensityDictionary.Add(binIndex, binIntensity.Item2);
+
+                                // Check the summed dictionary
+                                if (summedIntensityDictionary.TryGetValue(binIndex, out var summedIntensityValue))
                                 {
-                                    currentIntensityDictionary[binIndex] = currentValue + decodedIntensityValue;
-                                    summedIntensityDictionary[binIndex] += decodedIntensityValue;
+                                    summedIntensityDictionary[binIndex] = summedIntensityValue + binIntensity.Item2;
                                 }
                                 else
                                 {
-                                    currentIntensityDictionary.Add(binIndex, decodedIntensityValue);
-
-                                    // Check the summed dictionary
-                                    if (summedIntensityDictionary.TryGetValue(binIndex, out var summedIntensityValue))
-                                    {
-                                        summedIntensityDictionary[binIndex] = summedIntensityValue + decodedIntensityValue;
-                                    }
-                                    else
-                                    {
-                                        summedIntensityDictionary.Add(binIndex, decodedIntensityValue);
-                                    }
+                                    summedIntensityDictionary.Add(binIndex, binIntensity.Item2);
                                 }
-
-                                binIndex++;
                             }
-                            previousValue = decodedIntensityValue;
                         }
 
                     }

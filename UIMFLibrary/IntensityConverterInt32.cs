@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UIMFLibrary
 {
     /// <summary>
-    /// Convert intensities to a zero length encoded byte array
+    /// Convert sets of intensities to run-length zero encoding and compression
     /// </summary>
     public static class IntensityConverterInt32
     {
@@ -19,67 +19,20 @@ namespace UIMFLibrary
         /// <returns>
         /// Number of non-zero data points
         /// </returns>
+        [Obsolete("Use IntensityConverterCLZF.Compress(IReadOnlyList<int>,...)")]
         public static int Encode(
-            IList<int> intensities,
+            IReadOnlyList<int> intensities,
             out byte[] spectra,
             out double tic,
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
-            tic = 0;
-            bpi = 0;
-            indexOfMaxIntensity = 0;
-
-            // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            var zeroCount = 0;
-            var rlzeDataList = new List<int>();
-            var nonZeroCount = 0;
-
             // 32-bit integers are 4 bytes
             const int dataTypeSize = 4;
 
-            // Calculate TIC and BPI while run length zero encoding
-            for (var i = 0; i < intensities.Count; i++)
-            {
-                var intensity = intensities[i];
-                if (intensity > 0)
-                {
-                    // TIC is just the sum of all intensities
-                    tic += intensity;
-                    if (intensity > bpi)
-                    {
-                        bpi = intensity;
-                        indexOfMaxIntensity = i;
-                    }
-
-                    if (zeroCount < 0)
-                    {
-                        rlzeDataList.Add(zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    rlzeDataList.Add(intensity);
-                    nonZeroCount++;
-                }
-                else
-                {
-                    if (zeroCount == int.MinValue)
-                    {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add(zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    // Always count the zero
-                    zeroCount--;
-                }
-            }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
-
-            // Compress intensities
-            var nrlze = rlzeDataList.Count;
-            var runLengthZeroEncodedData = rlzeDataList.ToArray();
+            spectra = null;
+            var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
+            var nrlze = runLengthZeroEncodedData.Length;
 
             if (nrlze > 0)
             {
@@ -110,59 +63,12 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
-            tic = 0;
-            bpi = 0;
-            indexOfMaxIntensity = 0;
-
-            // RLZE - convert 0s to negative multiples as well as calculate TIC and BPI, BPI_MZ
-            var zeroCount = 0;
-            var rlzeDataList = new List<int>();
-            var nonZeroCount = 0;
-
             // 32-bit integers are 4 bytes
             const int dataTypeSize = 4;
 
-            // Calculate TIC and BPI while run length zero encoding
-            for (var i = 0; i < intensities.Count; i++)
-            {
-                var intensity = intensities[i];
-                if (intensity > 0)
-                {
-                    // TIC is just the sum of all intensities
-                    tic += intensity;
-                    if (intensity > bpi)
-                    {
-                        bpi = intensity;
-                        indexOfMaxIntensity = i;
-                    }
-
-                    if (zeroCount < 0)
-                    {
-                        rlzeDataList.Add(zeroCount);
-                        zeroCount = 0;
-                    }
-
-                    rlzeDataList.Add(intensity);
-                    nonZeroCount++;
-                }
-                else
-                {
-                    if (zeroCount == int.MinValue)
-                    {
-                        // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
-                        rlzeDataList.Add(zeroCount);
-                        rlzeDataList.Add(0);
-                        zeroCount = 0;
-                    }
-
-                    zeroCount--;
-                }
-            }
-
-            // Compress intensities
-            var nrlze = rlzeDataList.Count;
-            var runLengthZeroEncodedData = rlzeDataList.ToArray();
+            spectra = null;
+            var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
+            var nrlze = runLengthZeroEncodedData.Length;
 
             if (nrlze > 0)
             {
