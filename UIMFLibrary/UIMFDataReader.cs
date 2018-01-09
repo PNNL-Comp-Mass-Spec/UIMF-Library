@@ -3098,7 +3098,7 @@ namespace UIMFLibrary
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <returns>
-        /// The number of non-zero bins found in the resulting spectrum.
+        /// An array containing an intensity value for each bin location, even if the intensity value is 0.
         /// </returns>
         public int[] GetSpectrumAsBins(int frameNumber, FrameType frameType, int scanNumber)
         {
@@ -3175,6 +3175,104 @@ namespace UIMFLibrary
             }
 
             return intensityArray;
+        }
+
+        /// <summary>
+        /// Extracts intensities from given frame range and scan range.
+        /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
+        /// </summary>
+        /// <param name="frameNumber">
+        /// The frame number of the desired spectrum.
+        /// </param>
+        /// <param name="frameType">
+        /// The frame type to consider.
+        /// </param>
+        /// <param name="scanNumber">
+        /// The scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
+        /// <param name="maxBin">The maximum bin value for the scan</param>
+        /// <returns>
+        /// List of Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
+        /// </returns>
+        public List<Tuple<int, int>> GetSpectrumAsBinsNz(int frameNumber, FrameType frameType, int scanNumber, out int maxBin)
+        {
+            return GetSpectrumAsBinsNz(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out maxBin);
+        }
+
+        /// <summary>
+        /// Extracts intensities from given frame range and scan range.
+        /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
+        /// </summary>
+        /// <param name="startFrameNumber">
+        /// The start frame number of the desired spectrum.
+        /// </param>
+        /// <param name="endFrameNumber">
+        /// The end frame number of the desired spectrum.
+        /// </param>
+        /// <param name="frameType">
+        /// The frame type to consider.
+        /// </param>
+        /// <param name="startScanNumber">
+        /// The start scan number of the desired spectrum.
+        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
+        /// </param>
+        /// <param name="endScanNumber">
+        /// The end scan number of the desired spectrum.
+        /// </param>
+        /// <param name="maxBin">The maximum bin value for the scan</param>
+        /// <returns>
+        /// List of Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
+        /// </returns>
+        public List<Tuple<int, int>> GetSpectrumAsBinsNz(int startFrameNumber, int endFrameNumber, FrameType frameType,
+            int startScanNumber, int endScanNumber, out int maxBin)
+        {
+            m_getSpectrumCommand.Parameters.Clear();
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", endFrameNumber));
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", startScanNumber));
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", endScanNumber));
+            m_getSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
+
+            var intensityDict = new Dictionary<int, int>();
+            maxBin = m_globalParameters.Bins;
+
+            using (var reader = m_getSpectrumCommand.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var compressedBinIntensity = (byte[])reader["Intensities"];
+
+                    if (compressedBinIntensity.Length <= 0)
+                    {
+                        continue;
+                    }
+
+                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
+
+                    foreach (var binIntensity in binIntensities)
+                    {
+                        var binIndex = binIntensity.Item1;
+                        if (binIndex > maxBin)
+                        {
+                            Console.WriteLine("Warning: index out of bounds for frame {0}, scan {1} in GetSpectrumAsBins: {2} > {3} ",
+                                startFrameNumber, startScanNumber, binIndex, maxBin);
+                            break;
+                        }
+
+                        if (!intensityDict.ContainsKey(binIndex))
+                        {
+                            intensityDict.Add(binIndex, binIntensity.Item2);
+                        }
+                        else
+                        {
+                            intensityDict[binIndex] += binIntensity.Item2;
+                        }
+                    }
+                }
+            }
+
+            return intensityDict.Where(x => x.Value > 0).Select(x => new Tuple<int,int>(x.Key, x.Value)).ToList();
         }
 
         /// <summary>
