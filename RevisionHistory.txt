@@ -1,5 +1,13 @@
 UIMFLibrary Revision History
 
+Version 3.6.1.0; January 9, 2018
+	- Consolidate some code to text templates, and separate the RlzEncoding and Compression
+	- Add a couple reader functions to get bin-intensity values without expanding to the full array
+
+Version 3.6.0.0; October 13, 2017
+	- Fix a bug in the zero run length encoding (affecting the zero suppression, the count would be one too high for a gap)
+	- Handle the bug when reading files that were encoded with the buggy zero suppression
+
 Version 3.5.7.5; September 26, 2017
 	- Add drift tube length and drift tube gas global parameters
 
