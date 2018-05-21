@@ -124,10 +124,6 @@
     <Compile Include="SpeedTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\UIMFLibrary.UnitTests\UIMFLibrary.UnitTests.csproj">
-      <Project>{af8626a9-1ceb-4179-9f09-590b1b9c0157}</Project>
-      <Name>UIMFLibrary.UnitTests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj">
       <Project>{25849DAD-D507-4429-ACA4-2DB63F9EAF52}</Project>
       <Name>UIMFLibrary</Name>

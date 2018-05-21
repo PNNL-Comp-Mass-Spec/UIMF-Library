@@ -5,7 +5,6 @@ using System.Linq;
 using IMSDemultiplexer;
 using MathNet.Numerics.LinearAlgebra.Double;
 using NUnit.Framework;
-using UIMFLibrary.UnitTests.DataReaderTests;
 
 namespace UIMFLibrary.FunctionalTests
 {
@@ -27,7 +26,7 @@ namespace UIMFLibrary.FunctionalTests
             var scaledMatrix = (DenseMatrix)multiplierMatrix.Multiply(2.0 / 16.0);
             var inversedScaledMatrix = (DenseMatrix)scaledMatrix.Inverse();
 
-            var uimfFile = DataReaderTests.VerifyLocalUimfFile(@"Test_Data\9pep_mix_1uM_4bit_50_12Dec11_encoded.uimf");
+            var uimfFile = VerifyLocalUimfFile(@"Test_Data\9pep_mix_1uM_4bit_50_12Dec11_encoded.uimf");
 
             if (uimfFile == null)
             {
@@ -168,6 +167,73 @@ namespace UIMFLibrary.FunctionalTests
 
                 }
             }
+        }
+
+        public const string SHARE_PATH = @"\\proto-2\unitTest_Files\UIMF_Library\";
+
+        public static FileInfo VerifyLocalUimfFile(string relativeFilePath)
+        {
+            var uimfFile = new FileInfo(relativeFilePath);
+            if (uimfFile.Exists)
+            {
+#if DEBUG
+                Console.WriteLine("Found file " + uimfFile.FullName);
+                Console.WriteLine();
+#endif
+                return uimfFile;
+            }
+
+#if DEBUG
+            Console.WriteLine("Could not find " + relativeFilePath);
+            Console.WriteLine("Checking alternative locations");
+#endif
+
+            var relativePathsToCheck = new List<string>
+            {
+                uimfFile.Name
+            };
+
+            if (!Path.IsPathRooted(relativeFilePath) &&
+                (relativeFilePath.Contains(Path.DirectorySeparatorChar) || relativeFilePath.Contains(Path.AltDirectorySeparatorChar)))
+            {
+                relativePathsToCheck.Add(relativeFilePath);
+            }
+            var parentToCheck = uimfFile.Directory.Parent;
+            while (parentToCheck != null)
+            {
+                foreach (var relativePath in relativePathsToCheck)
+                {
+                    var alternateFile = new FileInfo(Path.Combine(parentToCheck.FullName, relativePath));
+                    if (alternateFile.Exists)
+                    {
+#if DEBUG
+                        Console.WriteLine("... found at " + alternateFile.FullName);
+                        Console.WriteLine();
+#endif
+                        return alternateFile;
+                    }
+                }
+
+                parentToCheck = parentToCheck.Parent;
+            }
+
+            foreach (var relativePath in relativePathsToCheck)
+            {
+                var serverPathFile = new FileInfo(Path.Combine(SHARE_PATH, relativePath));
+                if (serverPathFile.Exists)
+                {
+#if DEBUG
+                    Console.WriteLine("... found at " + serverPathFile);
+                    Console.WriteLine();
+#endif
+                    return serverPathFile;
+                }
+            }
+
+            var currentDirectory = new DirectoryInfo(".");
+
+            Assert.Fail("Could not find " + relativeFilePath + "; current working directory: " + currentDirectory.FullName);
+            return null;
         }
 
     }
