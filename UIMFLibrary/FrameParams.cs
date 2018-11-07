@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     /// <summary>
@@ -51,7 +53,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Mass calibration coefficients are cached to allow for fast lookup via external classes
         /// </summary>
+        /// <remarks>Do not make this an auto-property since this structure's members are updated directly in UpdateCachedParam</remarks>
+#pragma warning disable IDE0032
         private MassCalibrationCoefficientsType mCachedMassCalibrationCoefficients;
+#pragma warning restore IDE0032
 
         #endregion
 
