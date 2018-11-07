@@ -107,10 +107,8 @@ namespace UIMFLibrary
             int previousValue = 0;
             var binIndex = 0;
 
-            for (var i = 0; i < encoded.Count; i++)
+            foreach (var decodedIntensityValue in encoded)
             {
-                var decodedIntensityValue = encoded[i];
-
                 if (decodedIntensityValue < 0)
                 {
                     binIndex += -(int)decodedIntensityValue;
@@ -227,10 +225,8 @@ namespace UIMFLibrary
             short previousValue = 0;
             var binIndex = 0;
 
-            for (var i = 0; i < encoded.Count; i++)
+            foreach (var decodedIntensityValue in encoded)
             {
-                var decodedIntensityValue = encoded[i];
-
                 if (decodedIntensityValue < 0)
                 {
                     binIndex += -(int)decodedIntensityValue;
@@ -347,10 +343,8 @@ namespace UIMFLibrary
             float previousValue = 0;
             var binIndex = 0;
 
-            for (var i = 0; i < encoded.Count; i++)
+            foreach (var decodedIntensityValue in encoded)
             {
-                var decodedIntensityValue = encoded[i];
-
                 if (decodedIntensityValue < 0)
                 {
                     binIndex += -(int)decodedIntensityValue;
@@ -467,10 +461,8 @@ namespace UIMFLibrary
             double previousValue = 0;
             var binIndex = 0;
 
-            for (var i = 0; i < encoded.Count; i++)
+            foreach (var decodedIntensityValue in encoded)
             {
-                var decodedIntensityValue = encoded[i];
-
                 if (decodedIntensityValue < 0)
                 {
                     binIndex += -(int)decodedIntensityValue;
