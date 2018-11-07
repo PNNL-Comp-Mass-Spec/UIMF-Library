@@ -2159,7 +2159,17 @@ namespace UIMFLibrary
         /// <summary>
         /// Assures that NumFrames in the Global_Params table matches the number of frames in the Frame_Params table
         /// </summary>
+        [Obsolete("Use UpdateGlobalStats")]
         public void UpdateGlobalFrameCount()
+        {
+            UpdateGlobalStats();
+        }
+
+        /// <summary>
+        /// Assures that NumFrames in the Global_Params table matches the number of frames in the Frame_Params table
+        /// Also assures that PrescanTOFPulses lists the maximum scan number in any frame
+        /// </summary>
+        public void UpdateGlobalStats()
         {
             if (!HasFrameParamsTable)
                 throw new Exception("UIMF file does not have table Frame_Params; use method CreateTables to add tables");
@@ -2168,13 +2178,68 @@ namespace UIMFLibrary
             using (var dbCommand = m_dbConnection.CreateCommand())
             {
 
-                dbCommand.CommandText = "SELECT Count (Distinct FrameNum) FROM " + FRAME_PARAMS_TABLE + "";
+                dbCommand.CommandText = "SELECT Count (Distinct FrameNum) FROM " + FRAME_PARAMS_TABLE;
                 frameCount = dbCommand.ExecuteScalar();
             }
 
             if (frameCount != null && frameCount != DBNull.Value)
             {
                 AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, Convert.ToInt32(frameCount));
+            }
+
+            object maxScanFromQuery;
+            using (var dbCommand = m_dbConnection.CreateCommand())
+            {
+
+                dbCommand.CommandText = "SELECT Max(ScanNum) FROM " + FRAME_SCANS_TABLE;
+                maxScanFromQuery = dbCommand.ExecuteScalar();
+            }
+
+            if (maxScanFromQuery == null || maxScanFromQuery == DBNull.Value)
+                return;
+
+            var maxScan = Convert.ToInt32(maxScanFromQuery);
+            if (maxScan < 1)
+                return;
+
+            // PrescanTOFPulses tracks the maximum scan number in any frame
+            var existingValue = GetGlobalParams().GetValue(GlobalParamKeyType.PrescanTOFPulses);
+            bool updateGlobalParams;
+
+            if (existingValue > 0 && existingValue > maxScan)
+            {
+                // Update the value only if the new value is more than 5% less than the existing value
+                var percentDiff = (existingValue - frameCount) / (float)existingValue;
+                updateGlobalParams = percentDiff > 0.05;
+            }
+            else
+            {
+                updateGlobalParams = true;
+            }
+
+            if (updateGlobalParams)
+            {
+                // Round up maxScan to the nearest 10, 100, or 1000
+                int divisor;
+                if (maxScan <= 100)
+                {
+                    // When maxScan is between 1 and 100, round to the nearest 10
+                    divisor = 10;
+                }
+                else
+                {
+                    // When between 100 and 1000, round up to the nearest 10
+                    // When between 1000 and 10000, round up to the nearest 100
+                    var powerExponent = (int)Math.Ceiling(Math.Log10(maxScan));
+                    divisor = (int)Math.Pow(10, powerExponent - 2);
+                }
+
+                while (maxScan % divisor != 0)
+                {
+                    maxScan++;
+                }
+
+                AddUpdateGlobalParameter(GlobalParamKeyType.PrescanTOFPulses, maxScan);
             }
         }
 
