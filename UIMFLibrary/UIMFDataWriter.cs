@@ -2,7 +2,7 @@
 // <summary>
 //   UIMF Data Writer class
 //
-//   Written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
+//   Originally written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
 //   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, Bill Danielson, Spencer Prost, and Bryson Gibbons
 //   E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
 //   Website: http://omics.pnl.gov/software/
@@ -16,6 +16,8 @@ using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Reflection;
+
+// ReSharper disable UnusedMember.Global
 
 namespace UIMFLibrary
 {
@@ -88,7 +90,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
-        /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
+        /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="filePath">Full path to the data file</param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
@@ -100,7 +102,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
-        /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
+        /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="filePath">Full path to the data file</param>
         /// <param name="createLegacyParametersTables">When true, create and populate legacy tables Global_Parameters and Frame_Parameters</param>
@@ -1159,7 +1161,7 @@ namespace UIMFLibrary
                     dbCommand.ExecuteNonQuery();
                 }
 
-                // Commmit the currently open transaction
+                // Commit the currently open transaction
                 TransactionCommit();
                 System.Threading.Thread.Sleep(100);
 
@@ -1308,7 +1310,7 @@ namespace UIMFLibrary
         /// Commits the currently open transaction, then starts a new one
         /// </summary>
         /// <remarks>
-        /// Note that a transaction is started when the UIMF file is opened, then commited when the class is disposed
+        /// Note that a transaction is started when the UIMF file is opened, then committed when the class is disposed
         /// </remarks>
         public void FlushUimf()
         {
@@ -1320,7 +1322,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="forceFlush">True to force a flush; otherwise, will only flush if the last one was 5 or more seconds ago</param>
         /// <remarks>
-        /// Note that a transaction is started when the UIMF file is opened, then commited when the class is disposed
+        /// Note that a transaction is started when the UIMF file is opened, then committed when the class is disposed
         /// </remarks>
         public void FlushUimf(bool forceFlush)
         {
@@ -1686,6 +1688,7 @@ namespace UIMFLibrary
         /// <param name="tic">Total ion intensity</param>
         /// <param name="spectra">Mass spectra intensities</param>
         [Obsolete("Use InsertScanStoreBytes that accepts a FrameParams object")]
+        // ReSharper disable once UnusedMember.Local
         private void InsertScanStoreBytes(
             FrameParameters frameParameters,
             int scanNum,
@@ -1748,7 +1751,7 @@ namespace UIMFLibrary
 
         }
 
-        /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
+        /// <summary>Insert a new scan using an array of intensities (as integers) along with binWidth</summary>
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters">Frame parameters</param>
         /// <param name="scanNum">
@@ -1769,7 +1772,7 @@ namespace UIMFLibrary
             InsertScan(frameNumber, frameParameters, scanNum, intensities, binWidth, out _);
         }
 
-        /// <summary>Insert a new scan using an array of intensities (as ints) along with binWidth</summary>
+        /// <summary>Insert a new scan using an array of intensities (as integers) along with binWidth</summary>
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters">Frame parameters</param>
         /// <param name="scanNum">
@@ -2136,7 +2139,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
-        /// It is used in the nunit tests
+        /// It is used in the NUnit tests
         /// </summary>
         /// <param name="startFrameNum">
         /// The start Frame Num.
@@ -2370,7 +2373,7 @@ namespace UIMFLibrary
             }
             else
             {
-                Console.WriteLine("Skipping unsupported keytype, " + paramKey);
+                Console.WriteLine("Skipping unsupported key type, " + paramKey);
             }
         }
 
@@ -2530,7 +2533,7 @@ namespace UIMFLibrary
             }
             else
             {
-                Console.WriteLine("Skipping unsupported keytype, " + paramKeyType);
+                Console.WriteLine("Skipping unsupported key type, " + paramKeyType);
             }
 
         }

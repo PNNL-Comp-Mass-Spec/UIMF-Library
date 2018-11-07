@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
 

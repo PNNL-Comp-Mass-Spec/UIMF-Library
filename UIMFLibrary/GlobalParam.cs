@@ -37,7 +37,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: Bin width
         /// </summary>
-        BinWidth = 5,               // Tof-bin size (in nanosecods) or ppm bin size (in parts-per-million)
+        BinWidth = 5,               // Tof-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
 
         /// <summary>
         /// Key: Bins
@@ -62,6 +62,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: Prescan TOF Pulses
         /// </summary>
+        /// <remarks>
+        /// Tracks the maximum scan number in any frame
+        /// </remarks>
         PrescanTOFPulses = 10,
 
         /// <summary>
@@ -164,6 +167,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramType">Frame parameter definition</param>
         /// <param name="value">Parameter value</param>
+        // ReSharper disable once UnusedMember.Global
         public GlobalParam(GlobalParamKeyType paramType, dynamic value)
         {
             InitializeByType(paramType);
@@ -260,7 +264,7 @@ namespace UIMFLibrary
                     break;
 
                 case GlobalParamKeyType.PrescanTOFPulses:
-                    InitializeByType("PrescanTOFPulses", dataType, "Prescan TOF pulses");
+                    InitializeByType("PrescanTOFPulses", dataType, "Prescan TOF pulses; this tracks the maximum scan number in any frame");
                     break;
 
                 case GlobalParamKeyType.PrescanAccumulations:
@@ -300,7 +304,7 @@ namespace UIMFLibrary
                     break;
 
                 case GlobalParamKeyType.Unknown:
-                    throw new ArgumentOutOfRangeException(nameof(paramType), "Cannot initialiaze a global parameter of type Unknown: " + (int)paramType);
+                    throw new ArgumentOutOfRangeException(nameof(paramType), "Cannot initialize a global parameter of type Unknown: " + (int)paramType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized global param enum for paramType: " + (int)paramType);

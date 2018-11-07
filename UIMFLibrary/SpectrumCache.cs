@@ -33,6 +33,7 @@ namespace UIMFLibrary
         /// <param name="summedIntensityDictionary">
         /// The summed intensity dictionary.
         /// </param>
+        // ReSharper disable once UnusedMember.Global
         public SpectrumCache(
             int startFrameNumber,
             int endFrameNumber,
@@ -175,8 +176,8 @@ namespace UIMFLibrary
         /// Estimates the amount of memory used by SummedIntensityDictionary and ListOfIntensityDictionaries
         /// </summary>
         /// <remarks>
-        /// SummedIntensityDictionary is an int,int dictionary, so each entry takes up 8 bytes.  
-        /// However, given the overhead inerhent in a dictionary, we need to multiply by 5 to get a realistic estimate of the size.
+        /// SummedIntensityDictionary is an int,int dictionary, so each entry takes up 8 bytes.
+        /// However, given the overhead inherent in a dictionary, we need to multiply by 5 to get a realistic estimate of the size.
         /// ListOfIntensityDictionaries used to be a list of dictionaries, but it is now a list of SortedList objects.
         /// Each entry nominally takes up 8 bytes, but in reality each entry takes up 16 bytes.</remarks>
         private void UpdateMemoryUsageEstimate()

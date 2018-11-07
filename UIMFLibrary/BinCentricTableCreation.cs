@@ -97,6 +97,7 @@ namespace UIMFLibrary
         /// <param name="uimfReader">
         /// UIMF Reader connection
         /// </param>
+        // ReSharper disable once UnusedMember.Global
         public void CreateBinCentricTable(SQLiteConnection uimfWriterConnection, DataReader uimfReader)
         {
             CreateBinCentricTable(uimfWriterConnection, uimfReader, string.Empty);
@@ -153,6 +154,7 @@ namespace UIMFLibrary
         /// <param name="e">
         /// Message event args
         /// </param>
+        // ReSharper disable once UnusedMember.Global
         public void OnErrorMessage(MessageEventArgs e)
         {
             if (OnError != null)
@@ -606,7 +608,7 @@ namespace UIMFLibrary
         /// Sort data for bin.
         /// </summary>
         /// <param name="inConnection">
-        /// Sqlite connection
+        /// SQLite connection
         /// </param>
         /// <param name="insertCommand">
         /// Insert command

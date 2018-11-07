@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     /// <summary>

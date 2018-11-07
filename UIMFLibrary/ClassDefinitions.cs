@@ -27,7 +27,7 @@ namespace UIMFLibrary
         public int Bins;
 
         /// <summary>
-        /// Type of dataset (HMS/HMSMS/HMS-MSn)
+        /// Type of dataset (HMS/HMS/HMS-MSn)
         /// </summary>
         public string DatasetType;
 
@@ -81,6 +81,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Prescan TOF pulses
         /// </summary>
+        /// <remarks>
+        /// Tracks the maximum scan number in any frame
+        /// </remarks>
         public int Prescan_TOFPulses;
 
         /// <summary>
@@ -160,7 +163,7 @@ namespace UIMFLibrary
         public double Duration;
 
         /// <summary>
-        /// Electropsray voltage.
+        /// Electrospray voltage.
         /// </summary>
         public double ESIVoltage;
 
@@ -236,6 +239,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Number of TOF scans in a frame
         /// </summary>
+        /// <remarks>
+        /// This is actually the maximum scan number in the frame,
+        /// since a frame might not start at scan 1 and may have missing scans
+        /// </remarks>
         public int Scans;
 
         /// <summary>
@@ -414,6 +421,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="dtRunStartTime">
         /// </param>
+        // ReSharper disable once UnusedMember.Global
         public FrameParameters(DateTime dtRunStartTime)
         {
             StartTime = DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
@@ -426,6 +434,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Included for backwards compatibility
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public double voltEntranceIFTIn
         {
             get => voltEntranceHPFIn;
@@ -436,6 +445,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Included for backwards compatibility
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public double voltEntranceIFTOut
         {
             get => voltEntranceHPFOut;
@@ -446,6 +456,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Included for backwards compatibility
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public double voltExitIFTIn
         {
             get => voltExitHPFIn;
@@ -456,6 +467,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Included for backwards compatibility
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public double voltExitIFTOut
         {
             get => voltExitHPFOut;
@@ -473,6 +485,7 @@ namespace UIMFLibrary
         /// <param name="Target">
         /// Output: target object
         /// </param>
+        // ReSharper disable once UnusedMember.Global
         public void CopyTo(out FrameParameters Target)
         {
             Target = new FrameParameters

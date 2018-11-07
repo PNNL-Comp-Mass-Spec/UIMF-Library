@@ -425,6 +425,7 @@ namespace UIMFLibrary
         /// <param name="frameParamsByType"></param>
         /// <returns></returns>
         [Obsolete("Superseded by ConvertDynamicParamsToFrameParams")]
+        // ReSharper disable once UnusedMember.Global
         public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
         {
             var frameParams = new FrameParams();
@@ -575,7 +576,7 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 return new FrameParameters();
 
-            var frametype = frameParameters.FrameType;
+            var frameType = frameParameters.FrameType;
 
             // Populate legacyFrameParams using dictionary frameParams
             var legacyFrameParams = new FrameParameters
@@ -584,7 +585,7 @@ namespace UIMFLibrary
                 StartTime = frameParameters.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0),
                 Duration = frameParameters.GetValueDouble(FrameParamKeyType.DurationSeconds, 0),
                 Accumulations = frameParameters.GetValueInt32(FrameParamKeyType.Accumulations, 0),
-                FrameType = frametype,
+                FrameType = frameType,
                 Decoded = frameParameters.GetValueInt32(FrameParamKeyType.Decoded, 0),
                 CalibrationDone = frameParameters.GetValueInt32(FrameParamKeyType.CalibrationDone, 0),
                 Scans = frameParameters.Scans,
@@ -754,6 +755,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramName">Param key name</param>
         /// <returns><see cref="FrameParamDef"/> instance</returns>
+        // ReSharper disable once UnusedMember.Global
         public static FrameParamDef GetParamDefByName(string paramName)
         {
             if (string.IsNullOrWhiteSpace(paramName))
@@ -875,12 +877,12 @@ namespace UIMFLibrary
                 case FrameParamKeyType.AmbientTemperature:
                     return new FrameParamDef(FrameParamKeyType.AmbientTemperature,
                                           FrameParamKeyType.AmbientTemperature.ToString(), targetType,
-                                          "Ambient temperature, in Celcius");
+                                          "Ambient temperature, in Celsius");
 
                 case FrameParamKeyType.DriftTubeTemperature:
                     return new FrameParamDef(FrameParamKeyType.DriftTubeTemperature,
                                              FrameParamKeyType.DriftTubeTemperature.ToString(), targetType,
-                                             "Drift tube temperature, in Celcius");
+                                             "Drift tube temperature, in Celsius");
 
                 case FrameParamKeyType.VoltHVRack1:
                     return new FrameParamDef(FrameParamKeyType.VoltHVRack1, FrameParamKeyType.VoltHVRack1.ToString(),

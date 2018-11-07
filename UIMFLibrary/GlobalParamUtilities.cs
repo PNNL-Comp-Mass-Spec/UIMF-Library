@@ -89,6 +89,7 @@ namespace UIMFLibrary
         /// <param name="GlobalParamsByType"></param>
         /// <returns></returns>
         [Obsolete("Superseded by ConvertDynamicParamsToGlobalParams")]
+        // ReSharper disable once UnusedMember.Global
         public static GlobalParams ConvertStringParamsToGlobalParams(Dictionary<GlobalParamKeyType, string> GlobalParamsByType)
         {
             var globalParams = new GlobalParams();
@@ -160,7 +161,7 @@ namespace UIMFLibrary
                     {GlobalParamKeyType.DateStarted, typeof(string)},            // Stored as a string to assure the format does not change
                     {GlobalParamKeyType.NumFrames, typeof(int)},
                     {GlobalParamKeyType.TimeOffset, typeof(int)},
-                    {GlobalParamKeyType.BinWidth, typeof(double)},               // Tof-bin size (in nanosecods) or ppm bin size (in parts-per-million)
+                    {GlobalParamKeyType.BinWidth, typeof(double)},               // Tof-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
                     {GlobalParamKeyType.Bins, typeof(int)},
                     {GlobalParamKeyType.TOFCorrectionTime, typeof(float)},
                     {GlobalParamKeyType.TOFIntensityType, typeof(string)},
@@ -246,6 +247,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramName"></param>
         /// <returns>Specific GlobalParamKeyType enum, or GlobalParamKeyType.Unknown</returns>
+        // ReSharper disable once UnusedMember.Global
         public static GlobalParamKeyType GetParamTypeByName(string paramName)
         {
             var iteration = 0;

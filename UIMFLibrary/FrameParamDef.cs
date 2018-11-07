@@ -46,8 +46,12 @@ namespace UIMFLibrary
         CalibrationDone = 6,
 
         /// <summary>
-        /// Key: Scans
+        /// Key: Maximum scan number in the frame
         /// </summary>
+        /// <remarks>
+        /// A frame might not start at scan 1 and may have missing scans, so Scans is actually the maximum scan number
+        /// If ScanNumFirst and ScanNumLast are defined, Scans should be equal to ScanNumLast
+        /// </remarks>
         Scans = 7,
 
         /// <summary>
@@ -313,6 +317,7 @@ namespace UIMFLibrary
         /// Constructor
         /// </summary>
         /// <param name="paramType">Strongly typed enum of the new parameter</param>
+        // ReSharper disable once UnusedMember.Global
         public FrameParamDef(FrameParamKeyType paramType)
         {
             var paramDef = FrameParamUtilities.GetParamDefByType(paramType);
@@ -375,6 +380,7 @@ namespace UIMFLibrary
         /// Clone this frame parameter definition (deep copy)
         /// </summary>
         /// <returns></returns>
+        // ReSharper disable once UnusedMember.Global
         public FrameParamDef CopyTo()
         {
             var paramDefCopy = new FrameParamDef(ParamType, Name, DataType, Description);

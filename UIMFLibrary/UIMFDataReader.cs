@@ -2,7 +2,7 @@
 // <summary>
 //   UIMF Data Reader Class
 //
-//   Written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
+//   Originally written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
 //   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, Bill Danielson, Spencer Prost, and Bryson Gibbons
 //   E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
 //   Website: http://omics.pnl.gov/software/
@@ -12,6 +12,8 @@
 
 using System.Data;
 using System.Globalization;
+
+// ReSharper disable UnusedMember.Global
 
 namespace UIMFLibrary
 {
@@ -122,44 +124,44 @@ namespace UIMFLibrary
         private int m_frameTypeMS1;
 
         /// <summary>
-        /// Sqlite command for getting bin data
+        /// SQLite command for getting bin data
         /// </summary>
         private SQLiteCommand m_getBinDataCommand;
 
         // v1.2 prepared statements
 
         /// <summary>
-        /// Sqlite command for getting data count per frame
+        /// SQLite command for getting data count per frame
         /// </summary>
         private SQLiteCommand m_getCountPerFrameCommand;
 
         /// <summary>
-        /// Sqlite command for getting file bytes stored in a table
+        /// SQLite command for getting file bytes stored in a table
         /// </summary>
         private SQLiteCommand m_getFileBytesCommand;
 
         /// <summary>
-        /// Sqlite command for getting the legacy frame parameters
+        /// SQLite command for getting the legacy frame parameters
         /// </summary>
         private SQLiteCommand m_getFrameParametersCommand;
 
         /// <summary>
-        /// Sqlite command for getting the parameters from Frame_Params
+        /// SQLite command for getting the parameters from Frame_Params
         /// </summary>
         private SQLiteCommand m_getFrameParamsCommand;
 
         /// <summary>
-        /// Sqlite command for getting a list of the scans for a given frame, along with the NonZeroCount, BPI, BPI_MZ, and TIC
+        /// SQLite command for getting a list of the scans for a given frame, along with the NonZeroCount, BPI, BPI_MZ, and TIC
         /// </summary>
         private SQLiteCommand m_getFrameScansCommand;
 
         /// <summary>
-        /// Sqlite command for getting frames and scans by descending intensity
+        /// SQLite command for getting frames and scans by descending intensity
         /// </summary>
         private SQLiteCommand m_getFramesAndScanByDescendingIntensityCommand;
 
         /// <summary>
-        /// Sqlite command for getting a spectrum
+        /// SQLite command for getting a spectrum
         /// </summary>
         private SQLiteCommand m_getSpectrumCommand;
 
@@ -373,7 +375,7 @@ namespace UIMFLibrary
         public bool PressureIsMilliTorr { get; set; }
 
         /// <summary>
-        /// Gets the tenths of nano seconds per bin.
+        /// Gets the tenths of nanoseconds per bin.
         /// </summary>
         public double TenthsOfNanoSecondsPerBin => m_globalParameters.BinWidth * 10.0;
 
@@ -423,7 +425,7 @@ namespace UIMFLibrary
                     {
                         var sql = reader.GetString(0);
 
-                        // Replace the first open parenthese with a comma
+                        // Replace the first open parentheses with a comma
                         var charIndex = sql.IndexOf("(", StringComparison.Ordinal);
                         if (charIndex > 0)
                         {
@@ -452,7 +454,7 @@ namespace UIMFLibrary
         /// Compute the spacing between the two midpoint bins in a given frame
         /// </summary>
         /// <param name="frameNumber">Frame number</param>
-        /// <returns>Spacing between bins (in Thompsons)</returns>
+        /// <returns>Spacing between bins (in Thomsons)</returns>
         public double GetDeltaMz(int frameNumber)
         {
             // Determine the bin number at the midpoint
@@ -467,8 +469,8 @@ namespace UIMFLibrary
         /// Compute the spacing between any two adjacent bins in a given frame
         /// </summary>
         /// <param name="frameNumber">Frame number</param>
-        /// <param name="startBin">Starting bin nuber</param>
-        /// <returns>Spacing between bins (in Thompsons)</returns>
+        /// <param name="startBin">Starting bin number</param>
+        /// <returns>Spacing between bins (in Thomsons)</returns>
         public double GetDeltaMz(int frameNumber, int startBin)
         {
             var frameParams = GetFrameParams(frameNumber);
@@ -494,7 +496,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Retrieves a given frame (or frames) and sums them in order to be viewed on a heatmap view or other 2D representation visually.
+        /// Retrieves a given frame (or frames) and sums them in order to be viewed on a heat map view or other 2D representation visually.
         /// </summary>
         /// <param name="startFrameNumber">
         /// </param>
@@ -943,7 +945,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Returns the x,y,z arrays needed for a surface plot for the elution of the species in both the LC and drifttime dimensions
+        /// Returns the x,y,z arrays needed for a surface plot for the elution of the species in both the LC and drift time dimensions
         /// </summary>
         /// <param name="startFrameNumber">
         /// </param>
@@ -1151,6 +1153,8 @@ namespace UIMFLibrary
                     while (reader.Read())
                     {
                         var tableName = Convert.ToString(reader["Name"]);
+
+                        // ReSharper disable once StringLiteralTypo
                         if (tableName.StartsWith("Calib_"))
                         {
                             calibrationTableNames.Add(tableName);
@@ -1173,7 +1177,7 @@ namespace UIMFLibrary
         /// The frame number.
         /// </param>
         /// <returns>
-        /// Sum of nonzerocount for the spectra in a frame<see cref="int"/>.
+        /// Sum of NonZeroCount for the spectra in a frame<see cref="int"/>.
         /// </returns>
         public int GetCountPerFrame(int frameNumber)
         {
@@ -1194,7 +1198,7 @@ namespace UIMFLibrary
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception looking up sum(nonzerocount) for frame " + frameNumber + ": " + ex.Message);
+                Console.WriteLine("Exception looking up sum(NonZeroCount) for frame " + frameNumber + ": " + ex.Message);
                 countPerFrame = 1;
             }
 
@@ -1739,7 +1743,7 @@ namespace UIMFLibrary
         {
 
             /*
-             * [gord, April 2011] A little history..
+             * [April 2011] A little history from Gordon Slysz
              * Earlier UIMF files have the column 'PressureBack' but not the
              * newer 'RearIonFunnelPressure' or 'IonFunnelTrapPressure'
              *
@@ -1891,7 +1895,7 @@ namespace UIMFLibrary
         /// Start scan.
         /// </param>
         /// <param name="endScan">
-        /// Eend scan.
+        /// End scan.
         /// </param>
         /// <param name="targetMZ">
         /// Target mz.
@@ -2087,7 +2091,8 @@ namespace UIMFLibrary
         /// Number of bins to return when using pagingFilterStartBin
         /// </param>
         /// <param name="numFramesToSum">
-        /// Number of frames to sum. Must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
+        /// Number of frames to sum. Must be an odd number greater than 0.
+        /// e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
         /// </param>
         /// <returns>
         ///  Array of intensities for a given frame; dimensions are bin and scan
@@ -2106,7 +2111,8 @@ namespace UIMFLibrary
             if (numFramesToSum < 1 || numFramesToSum % 2 != 1)
             {
                 throw new Exception(
-                    "Number of frames to sum must be an odd number greater than 0.\ne.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.");
+                    "Number of frames to sum must be an odd number greater than 0;" +
+                    "e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.");
             }
 
             // This will be the +- number of frames
@@ -2326,7 +2332,7 @@ namespace UIMFLibrary
         /// Tolerance in mz.
         /// </param>
         /// <param name="frameValues">
-        /// Ouput: list of frame numbers
+        /// Output: list of frame numbers
         /// </param>
         /// <param name="intensities">
         /// Output: list of summed intensity values
@@ -4146,9 +4152,9 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Method to check if this dataset has any MSMS data
+        /// Method to check if this dataset has any MS/MS data
         /// </summary>
-        /// <returns>True if MSMS frames are present</returns>
+        /// <returns>True if MS/MS frames are present</returns>
         public bool HasMSMSData()
         {
             var count = 0;
@@ -4319,7 +4325,7 @@ namespace UIMFLibrary
                         catch (Exception ex)
                         {
                             Console.WriteLine(
-                                "Exception determing if all frames are calibrated; error occurred with FrameType " +
+                                "Exception determining if all frames are calibrated; error occurred with FrameType " +
                                 iFrameType + ": "
                                 + ex.Message);
                         }
@@ -5200,7 +5206,7 @@ namespace UIMFLibrary
 
             if (filterByFrameType)
             {
-                // Need to tie in the Frame_Params or Frame_Parameters tabe
+                // Need to tie in the Frame_Params or Frame_Parameters table
 
                 if (m_UsingLegacyFrameParameters)
                 {
@@ -5444,7 +5450,7 @@ namespace UIMFLibrary
 
                 int frameTypeInt = GetInt16(reader, "FrameType");
 
-                // If the frametype is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
+                // If the frameType is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
                 if (frameTypeInt == 0)
                 {
                     fp.FrameType = FrameType.MS1;
@@ -5675,6 +5681,7 @@ namespace UIMFLibrary
             return true;
         }
 
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void ValidateScanNumber(int scanNum)
         {
             if (scanNum < 0)

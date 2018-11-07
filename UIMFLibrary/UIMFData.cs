@@ -6,6 +6,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     /// <summary>
@@ -218,7 +220,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UIMFData"/> class.
-        /// Constructor for UIMF datawriter that takes the filename and begins the transaction.
+        /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
         /// <param name="fileName">
         /// Full path to the data file
@@ -448,7 +450,7 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Returns the bin value that corresponds to an m/z value.
-        /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
+        /// NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (e.g. FrameParameter A2)
         /// </summary>
         /// <param name="slope">
         /// </param>
@@ -470,7 +472,7 @@ namespace UIMFLibrary
             double correctionTimeForTOF,
             double targetMZ)
         {
-            // NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (eg.  FrameParameter A2)
+            // NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (e.g. FrameParameter A2)
             var binCorrection = (correctionTimeForTOF / 1000) / binWidth;
             var bin = (Math.Sqrt(targetMZ) / slope + intercept) / binWidth * 1000;
 
@@ -533,7 +535,7 @@ namespace UIMFLibrary
         /// Determine the columns in a table or view
         /// </summary>
         /// <param name="uimfConnection">
-        /// Sqlite connection
+        /// SQLite connection
         /// </param>
         /// <param name="tableName">
         /// Table name
@@ -634,7 +636,7 @@ namespace UIMFLibrary
         /// Check whether a table has a column
         /// </summary>
         /// <param name="uimfConnection">
-        /// Sqlite connection
+        /// SQLite connection
         /// </param>
         /// <param name="tableName">
         /// Table name
@@ -963,7 +965,7 @@ namespace UIMFLibrary
             {
                 m_UnrecognizedFrameParamTypes.Add(paramID);
                 Console.WriteLine("Ignoring frame parameter " + paramName + " (ID " + paramID + "); " +
-                                  "you need an updated copy of the UIMFLibary that supports this new parameter");
+                                  "you need an updated copy of the UIMFLibrary that supports this new parameter");
             }
 
         }
@@ -1015,7 +1017,7 @@ namespace UIMFLibrary
                         {
                             // Unrecognized global parameter type; ignore it
                             Console.WriteLine("Ignoring global parameter ID " + paramID + "; " +
-                                              "you need an updated copy of the UIMFLibary that supports this new parameter");
+                                              "you need an updated copy of the UIMFLibrary that supports this new parameter");
 
                             continue;
                         }
