@@ -136,12 +136,12 @@ namespace UIMFLibrary
         /// <summary>
         /// Number of error messages that have been caught
         /// </summary>
-        protected internal static int m_errMessageCounter;
+        protected internal static int mErrMessageCounter;
 
         /// <summary>
         /// Tracks the frame parameter types that were not recognized
         /// </summary>
-        private static readonly SortedSet<int> m_UnrecognizedFrameParamTypes = new SortedSet<int>();
+        private static readonly SortedSet<int> mUnrecognizedFrameParamTypes = new SortedSet<int>();
 
         #endregion
 
@@ -150,7 +150,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Frame parameter keys
         /// </summary>
-        protected Dictionary<FrameParamKeyType, FrameParamDef> m_frameParameterKeys;
+        protected Dictionary<FrameParamKeyType, FrameParamDef> mFrameParameterKeys;
 
         /// <summary>
         /// U.S. Culture Info
@@ -160,22 +160,22 @@ namespace UIMFLibrary
         /// <summary>
         /// Connection to the database
         /// </summary>
-        protected SQLiteConnection m_dbConnection;
+        protected SQLiteConnection mDbConnection;
 
         /// <summary>
         /// Full path to the UIMF file
         /// </summary>
-        protected readonly string m_FilePath;
+        protected readonly string mFilePath;
 
         /// <summary>
         /// Global parameters object
         /// </summary>
-        protected GlobalParams m_globalParameters { get; private set; }
+        protected GlobalParams mGlobalParameters { get; private set; }
 
         /// <summary>
         /// This dictionary tracks the existing of key tables, including whether or not we have actually checked for the table
         /// </summary>
-        private readonly Dictionary<UIMFTableType, TableStatus> m_TableStatus;
+        private readonly Dictionary<UIMFTableType, TableStatus> mTableStatus;
 
         #endregion
 
@@ -207,7 +207,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets the uimf file path.
         /// </summary>
-        public string UimfFilePath => m_FilePath;
+        public string UimfFilePath => mFilePath;
 
         /// <summary>
         /// The format version of the UIMF file
@@ -228,17 +228,17 @@ namespace UIMFLibrary
         /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         protected UIMFData(string fileName)
         {
-            m_errMessageCounter = 0;
+            mErrMessageCounter = 0;
 
             FileSystemInfo uimfFileInfo = new FileInfo(fileName);
-            m_FilePath = uimfFileInfo.FullName;
+            mFilePath = uimfFileInfo.FullName;
 
-            m_globalParameters = new GlobalParams();
+            mGlobalParameters = new GlobalParams();
 
-            m_TableStatus = new Dictionary<UIMFTableType, TableStatus>();
+            mTableStatus = new Dictionary<UIMFTableType, TableStatus>();
             foreach (var tableType in Enum.GetValues(typeof(UIMFTableType)).Cast<UIMFTableType>())
             {
-                m_TableStatus.Add(tableType, new TableStatus());
+                mTableStatus.Add(tableType, new TableStatus());
             }
 
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -276,11 +276,11 @@ namespace UIMFLibrary
         {
             if (disposing)
             {
-                if (m_dbConnection != null)
+                if (mDbConnection != null)
                 {
-                    m_dbConnection.Close();
-                    m_dbConnection.Dispose();
-                    m_dbConnection = null;
+                    mDbConnection.Close();
+                    mDbConnection.Dispose();
+                    mDbConnection = null;
                 }
             }
         }
@@ -304,22 +304,22 @@ namespace UIMFLibrary
         /// </exception>
         public Dictionary<FrameParamKeyType, FrameParamDef> GetFrameParameterKeys(bool forceRefresh = false)
         {
-            if (m_dbConnection == null)
+            if (mDbConnection == null)
             {
-                return m_frameParameterKeys;
+                return mFrameParameterKeys;
             }
 
-            if (!forceRefresh && m_frameParameterKeys != null)
-                return m_frameParameterKeys;
+            if (!forceRefresh && mFrameParameterKeys != null)
+                return mFrameParameterKeys;
 
-            if (m_frameParameterKeys == null)
-                m_frameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
+            if (mFrameParameterKeys == null)
+                mFrameParameterKeys = new Dictionary<FrameParamKeyType, FrameParamDef>();
             else
-                m_frameParameterKeys.Clear();
+                mFrameParameterKeys.Clear();
 
-            m_frameParameterKeys = GetFrameParameterKeys(m_dbConnection);
+            mFrameParameterKeys = GetFrameParameterKeys(mDbConnection);
 
-            return m_frameParameterKeys;
+            return mFrameParameterKeys;
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace UIMFLibrary
         [Obsolete("Use GetGlobalParams")]
         public GlobalParameters GetGlobalParameters()
         {
-            return GlobalParamUtilities.GetLegacyGlobalParameters(m_globalParameters);
+            return GlobalParamUtilities.GetLegacyGlobalParameters(mGlobalParameters);
         }
 
         /// <summary>
@@ -340,12 +340,12 @@ namespace UIMFLibrary
         /// <returns></returns>
         public GlobalParams GetGlobalParams()
         {
-            if (m_globalParameters != null)
+            if (mGlobalParameters != null)
             {
-                return m_globalParameters;
+                return mGlobalParameters;
             }
 
-            return m_globalParameters;
+            return mGlobalParameters;
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace UIMFLibrary
         /// </returns>
         public List<string> GetTableColumnNames(string tableName)
         {
-            return GetTableColumnNames(m_dbConnection, tableName);
+            return GetTableColumnNames(mDbConnection, tableName);
         }
 
         /// <summary>
@@ -373,7 +373,7 @@ namespace UIMFLibrary
         /// </returns>
         public bool IndexExists(string indexName)
         {
-            return IndexExists(m_dbConnection, indexName);
+            return IndexExists(mDbConnection, indexName);
         }
 
         /// <summary>
@@ -387,7 +387,7 @@ namespace UIMFLibrary
         /// </returns>
         public bool TableExists(string tableName)
         {
-            return TableExists(m_dbConnection, tableName);
+            return TableExists(mDbConnection, tableName);
         }
 
         /// <summary>
@@ -408,7 +408,7 @@ namespace UIMFLibrary
         /// </remarks>
         public bool TableHasColumn(string tableName, string columnName)
         {
-            return TableHasColumn(m_dbConnection, tableName, columnName);
+            return TableHasColumn(mDbConnection, tableName, columnName);
         }
 
         #endregion
@@ -762,7 +762,7 @@ namespace UIMFLibrary
                             }
                             catch
                             {
-                                m_errMessageCounter++;
+                                mErrMessageCounter++;
                                 Console.WriteLine(
                                     "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                             }
@@ -961,9 +961,9 @@ namespace UIMFLibrary
         /// <param name="paramName"></param>
         protected internal static void WarnUnrecognizedFrameParamID(int paramID, string paramName)
         {
-            if (!m_UnrecognizedFrameParamTypes.Contains(paramID))
+            if (!mUnrecognizedFrameParamTypes.Contains(paramID))
             {
-                m_UnrecognizedFrameParamTypes.Add(paramID);
+                mUnrecognizedFrameParamTypes.Add(paramID);
                 Console.WriteLine("Ignoring frame parameter " + paramName + " (ID " + paramID + "); " +
                                   "you need an updated copy of the UIMFLibrary that supports this new parameter");
             }
@@ -975,7 +975,7 @@ namespace UIMFLibrary
         #region Methods
 
         /// <summary>
-        /// Read either the global params (or the legacy global parameters) and store them to m_globalParameters
+        /// Read either the global params (or the legacy global parameters) and store them to mGlobalParameters
         /// </summary>
         /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
         protected void CacheGlobalParameters()
@@ -985,16 +985,16 @@ namespace UIMFLibrary
             if (usingLegacyGlobalParameters)
             {
                 // Populate the global parameters object
-                var legacyGlobalParameters = GetGlobalParametersFromTable(m_dbConnection);
+                var legacyGlobalParameters = GetGlobalParametersFromTable(mDbConnection);
 
                 var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                m_globalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+                mGlobalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
                 return;
             }
 
-            m_globalParameters = new GlobalParams();
+            mGlobalParameters = new GlobalParams();
 
-            using (var dbCommand = m_dbConnection.CreateCommand())
+            using (var dbCommand = mDbConnection.CreateCommand())
             {
                 dbCommand.CommandText = "SELECT ParamID, ParamValue FROM " + GLOBAL_PARAMS_TABLE;
 
@@ -1033,7 +1033,7 @@ namespace UIMFLibrary
                                               paramValue, paramType, dataType));
                         }
 
-                        m_globalParameters.AddUpdateValue(paramType, paramValueDynamic);
+                        mGlobalParameters.AddUpdateValue(paramType, paramValueDynamic);
                     }
                 }
             }
@@ -1074,14 +1074,14 @@ namespace UIMFLibrary
         /// <returns>True if the table exists, false if missing</returns>
         private bool CheckHasTable(UIMFTableType tableType, string tableName)
         {
-            var table = m_TableStatus[tableType];
+            var table = mTableStatus[tableType];
             if (!table.Exists && !table.Checked)
             {
                 var tableExists = TableExists(tableName);
                 UpdateTableExists(tableType, tableExists);
             }
 
-            return m_TableStatus[tableType].Exists;
+            return mTableStatus[tableType].Exists;
         }
 
         /// <summary>
@@ -1117,7 +1117,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+                ((t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
 
             mz = (mz * mz) + resMassErr;
 
@@ -1149,7 +1149,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                ((t - (double)m_globalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+                ((t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
 
             mz = (mz * mz) + resMassErr;
 
@@ -1506,7 +1506,7 @@ namespace UIMFLibrary
             var versions = new List<VersionInfo>();
             if (HasVersionInfoTable)
             {
-                using (var dbCommand = m_dbConnection.CreateCommand())
+                using (var dbCommand = mDbConnection.CreateCommand())
                 {
                     dbCommand.CommandText = "SELECT * FROM " + VERSION_INFO_TABLE;
 
@@ -1593,19 +1593,19 @@ namespace UIMFLibrary
         /// <param name="checkedForTable"></param>
         protected void UpdateTableCheckedStatus(UIMFTableType tableType, bool checkedForTable = true)
         {
-            var status = m_TableStatus[tableType];
+            var status = mTableStatus[tableType];
             status.Checked = checkedForTable;
 
-            m_TableStatus[tableType] = status;
+            mTableStatus[tableType] = status;
         }
 
         private void UpdateTableExists(UIMFTableType tableType, bool tableExists = true)
         {
-            var status = m_TableStatus[tableType];
+            var status = mTableStatus[tableType];
             status.Checked = true;
             status.Exists = tableExists;
 
-            m_TableStatus[tableType] = status;
+            mTableStatus[tableType] = status;
         }
 
         /// <summary>
@@ -1616,7 +1616,7 @@ namespace UIMFLibrary
         {
             var usingLegacyParams = TableExists(GLOBAL_PARAMETERS_TABLE);
 
-            if (TableExists(m_dbConnection, GLOBAL_PARAMS_TABLE))
+            if (TableExists(mDbConnection, GLOBAL_PARAMS_TABLE))
                 usingLegacyParams = false;
 
             return usingLegacyParams;

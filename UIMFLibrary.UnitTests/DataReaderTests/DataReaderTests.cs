@@ -24,9 +24,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Fields
 
         /// <summary>
-        /// The m_reader.
+        /// The data reader.
         /// </summary>
-        private DataReader m_reader;
+        private DataReader mReader;
 
         #endregion
 
@@ -73,19 +73,19 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             const int startFrame = 306;
             const int startScan = 128;
-            const double bpimz = 173.289545940302;
-            const double toleranceInMZ = 25 / 1e6 * bpimz;
+            const double bpiMZ = 173.289545940302;
+            const double toleranceInMZ = 25 / 1e6 * bpiMZ;
 
             Console.WriteLine("Tolerance in mz is " + toleranceInMZ);
-            using (m_reader = new DataReader(filePath))
+            using (mReader = new DataReader(filePath))
             {
-                var intensityMap = m_reader.GetFramesAndScanIntensitiesForAGivenMz(
+                var intensityMap = mReader.GetFramesAndScanIntensitiesForAGivenMz(
                     startFrame - 40,
                     startFrame + 40,
                     0,
                     startScan - 20,
                     startScan + 20,
-                    bpimz,
+                    bpiMZ,
                     toleranceInMZ);
 
                 var lastIndex = intensityMap.Length - 1;
@@ -687,10 +687,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int testFrame = 1000;
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
 
-            using (m_reader = new DataReader(filePath))
+            using (mReader = new DataReader(filePath))
             {
-                var gp = m_reader.GetGlobalParams();
-                var fp = m_reader.GetFrameParams(testFrame);
+                var gp = mReader.GetGlobalParams();
+                var fp = mReader.GetFrameParams(testFrame);
 
                 var sb = new StringBuilder();
 
