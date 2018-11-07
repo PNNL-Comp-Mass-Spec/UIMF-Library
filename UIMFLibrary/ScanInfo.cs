@@ -11,18 +11,16 @@ namespace UIMFLibrary
     /// </summary>
     public class ScanInfo
     {
-        private readonly int mFrameNumber;
-        private readonly int mScanNumber;
 
         /// <summary>
         /// Frame number for scan
         /// </summary>
-        public int Frame => mFrameNumber;
+        public int Frame { get; }
 
         /// <summary>
         /// Scan number
         /// </summary>
-        public int Scan => mScanNumber;
+        public int Scan { get; }
 
         /// <summary>
         /// Number of non-zero (positive) intensity values in the scan
@@ -61,8 +59,8 @@ namespace UIMFLibrary
         /// <param name="scanNumber">Scan number</param>
         public ScanInfo(int frameNumber, int scanNumber)
         {
-            mFrameNumber = frameNumber;
-            mScanNumber = scanNumber;
+            Frame = frameNumber;
+            Scan = scanNumber;
         }
 
         /// <summary>
@@ -71,7 +69,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Format("Frame {0}, scan {1}, TIC {2:F0}, BPI {3:F0}, BPI_Mz {4:F4}", mFrameNumber, mScanNumber, TIC, BPI, BPI_MZ);
+            return string.Format("Frame {0}, scan {1}, TIC {2:F0}, BPI {3:F0}, BPI_Mz {4:F4}", Frame, Scan, TIC, BPI, BPI_MZ);
         }
 
     }

@@ -101,6 +101,7 @@ namespace UIMFLibrary
             UpdateMemoryUsageEstimate();
         }
     
+
         #endregion
 
         #region Public Properties
@@ -108,7 +109,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets the end frame number.
         /// </summary>
-        public int EndFrameNumber { get; private set; }
+        public int EndFrameNumber { get; }
 
         /// <summary>
         /// Gets the list of intensity Lists
@@ -119,27 +120,27 @@ namespace UIMFLibrary
         /// Prior to January 2015 we used a Dictionary(int, int), which gives faster lookups for .TryGetValue
         /// However, a Dictionary uses roughly 2x more memory vs. a SortedList, which can cause problems for rich UIMF files
         /// </remarks>
-        public IList<SortedList<int, int>> ListOfIntensityDictionaries { get; private set; }
+        public IList<SortedList<int, int>> ListOfIntensityDictionaries { get; }
 
         /// <summary>
         /// Gets the start frame number.
         /// </summary>
-        public int StartFrameNumber { get; private set; }
+        public int StartFrameNumber { get; }
 
         /// <summary>
         /// Gets the first (minimum) scan number in ListOfIntensityDictionaries
         /// </summary>
-        public int FirstScan { get; private set; }
+        public int FirstScan { get; }
 
         /// <summary>
         /// Gets the last (maximum) scan number in ListOfIntensityDictionaries
         /// </summary>
-        public int LastScan { get; private set; }
+        public int LastScan { get; }
 
         /// <summary>
         /// Gets the summed intensity dictionary.
         /// </summary>
-        public IDictionary<int, int> SummedIntensityDictionary { get; private set; }
+        public IDictionary<int, int> SummedIntensityDictionary { get; }
 
         /// <summary>
         /// Estimated MB of data tracked by this cached spectrum
