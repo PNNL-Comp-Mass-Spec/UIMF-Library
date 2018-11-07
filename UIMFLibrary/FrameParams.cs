@@ -46,14 +46,7 @@ namespace UIMFLibrary
         }
 
         #endregion
-
         #region Member Variables
-
-        /// <summary>
-        /// Frame parameters dictionary
-        /// </summary>
-        /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
-        private readonly Dictionary<FrameParamKeyType, FrameParam> mFrameParameters;
 
         /// <summary>
         /// Mass calibration coefficients are cached to allow for fast lookup via external classes
@@ -68,7 +61,7 @@ namespace UIMFLibrary
         /// Frame parameters dictionary
         /// </summary>
         /// <remarks>Key is parameter type; value is the frame parameter container (<see cref="FrameParam"/> class)</remarks>
-        public Dictionary<FrameParamKeyType, FrameParam> Values => mFrameParameters;
+        public Dictionary<FrameParamKeyType, FrameParam> Values { get; }
 
         /// <summary>
         /// Calibration slope
@@ -150,7 +143,7 @@ namespace UIMFLibrary
         /// </summary>
         public FrameParams()
         {
-            mFrameParameters = new Dictionary<FrameParamKeyType, FrameParam>();
+            Values = new Dictionary<FrameParamKeyType, FrameParam>();
         }
 
         /// <summary>
@@ -200,14 +193,14 @@ namespace UIMFLibrary
         /// <param name="value">Value (dynamic)</param>
         private FrameParams AddUpdateValueDynamic(FrameParamKeyType paramType, dynamic value)
         {
-            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
             else
             {
                 paramEntry = new FrameParam(FrameParamUtilities.GetParamDefByType(paramType), value);
-                mFrameParameters.Add(paramType, paramEntry);
+                Values.Add(paramType, paramEntry);
             }
 
             UpdateCachedParam(paramType, value);
@@ -262,14 +255,14 @@ namespace UIMFLibrary
         /// <param name="value">Value (dynamic)</param>
         private FrameParams AddUpdateValueDynamic(FrameParamDef paramDef, dynamic value)
         {
-            if (mFrameParameters.TryGetValue(paramDef.ParamType, out var paramEntry))
+            if (Values.TryGetValue(paramDef.ParamType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
             else
             {
                 paramEntry = new FrameParam(paramDef, value);
-                mFrameParameters.Add(paramDef.ParamType, paramEntry);
+                Values.Add(paramDef.ParamType, paramEntry);
             }
 
             return this;
@@ -294,7 +287,7 @@ namespace UIMFLibrary
         /// <returns>Value (dynamic)</returns>
         public dynamic GetValue(FrameParamKeyType paramType, dynamic valueIfMissing)
         {
-            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 return paramEntry.Value;
             }
@@ -321,7 +314,7 @@ namespace UIMFLibrary
         /// <returns>Value (double)</returns>
         public double GetValueDouble(FrameParamKeyType paramType, double valueIfMissing)
         {
-            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 if (FrameParamUtilities.ConvertDynamicToDouble(paramEntry.Value, out double result))
                     return result;
@@ -349,7 +342,7 @@ namespace UIMFLibrary
         /// <returns>Value (int)</returns>
         public int GetValueInt32(FrameParamKeyType paramType, int valueIfMissing)
         {
-            if (mFrameParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 if (FrameParamUtilities.ConvertDynamicToInt32(paramEntry.Value, out int result))
                     return result;
@@ -376,7 +369,7 @@ namespace UIMFLibrary
         /// <returns>True if defined, otherwise false</returns>
         public bool HasParameter(FrameParamKeyType paramType)
         {
-            return mFrameParameters.ContainsKey(paramType);
+            return Values.ContainsKey(paramType);
         }
 
         private void UpdateCachedParam(FrameParamKeyType paramType, dynamic value)

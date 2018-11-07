@@ -11,15 +11,6 @@ namespace UIMFLibrary
     /// </summary>
     public class GlobalParams
     {
-        #region Member Variables
-
-        /// <summary>
-        /// Global parameters dictionary
-        /// </summary>
-        /// <remarks>Key is parameter type; value is the Global parameter container (<see cref="GlobalParam"/> class)</remarks>
-        private readonly Dictionary<GlobalParamKeyType, GlobalParam> mGlobalParameters;
-
-        #endregion
 
         #region Properties
 
@@ -27,7 +18,7 @@ namespace UIMFLibrary
         /// Global parameters dictionary
         /// </summary>
         /// <remarks>Key is parameter type; value is the global parameter container (<see cref="GlobalParam"/> class)</remarks>
-        public Dictionary<GlobalParamKeyType, GlobalParam> Values => mGlobalParameters;
+        public Dictionary<GlobalParamKeyType, GlobalParam> Values { get; }
 
         /// <summary>
         /// Total number of TOF bins in frame
@@ -103,7 +94,7 @@ namespace UIMFLibrary
         /// </summary>
         public GlobalParams()
         {
-            mGlobalParameters = new Dictionary<GlobalParamKeyType, GlobalParam>();
+            Values = new Dictionary<GlobalParamKeyType, GlobalParam>();
         }
 
         /// <summary>
@@ -164,14 +155,14 @@ namespace UIMFLibrary
         private GlobalParams AddUpdateValueDynamic(GlobalParamKeyType paramType, dynamic value)
         {
 
-            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 paramEntry.Value = value;
             }
             else
             {
                 paramEntry = new GlobalParam(paramType, value);
-                mGlobalParameters.Add(paramType, paramEntry);
+                Values.Add(paramType, paramEntry);
             }
 
             return this;
@@ -197,7 +188,7 @@ namespace UIMFLibrary
         /// <returns>Value (dynamic)</returns>
         public dynamic GetValue(GlobalParamKeyType paramType, dynamic valueIfMissing)
         {
-            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 return paramEntry.Value;
             }
@@ -224,7 +215,7 @@ namespace UIMFLibrary
         /// <returns>Value (double)</returns>
         public double GetValueDouble(GlobalParamKeyType paramType, double valueIfMissing)
         {
-            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 if (FrameParamUtilities.ConvertDynamicToDouble(paramEntry.Value, out double result))
                     return result;
@@ -252,7 +243,7 @@ namespace UIMFLibrary
         /// <returns>Value (int)</returns>
         public int GetValueInt32(GlobalParamKeyType paramType, int valueIfMissing)
         {
-            if (mGlobalParameters.TryGetValue(paramType, out var paramEntry))
+            if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 if (FrameParamUtilities.ConvertDynamicToInt32(paramEntry.Value, out int result))
                     return result;
@@ -279,7 +270,7 @@ namespace UIMFLibrary
         /// <returns>True if defined, otherwise false</returns>
         public bool HasParameter(GlobalParamKeyType paramType)
         {
-            return mGlobalParameters.ContainsKey(paramType);
+            return Values.ContainsKey(paramType);
         }
     }
 }
