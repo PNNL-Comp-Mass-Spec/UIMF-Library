@@ -1,5 +1,8 @@
 UIMFLibrary Revision History
 
+Version 3.6.2.0; November 6, 2018
+	- Replace UpdateGlobalFrameCount with UpdateGlobalStats
+
 Version 3.6.1.0; January 9, 2018
 	- Consolidate some code to text templates, and separate the RlzEncoding and Compression
 	- Add a couple reader functions to get bin-intensity values without expanding to the full array
