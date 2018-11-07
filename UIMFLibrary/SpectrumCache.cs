@@ -37,7 +37,7 @@ namespace UIMFLibrary
         public SpectrumCache(
             int startFrameNumber,
             int endFrameNumber,
-            IList<SortedList<int, int>> listOfIntensityDictionaries, 
+            IList<SortedList<int, int>> listOfIntensityDictionaries,
             IDictionary<int, int> summedIntensityDictionary)
         {
             StartFrameNumber = startFrameNumber;
@@ -50,7 +50,7 @@ namespace UIMFLibrary
 
             FirstScan = firstScan;
             LastScan = lastScan;
-            
+
             UpdateMemoryUsageEstimate();
         }
 
@@ -72,9 +72,9 @@ namespace UIMFLibrary
         /// <param name="firstScan">The scan number of the first entry in listOfIntensityDictionaries that has non-zero intensities</param>
         /// <param name="lastScan">The scan number of the last entry in listOfIntensityDictionaries that has non-zero intensities</param>
         public SpectrumCache(
-            int startFrameNumber, 
-            int endFrameNumber, 
-            IList<SortedList<int, int>> listOfIntensityDictionaries, 
+            int startFrameNumber,
+            int endFrameNumber,
+            IList<SortedList<int, int>> listOfIntensityDictionaries,
             IDictionary<int, int> summedIntensityDictionary,
             int firstScan,
             int lastScan)
@@ -100,7 +100,6 @@ namespace UIMFLibrary
 
             UpdateMemoryUsageEstimate();
         }
-    
 
         #endregion
 
@@ -172,7 +171,7 @@ namespace UIMFLibrary
                 lastScan = 0;
             }
         }
-        
+
         /// <summary>
         /// Estimates the amount of memory used by SummedIntensityDictionary and ListOfIntensityDictionaries
         /// </summary>

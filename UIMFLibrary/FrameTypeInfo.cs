@@ -36,7 +36,7 @@ namespace UIMFLibrary
         /// Mapping between frame number and frame index
         /// </summary>
         /// <remarks>Key is frame number, value is frame index</remarks>
-        public Dictionary<int, int> FrameIndexes { get; private set; }
+        public Dictionary<int, int> FrameIndexes { get; }
 
         /// <summary>
         /// Gets the num frames.
@@ -58,7 +58,7 @@ namespace UIMFLibrary
             if (FrameIndexes.ContainsKey(frameNumber))
                 throw new Exception("Frame " + frameNumber + " was sent to FrameSetContainer.AddFrame more than 1 time; likely a programming bug");
 
-            FrameIndexes.Add(frameNumber, NumFrames);			
+            FrameIndexes.Add(frameNumber, NumFrames);
             NumFrames++;
         }
 
