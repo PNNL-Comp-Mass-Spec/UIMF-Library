@@ -18,7 +18,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     public class CreateUIMFFileTests
     {
         [Test]
-        public void CreateDB_test1()
+        [TestCase(10)]
+        public void CreateDB_test1(int frameCountToWrite)
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -39,7 +40,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, 400000)
                                 .AddUpdateValue(GlobalParamKeyType.BinWidth, 0.25)
                                 .AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now)
-                                .AddUpdateValue(GlobalParamKeyType.NumFrames, 10)
+                                .AddUpdateValue(GlobalParamKeyType.NumFrames, frameCountToWrite)
                                 .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC");
 
                 writer.InsertGlobal(globalParameters)
@@ -52,7 +53,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 var randGenerator = new Random();
 
-                for (var frameNum = 1; frameNum <= 10; frameNum++)
+                for (var frameNum = 1; frameNum <= frameCountToWrite; frameNum++)
                 {
 
                     var fp = new FrameParams();
@@ -88,7 +89,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 }
 
-                writer.UpdateGlobalFrameCount();
+                writer.UpdateGlobalStats();
 
                 Console.WriteLine("Wrote 10 frames of data to " + fiTarget.FullName);
 
