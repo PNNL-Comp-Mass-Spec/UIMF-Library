@@ -6,7 +6,7 @@
 
 using System;
 using System.Diagnostics;
-using BenchmarkIt;
+// using BenchmarkIt;
 using NUnit.Framework;
 
 namespace UIMFLibrary.FunctionalTests
