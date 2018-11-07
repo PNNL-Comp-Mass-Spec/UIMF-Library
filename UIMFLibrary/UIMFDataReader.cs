@@ -4,8 +4,8 @@
 //
 //   Originally written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
 //   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, Bill Danielson, Spencer Prost, and Bryson Gibbons
-//   E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov
-//   Website: http://omics.pnl.gov/software/
+//   E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
+//   Website: https://omics.pnl.gov/ or https://www.pnnl.gov/sysbio/ or https://panomics.pnnl.gov/
 //
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
