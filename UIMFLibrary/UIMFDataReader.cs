@@ -39,7 +39,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Data size
         /// </summary>
-        private const int DATASIZE = sizeof(int); // All intensities are stored as 4 byte quantities
+        private const int DATA_SIZE = sizeof(int); // All intensities are stored as 4 byte quantities
 
         /// <summary>
         /// TIC text
@@ -276,7 +276,7 @@ namespace UIMFLibrary
                 // Look for the Frame_Parameters and Frame_Params tables
                 m_UsingLegacyFrameParameters = UsingLegacyFrameParams(out m_HasLegacyFrameParameters);
 
-                LoadPrepStmts();
+                LoadPrepStatements();
 
                 // Update the frame parameter keys
                 GetFrameParameterKeys(true);
@@ -893,7 +893,7 @@ namespace UIMFLibrary
             {
                 try
                 {
-                    UnloadPrepStmts();
+                    UnloadPrepStatements();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -1784,9 +1784,9 @@ namespace UIMFLibrary
         {
             var scansForFrame = GetFrameScans(frameNumber);
 
-            //var scanNums = scansForFrame.Select(x => x.Scan).ToList();
-            //var minScan = scanNums.Min();
-            //var maxScan = scanNums.Max();
+            //var scanNumbers = scansForFrame.Select(x => x.Scan).ToList();
+            //var minScan = scanNumbers.Min();
+            //var maxScan = scanNumbers.Max();
             //if (scan < minScan || scan > maxScan)
             //{
             //    throw new ArgumentOutOfRangeException(nameof(scan),
@@ -2097,7 +2097,7 @@ namespace UIMFLibrary
         /// <returns>
         ///  Array of intensities for a given frame; dimensions are bin and scan
         /// </returns>
-        public Double[][] GetIntensityBlockForDemultiplexing(
+        public double[][] GetIntensityBlockForDemultiplexing(
             int frameNumber,
             FrameType frameType,
             int segmentLength,
@@ -2279,7 +2279,7 @@ namespace UIMFLibrary
 
             using (var reader = m_getSpectrumCommand.ExecuteReader())
             {
-                var decompSpectraRecord = new byte[m_globalParameters.Bins * DATASIZE];
+                // var compressedSpectraRecord = new byte[m_globalParameters.Bins * DATA_SIZE];
 
                 while (reader.Read())
                 {
@@ -3356,12 +3356,12 @@ namespace UIMFLibrary
                     var intensity = 0;
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -3586,12 +3586,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -3682,12 +3682,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -3799,12 +3799,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -3915,12 +3915,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -4029,12 +4029,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -4116,12 +4116,12 @@ namespace UIMFLibrary
                 {
                     var entryIndex = 0;
 
-                    var decompSpectraRecord = (byte[])reader["INTENSITIES"];
-                    var numPossibleRecords = decompSpectraRecord.Length / DATASIZE;
+                    var compressedSpectraRecord = (byte[])reader["INTENSITIES"];
+                    var numPossibleRecords = compressedSpectraRecord.Length / DATA_SIZE;
 
                     for (var i = 0; i < numPossibleRecords; i++)
                     {
-                        var decodedSpectraRecord = BitConverter.ToInt32(decompSpectraRecord, i * DATASIZE);
+                        var decodedSpectraRecord = BitConverter.ToInt32(compressedSpectraRecord, i * DATA_SIZE);
                         if (decodedSpectraRecord < 0)
                         {
                             entryIndex += -decodedSpectraRecord;
@@ -5263,10 +5263,10 @@ namespace UIMFLibrary
             // Finalize the Sql command
             sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";
 
-            using (var dbcmdUIMF = m_dbConnection.CreateCommand())
+            using (var dbCmdUIMF = m_dbConnection.CreateCommand())
             {
-                dbcmdUIMF.CommandText = sql;
-                using (var reader = dbcmdUIMF.ExecuteReader())
+                dbCmdUIMF.CommandText = sql;
+                using (var reader = dbCmdUIMF.ExecuteReader())
                 {
                     while (reader.Read())
                     {
@@ -5347,7 +5347,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Load prep statements
         /// </summary>
-        private void LoadPrepStmts()
+        private void LoadPrepStatements()
         {
             // The ScanNum casts below are required to support UIMF files that list the ScanNum field as SMALLINT yet have scan number values > 32765
 
@@ -5648,7 +5648,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Unload the prep statements
         /// </summary>
-        private void UnloadPrepStmts()
+        private void UnloadPrepStatements()
         {
             m_getCountPerFrameCommand?.Dispose();
 

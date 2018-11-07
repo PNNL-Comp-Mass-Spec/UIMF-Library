@@ -2006,7 +2006,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for all frames
         /// </summary>
-        /// <param name="dBconnection"></param>
+        /// <param name="dBConnection"></param>
         /// <param name="slope">
         /// The slope value for the calibration.
         /// </param>
@@ -2019,7 +2019,7 @@ namespace UIMFLibrary
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateAllCalibrationCoefficients.", true)]
         public static void UpdateAllCalibrationCoefficients(
-            SQLiteConnection dBconnection,
+            SQLiteConnection dBConnection,
             double slope,
             double intercept,
             bool isAutoCalibrating = false)
@@ -2056,7 +2056,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for the given frame
         /// </summary>
-        /// <param name="dBconnection"></param>
+        /// <param name="dBConnection"></param>
         /// <param name="frameNumber">
         /// The frame number to update.
         /// </param>
@@ -2072,7 +2072,7 @@ namespace UIMFLibrary
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateCalibrationCoefficients.")]
         public static void UpdateCalibrationCoefficients(
-            SQLiteConnection dBconnection,
+            SQLiteConnection dBConnection,
             int frameNumber,
             double slope,
             double intercept,

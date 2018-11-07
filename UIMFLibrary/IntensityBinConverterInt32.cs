@@ -102,13 +102,13 @@ namespace UIMFLibrary
             }
 
             // Compress intensities
-            var nrlze = rlzeDataList.Count;
+            var encodedDataLength = rlzeDataList.Count;
             var runLengthZeroEncodedData = rlzeDataList.ToArray();
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
             return nonZeroCount;
@@ -181,13 +181,13 @@ namespace UIMFLibrary
             }
 
             // Compress intensities
-            var nrlze = rlzeDataList.Count;
+            var encodedDataLength = rlzeDataList.Count;
             var runLengthZeroEncodedData = rlzeDataList.ToArray();
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
 

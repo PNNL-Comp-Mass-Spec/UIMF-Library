@@ -6,6 +6,8 @@
 
 using System.Globalization;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     using System;
@@ -72,27 +74,27 @@ namespace UIMFLibrary
 
 
         /// <summary>
-        /// Filters xvals and yvals to only contain data with mass between 1 and 100000 m/z, and with intensity > 0
+        /// Filters xData and yData to only contain data with mass between 1 and 100000 m/z, and with intensity > 0
         /// </summary>
-        /// <param name="xvals">
-        /// The xvals.
+        /// <param name="xData">
+        /// The x values.
         /// </param>
-        /// <param name="yvals">
-        /// The yvals.
+        /// <param name="yData">
+        /// The y values.
         /// </param>
-        public static void ParseOutZeroValues(ref double[] xvals, ref int[] yvals)
+        public static void ParseOutZeroValues(ref double[] xData, ref int[] yData)
         {
-            ParseOutZeroValues(ref xvals, ref yvals, 1, 100000);
+            ParseOutZeroValues(ref xData, ref yData, 1, 100000);
         }
 
         /// <summary>
-        /// Filters xvals and yvals to only contain data with mass between minMZ and maxMZ, and with intensity > 0
+        /// Filters xData and yData to only contain data with mass between minMZ and maxMZ, and with intensity > 0
         /// </summary>
-        /// <param name="xvals">
-        /// The xvals.
+        /// <param name="xData">
+        /// The x values.
         /// </param>
-        /// <param name="yvals">
-        /// The yvals.
+        /// <param name="yData">
+        /// The y values.
         /// </param>
         /// <param name="minMZ">
         /// The min mz.
@@ -100,25 +102,25 @@ namespace UIMFLibrary
         /// <param name="maxMZ">
         /// The max mz.
         /// </param>
-        public static void ParseOutZeroValues(ref double[] xvals, ref int[] yvals, double minMZ, double maxMZ)
+        public static void ParseOutZeroValues(ref double[] xData, ref int[] yData, double minMZ, double maxMZ)
         {
-            var intensityArrLength = yvals.Length;
-            var tempIntensities = yvals;
+            var intensityArrLength = yData.Length;
+            var tempIntensities = yData;
             var targetIndex = 0;
 
             for (var k = 0; k < intensityArrLength; k++)
             {
-                if (tempIntensities[k] > 0 && (minMZ <= xvals[k] && maxMZ >= xvals[k]))
+                if (tempIntensities[k] > 0 && (minMZ <= xData[k] && maxMZ >= xData[k]))
                 {
-                    xvals[targetIndex] = xvals[k];
-                    yvals[targetIndex] = tempIntensities[k];
+                    xData[targetIndex] = xData[k];
+                    yData[targetIndex] = tempIntensities[k];
                     targetIndex++;
                 }
             }
 
             // resize arrays cutting off the zeroes at the end.
-            Array.Resize(ref xvals, targetIndex);
-            Array.Resize(ref yvals, targetIndex);
+            Array.Resize(ref xData, targetIndex);
+            Array.Resize(ref yData, targetIndex);
         }
 
         /// <summary>

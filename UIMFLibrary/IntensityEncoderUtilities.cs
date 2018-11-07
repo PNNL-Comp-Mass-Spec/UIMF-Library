@@ -36,12 +36,12 @@ namespace UIMFLibrary
             nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
 
             // Compress intensities
-            var nrlze = runLengthZeroEncodedData.Length;
+            var encodedDataLength = runLengthZeroEncodedData.Length;
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
         }

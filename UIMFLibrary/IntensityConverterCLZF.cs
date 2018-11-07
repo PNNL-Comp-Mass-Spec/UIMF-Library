@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     /// <summary>
@@ -31,17 +33,17 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            // Get the size of the datatype. Use of sizeof() for primitives is allowed in safe code blocks
+            // Get the size of the data type. Use of sizeof() for primitives is allowed in safe code blocks
             const int dataTypeSize = sizeof(int);
 
             spectra = null;
             var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
-            var nrlze = runLengthZeroEncodedData.Length;
+            var encodedDataLength = runLengthZeroEncodedData.Length;
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
 
@@ -86,17 +88,17 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            // Get the size of the datatype. Use of sizeof() for primitives is allowed in safe code blocks
+            // Get the size of the data type. Use of sizeof() for primitives is allowed in safe code blocks
             const int dataTypeSize = sizeof(short);
 
             spectra = null;
             var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
-            var nrlze = runLengthZeroEncodedData.Length;
+            var encodedDataLength = runLengthZeroEncodedData.Length;
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
 
@@ -141,17 +143,17 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            // Get the size of the datatype. Use of sizeof() for primitives is allowed in safe code blocks
+            // Get the size of the data type. Use of sizeof() for primitives is allowed in safe code blocks
             const int dataTypeSize = sizeof(float);
 
             spectra = null;
             var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
-            var nrlze = runLengthZeroEncodedData.Length;
+            var encodedDataLength = runLengthZeroEncodedData.Length;
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
 
@@ -196,17 +198,17 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            // Get the size of the datatype. Use of sizeof() for primitives is allowed in safe code blocks
+            // Get the size of the data type. Use of sizeof() for primitives is allowed in safe code blocks
             const int dataTypeSize = sizeof(double);
 
             spectra = null;
             var nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
-            var nrlze = runLengthZeroEncodedData.Length;
+            var encodedDataLength = runLengthZeroEncodedData.Length;
 
-            if (nrlze > 0)
+            if (encodedDataLength > 0)
             {
-                spectra = new byte[nrlze * dataTypeSize];
-                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, nrlze * dataTypeSize);
+                spectra = new byte[encodedDataLength * dataTypeSize];
+                Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
 
