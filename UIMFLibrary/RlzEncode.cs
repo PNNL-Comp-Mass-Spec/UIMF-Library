@@ -70,7 +70,7 @@ namespace UIMFLibrary
 
                     if (zeroCount < 0)
                     {
-                        rlzeDataList.Add((int)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
@@ -82,7 +82,7 @@ namespace UIMFLibrary
                     if (zeroCount == int.MinValue)
                     {
                         // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add((int)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
@@ -104,14 +104,14 @@ namespace UIMFLibrary
         public static List<Tuple<int, int>> Decode(IReadOnlyList<int> encoded)
         {
             var binIntensityTuples = new List<Tuple<int, int>>();
-            int previousValue = 0;
+            var previousValue = 0;
             var binIndex = 0;
 
             foreach (var decodedIntensityValue in encoded)
             {
                 if (decodedIntensityValue < 0)
                 {
-                    binIndex += -(int)decodedIntensityValue;
+                    binIndex += -decodedIntensityValue;
                 }
                 else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(int.MinValue)))
                 {
@@ -229,7 +229,7 @@ namespace UIMFLibrary
             {
                 if (decodedIntensityValue < 0)
                 {
-                    binIndex += -(int)decodedIntensityValue;
+                    binIndex += -decodedIntensityValue;
                 }
                 else if (decodedIntensityValue == 0 && (previousValue.Equals(short.MinValue) || previousValue.Equals(short.MinValue)))
                 {
@@ -306,7 +306,7 @@ namespace UIMFLibrary
 
                     if (zeroCount < 0)
                     {
-                        rlzeDataList.Add((float)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
@@ -318,7 +318,7 @@ namespace UIMFLibrary
                     if (zeroCount == short.MinValue)
                     {
                         // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add((float)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
@@ -424,7 +424,7 @@ namespace UIMFLibrary
 
                     if (zeroCount < 0)
                     {
-                        rlzeDataList.Add((double)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
@@ -436,7 +436,7 @@ namespace UIMFLibrary
                     if (zeroCount == short.MinValue)
                     {
                         // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
-                        rlzeDataList.Add((double)zeroCount);
+                        rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
 
