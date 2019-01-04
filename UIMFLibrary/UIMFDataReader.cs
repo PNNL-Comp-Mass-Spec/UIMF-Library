@@ -580,11 +580,8 @@ namespace UIMFLibrary
                     if (Math.Abs(frameParams.CalibrationSlope) < float.Epsilon)
                         Console.WriteLine(" ... Warning, CalibrationSlope is 0 for frame " + currentFrameNumber);
 
-                    var mzMin =
-                        mzCalibrator.BinToMZ(startBin);
-
-                    var mzMax =
-                        mzCalibrator.BinToMZ(endBin);
+                    var mzMin = mzCalibrator.BinToMZ(startBin);
+                    var mzMax = mzCalibrator.BinToMZ(endBin);
 
                     for (var i = 0; i < height; i++)
                     {
@@ -2097,6 +2094,7 @@ namespace UIMFLibrary
         /// <returns>
         ///  Array of intensities for a given frame; dimensions are bin and scan
         /// </returns>
+        [Obsolete("Moved to UIMFDemultiplexer.UIMFDemultiplexer")]
         public double[][] GetIntensityBlockForDemultiplexing(
             int frameNumber,
             FrameType frameType,
