@@ -2174,18 +2174,19 @@ namespace UIMFLibrary
             if (!HasFrameParamsTable)
                 throw new Exception("UIMF file does not have table Frame_Params; use method CreateTables to add tables");
 
-            object frameCount;
             using (var dbCommand = mDbConnection.CreateCommand())
             {
 
                 dbCommand.CommandText = "SELECT Count (Distinct FrameNum) FROM " + FRAME_PARAMS_TABLE;
-                frameCount = dbCommand.ExecuteScalar();
+                var frameCountObj = dbCommand.ExecuteScalar();
+
+                if (frameCountObj != null && frameCountObj != DBNull.Value)
+                {
+                    AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, Convert.ToInt32(frameCountObj));
+                }
             }
 
-            if (frameCount != null && frameCount != DBNull.Value)
-            {
-                AddUpdateGlobalParameter(GlobalParamKeyType.NumFrames, Convert.ToInt32(frameCount));
-            }
+            var frameCount = mGlobalParameters.NumFrames;
 
             object maxScanFromQuery;
             using (var dbCommand = mDbConnection.CreateCommand())
