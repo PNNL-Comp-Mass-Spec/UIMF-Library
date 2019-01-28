@@ -86,12 +86,12 @@ namespace UIMFLibrary.FunctionalTests
                 uimfWriter.InsertGlobal(globalParams);
 
 
-                var firstFrameParams = uimfReader.GetFrameParams(1);
+                // Old method of instantiating the Demultiplexer:
+                // var firstFrameParams = uimfReader.GetFrameParams(1);
+                // var averageTOFLength = firstFrameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+                // Demultiplexer demultiplexer = new Demultiplexer(inversedScaledMatrix, numSegments, binWidth, averageTOFLength);
 
-                var averageTOFLength = firstFrameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
-
-                // Old: Demultiplexer demultiplexer = new Demultiplexer(inversedScaledMatrix, numSegments, binWidth, averageTOFLength);
-                var demultiplexerOptions = new DemultiplexerOptions(uimfFile.FullName, bitSequence);
+                var demultiplexerOptions = new DemultiplexerOptions();
                 var demultiplexer = new Demultiplexer(demultiplexerOptions);
                 var scanToIndexMap = demultiplexerOptions.ScanToIndexMap;
 
@@ -128,7 +128,8 @@ namespace UIMFLibrary.FunctionalTests
                     const bool isReordered = false;
 
                     // Get the data of the frame from the UIMF File
-                    var arrayOfIntensityArrays = uimfReader.GetIntensityBlockForDemultiplexing(
+                    var arrayOfIntensityArrays = UIMFDemultiplexer.UIMFDemultiplexer.GetIntensityBlockForDemultiplexing(
+                        uimfReader,
                         currentFrameNumber,
                         frameParams.FrameType,
                         segmentLength,
