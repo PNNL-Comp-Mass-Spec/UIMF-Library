@@ -26,6 +26,31 @@ namespace UIMFLibrary.FunctionalTests
             var scaledMatrix = (DenseMatrix)multiplierMatrix.Multiply(2.0 / 16.0);
             var inversedScaledMatrix = (DenseMatrix)scaledMatrix.Inverse();
 
+            Assert.AreEqual(15, inversedScaledMatrix.ColumnCount);
+            Assert.AreEqual(15, inversedScaledMatrix.RowCount);
+
+            var expectMatrixVals = new List<int>
+            {
+                1,
+                -1,
+                -1,
+                1,
+                1,
+                -1,
+                1,
+                -1,
+                1,
+                1,
+                1,
+                1,
+                -1
+            };
+
+            for (var i = 0; i < expectMatrixVals.Count; i++)
+            {
+                Assert.AreEqual(expectMatrixVals[i], inversedScaledMatrix.Values[i], 0.01, "inversedScaledMatrix has unexpected values");
+            }
+
             var uimfFile = VerifyLocalUimfFile(@"Test_Data\9pep_mix_1uM_4bit_50_12Dec11_encoded.uimf");
 
             if (uimfFile == null)
@@ -59,9 +84,15 @@ namespace UIMFLibrary.FunctionalTests
                 newFileName = baseFileName + "_decoded.uimf";
             }
 
+            if (uimfFile.DirectoryName == null)
+            {
+                Assert.Fail("Unable to determine the parent directory of " + uimfFile.FullName);
+            }
+
             var newFile = new FileInfo(Path.Combine(uimfFile.DirectoryName, newFileName));
 
             var bitSequence = DemultiplexerOptions.GetBitSequence(numberOfBits);
+            Assert.AreEqual(matrixString, bitSequence, "Unexpected bit sequence: " + bitSequence + "; expecting " + matrixString);
 
             if (newFile.Exists)
             {
@@ -199,7 +230,8 @@ namespace UIMFLibrary.FunctionalTests
             {
                 relativePathsToCheck.Add(relativeFilePath);
             }
-            var parentToCheck = uimfFile.Directory.Parent;
+
+            var parentToCheck = uimfFile.Directory?.Parent;
             while (parentToCheck != null)
             {
                 foreach (var relativePath in relativePathsToCheck)
