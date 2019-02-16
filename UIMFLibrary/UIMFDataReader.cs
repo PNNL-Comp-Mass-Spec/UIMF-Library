@@ -1956,6 +1956,17 @@ namespace UIMFLibrary
             return intensityValues;
         }
 
+        private FrameSetContainer GetFrameSetByFrameType(FrameType frameType)
+        {
+
+            if (!mFrameTypeInfo.ContainsKey(frameType))
+            {
+                throw new KeyNotFoundException("UIMF file does not have any frames of type " + frameType);
+            }
+
+            return mFrameTypeInfo[frameType];
+        }
+
         private int GetFrameTypeInt(FrameType frameType)
         {
             if (frameType.Equals(FrameType.MS1))
@@ -3569,7 +3580,7 @@ namespace UIMFLibrary
             var frameParams = GetFrameParams(1);
             var numImsScans = frameParams.Scans;
 
-            var frameSet = mFrameTypeInfo[frameType];
+            var frameSet = GetFrameSetByFrameType(frameType);
             var frameIndexes = frameSet.FrameIndexes;
 
             var intensityList = new List<IntensityPoint>();
@@ -3658,7 +3669,7 @@ namespace UIMFLibrary
             var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
-            var frameSet = mFrameTypeInfo[frameType];
+            var frameSet = GetFrameSetByFrameType(frameType);
             var frameIndexes = frameSet.FrameIndexes;
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
@@ -3775,7 +3786,7 @@ namespace UIMFLibrary
             var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
-            var frameSet = mFrameTypeInfo[frameType];
+            var frameSet = GetFrameSetByFrameType(frameType);
             var frameIndexes = frameSet.FrameIndexes;
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
@@ -3890,7 +3901,7 @@ namespace UIMFLibrary
             var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
-            var frameSet = mFrameTypeInfo[frameType];
+            var frameSet = GetFrameSetByFrameType(frameType);
             var numFrames = frameSet.NumFrames;
             var frameIndexes = frameSet.FrameIndexes;
 
@@ -4004,9 +4015,9 @@ namespace UIMFLibrary
             var numImsScans = frameParams.Scans;
             var numScans = scanMax - scanMin + 1;
 
-            var frameSet = mFrameTypeInfo[frameType];
-            var frameIndexes = frameSet.FrameIndexes;
+            var frameSet = GetFrameSetByFrameType(frameType);
             var numFrames = frameNumberMax - frameNumberMin + 1;
+            var frameIndexes = frameSet.FrameIndexes;
 
             var result = new double[numFrames, numScans];
 
@@ -4098,7 +4109,7 @@ namespace UIMFLibrary
             var frameParameters = GetFrameParams(1);
             var numImsScans = frameParameters.Scans;
 
-            var frameSet = mFrameTypeInfo[frameType];
+            var frameSet = GetFrameSetByFrameType(frameType);
             var numFrames = frameSet.NumFrames;
             var frameIndexes = frameSet.FrameIndexes;
 
