@@ -942,6 +942,46 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Examine the frame numbers in a FrameSet to determine the closest frame number to frameNumberMin and frameNumberMax
+        /// Useful for FrameSets with non-contiguous frame numbers (e.g. MS2 frames)
+        /// </summary>
+        /// <param name="frameSet"></param>
+        /// <param name="frameNumberMin"></param>
+        /// <param name="frameNumberMax"></param>
+        /// <param name="minFrameNumberInFrameSet">First frame number greater than or equal to frameNumberMin</param>
+        /// <param name="maxFrameNumberInFrameSet">Last frame number less than or equal to frameNumberMax</param>
+        private void GetActualMinMaxFrameNumbersInFrameSet(
+            FrameSetContainer frameSet,
+            int frameNumberMin, int frameNumberMax,
+            out int minFrameNumberInFrameSet, out int maxFrameNumberInFrameSet)
+        {
+            var frameSetFrameNumbers = frameSet.FrameIndexes.Keys.ToList();
+            frameSetFrameNumbers.Sort();
+
+            minFrameNumberInFrameSet = -1;
+            maxFrameNumberInFrameSet = -1;
+
+            foreach (var frameNumber in frameSetFrameNumbers)
+            {
+                if (minFrameNumberInFrameSet < 0 && frameNumber >= frameNumberMin)
+                {
+                    minFrameNumberInFrameSet = frameNumber;
+                }
+
+                if (frameNumber >= frameNumberMin && frameNumber <= frameNumberMax)
+                {
+                    maxFrameNumberInFrameSet = frameNumber;
+                }
+            }
+
+            if (minFrameNumberInFrameSet < 0)
+                minFrameNumberInFrameSet = frameSetFrameNumbers.FirstOrDefault();
+
+            if (maxFrameNumberInFrameSet < 0)
+                maxFrameNumberInFrameSet = minFrameNumberInFrameSet;
+        }
+
+        /// <summary>
         /// Returns the x,y,z arrays needed for a surface plot for the elution of the species in both the LC and drift time dimensions
         /// </summary>
         /// <param name="startFrameNumber">
@@ -3789,6 +3829,10 @@ namespace UIMFLibrary
             var frameSet = GetFrameSetByFrameType(frameType);
             var frameIndexes = frameSet.FrameIndexes;
 
+            GetActualMinMaxFrameNumbersInFrameSet(frameSet, frameNumberMin, frameNumberMax,
+                                                  out var minFrameNumberInFrameSet,
+                                                  out var maxFrameNumberInFrameSet);
+
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
             var lowMz = targetMz - mzTolerance;
             var highMz = targetMz + mzTolerance;
@@ -3836,13 +3880,13 @@ namespace UIMFLibrary
                             var frameIndex = frameIndexes[scanLc];
 
                             // We can stop after we get past the max frame number given
-                            if (frameIndex > frameIndexes[frameNumberMax])
+                            if (frameIndex > frameIndexes[maxFrameNumberInFrameSet])
                             {
                                 break;
                             }
 
                             // Skip all frames and scans that we do not care about
-                            if (frameIndex < frameIndexes[frameNumberMin] || scanIms < scanMin || scanIms > scanMax)
+                            if (frameIndex < frameIndexes[minFrameNumberInFrameSet] || scanIms < scanMin || scanIms > scanMax)
                             {
                                 continue;
                             }
@@ -4019,6 +4063,10 @@ namespace UIMFLibrary
             var numFrames = frameNumberMax - frameNumberMin + 1;
             var frameIndexes = frameSet.FrameIndexes;
 
+            GetActualMinMaxFrameNumbersInFrameSet(frameSet, frameNumberMin, frameNumberMax,
+                                                  out var minFrameNumberInFrameSet,
+                                                  out var maxFrameNumberInFrameSet);
+
             var result = new double[numFrames, numScans];
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
@@ -4066,19 +4114,19 @@ namespace UIMFLibrary
                             var frameIndex = frameIndexes[scanLc];
 
                             // We can stop after we get past the max frame number given
-                            if (frameIndex > frameIndexes[frameNumberMax])
+                            if (frameIndex > frameIndexes[maxFrameNumberInFrameSet])
                             {
                                 break;
                             }
 
                             // Skip all frames and scans that we do not care about
-                            if (frameIndex < frameIndexes[frameNumberMin] || scanIms < scanMin || scanIms > scanMax)
+                            if (frameIndex < frameIndexes[minFrameNumberInFrameSet] || scanIms < scanMin || scanIms > scanMax)
                             {
                                 continue;
                             }
 
                             // Add intensity to the result
-                            result[frameIndex - frameIndexes[frameNumberMin], scanIms - scanMin] += decodedSpectraRecord;
+                            result[frameIndex - frameIndexes[minFrameNumberInFrameSet], scanIms - scanMin] += decodedSpectraRecord;
                         }
                     }
                 }
