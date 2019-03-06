@@ -53,6 +53,11 @@ namespace UIMFLibrary
         private SQLiteCommand mDbCommandInsertFrameParamValue;
 
         /// <summary>
+        /// Command to update a frame parameter value
+        /// </summary>
+        private SQLiteCommand mDbCommandUpdateFrameParamValue;
+
+        /// <summary>
         /// Command to insert a row in the legacy FrameParameters table
         /// </summary>
         private SQLiteCommand mDbCommandInsertLegacyFrameParameterRow;
@@ -61,6 +66,11 @@ namespace UIMFLibrary
         /// Command to insert a global parameter value
         /// </summary>
         private SQLiteCommand mDbCommandInsertGlobalParamValue;
+
+        /// <summary>
+        /// Command to update a global parameter value
+        /// </summary>
+        private SQLiteCommand mDbCommandUpdateGlobalParamValue;
 
         /// <summary>
         /// Command to insert a scan
@@ -132,7 +142,9 @@ namespace UIMFLibrary
 
                 PrepareInsertFrameParamKey();
                 PrepareInsertFrameParamValue();
+                PrepareUpdateFrameParamValue();
                 PrepareInsertGlobalParamValue();
+                PrepareUpdateGlobalParamValue();
                 PrepareInsertScan();
                 PrepareInsertLegacyFrameParamValue();
 
@@ -558,16 +570,15 @@ namespace UIMFLibrary
                 // We therefore must first try an Update query
                 // If no rows are matched, then run an insert query
 
-                int updateCount;
+                mDbCommandUpdateFrameParamValue.Parameters.Clear();
+                mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
+                mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+                var updateCount = mDbCommandUpdateFrameParamValue.ExecuteNonQuery();
 
-                using (var dbCommand = mDbConnection.CreateCommand())
+                if (mCreateLegacyParametersTables)
                 {
-                    dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                            "SET ParamValue = '" + paramValue + "'" +
-                                            "WHERE FrameNum = " + frameNum + " AND ParamID = " + (int)paramKeyType;
-                    updateCount = dbCommand.ExecuteNonQuery();
-
-                    if (mCreateLegacyParametersTables)
+                    using (var dbCommand = mDbConnection.CreateCommand())
                     {
                         if (!mFrameNumsInLegacyFrameParametersTable.Contains(frameNum))
                         {
@@ -675,22 +686,21 @@ namespace UIMFLibrary
                 // We therefore must first try an Update query
                 // If no rows are matched, then run an insert query
 
-                int updateCount;
-
                 var globalParam = new GlobalParam(paramKeyType, value);
 
-                using (var dbCommand = mDbConnection.CreateCommand())
-                {
-                    dbCommand.CommandText = "UPDATE " + GLOBAL_PARAMS_TABLE + " " +
-                                            "SET ParamValue = '" + value + "' " +
-                                            "WHERE ParamID = " + (int)paramKeyType;
-                    updateCount = dbCommand.ExecuteNonQuery();
+                mDbCommandUpdateGlobalParamValue.Parameters.Clear();
 
-                    if (mCreateLegacyParametersTables)
+                mDbCommandUpdateGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID",
+                                                                                    (int)globalParam.ParamType));
+                mDbCommandUpdateGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", globalParam.Value));
+                var updateCount = mDbCommandUpdateGlobalParamValue.ExecuteNonQuery();
+
+                if (mCreateLegacyParametersTables)
+                {
+                    using (var dbCommand = mDbConnection.CreateCommand())
                     {
                         InsertLegacyGlobalParameter(dbCommand, paramKeyType, value);
                     }
-
                 }
 
                 if (updateCount == 0)
@@ -708,8 +718,7 @@ namespace UIMFLibrary
                     mDbCommandInsertGlobalParamValue.ExecuteNonQuery();
                 }
 
-                mGlobalParameters.AddUpdateValue(paramKeyType, value);
-
+                mGlobalParameters.AddUpdateValue(paramKeyType, globalParam.Value);
             }
             catch (Exception ex)
             {
@@ -1297,8 +1306,10 @@ namespace UIMFLibrary
 
                     DisposeCommand(mDbCommandInsertFrameParamKey);
                     DisposeCommand(mDbCommandInsertFrameParamValue);
+                    DisposeCommand(mDbCommandUpdateFrameParamValue);
                     DisposeCommand(mDbCommandInsertLegacyFrameParameterRow);
                     DisposeCommand(mDbCommandInsertGlobalParamValue);
+                    DisposeCommand(mDbCommandUpdateGlobalParamValue);
                     DisposeCommand(mDbCommandInsertScan);
                 }
             }
@@ -2204,7 +2215,7 @@ namespace UIMFLibrary
                 return;
 
             // PrescanTOFPulses tracks the maximum scan number in any frame
-            var existingValue = GetGlobalParams().GetValue(GlobalParamKeyType.PrescanTOFPulses);
+            var existingValue = GetGlobalParams().GetValue(GlobalParamKeyType.PrescanTOFPulses, 0);
             bool updateGlobalParams;
 
             if (existingValue > 0 && existingValue > maxScan)
@@ -2501,6 +2512,18 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Create command for updating frame parameters
+        /// </summary>
+        private void PrepareUpdateFrameParamValue()
+        {
+            mDbCommandUpdateFrameParamValue = mDbConnection.CreateCommand();
+
+            mDbCommandUpdateFrameParamValue.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
+                                                          "SET ParamValue = :ParamValue" +
+                                                          "WHERE FrameNum = :FrameNum AND ParamID = :ParamID";
+        }
+
+        /// <summary>
         /// Create command for inserting legacy frame parameters
         /// </summary>
         private void PrepareInsertLegacyFrameParamValue()
@@ -2537,6 +2560,18 @@ namespace UIMFLibrary
                 "INSERT INTO " + GLOBAL_PARAMS_TABLE + " " +
                 "(ParamID, ParamName, ParamValue, ParamDataType, ParamDescription) " +
                 "VALUES (:ParamID, :ParamName, :ParamValue, :ParamDataType, :ParamDescription);";
+        }
+
+        /// <summary>
+        /// Create command for updating global parameters
+        /// </summary>
+        private void PrepareUpdateGlobalParamValue()
+        {
+            mDbCommandUpdateGlobalParamValue = mDbConnection.CreateCommand();
+
+            mDbCommandUpdateGlobalParamValue.CommandText = "UPDATE " + GLOBAL_PARAMS_TABLE + " " +
+                                                           "SET ParamValue = :ParamValue " +
+                                                           "WHERE ParamID = :ParamID";
         }
 
         /// <summary>
