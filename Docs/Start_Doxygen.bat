@@ -30,4 +30,5 @@ cd ..
 echo.
 echo Moving the .zip file to ..\Releases\
 
+if not exist ..\Releases mkdir ..\Releases
 if exist UIMFLibrary_ClassInfo.zip (move /Y UIMFLibrary_ClassInfo.zip ..\Releases\) else echo Source file not found: UIMFLibrary_ClassInfo.zip
