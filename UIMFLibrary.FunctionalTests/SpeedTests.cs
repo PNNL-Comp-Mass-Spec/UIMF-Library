@@ -6,7 +6,9 @@
 
 using System;
 using System.Diagnostics;
-// using BenchmarkIt;
+#if (EXPERIMENTAL)
+using BenchmarkIt;
+#endif
 using NUnit.Framework;
 
 namespace UIMFLibrary.FunctionalTests
@@ -102,7 +104,7 @@ namespace UIMFLibrary.FunctionalTests
                 clzf2Result = CLZF2.Compress(spectra);
             }).WithWarmup(100).Against.This("ZREL CLZF2 Compress", () =>
             {
-                IntensityConverterInt32.Encode(intensities, out zrleClzf2Result, out var tic, out var bpi,
+                IntensityConverterCLZF.Compress(intensities, out zrleClzf2Result, out var tic, out var bpi,
                     out var indexOfMaxIntensity);
             }).WithWarmup(100).Against.This("Snappy", () =>
                 {

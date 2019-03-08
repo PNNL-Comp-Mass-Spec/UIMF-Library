@@ -12,12 +12,12 @@
     <PackageProjectUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</PackageProjectUrl>
     <RepositoryUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
-    <PackageLicenseUrl>https://opensource.org/licenses/ECL-2.0</PackageLicenseUrl>
+    <PackageLicenseExpression>ECL-2.0</PackageLicenseExpression>
     <Title>UIMF Library</Title>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Configurations>Debug;Release;Experimental_Release</Configurations>
+    <Configurations>Debug;Release;Experimental_Release;Pwiz_Release</Configurations>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' OR '$(Configuration)|$(Platform)'=='Pwiz_Release|AnyCPU'">
     <DefineConstants>TRACE;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Experimental_Release'">
@@ -33,8 +33,11 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.97" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
   </ItemGroup>
   <ItemGroup>
     <None Update="IntensityConverterCLZF.tt">

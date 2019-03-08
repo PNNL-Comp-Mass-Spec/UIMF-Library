@@ -1,122 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{F78AE1DE-FF7A-46FC-ABC0-F610F82B3504}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UIMFLibrary.FunctionalTests</RootNamespace>
-    <AssemblyName>UIMFLibrary.FunctionalTests</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>a18f0961</NuGetPackageImportStamp>
+    <TargetFramework>net462</TargetFramework>
+    <Company>Pacific Northwest National Laboratory</Company>
+    <Authors>PNNL-Comp-Mass-Spec</Authors>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <RepositoryUrl>https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <Title>UIMFLibrary.FunctionalTests</Title>
+    <Configurations>Debug;Release;Experimental_Release;Pwiz_Release</Configurations>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' OR '$(Configuration)|$(Platform)'=='Pwiz_Release|AnyCPU'">
+    <DefineConstants>TRACE;</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Experimental_Release|AnyCPU'">
-    <OutputPath>bin\Experimental_Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)'=='Experimental_Release'">
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Experimental_Release'">
+    <PackageReference Include="Benchmark.It" Version="1.2.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.97" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="IMSDemultiplexer">
       <HintPath>Lib\IMSDemultiplexer.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="UIMFDemultiplexer">
       <HintPath>Lib\UIMFDemultiplexer.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DemultiplexerTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SpeedTests.cs" />
+    <PackageReference Include="MathNet.Numerics" Version="4.7.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
+    <PackageReference Include="PRISM-Library" Version="2.5.11" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj">
-      <Project>{25849DAD-D507-4429-ACA4-2DB63F9EAF52}</Project>
-      <Name>UIMFLibrary</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Benchmark.It">
-      <Version>1.2.0</Version>
-    </PackageReference>
-    <PackageReference Include="MathNet.Numerics">
-      <Version>4.7.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CSharp">
-      <Version>4.5.0</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit">
-      <Version>3.11.0</Version>
-    </PackageReference>
-    <PackageReference Include="PRISM-Library">
-      <Version>2.5.11</Version>
-    </PackageReference>
-    <PackageReference Include="Snappy.NET">
-      <Version>1.1.1.8</Version>
-    </PackageReference>
-    <PackageReference Include="System.Data.SQLite.Core">
-      <Version>1.0.97</Version>
-    </PackageReference>
-    <PackageReference Include="System.Numerics.Vectors">
-      <Version>4.5.0</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>if exist "$(TargetDir)SQLite.Interop.dll" (del "$(TargetDir)SQLite.Interop.dll")
-if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
-if not exist "$(TargetDir)x64" mkdir "$(TargetDir)x64"
-xcopy "$(ProjectDir)..\lib\x86\SQLite.Interop.dll" "$(TargetDir)x86" /D /Y
-xcopy "$(ProjectDir)..\lib\x64\SQLite.Interop.dll" "$(TargetDir)x64" /D /Y
-</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

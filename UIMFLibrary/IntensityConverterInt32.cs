@@ -57,7 +57,7 @@ namespace UIMFLibrary
         /// Number of non-zero data points
         /// </returns>
         public static int EncodeSnappy(
-            IList<int> intensities,
+            IReadOnlyList<int> intensities,
             out byte[] spectra,
             out double tic,
             out double bpi,
