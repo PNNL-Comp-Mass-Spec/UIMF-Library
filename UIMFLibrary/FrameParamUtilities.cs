@@ -380,6 +380,10 @@ namespace UIMFLibrary
 
                 if (targetType == typeof(float))
                 {
+                    // Interpret null or empty string as NaN
+                    if (string.IsNullOrEmpty(value))
+                        return float.NaN;
+
                     if (float.TryParse(value, out var parsed))
                         return parsed;
 
@@ -389,6 +393,10 @@ namespace UIMFLibrary
 
                 if (targetType == typeof(double))
                 {
+                    // Interpret null or empty string as NaN
+                    if (string.IsNullOrEmpty(value))
+                        return double.NaN;
+
                     if (double.TryParse(value, out var parsed))
                         return parsed;
 

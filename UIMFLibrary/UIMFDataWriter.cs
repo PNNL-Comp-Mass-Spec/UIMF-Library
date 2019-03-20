@@ -1422,10 +1422,16 @@ namespace UIMFLibrary
             {
                 foreach (var paramValue in frameParameters)
                 {
+                    var value = paramValue.Value;
+                    // double.NaN and float.NaN: Make sure they are output as 'NaN'; without this override, they are output as 'NULL'
+                    if ((value is double || value is float) && double.IsNaN(value))
+                    {
+                        value = "NaN";
+                    }
                     mDbCommandInsertFrameParamValue.Parameters.Clear();
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramValue.Key));
-                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue.Value));
+                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", value));
                     mDbCommandInsertFrameParamValue.ExecuteNonQuery();
                 }
             }

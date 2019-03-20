@@ -5667,7 +5667,12 @@ namespace UIMFLibrary
             // FrameNum, ParamID, ParamValue
 
             var paramID = reader.GetInt32(idColIndex);
-            var paramValue = reader.GetString(valueColIndex);
+            // If NULL was stored as the value (for some reason), reader.GetString() will fail. Check for null first.
+            string paramValue = null;
+            if (!reader.IsDBNull(valueColIndex))
+            {
+                paramValue = reader.GetString(valueColIndex);
+            }
 
             var paramType = FrameParamUtilities.GetParamTypeByID(paramID);
             var dataType = FrameParamUtilities.GetFrameParamKeyDataType(paramType);
