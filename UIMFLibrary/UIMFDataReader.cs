@@ -1754,7 +1754,32 @@ namespace UIMFLibrary
                 mCachedFrameParameters.Add(frameNumber, frameParameters);
 
             return frameParameters;
+        }
 
+        /// <summary>
+        /// If 'StartTimeMinutes' is not specified in the FrameParams, this method will estimate it (but with no guarantees of accuracy)
+        /// </summary>
+        /// <param name="frameNumber"></param>
+        /// <returns>Actual StartTimeMinutes (if set), otherwise the computed start time (which depends on other metadata being correct)</returns>
+        public double GetFrameStartTimeMinutesEstimated(int frameNumber)
+        {
+            var fp = GetFrameParams(frameNumber);
+
+            // If the frame start time is set, return it
+            if (fp.HasParameter(FrameParamKeyType.StartTimeMinutes))
+            {
+                return fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
+            }
+
+            // If the frame start time is not set, then compute it so it is available (but with no guarantees of accuracy)
+            // nanoseconds
+            var averageTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+            // Frame number is 1-based...
+            var framesOffset = frameNumber - 1;
+            var scansPerFrame = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, fp.Scans);
+            var scansOffset = framesOffset * scansPerFrame;
+            var startTimeSeconds = averageTOFLength * scansOffset / 1e9;
+            return startTimeSeconds / 60;
         }
 
         /// <summary>

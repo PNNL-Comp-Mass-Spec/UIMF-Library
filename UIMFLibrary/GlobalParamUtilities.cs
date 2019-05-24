@@ -136,7 +136,7 @@ namespace UIMFLibrary
 
 
         /// <summary>
-        /// Get the default value for the data type associated with teh given frame param key
+        /// Get the default value for the data type associated with the given frame param key
         /// </summary>
         /// <param name="paramType"></param>
         /// <returns></returns>
