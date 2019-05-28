@@ -5260,7 +5260,7 @@ namespace UIMFLibrary
         /// <param name="frameType">Frame type to filter on
         /// </param>
         /// <returns>
-        /// List of KeyValuePair where keys are frame number and values are the TIC or BPI value
+        /// Dictionary where keys are frame number and values are the TIC or BPI value
         /// </returns>
         private SortedDictionary<int, double> GetTicOrBpiByFrame(
             int startFrameNumber,
