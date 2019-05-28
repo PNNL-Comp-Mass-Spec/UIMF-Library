@@ -1112,7 +1112,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
-        public Dictionary<int, double> GetBPIByFrame(
+        public SortedDictionary<int, double> GetBPIByFrame(
             int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
         {
@@ -1150,7 +1150,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
-        public Dictionary<int, double> GetBPIByFrame(
+        public SortedDictionary<int, double> GetBPIByFrame(
             int startFrameNumber,
             int endFrameNumber,
             int startScan,
@@ -3565,7 +3565,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
-        public Dictionary<int, double> GetTICByFrame(
+        public SortedDictionary<int, double> GetTICByFrame(
             int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
         {
@@ -3603,7 +3603,7 @@ namespace UIMFLibrary
         /// <remarks>
         /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
         /// </remarks>
-        public Dictionary<int, double> GetTICByFrame(
+        public SortedDictionary<int, double> GetTICByFrame(
             int startFrameNumber,
             int endFrameNumber,
             int startScan,
@@ -5260,9 +5260,9 @@ namespace UIMFLibrary
         /// <param name="frameType">Frame type to filter on
         /// </param>
         /// <returns>
-        /// Dictionary where keys are frame number and values are the TIC or BPI value
+        /// List of KeyValuePair where keys are frame number and values are the TIC or BPI value
         /// </returns>
-        private Dictionary<int, double> GetTicOrBpiByFrame(
+        private SortedDictionary<int, double> GetTicOrBpiByFrame(
             int startFrameNumber,
             int endFrameNumber,
             int startScan,
@@ -5277,7 +5277,7 @@ namespace UIMFLibrary
                 endFrameNumber = startFrameNumber;
             }
 
-            var dctTicOrBPI = new Dictionary<int, double>();
+            var dctTicOrBPI = new SortedDictionary<int, double>();
 
 
             // Construct the SQL
