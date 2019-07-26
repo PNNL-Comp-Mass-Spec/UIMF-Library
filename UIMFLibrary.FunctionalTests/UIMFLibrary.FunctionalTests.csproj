@@ -27,7 +27,7 @@
     <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.97" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
@@ -44,7 +44,7 @@
     <PackageReference Include="MathNet.Numerics" Version="4.7.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="NUnit" Version="3.11.0" />
-    <PackageReference Include="PRISM-Library" Version="2.5.22" />
+    <PackageReference Include="PRISM-Library" Version="2.5.24" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj" />
