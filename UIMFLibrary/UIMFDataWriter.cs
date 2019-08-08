@@ -2525,7 +2525,7 @@ namespace UIMFLibrary
             mDbCommandUpdateFrameParamValue = mDbConnection.CreateCommand();
 
             mDbCommandUpdateFrameParamValue.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
-                                                          "SET ParamValue = :ParamValue" +
+                                                          "SET ParamValue = :ParamValue " +
                                                           "WHERE FrameNum = :FrameNum AND ParamID = :ParamID";
         }
 
