@@ -1866,6 +1866,44 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Gets the minimum and maximum scan number across all frames, and returns 'true' if the minimum scan number is probably 1
+        /// </summary>
+        /// <param name="minScanNumber">The lowest scan number for any frame in the file</param>
+        /// <param name="maxScanNumber">The highest scan number for any frame in the file</param>
+        /// <returns>'true' if the minimum scan number is probably 1. "Probably" is because missing (empty) scans can make this hard to determine.</returns>
+        public bool? GetMinMaxScanNumbersAllFrames(out int minScanNumber, out int maxScanNumber)
+        {
+            minScanNumber = -1;
+            maxScanNumber = -1;
+            using (var cmd = mDbConnection.CreateCommand())
+            {
+                // TODO: Is there a faster but still reliable way to do this? This is a bit slow on large UIMF files.
+                cmd.CommandText = "SELECT min(ScanNum) AS MinScanNum, max(ScanNum) AS MaxScanNum FROM (SELECT DISTINCT(ScanNum) FROM Frame_Scans);";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        minScanNumber = reader.GetInt32(0);
+                        maxScanNumber = reader.GetInt32(1);
+                    }
+                }
+            }
+
+            var scansPerFrame = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses);
+            if (minScanNumber == 0)
+            {
+                return false;
+            }
+
+            if (maxScanNumber >= scansPerFrame)
+            {
+                return true;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Gets information on the scans associated with a given frame
         /// </summary>
         /// <param name="frameNumber">Frame Number</param>
