@@ -33,14 +33,6 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="IMSDemultiplexer">
-      <HintPath>Lib\IMSDemultiplexer.dll</HintPath>
-    </Reference>
-    <Reference Include="UIMFDemultiplexer">
-      <HintPath>Lib\UIMFDemultiplexer.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="4.7.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="NUnit" Version="3.11.0" />
