@@ -3310,12 +3310,13 @@ namespace UIMFLibrary
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="maxBin">The maximum bin value for the scan</param>
+        /// <param name="sort">If true, data will be sorted before being returned</param>
         /// <returns>
-        /// List of Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
+        /// List of possibly sorted Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
         /// </returns>
-        public List<Tuple<int, int>> GetSpectrumAsBinsNz(int frameNumber, FrameType frameType, int scanNumber, out int maxBin)
+        public List<Tuple<int, int>> GetSpectrumAsBinsNz(int frameNumber, FrameType frameType, int scanNumber, out int maxBin, bool sort = false)
         {
-            return GetSpectrumAsBinsNz(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out maxBin);
+            return GetSpectrumAsBinsNz(frameNumber, frameNumber, frameType, scanNumber, scanNumber, out maxBin, sort);
         }
 
         /// <summary>
@@ -3339,11 +3340,12 @@ namespace UIMFLibrary
         /// The end scan number of the desired spectrum.
         /// </param>
         /// <param name="maxBin">The maximum bin value for the scan</param>
+        /// <param name="sort">If true, data will be sorted before being returned</param>
         /// <returns>
-        /// List of Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
+        /// List of possibly sorted Key-Value Pairs (Key=Bin, Value=Intensity) containing an intensity value for each non-zero bin location.
         /// </returns>
         public List<Tuple<int, int>> GetSpectrumAsBinsNz(int startFrameNumber, int endFrameNumber, FrameType frameType,
-            int startScanNumber, int endScanNumber, out int maxBin)
+            int startScanNumber, int endScanNumber, out int maxBin, bool sort = false)
         {
             mGetSpectrumCommand.Parameters.Clear();
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", startFrameNumber));
@@ -3390,7 +3392,13 @@ namespace UIMFLibrary
                 }
             }
 
-            return intensityDict.Where(x => x.Value > 0).Select(x => new Tuple<int,int>(x.Key, x.Value)).ToList();
+            var results = intensityDict.Where(x => x.Value > 0).Select(x => new Tuple<int,int>(x.Key, x.Value)).ToList();
+            if (sort)
+            {
+                results.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+            }
+
+            return results;
         }
 
         /// <summary>
