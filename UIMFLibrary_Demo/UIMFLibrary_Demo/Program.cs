@@ -7,9 +7,22 @@ namespace UIMFLibrary_Demo
 {
     static class Program
     {
-        private const bool TEST_READER = true;
+        private const bool TEST_READER = false;
+
         private const bool TEST_WRITER = false;
-        private const bool UPDATE_PARAM_TABLES = false;
+
+        /// <summary>
+        /// Set this to True to add the Frame_Params and Global_Params tables
+        /// </summary>
+        private const bool UPDATE_PARAM_TABLES = true;
+
+        /// <summary>
+        /// When true, duplicate the .uimf file to add the missing tables
+        /// When false, simply add the tables
+        /// </summary>
+        /// <remarks>Only used when UPDATE_PARAM_TABLES is true</remarks>
+        private const bool UPDATE_PARAM_TABLES_DUPLICATE_FILE = false;
+
         private const bool ADD_LEGACY_PARAM_TABLES = false;
 
         private static void Main(string[] args)
@@ -143,26 +156,49 @@ namespace UIMFLibrary_Demo
         {
             try
             {
-                var fiLegacyFile = new FileInfo(uimfFilePath);
-                if (!fiLegacyFile.Exists)
-                    return;
-
-                if (fiLegacyFile.Directory == null)
-                    return;
-
-                var targetPath = Path.Combine(fiLegacyFile.Directory.FullName,
-                                              Path.GetFileNameWithoutExtension(fiLegacyFile.Name) + "_updated.uimf");
-
-                Console.WriteLine("Duplicating " + fiLegacyFile.FullName + Environment.NewLine + " to create " +Path.GetFileName(targetPath));
-
-                fiLegacyFile.CopyTo(targetPath, true);
-                System.Threading.Thread.Sleep(100);
-
-                // For an exising .UIMF file, simply opening the file with the writer will update the tables
-                using (var writer = new DataWriter(targetPath))
+                var legacyUimfFile = new FileInfo(uimfFilePath);
+                if (!legacyUimfFile.Exists)
                 {
-                    writer.UpdateGlobalFrameCount();
+                    ConsoleMsgUtils.ShowWarning("File not found: " + uimfFilePath);
+                    return;
                 }
+
+
+                if (UPDATE_PARAM_TABLES_DUPLICATE_FILE)
+                {
+
+                    if (legacyUimfFile.Directory == null)
+                    {
+                        ConsoleMsgUtils.ShowWarning("Cannot determine the parent directory of: " + uimfFilePath);
+                        return;
+                    }
+
+                    var targetPath = Path.Combine(legacyUimfFile.Directory.FullName,
+                                                  Path.GetFileNameWithoutExtension(legacyUimfFile.Name) + "_updated.uimf");
+
+                    Console.WriteLine("Duplicating " + legacyUimfFile.FullName + Environment.NewLine + " to create " + Path.GetFileName(targetPath));
+
+                    legacyUimfFile.CopyTo(targetPath, true);
+                    System.Threading.Thread.Sleep(100);
+
+                    // For an existing .UIMF file, simply opening the file with the writer will update the tables
+                    using (var writer = new DataWriter(targetPath))
+                    {
+                        writer.UpdateGlobalStats();
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Updating " + legacyUimfFile.FullName + Environment.NewLine + " to add the Global_Params and Frame_Params tables");
+
+                    using (var writer = new DataWriter(legacyUimfFile.FullName))
+                    {
+                        Console.WriteLine("  .. updating global stats");
+                        writer.UpdateGlobalStats();
+                        Console.WriteLine("  .. update complete");
+                    }
+                }
+
             }
             catch (Exception ex)
             {
