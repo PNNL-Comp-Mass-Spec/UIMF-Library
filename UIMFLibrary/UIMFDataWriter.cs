@@ -63,12 +63,12 @@ namespace UIMFLibrary
         private SQLiteCommand mDbCommandInsertLegacyFrameParameterRow;
 
         /// <summary>
-        /// Command to insert a global parameter value
+        /// Command to insert a global parameter value into the Global_Params table
         /// </summary>
         private SQLiteCommand mDbCommandInsertGlobalParamValue;
 
         /// <summary>
-        /// Command to update a global parameter value
+        /// Command to update a global parameter value in the Global_Params table
         /// </summary>
         private SQLiteCommand mDbCommandUpdateGlobalParamValue;
 
