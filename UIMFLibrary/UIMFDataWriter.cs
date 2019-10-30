@@ -382,8 +382,23 @@ namespace UIMFLibrary
                 foreach (var globalParam in cachedGlobalParams.Values)
                 {
                     var currentParam = globalParam.Value;
+                    var value = currentParam.Value;
 
-                    AddUpdateGlobalParameter(currentParam.ParamType, currentParam.Value);
+                    if (currentParam.ParamType == GlobalParamKeyType.DateStarted && !string.IsNullOrWhiteSpace(value))
+                    {
+                        // Assure that the value ends in AM or PM
+                        if (value is string dateText)
+                        {
+                            if (DateTime.TryParse(dateText, out var dateStarted))
+                            {
+                                var standardizedDate = UIMFDataUtilities.StandardizeDate(dateStarted);
+                                AddUpdateGlobalParameter(currentParam.ParamType, standardizedDate);
+                                continue;
+                            }
+                        }
+                    }
+
+                    AddUpdateGlobalParameter(currentParam.ParamType, value);
                 }
 
                 FlushUimf(false);
