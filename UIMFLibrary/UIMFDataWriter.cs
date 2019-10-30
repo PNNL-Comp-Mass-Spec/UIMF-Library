@@ -747,8 +747,8 @@ namespace UIMFLibrary
 
         private void AddVersionInfo(Assembly entryAssembly = null)
         {
-            var softwareName = "Unknown";
-            var softwareVersion = new Version(0, 0, 0, 0);
+            var defaultName = "Unknown";
+            var defaultVersion = new Version(0, 0, 0, 0);
 
             // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
             try
@@ -757,22 +757,23 @@ namespace UIMFLibrary
 
                 if (entryAssembly == null)
                 {
-                    software = Assembly.GetEntryAssembly().GetName();
+                    software = Assembly.GetEntryAssembly()?.GetName();
                 }
                 else
                 {
                     software = entryAssembly.GetName();
                 }
 
-                softwareName = software.Name;
-                softwareVersion = software.Version;
+                var softwareName = software?.Name ?? defaultName;
+                var softwareVersion = software?.Version ?? defaultVersion;
+
+                AddVersionInfo(softwareName, softwareVersion);
             }
             catch
             {
-                // Ignore errors here
+                AddVersionInfo(defaultName, defaultVersion);
             }
 
-            AddVersionInfo(softwareName, softwareVersion);
         }
 
         /// <summary>
@@ -1729,7 +1730,7 @@ namespace UIMFLibrary
             int nonZeroCount,
             double bpi,
             Int64 tic,
-            byte[] spectra)
+            IEnumerable<byte> spectra)
         {
             if (nonZeroCount <= 0)
                 return;
@@ -1768,7 +1769,7 @@ namespace UIMFLibrary
             int nonZeroCount,
             int bpi,
             long tic,
-            byte[] spectra)
+            IEnumerable<byte> spectra)
         {
             if (nonZeroCount <= 0)
                 return;
