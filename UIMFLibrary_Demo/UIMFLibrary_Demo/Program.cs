@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using PRISM;
 using UIMFLibrary;
+
+#pragma warning disable 162
 
 namespace UIMFLibrary_Demo
 {
+    [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
+    [SuppressMessage("ReSharper", "HeuristicUnreachableCode")]
     static class Program
     {
         private const bool TEST_READER = false;
@@ -288,7 +294,7 @@ namespace UIMFLibrary_Demo
                     globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, 400000)
                                     .AddUpdateValue(GlobalParamKeyType.BinWidth, 0.25)
                                     .AddUpdateValue(GlobalParamKeyType.DateStarted, DateTime.Now)
-                                    .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC")                                    
+                                    .AddUpdateValue(GlobalParamKeyType.TOFIntensityType, "ADC")
                                     .AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, 0.0);
 
                     writer.InsertGlobal(globalParameters);
@@ -341,7 +347,7 @@ namespace UIMFLibrary_Demo
                 }
 
                 Console.WriteLine("Wrote 5 frames of data to \n" + fiTestFile.FullName);
-                
+
             }
             catch (Exception ex)
             {
