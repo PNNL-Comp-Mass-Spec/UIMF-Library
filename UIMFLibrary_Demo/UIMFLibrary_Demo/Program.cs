@@ -313,7 +313,7 @@ namespace UIMFLibrary_Demo
                     {
                         var fp = new FrameParams();
 
-                        fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFLibrary.DataReader.FrameType.MS1)
+                        fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFData.FrameType.MS1)
                           .AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481)
                           .AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093)
                           .AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667)
