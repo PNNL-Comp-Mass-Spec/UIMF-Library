@@ -30,39 +30,31 @@ namespace UIMFLibrary_Demo
             string dataFilePathForReader;
 
             if (args != null && args.Length > 0)
+            {
                 dataFilePathForReader = args[0];
+            }
             else
             {
-                // Look for the default file
-                var diDataFolder = new DirectoryInfo(GetAppFolderPath());
-                DirectoryInfo diDataFolderPath = null;
-                while (true)
-                {
-                    var diFolders = diDataFolder.GetDirectories("Test_Data");
-                    if (diFolders.Length > 0)
-                    {
-                        diDataFolderPath = diFolders[0];
-                        break;
-                    }
+                Console.WriteLine("Looking for a directory named Test_Data");
 
-                    if (diDataFolder.Parent == null)
-                    {
-                        break;
-                    }
-                    diDataFolder = diDataFolder.Parent;
-                }
+                // Find the first directory with a .uimf file
+                var testDataDirectory = FindTestDataDirectory();
 
-                if (diDataFolderPath == null)
+                var inputDirectory = testDataDirectory ?? FindDirectoryWithUimfFile();
+
+                if (inputDirectory == null)
                 {
-                    Console.WriteLine("Please provide the path to a UIMF file.");
+                    Console.WriteLine("Please provide the path to a UIMF file, " +
+                                      "or run this program in a directory with a UIMF file " +
+                                      "or in a directory with subdirectory Test_Data");
                     System.Threading.Thread.Sleep(3000);
                     return;
                 }
 
-                var fiFiles = diDataFolderPath.GetFiles("*.uimf");
+                var fiFiles = inputDirectory.GetFiles("*.uimf");
                 if (fiFiles.Length == 0)
                 {
-                    Console.WriteLine("No .UIMF files were found in folder " + diDataFolder.FullName);
+                    Console.WriteLine("No .UIMF files were found in directory " + inputDirectory.FullName);
                     System.Threading.Thread.Sleep(3000);
                     return;
                 }
@@ -81,8 +73,7 @@ namespace UIMFLibrary_Demo
 
             if (UPDATE_PARAM_TABLES)
             {
-                const string legacyFilePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v2.uimf";
-                UpdateParamTables(legacyFilePath);
+                UpdateParamTables(dataFilePathForReader);
             }
 
             if (TEST_WRITER)
@@ -97,8 +88,67 @@ namespace UIMFLibrary_Demo
                 AddLegacyParamTables(v3FilePath);
 
             }
-            
+
             System.Threading.Thread.Sleep(1000);
+
+        }
+
+        /// <summary>
+        /// Search for a .uimf file in the current directory and all subdirectories
+        /// If not files are found, move up one level and try again
+        /// </summary>
+        /// <returns></returns>
+        private static DirectoryInfo FindDirectoryWithUimfFile()
+        {
+            // Look for the first directory with a UIMF file
+            var directoryToCheck = new DirectoryInfo(GetAppFolderPath());
+
+            while (true)
+            {
+                var uimfFiles = directoryToCheck.GetFiles("*.uimf");
+                if (uimfFiles.Length > 0)
+                {
+                    return directoryToCheck;
+                }
+
+                var subdirectories = directoryToCheck.GetDirectories();
+                foreach (var subDirectory in subdirectories)
+                {
+                    var subDirUimfFiles = subDirectory.GetFiles("*.uimf");
+                    if (subDirUimfFiles.Length > 0)
+                    {
+                        return subDirectory;
+                    }
+                }
+
+                if (directoryToCheck.Parent == null)
+                {
+                    return null;
+                }
+
+                directoryToCheck = directoryToCheck.Parent;
+            }
+        }
+
+        private static DirectoryInfo FindTestDataDirectory()
+        {
+            // Look for the default file
+            var directoryToCheck = new DirectoryInfo(GetAppFolderPath());
+
+            while (true)
+            {
+                var subDirectories = directoryToCheck.GetDirectories("Test_Data");
+                if (subDirectories.Length > 0)
+                {
+                    return subDirectories[0];
+                }
+
+                if (directoryToCheck.Parent == null)
+                {
+                    return null;
+                }
+                directoryToCheck = directoryToCheck.Parent;
+            }
 
         }
 
