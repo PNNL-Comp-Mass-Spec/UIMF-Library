@@ -72,6 +72,14 @@
       <Name>UIMFLibrary</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PRISM-Library">
+      <Version>2.5.26</Version>
+    </PackageReference>
+    <PackageReference Include="System.Data.SQLite.Core">
+      <Version>1.0.111</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
