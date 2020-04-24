@@ -161,7 +161,7 @@ namespace UIMFLibrary
                     {GlobalParamKeyType.DateStarted, typeof(string)},            // Stored as a string to assure the format does not change
                     {GlobalParamKeyType.NumFrames, typeof(int)},
                     {GlobalParamKeyType.TimeOffset, typeof(int)},
-                    {GlobalParamKeyType.BinWidth, typeof(double)},               // Tof-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
+                    {GlobalParamKeyType.BinWidth, typeof(double)},               // TOF-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
                     {GlobalParamKeyType.Bins, typeof(int)},
                     {GlobalParamKeyType.TOFCorrectionTime, typeof(float)},
                     {GlobalParamKeyType.TOFIntensityType, typeof(string)},
@@ -171,11 +171,12 @@ namespace UIMFLibrary
                     {GlobalParamKeyType.PrescanTICThreshold, typeof(int)},
                     {GlobalParamKeyType.PrescanContinuous, typeof(int)},
                     {GlobalParamKeyType.PrescanProfile, typeof(string)},
-                    {GlobalParamKeyType.InstrumentClass, typeof(int)},       // 0 for TOF; 1 for ppm bin-based
+                    {GlobalParamKeyType.InstrumentClass, typeof(int)},          // 0 for TOF; 1 for ppm bin-based
                     {GlobalParamKeyType.PpmBinBasedStartMz, typeof(double)},    // Only used when InstrumentClass is 1 (ppm bin-based)
-                    {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)},    // Only used when InstrumentClass is 1 (ppm bin-based)
-                    {GlobalParamKeyType.DriftTubeLength, typeof(double)},    // Only used for IMS
-                    {GlobalParamKeyType.DriftGas, typeof(string)}
+                    {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)},      // Only used when InstrumentClass is 1 (ppm bin-based)
+                    {GlobalParamKeyType.DriftTubeLength, typeof(double)},       // Only used for IMS
+                    {GlobalParamKeyType.DriftGas, typeof(string)},
+                    {GlobalParamKeyType.ADCName, typeof(string)}
                 };
 
                 foreach (var item in keyTypes)

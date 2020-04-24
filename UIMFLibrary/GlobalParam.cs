@@ -112,6 +112,11 @@ namespace UIMFLibrary
         /// Key: Drift Gas (for IMS)
         /// </summary>
         DriftGas = 19,
+
+        /// <summary>
+        /// Key: Analog to Digital Converter name
+        /// </summary>
+        ADCName = 20
     }
 
     /// <summary>
@@ -302,6 +307,10 @@ namespace UIMFLibrary
 
                 case GlobalParamKeyType.DriftGas:
                     InitializeByType("DriftGas", dataType, "Drift gas (i.e., N2)");
+                    break;
+
+                case GlobalParamKeyType.ADCName:
+                    InitializeByType("ADCName", dataType, "Analog to Digital Converter name");
                     break;
 
                 case GlobalParamKeyType.Unknown:
