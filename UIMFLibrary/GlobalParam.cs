@@ -37,7 +37,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: Bin width
         /// </summary>
-        BinWidth = 5,               // Tof-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
+        BinWidth = 5,               // TOF-bin size (in nanoseconds) or ppm bin size (in parts-per-million)
 
         /// <summary>
         /// Key: Bins
@@ -47,6 +47,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: TOF Correction Time
         /// </summary>
+        // ReSharper disable once InconsistentNaming
         TOFCorrectionTime = 7,
 
         /// <summary>
