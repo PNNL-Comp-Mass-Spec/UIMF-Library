@@ -235,13 +235,10 @@ namespace UIMFLibrary
         {
             var outputLength = output.Length;
 
-            long hslot;
-            uint iidx = 0;
-            uint oidx = 0;
-            long reference;
+            uint inputIndex = 0;
+            uint outputIndex = 0;
 
-            var hval = (uint)(((input[iidx]) << 8) | input[iidx + 1]); // FRST(in_data, iidx);
-            long off;
+            var hValue = (uint)(((input[inputIndex]) << 8) | input[inputIndex + 1]); // FRST(in_data, inputIndex);
             var lit = 0;
 
             // Lock so we have exclusive access to hashtable.
@@ -251,86 +248,87 @@ namespace UIMFLibrary
 
                 for (; ; )
                 {
-                    if (iidx < inputLength - 2)
+                    if (inputIndex < inputLength - 2)
                     {
-                        hval = (hval << 8) | input[iidx + 2];
-                        hslot = ((hval ^ (hval << 5)) >> (int)(((3 * 8 - HLOG)) - hval * 5) & (HSIZE - 1));
-                        reference = HashTable[hslot];
-                        HashTable[hslot] = (long)iidx;
+                        hValue = (hValue << 8) | input[inputIndex + 2];
+                        long hSlot = ((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1));
+                        var reference = HashTable[hSlot];
+                        HashTable[hSlot] = inputIndex;
 
-                        if ((off = iidx - reference - 1) < MAX_OFF
-                            && iidx + 4 < inputLength
+                        long offset;
+                        if ((offset = inputIndex - reference - 1) < MAX_OFF
+                            && inputIndex + 4 < inputLength
                             && reference > 0
-                            && input[reference + 0] == input[iidx + 0]
-                            && input[reference + 1] == input[iidx + 1]
-                            && input[reference + 2] == input[iidx + 2]
+                            && input[reference + 0] == input[inputIndex + 0]
+                            && input[reference + 1] == input[inputIndex + 1]
+                            && input[reference + 2] == input[inputIndex + 2]
                         )
                         {
                             /* match found at *reference++ */
                             uint len = 2;
-                            var maxlen = (uint)inputLength - iidx - len;
-                            maxlen = maxlen > MAX_REF ? MAX_REF : maxlen;
+                            var maxLength = (uint)inputLength - inputIndex - len;
+                            maxLength = maxLength > MAX_REF ? MAX_REF : maxLength;
 
-                            if (oidx + lit + 1 + 3 >= outputLength)
+                            if (outputIndex + lit + 1 + 3 >= outputLength)
                                 return 0;
 
                             do
                                 len++;
-                            while (len < maxlen && input[reference + len] == input[iidx + len]);
+                            while (len < maxLength && input[reference + len] == input[inputIndex + len]);
 
                             if (lit != 0)
                             {
-                                output[oidx++] = (byte)(lit - 1);
+                                output[outputIndex++] = (byte)(lit - 1);
                                 lit = -lit;
                                 do
-                                    output[oidx++] = input[iidx + lit];
+                                    output[outputIndex++] = input[inputIndex + lit];
                                 while ((++lit) != 0);
                             }
 
                             len -= 2;
-                            iidx++;
+                            inputIndex++;
 
                             if (len < 7)
                             {
-                                output[oidx++] = (byte)((off >> 8) + (len << 5));
+                                output[outputIndex++] = (byte)((offset >> 8) + (len << 5));
                             }
                             else
                             {
-                                output[oidx++] = (byte)((off >> 8) + (7 << 5));
-                                output[oidx++] = (byte)(len - 7);
+                                output[outputIndex++] = (byte)((offset >> 8) + (7 << 5));
+                                output[outputIndex++] = (byte)(len - 7);
                             }
 
-                            output[oidx++] = (byte)off;
+                            output[outputIndex++] = (byte)offset;
 
-                            iidx += len - 1;
-                            hval = (uint)(((input[iidx]) << 8) | input[iidx + 1]);
+                            inputIndex += len - 1;
+                            hValue = (uint)(((input[inputIndex]) << 8) | input[inputIndex + 1]);
 
-                            hval = (hval << 8) | input[iidx + 2];
-                            HashTable[((hval ^ (hval << 5)) >> (int)(((3 * 8 - HLOG)) - hval * 5) & (HSIZE - 1))] = iidx;
-                            iidx++;
+                            hValue = (hValue << 8) | input[inputIndex + 2];
+                            HashTable[((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1))] = inputIndex;
+                            inputIndex++;
 
-                            hval = (hval << 8) | input[iidx + 2];
-                            HashTable[((hval ^ (hval << 5)) >> (int)(((3 * 8 - HLOG)) - hval * 5) & (HSIZE - 1))] = iidx;
-                            iidx++;
+                            hValue = (hValue << 8) | input[inputIndex + 2];
+                            HashTable[((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1))] = inputIndex;
+                            inputIndex++;
                             continue;
                         }
                     }
-                    else if (iidx == inputLength)
+                    else if (inputIndex == inputLength)
                         break;
 
                     /* one more literal byte we must copy */
                     lit++;
-                    iidx++;
+                    inputIndex++;
 
                     if (lit == MAX_LIT)
                     {
-                        if (oidx + 1 + MAX_LIT >= outputLength)
+                        if (outputIndex + 1 + MAX_LIT >= outputLength)
                             return 0;
 
-                        output[oidx++] = (byte)(MAX_LIT - 1);
+                        output[outputIndex++] = (byte)(MAX_LIT - 1);
                         lit = -lit;
                         do
-                            output[oidx++] = input[iidx + lit];
+                            output[outputIndex++] = input[inputIndex + lit];
                         while ((++lit) != 0);
                     }
                 } // for
@@ -338,17 +336,17 @@ namespace UIMFLibrary
 
             if (lit != 0)
             {
-                if (oidx + lit + 1 >= outputLength)
+                if (outputIndex + lit + 1 >= outputLength)
                     return 0;
 
-                output[oidx++] = (byte)(lit - 1);
+                output[outputIndex++] = (byte)(lit - 1);
                 lit = -lit;
                 do
-                    output[oidx++] = input[iidx + lit];
+                    output[outputIndex++] = input[inputIndex + lit];
                 while ((++lit) != 0);
             }
 
-            return (int)oidx;
+            return (int)outputIndex;
         }
 
         /// <summary>
@@ -362,39 +360,39 @@ namespace UIMFLibrary
         {
             var outputLength = output.Length;
 
-            uint iidx = 0;
-            uint oidx = 0;
+            uint inputIndex = 0;
+            uint outputIndex = 0;
 
             do
             {
-                uint ctrl = input[iidx++];
+                uint ctrl = input[inputIndex++];
 
                 if (ctrl < (1 << 5)) /* literal run */
                 {
                     ctrl++;
 
-                    if (oidx + ctrl > outputLength)
+                    if (outputIndex + ctrl > outputLength)
                     {
                         //SET_ERRNO (E2BIG);
                         return 0;
                     }
 
                     do
-                        output[oidx++] = input[iidx++];
+                        output[outputIndex++] = input[inputIndex++];
                     while ((--ctrl) != 0);
                 }
                 else /* back reference */
                 {
                     var len = ctrl >> 5;
 
-                    var reference = (int)(oidx - ((ctrl & 0x1f) << 8) - 1);
+                    var reference = (int)(outputIndex - ((ctrl & 0x1f) << 8) - 1);
 
                     if (len == 7)
-                        len += input[iidx++];
+                        len += input[inputIndex++];
 
-                    reference -= input[iidx++];
+                    reference -= input[inputIndex++];
 
-                    if (oidx + len + 2 > outputLength)
+                    if (outputIndex + len + 2 > outputLength)
                     {
                         //SET_ERRNO (E2BIG);
                         return 0;
@@ -406,17 +404,17 @@ namespace UIMFLibrary
                         return 0;
                     }
 
-                    output[oidx++] = output[reference++];
-                    output[oidx++] = output[reference++];
+                    output[outputIndex++] = output[reference++];
+                    output[outputIndex++] = output[reference++];
 
                     do
-                        output[oidx++] = output[reference++];
+                        output[outputIndex++] = output[reference++];
                     while ((--len) != 0);
                 }
             }
-            while (iidx < inputLength);
+            while (inputIndex < inputLength);
 
-            return (int)oidx;
+            return (int)outputIndex;
         }
 
         #endregion
