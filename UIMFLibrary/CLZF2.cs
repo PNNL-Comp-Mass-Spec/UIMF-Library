@@ -111,9 +111,9 @@ namespace UIMFLibrary
         public static byte[] Compress(byte[] inputBytes, int inputLength)
         {
             byte[] tempBuffer = null;
-            int byteCount = Compress(inputBytes, ref tempBuffer, inputLength);
+            var byteCount = Compress(inputBytes, ref tempBuffer, inputLength);
 
-            byte[] outputBytes = new byte[byteCount];
+            var outputBytes = new byte[byteCount];
             Buffer.BlockCopy(tempBuffer, 0, outputBytes, 0, byteCount);
             return outputBytes;
         }
@@ -139,11 +139,11 @@ namespace UIMFLibrary
         public static int Compress(byte[] inputBytes, ref byte[] outputBuffer, int inputLength)
         {
             // Estimate necessary output buffer size.
-            int outputByteCountGuess = inputBytes.Length * BUFFER_SIZE_ESTIMATE;
+            var outputByteCountGuess = inputBytes.Length * BUFFER_SIZE_ESTIMATE;
             if (outputBuffer == null || outputBuffer.Length < outputByteCountGuess)
                 outputBuffer = new byte[outputByteCountGuess];
 
-            int byteCount = lzf_compress(inputBytes, ref outputBuffer, inputLength);
+            var byteCount = lzf_compress(inputBytes, ref outputBuffer, inputLength);
 
             // If byteCount is 0, increase buffer size and try again.
             while (byteCount == 0)
@@ -175,9 +175,9 @@ namespace UIMFLibrary
         public static byte[] Decompress(byte[] inputBytes, int inputLength)
         {
             byte[] tempBuffer = null;
-            int byteCount = Decompress(inputBytes, ref tempBuffer, inputLength);
+            var byteCount = Decompress(inputBytes, ref tempBuffer, inputLength);
 
-            byte[] outputBytes = new byte[byteCount];
+            var outputBytes = new byte[byteCount];
             Buffer.BlockCopy(tempBuffer, 0, outputBytes, 0, byteCount);
             return outputBytes;
         }
@@ -203,11 +203,11 @@ namespace UIMFLibrary
         public static int Decompress(byte[] inputBytes, ref byte[] outputBuffer, int inputLength)
         {
             // Estimate necessary output buffer size.
-            int outputByteCountGuess = inputBytes.Length * BUFFER_SIZE_ESTIMATE;
+            var outputByteCountGuess = inputBytes.Length * BUFFER_SIZE_ESTIMATE;
             if (outputBuffer == null || outputBuffer.Length < outputByteCountGuess)
                 outputBuffer = new byte[outputByteCountGuess];
 
-            int byteCount = lzf_decompress(inputBytes, ref outputBuffer, inputLength);
+            var byteCount = lzf_decompress(inputBytes, ref outputBuffer, inputLength);
 
             // If byteCount is 0, increase buffer size and try again.
             while (byteCount == 0)
@@ -233,16 +233,16 @@ namespace UIMFLibrary
         /// <returns>The size of the compressed archive in the output buffer.</returns>
         private static int lzf_compress(byte[] input, ref byte[] output, int inputLength)
         {
-            int outputLength = output.Length;
+            var outputLength = output.Length;
 
             long hslot;
             uint iidx = 0;
             uint oidx = 0;
             long reference;
 
-            uint hval = (uint)(((input[iidx]) << 8) | input[iidx + 1]); // FRST(in_data, iidx);
+            var hval = (uint)(((input[iidx]) << 8) | input[iidx + 1]); // FRST(in_data, iidx);
             long off;
-            int lit = 0;
+            var lit = 0;
 
             // Lock so we have exclusive access to hashtable.
             lock (locker)
@@ -268,7 +268,7 @@ namespace UIMFLibrary
                         {
                             /* match found at *reference++ */
                             uint len = 2;
-                            uint maxlen = (uint)inputLength - iidx - len;
+                            var maxlen = (uint)inputLength - iidx - len;
                             maxlen = maxlen > MAX_REF ? MAX_REF : maxlen;
 
                             if (oidx + lit + 1 + 3 >= outputLength)
@@ -360,7 +360,7 @@ namespace UIMFLibrary
         /// <returns>The size of the decompressed archive in the output buffer.</returns>
         private static int lzf_decompress(byte[] input, ref byte[] output, int inputLength)
         {
-            int outputLength = output.Length;
+            var outputLength = output.Length;
 
             uint iidx = 0;
             uint oidx = 0;
@@ -385,9 +385,9 @@ namespace UIMFLibrary
                 }
                 else /* back reference */
                 {
-                    uint len = ctrl >> 5;
+                    var len = ctrl >> 5;
 
-                    int reference = (int)(oidx - ((ctrl & 0x1f) << 8) - 1);
+                    var reference = (int)(oidx - ((ctrl & 0x1f) << 8) - 1);
 
                     if (len == 7)
                         len += input[iidx++];
