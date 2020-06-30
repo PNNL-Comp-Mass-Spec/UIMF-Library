@@ -231,6 +231,7 @@ namespace UIMFLibrary
         /// <param name="output">Reference to a buffer which will contain the compressed data.</param>
         /// <param name="inputLength">Length of input bytes to process.</param>
         /// <returns>The size of the compressed archive in the output buffer.</returns>
+        // ReSharper disable once SuggestBaseTypeForParameter
         private static int lzf_compress(byte[] input, ref byte[] output, int inputLength)
         {
             var outputLength = output.Length;
@@ -356,6 +357,7 @@ namespace UIMFLibrary
         /// <param name="output">Reference to a buffer which will contain the decompressed data.</param>
         /// <param name="inputLength">Length of input bytes to process.</param>
         /// <returns>The size of the decompressed archive in the output buffer.</returns>
+        // ReSharper disable once SuggestBaseTypeForParameter
         private static int lzf_decompress(byte[] input, ref byte[] output, int inputLength)
         {
             var outputLength = output.Length;
