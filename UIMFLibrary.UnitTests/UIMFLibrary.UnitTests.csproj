@@ -18,10 +18,11 @@
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Needed for static type <-> 'dynamic' conversion tests -->
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Experimental_Release'">
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
@@ -30,7 +31,7 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.11.0" />
+    <PackageReference Include="NUnit" Version="3.13.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UIMFLibrary\UIMFLibrary.csproj" />

@@ -111,7 +111,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
-        public void TestConverFrameParametersToDictionary()
+        public void TestConvertFrameParametersToDictionary()
         {
             var frameParameters = GetExampleFrameParameters();
             var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);

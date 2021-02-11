@@ -195,7 +195,6 @@ namespace UIMFLibrary
         {
             try
             {
-
                 if (!HasLegacyParameterTables)
                 {
                     // Nothing to do
@@ -214,9 +213,7 @@ namespace UIMFLibrary
                         if (!mFrameNumsInLegacyFrameParametersTable.Contains(frameNum))
                             mFrameNumsInLegacyFrameParametersTable.Add(frameNum);
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -225,13 +222,10 @@ namespace UIMFLibrary
                     "Exception caching the frame numbers in the legacy Frame_Parameters table: " + ex.Message, ex);
                 throw;
             }
-
-
         }
 
         private void ConvertLegacyFrameParameters()
         {
-
             var framesProcessed = 0;
             var currentTask = "Initializing";
 
@@ -283,7 +277,6 @@ namespace UIMFLibrary
                             lastUpdate = DateTime.UtcNow;
                         }
                     }
-
                 }
 
                 Console.WriteLine();
@@ -318,7 +311,6 @@ namespace UIMFLibrary
                                           cachedFrameParams.Count);
                         lastUpdate = DateTime.UtcNow;
                     }
-
                 }
 
                 Console.WriteLine("Conversion complete\n");
@@ -336,7 +328,6 @@ namespace UIMFLibrary
                     "(current task '" + currentTask + "', processed " + framesProcessed + " frames): " + ex.Message, ex);
                 throw;
             }
-
         }
 
         /// <summary>
@@ -405,7 +396,6 @@ namespace UIMFLibrary
 
                 // Possibly turn back on Legacy parameter writing
                 mCreateLegacyParametersTables = createLegacyParametersTablesSaved;
-
             }
             catch (Exception ex)
             {
@@ -414,7 +404,6 @@ namespace UIMFLibrary
                     "Exception creating the Global_Params table using existing table Global_Parameters: " + ex.Message, ex);
                 throw;
             }
-
         }
 
         #endregion

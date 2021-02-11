@@ -24,10 +24,12 @@
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net45' OR '$(TargetFramework)'=='net461' OR '$(TargetFramework)'=='net47'">
+    <!-- Needed for use of the 'dynamic' type -->
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+    <!-- Needed for use of the 'dynamic' type -->
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Experimental_Release'">
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
