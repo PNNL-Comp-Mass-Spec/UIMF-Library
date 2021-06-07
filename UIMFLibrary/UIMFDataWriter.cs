@@ -556,6 +556,9 @@ namespace UIMFLibrary
         /// <param name="frameNum">Frame number</param>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="paramValue">Parameter value</param>
+        /// <returns>
+        /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public DataWriter AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
         {
             // Make sure the Frame_Param_Keys table contains key paramKeyType
@@ -658,6 +661,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="value">Parameter value (string)</param>
+        /// <returns>
+        /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public DataWriter AddUpdateGlobalParameter(GlobalParamKeyType paramKeyType, string value)
         {
             try
@@ -1359,6 +1365,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">FrameParams object</param>
+        /// <returns>
+        /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public DataWriter InsertFrame(int frameNum, FrameParams frameParameters)
         {
             var frameParamsLite = frameParameters.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
@@ -1370,6 +1379,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">Frame parameters dictionary</param>
+        /// <returns>
+        /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public DataWriter InsertFrame(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParameters)
         {
             // Make sure the previous frame's data is committed to the database
@@ -1442,6 +1454,9 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="globalParameters">
         /// </param>
+        /// <returns>
+        /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public DataWriter InsertGlobal(GlobalParams globalParameters)
         {
             foreach (var globalParam in globalParameters.Values)
@@ -2320,12 +2335,12 @@ namespace UIMFLibrary
         /// Table name
         /// </param>
         /// <param name="lstFields">
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </param>
         /// <returns></returns>
         private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
         {
-            // Construct a Sql Statement of the form
+            // Construct a SQL Statement of the form
             // CREATE TABLE Frame_Scans (FrameNum INTEGER NOT NULL, ParamID INTEGER NOT NULL, Value TEXT)";
 
             var sbSql = new StringBuilder("CREATE TABLE " + tableName + " ( ");

@@ -17,7 +17,9 @@ namespace UIMFLibrary
         /// <param name="dataWriter"></param>
         /// <param name="frameNum"></param>
         /// <param name="frameParameters"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// Instance of the DataWriter class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
+        /// </returns>
         public static async Task InsertFrameAsync(this DataWriter dataWriter, int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParameters)
         {
             try
