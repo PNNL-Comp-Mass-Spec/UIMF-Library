@@ -583,7 +583,7 @@ namespace UIMFLibrary
                         {
                             // Check for an existing row in the legacy Frame_Parameters table for this frame
                             dbCommand.CommandText = "SELECT COUNT(*) FROM " + FRAME_PARAMETERS_TABLE + " WHERE FrameNum = " + frameNum;
-                            var rowCount = (long)(dbCommand.ExecuteScalar());
+                            var rowCount = (long)dbCommand.ExecuteScalar();
 
                             if (rowCount < 1)
                             {
@@ -2387,7 +2387,7 @@ namespace UIMFLibrary
             {
                 // Check for an existing row in the legacy Global_Parameters table
                 dbCommand.CommandText = "SELECT COUNT(*) FROM " + GLOBAL_PARAMETERS_TABLE;
-                var rowCount = (long)(dbCommand.ExecuteScalar());
+                var rowCount = (long)dbCommand.ExecuteScalar();
 
                 if (rowCount < 1)
                 {

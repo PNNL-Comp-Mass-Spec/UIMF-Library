@@ -46,7 +46,7 @@ namespace UIMFLibrary
         /// <returns></returns>
         public static string FloatToString(float value)
         {
-            if ((value - (int)value) < float.Epsilon * 2)
+            if (value - (int)value < float.Epsilon * 2)
                 return ((int)value).ToString(CultureInfo.InvariantCulture);
 
             return value.ToString(CultureInfo.InvariantCulture);
@@ -109,7 +109,7 @@ namespace UIMFLibrary
 
             for (var k = 0; k < intensityArrLength; k++)
             {
-                if (tempIntensities[k] > 0 && (minMZ <= xData[k] && maxMZ >= xData[k]))
+                if (tempIntensities[k] > 0 && minMZ <= xData[k] && maxMZ >= xData[k])
                 {
                     xData[targetIndex] = xData[k];
                     yData[targetIndex] = tempIntensities[k];

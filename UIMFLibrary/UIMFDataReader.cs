@@ -568,7 +568,7 @@ namespace UIMFLibrary
                 {
                     for (var i = 0; i < height; i++)
                     {
-                        mCalibrationTable[i] = startBin + (i * (double)(endBin - startBin) / height);
+                        mCalibrationTable[i] = startBin + i * (double)(endBin - startBin) / height;
                     }
                 }
                 else
@@ -584,7 +584,7 @@ namespace UIMFLibrary
 
                     for (var i = 0; i < height; i++)
                     {
-                        mCalibrationTable[i] = mzCalibrator.MZtoBin(mzMin + (i * (mzMax - mzMin) / height));
+                        mCalibrationTable[i] = mzCalibrator.MZtoBin(mzMin + i * (mzMax - mzMin) / height);
                     }
                 }
 
@@ -626,13 +626,13 @@ namespace UIMFLibrary
             int endBin,
             ref double[,] frameData)
         {
-            for (var scansData = 0; (scansData < width) && reader.Read(); scansData++)
+            for (var scansData = 0; scansData < width && reader.Read(); scansData++)
             {
                 var scanNum = GetInt32(reader, "ScanNum");
                 ValidateScanNumber(scanNum);
 
                 var currentScan = scanNum - startScan;
-                var compressedBinIntensity = (byte[])(reader["Intensities"]);
+                var compressedBinIntensity = (byte[])reader["Intensities"];
 
                 if (compressedBinIntensity.Length == 0)
                 {
@@ -673,7 +673,7 @@ namespace UIMFLibrary
                 ValidateScanNumber(scanNum);
 
                 var currentScan = scanNum - startScan;
-                var compressedBinIntensity = (byte[])(reader["Intensities"]);
+                var compressedBinIntensity = (byte[])reader["Intensities"];
 
                 if (compressedBinIntensity.Length == 0)
                 {
@@ -816,7 +816,7 @@ namespace UIMFLibrary
                                 {
                                     if (!string.Equals(sCurrentObject, FRAME_SCANS_TABLE, StringComparison.InvariantCultureIgnoreCase) ||
                                         frameTypesToAlwaysCopy == null ||
-                                        frameTypesToAlwaysCopy.Count <= 0)
+                                        frameTypesToAlwaysCopy.Count == 0)
                                     {
                                         continue;
                                     }
@@ -1013,7 +1013,7 @@ namespace UIMFLibrary
             out int[] scanValues,
             out int[] intensities)
         {
-            if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
+            if (startFrameNumber > endFrameNumber || startFrameNumber < 0)
             {
                 throw new ArgumentException(
                     "Failed to get LCProfile. Input startFrame was greater than input endFrame. start_frame="
@@ -1338,14 +1338,14 @@ namespace UIMFLibrary
             ref int[] imsScanValues,
             ref int[] intensities)
         {
-            if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
+            if (startFrameNumber > endFrameNumber || startFrameNumber < 0)
             {
                 throw new ArgumentException(
                     "Failed to get DriftTime profile. Input startFrame was greater than input endFrame. start_frame="
                     + startFrameNumber + ", end_frame=" + endFrameNumber);
             }
 
-            if ((startScan > endScan) || (startScan < 0))
+            if (startScan > endScan || startScan < 0)
             {
                 throw new ArgumentException(
                     "Failed to get LCProfile. Input startScan was greater than input endScan. startScan=" + startScan +
@@ -2000,7 +2000,7 @@ namespace UIMFLibrary
             double targetMZ,
             double toleranceInMZ)
         {
-            if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
+            if (startFrameNumber > endFrameNumber || startFrameNumber < 0)
             {
                 throw new ArgumentException("Failed to get 3D profile. Input startFrame was greater than input endFrame");
             }
@@ -2443,7 +2443,7 @@ namespace UIMFLibrary
             out int[] frameValues,
             out int[] intensities)
         {
-            if ((startFrameNumber > endFrameNumber) || (startFrameNumber < 0))
+            if (startFrameNumber > endFrameNumber || startFrameNumber < 0)
             {
                 throw new ArgumentException(
                     "Failed to get LCProfile. Input startFrame was greater than input endFrame. start_frame="
@@ -2704,7 +2704,7 @@ namespace UIMFLibrary
         /// </returns>
         public double GetBinForPixel(int pixel)
         {
-            if ((mCalibrationTable != null) && (pixel < mCalibrationTable.Length))
+            if (mCalibrationTable != null && pixel < mCalibrationTable.Length)
             {
                 return mCalibrationTable[pixel];
             }
@@ -3771,7 +3771,7 @@ namespace UIMFLibrary
             var frameSet = GetFrameSetByFrameType(frameType);
             var frameIndexes = frameSet.FrameIndexes;
 
-            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : targetMz / 1000000 * tolerance;
             var lowMz = targetMz - mzTolerance;
             var highMz = targetMz + mzTolerance;
 
@@ -3892,7 +3892,7 @@ namespace UIMFLibrary
                                                   out var minFrameNumberInFrameSet,
                                                   out var maxFrameNumberInFrameSet);
 
-            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : targetMz / 1000000 * tolerance;
             var lowMz = targetMz - mzTolerance;
             var highMz = targetMz + mzTolerance;
 
@@ -4010,7 +4010,7 @@ namespace UIMFLibrary
 
             var result = new double[numFrames, numImsScans];
 
-            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : targetMz / 1000000 * tolerance;
             var lowMz = targetMz - mzTolerance;
             var highMz = targetMz + mzTolerance;
 
@@ -4128,7 +4128,7 @@ namespace UIMFLibrary
 
             var result = new double[numFrames, numScans];
 
-            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : (targetMz / 1000000 * tolerance);
+            var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : targetMz / 1000000 * tolerance;
             var lowMz = targetMz - mzTolerance;
             var highMz = targetMz + mzTolerance;
 
@@ -4555,7 +4555,7 @@ namespace UIMFLibrary
                     {
                         var pressureUnits = (PressureUnits)frameParams.GetValueInt32(FrameParamKeyType.PressureUnits);
 
-                        PressureIsMilliTorr = (pressureUnits == PressureUnits.MilliTorr);
+                        PressureIsMilliTorr = pressureUnits == PressureUnits.MilliTorr;
                         return;
                     }
                 }

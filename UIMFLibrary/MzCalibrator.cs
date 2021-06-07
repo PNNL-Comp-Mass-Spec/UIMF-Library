@@ -77,7 +77,7 @@ namespace UIMFLibrary
         public virtual int MZtoTOF(double mz)
         {
             var r = Math.Sqrt(mz);
-            return (int)Math.Round(((r / K) + T0));
+            return (int)Math.Round(r / K + T0);
         }
 
         /// <summary>

@@ -200,7 +200,7 @@ namespace UIMFLibrary
 
             // PrescanContinuous is a boolean value stored as a 0 or 1
             var result = globalParameters.GetValueInt32(GlobalParamKeyType.PrescanContinuous, 0);
-            var prescanContinuous = (result != 0);
+            var prescanContinuous = result != 0;
 
             // Populate legacyGlobalParams using dictionary GlobalParams
             var legacyGlobalParams = new GlobalParameters

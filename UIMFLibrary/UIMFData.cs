@@ -473,7 +473,7 @@ namespace UIMFLibrary
             double targetMZ)
         {
             // NOTE: this may not be accurate if the UIMF file uses polynomial calibration values  (e.g. FrameParameter A2)
-            var binCorrection = (correctionTimeForTOF / 1000) / binWidth;
+            var binCorrection = correctionTimeForTOF / 1000 / binWidth;
             var bin = (Math.Sqrt(targetMZ) / slope + intercept) / binWidth * 1000;
 
             // TODO:  have a test case with a TOFCorrectionTime > 0 and verify the binCorrection adjustment
@@ -1113,7 +1113,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                ((t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+                (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
             mz = (mz * mz) + resMassErr;
 
@@ -1145,7 +1145,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                ((t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept));
+                (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
             mz = (mz * mz) + resMassErr;
 

@@ -68,10 +68,10 @@ namespace UIMFLibrary
 
         # region Other Constants (Do Not Modify)
 
-        private const uint HSIZE = (1 << (int)HLOG);
-        private const uint MAX_LIT = (1 << 5);
-        private const uint MAX_OFF = (1 << 13);
-        private const uint MAX_REF = ((1 << 8) + (1 << 3));
+        private const uint HSIZE = 1 << (int)HLOG;
+        private const uint MAX_LIT = 1 << 5;
+        private const uint MAX_OFF = 1 << 13;
+        private const uint MAX_REF = (1 << 8) + (1 << 3);
 
         #endregion
 
@@ -239,7 +239,7 @@ namespace UIMFLibrary
             uint inputIndex = 0;
             uint outputIndex = 0;
 
-            var hValue = (uint)(((input[inputIndex]) << 8) | input[inputIndex + 1]); // FRST(in_data, inputIndex);
+            var hValue = (uint)((input[inputIndex] << 8) | input[inputIndex + 1]); // FRST(in_data, inputIndex);
             var lit = 0;
 
             // Lock so we have exclusive access to hashtable.
@@ -252,7 +252,7 @@ namespace UIMFLibrary
                     if (inputIndex < inputLength - 2)
                     {
                         hValue = (hValue << 8) | input[inputIndex + 2];
-                        long hSlot = ((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1));
+                        long hSlot = (hValue ^ (hValue << 5)) >> (int)(3 * 8 - HLOG - hValue * 5) & (HSIZE - 1);
                         var reference = HashTable[hSlot];
                         HashTable[hSlot] = inputIndex;
 
@@ -283,7 +283,7 @@ namespace UIMFLibrary
                                 lit = -lit;
                                 do
                                     output[outputIndex++] = input[inputIndex + lit];
-                                while ((++lit) != 0);
+                                while (++lit != 0);
                             }
 
                             len -= 2;
@@ -302,14 +302,14 @@ namespace UIMFLibrary
                             output[outputIndex++] = (byte)offset;
 
                             inputIndex += len - 1;
-                            hValue = (uint)(((input[inputIndex]) << 8) | input[inputIndex + 1]);
+                            hValue = (uint)((input[inputIndex] << 8) | input[inputIndex + 1]);
 
                             hValue = (hValue << 8) | input[inputIndex + 2];
-                            HashTable[((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1))] = inputIndex;
+                            HashTable[(hValue ^ (hValue << 5)) >> (int)(3 * 8 - HLOG - hValue * 5) & (HSIZE - 1)] = inputIndex;
                             inputIndex++;
 
                             hValue = (hValue << 8) | input[inputIndex + 2];
-                            HashTable[((hValue ^ (hValue << 5)) >> (int)(((3 * 8 - HLOG)) - hValue * 5) & (HSIZE - 1))] = inputIndex;
+                            HashTable[(hValue ^ (hValue << 5)) >> (int)(3 * 8 - HLOG - hValue * 5) & (HSIZE - 1)] = inputIndex;
                             inputIndex++;
                             continue;
                         }
@@ -330,7 +330,7 @@ namespace UIMFLibrary
                         lit = -lit;
                         do
                             output[outputIndex++] = input[inputIndex + lit];
-                        while ((++lit) != 0);
+                        while (++lit != 0);
                     }
                 } // for
             } // lock
@@ -344,7 +344,7 @@ namespace UIMFLibrary
                 lit = -lit;
                 do
                     output[outputIndex++] = input[inputIndex + lit];
-                while ((++lit) != 0);
+                while (++lit != 0);
             }
 
             return (int)outputIndex;
@@ -369,7 +369,7 @@ namespace UIMFLibrary
             {
                 uint ctrl = input[inputIndex++];
 
-                if (ctrl < (1 << 5)) /* literal run */
+                if (ctrl < 1 << 5) /* literal run */
                 {
                     ctrl++;
 
@@ -381,7 +381,7 @@ namespace UIMFLibrary
 
                     do
                         output[outputIndex++] = input[inputIndex++];
-                    while ((--ctrl) != 0);
+                    while (--ctrl != 0);
                 }
                 else /* back reference */
                 {
@@ -411,7 +411,7 @@ namespace UIMFLibrary
 
                     do
                         output[outputIndex++] = output[reference++];
-                    while ((--len) != 0);
+                    while (--len != 0);
                 }
             }
             while (inputIndex < inputLength);

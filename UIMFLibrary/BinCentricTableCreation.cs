@@ -329,7 +329,7 @@ namespace UIMFLibrary
                     {
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
                         var progressMessage = "Creating indices, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
-                        var percentComplete = 37 + (i / (double)numBins) * 30;
+                        var percentComplete = 37 + i / (double)numBins * 30;
                         UpdateProgress(percentComplete, progressMessage);
                     }
                 }
@@ -432,7 +432,7 @@ namespace UIMFLibrary
                         }
 
                         // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-                        var percentComplete = 0 + (frameNumber / (double)numFrames) * 37;
+                        var percentComplete = 0 + frameNumber / (double)numFrames * 37;
                         UpdateProgress(percentComplete, progressMessage);
                     }
 
@@ -592,7 +592,7 @@ namespace UIMFLibrary
                     var progressMessage = "Adding bin-centric data, bin: " + i.ToString("#,##0") + " / " + numBins.ToString("#,##0");
 
                     // Note: We are assuming that 37% of the time was taken up by CreateTemporaryDatabase, 30% by CreateIndexes, and 33% by InsertBinCentricData
-                    var percentComplete = (37 + 30) + (i / (double)numBins) * 33;
+                    var percentComplete = 37 + 30 + i / (double)numBins * 33;
                     UpdateProgress(percentComplete, progressMessage);
                 }
             }
@@ -640,7 +640,7 @@ namespace UIMFLibrary
                         var scanIms = reader.GetInt32(2);
                         var intensity = reader.GetInt32(3);
 
-                        var newLocation = (scanLc * numImsScans) + scanIms;
+                        var newLocation = scanLc * numImsScans + scanIms;
                         var difference = newLocation - previousLocation - 1;
 
                         // Add the negative difference if greater than 0 to represent a number of scans without data
