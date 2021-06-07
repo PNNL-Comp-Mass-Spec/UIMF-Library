@@ -159,7 +159,7 @@ namespace UIMFLibrary
                 // If table Global_Parameters exists and table Global_Params does not exist, create Global_Params using Global_Parameters
                 ConvertLegacyGlobalParameters();
 
-                if (usingExistingDatabase && mGlobalParameters.Values.Count == 0)
+                if (usingExistingDatabase && GlobalParameters.Values.Count == 0)
                 {
                     CacheGlobalParameters();
                 }
@@ -712,7 +712,7 @@ namespace UIMFLibrary
                     mDbCommandInsertGlobalParamValue.ExecuteNonQuery();
                 }
 
-                mGlobalParameters.AddUpdateValue(paramKeyType, globalParam.Value);
+                GlobalParameters.AddUpdateValue(paramKeyType, globalParam.Value);
             }
             catch (Exception ex)
             {
@@ -1781,16 +1781,16 @@ namespace UIMFLibrary
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
 
-            if (mGlobalParameters.IsPpmBinBased)
+            if (GlobalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
 
             // Make sure intensities.Count is not greater than the number of bins tracked by the global parameters
             // However, allow it to be one size larger because GetSpectrumAsBins pads the intensities array with an extra value for compatibility with older UIMF files
-            if (intensities.Count > mGlobalParameters.Bins + 1)
+            if (intensities.Count > GlobalParameters.Bins + 1)
             {
                 throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
                                     " has more entries than the number of bins defined in the global parameters" +
-                                    " (" + mGlobalParameters.Bins + ")");
+                                    " (" + GlobalParameters.Bins + ")");
 
                 // Future possibility: silently auto-change the Bins value
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
@@ -1855,7 +1855,7 @@ namespace UIMFLibrary
             if (binToIntensityMap == null)
                 throw new ArgumentNullException(nameof(binToIntensityMap), "binToIntensityMap cannot be null");
 
-            if (mGlobalParameters.IsPpmBinBased)
+            if (GlobalParameters.IsPpmBinBased)
                 throw new InvalidOperationException("You cannot call InsertScan when the InstrumentClass is ppm bin-based; instead use InsertScanPpmBinBased");
 
             if (binToIntensityMap.Count == 0)
@@ -1873,11 +1873,11 @@ namespace UIMFLibrary
 
             // Make sure intensities.Count is not greater than the number of bins tracked by the global parameters
             // However, allow it to be one size larger because GetSpectrumAsBins pads the intensities array with an extra value for compatibility with older UIMF files
-            if (maxBin > mGlobalParameters.Bins + 1)
+            if (maxBin > GlobalParameters.Bins + 1)
             {
                 throw new Exception("Intensity list for frame " + frameNumber + ", scan " + scanNum +
                                     " has more entries than the number of bins defined in the global parameters" +
-                                    " (" + mGlobalParameters.Bins + ")");
+                                    " (" + GlobalParameters.Bins + ")");
 
                 // Future possibility: silently auto-change the Bins value
                 // AddUpdateGlobalParameter(GlobalParamKeyType.Bins, maxBin);
@@ -2165,7 +2165,7 @@ namespace UIMFLibrary
                 }
             }
 
-            var frameCount = mGlobalParameters.NumFrames;
+            var frameCount = GlobalParameters.NumFrames;
 
             object maxScanFromQuery;
             using (var dbCommand = mDbConnection.CreateCommand())
@@ -2392,7 +2392,7 @@ namespace UIMFLibrary
                     var legacyGlobalParameters = new GlobalParameters
                     {
                         DateStarted = string.Empty,
-                        NumFrames = mGlobalParameters.NumFrames,
+                        NumFrames = GlobalParameters.NumFrames,
                         InstrumentName = string.Empty,
                         Prescan_Profile = string.Empty,
                         TOFIntensityType = string.Empty

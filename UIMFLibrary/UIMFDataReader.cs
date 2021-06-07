@@ -377,7 +377,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets the tenths of nanoseconds per bin.
         /// </summary>
-        public double TenthsOfNanoSecondsPerBin => mGlobalParameters.BinWidth * 10.0;
+        public double TenthsOfNanoSecondsPerBin => GlobalParameters.BinWidth * 10.0;
 
         #endregion
 
@@ -458,7 +458,7 @@ namespace UIMFLibrary
         public double GetDeltaMz(int frameNumber)
         {
             // Determine the bin number at the midpoint
-            var startBin = mGlobalParameters.Bins / 2;
+            var startBin = GlobalParameters.Bins / 2;
             if (startBin < 0)
                 startBin = 0;
 
@@ -480,15 +480,15 @@ namespace UIMFLibrary
             var mz1 = ConvertBinToMZ(
                 calibrationSlope,
                 calibrationIntercept,
-                mGlobalParameters.BinWidth,
-                mGlobalParameters.TOFCorrectionTime,
+                GlobalParameters.BinWidth,
+                GlobalParameters.TOFCorrectionTime,
                 startBin);
 
             var mz2 = ConvertBinToMZ(
                 calibrationSlope,
                 calibrationIntercept,
-                mGlobalParameters.BinWidth,
-                mGlobalParameters.TOFCorrectionTime,
+                GlobalParameters.BinWidth,
+                GlobalParameters.TOFCorrectionTime,
                 startBin + 1);
 
             var deltaMz = mz2 - mz1;
@@ -1433,7 +1433,7 @@ namespace UIMFLibrary
                 scansPerFrame = 100;
             }
 
-            var tuples = new Stack<int[]>(mGlobalParameters.NumFrames * scansPerFrame);
+            var tuples = new Stack<int[]>(GlobalParameters.NumFrames * scansPerFrame);
 
             using (var reader = mGetFramesAndScanByDescendingIntensityCommand.ExecuteReader())
             {
@@ -1555,13 +1555,13 @@ namespace UIMFLibrary
         public void PreCacheAllFrameParams()
         {
             var cachedCount = 0;
-            for (var frameNum = 0; frameNum <= mGlobalParameters.NumFrames; frameNum++)
+            for (var frameNum = 0; frameNum <= GlobalParameters.NumFrames; frameNum++)
             {
                 if (mCachedFrameParameters.ContainsKey(frameNum))
                     cachedCount++;
             }
 
-            if (cachedCount > 0 && cachedCount >= mGlobalParameters.NumFrames)
+            if (cachedCount > 0 && cachedCount >= GlobalParameters.NumFrames)
             {
                 // Nothing to do; all frames are already cached
                 return;
@@ -1618,7 +1618,7 @@ namespace UIMFLibrary
                             {
                                 dtLastStatusUpdate = DateTime.UtcNow;
                                 Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " +
-                                                  mGlobalParameters.NumFrames);
+                                                  GlobalParameters.NumFrames);
                             }
                         }
 
@@ -1662,7 +1662,7 @@ namespace UIMFLibrary
                         {
                             dtLastStatusUpdate = DateTime.UtcNow;
                             Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " +
-                                              mGlobalParameters.NumFrames);
+                                              GlobalParameters.NumFrames);
                         }
                     }
                 }
@@ -1762,7 +1762,7 @@ namespace UIMFLibrary
             var averageTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
             // Frame number is 1-based...
             var framesOffset = frameNumber - 1;
-            var scansPerFrame = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, fp.Scans);
+            var scansPerFrame = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, fp.Scans);
             var scansOffset = framesOffset * scansPerFrame;
             var startTimeSeconds = averageTOFLength * scansOffset / 1e9;
             return startTimeSeconds / 60;
@@ -1874,7 +1874,7 @@ namespace UIMFLibrary
                 }
             }
 
-            var scansPerFrame = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses);
+            var scansPerFrame = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses);
             if (minScanNumber == 0)
             {
                 return false;
@@ -2101,9 +2101,9 @@ namespace UIMFLibrary
                 startBin = 0;
             }
 
-            if (endBin > mGlobalParameters.Bins)
+            if (endBin > GlobalParameters.Bins)
             {
-                endBin = mGlobalParameters.Bins;
+                endBin = GlobalParameters.Bins;
             }
 
             var lengthOfFrameArray = endFrameNumber - startFrameNumber + 1;
@@ -2222,7 +2222,7 @@ namespace UIMFLibrary
             // Make sure we are grabbing frames only with the given frame type
             for (var i = frameNumber + 1; i <= maxFrame; i++)
             {
-                if (maxFrame > mGlobalParameters.NumFrames)
+                if (maxFrame > GlobalParameters.NumFrames)
                 {
                     maxFrame = i - 1;
                     break;
@@ -2264,7 +2264,7 @@ namespace UIMFLibrary
 
             int startBin;
             int endBin;
-            var numBins = mGlobalParameters.Bins;
+            var numBins = GlobalParameters.Bins;
 
             if (pagingFilterCount > 0)
             {
@@ -2372,7 +2372,7 @@ namespace UIMFLibrary
 
             using (var reader = mGetSpectrumCommand.ExecuteReader())
             {
-                // var compressedSpectraRecord = new byte[mGlobalParameters.Bins * DATA_SIZE];
+                // var compressedSpectraRecord = new byte[GlobalParameters.Bins * DATA_SIZE];
 
                 while (reader.Read())
                 {
@@ -2627,7 +2627,7 @@ namespace UIMFLibrary
             var calibrationSlope = frameParameters.CalibrationSlope;
             var calibrationIntercept = frameParameters.CalibrationIntercept;
 
-            return new MzCalibrator(calibrationSlope / 10000.0, calibrationIntercept * 10000.0, mGlobalParameters.BinWidth);
+            return new MzCalibrator(calibrationSlope / 10000.0, calibrationIntercept * 10000.0, GlobalParameters.BinWidth);
         }
 
         /// <summary>
@@ -2719,7 +2719,7 @@ namespace UIMFLibrary
         [Obsolete("This assumes the detector is 8 bits; newer detectors used in 2014 are 12 bits")]
         public int GetSaturationLevel()
         {
-            var prescanAccumulations = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0);
+            var prescanAccumulations = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0);
 
             return prescanAccumulations * 255;
         }
@@ -2731,7 +2731,7 @@ namespace UIMFLibrary
         /// <returns>saturation level</returns>
         public int GetSaturationLevel(int detectorBits)
         {
-            var prescanAccumulations = mGlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0);
+            var prescanAccumulations = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanAccumulations, 0);
 
             return prescanAccumulations * ((int)Math.Pow(2, detectorBits) - 1);
         }
@@ -2851,8 +2851,8 @@ namespace UIMFLibrary
 
             // Allocate the maximum possible for these arrays. Later on we will strip out the zeros.
             // Adding 1 to the size to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
-            mzArray = new double[mGlobalParameters.Bins + 1];
-            intensityArray = new int[mGlobalParameters.Bins + 1];
+            mzArray = new double[GlobalParameters.Bins + 1];
+            intensityArray = new int[GlobalParameters.Bins + 1];
 
             var cachedListOfIntensityDictionaries = spectrumCache.ListOfIntensityDictionaries;
 
@@ -2899,8 +2899,8 @@ namespace UIMFLibrary
                         mzArray[binIndex] = ConvertBinToMZ(
                             calibrationSlope,
                             calibrationIntercept,
-                            mGlobalParameters.BinWidth,
-                            mGlobalParameters.TOFCorrectionTime,
+                            GlobalParameters.BinWidth,
+                            GlobalParameters.TOFCorrectionTime,
                             binIndex);
                         nonZeroCount++;
                     }
@@ -2939,8 +2939,8 @@ namespace UIMFLibrary
                             mzArray[binIndex] = ConvertBinToMZ(
                                 calibrationSlope,
                                 calibrationIntercept,
-                                mGlobalParameters.BinWidth,
-                                mGlobalParameters.TOFCorrectionTime,
+                                GlobalParameters.BinWidth,
+                                GlobalParameters.TOFCorrectionTime,
                                 binIndex);
                             nonZeroCount++;
                         }
@@ -3007,13 +3007,13 @@ namespace UIMFLibrary
 
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
-            var binWidth = mGlobalParameters.BinWidth;
-            var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
+            var binWidth = GlobalParameters.BinWidth;
+            var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
 
             var startBin = (int)Math.Floor(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, startMz)) - 1;
             var endBin = (int)Math.Ceiling(GetBinClosestToMZ(slope, intercept, binWidth, tofCorrectionTime, endMz)) + 1;
 
-            if (startBin < 0 || endBin > mGlobalParameters.Bins)
+            if (startBin < 0 || endBin > GlobalParameters.Bins)
             {
                 // If the start or end bin is outside a normal range, then just grab everything
                 return GetSpectrum(
@@ -3130,8 +3130,8 @@ namespace UIMFLibrary
                         mzArray[binIndex] = ConvertBinToMZ(
                             frameParams.CalibrationSlope,
                             frameParams.CalibrationIntercept,
-                            mGlobalParameters.BinWidth,
-                            mGlobalParameters.TOFCorrectionTime,
+                            GlobalParameters.BinWidth,
+                            GlobalParameters.TOFCorrectionTime,
                             binNumber);
                         nonZeroCount++;
                     }
@@ -3171,8 +3171,8 @@ namespace UIMFLibrary
                             mzArray[binIndex] = ConvertBinToMZ(
                                 frameParams.CalibrationSlope,
                                 frameParams.CalibrationIntercept,
-                                mGlobalParameters.BinWidth,
-                                mGlobalParameters.TOFCorrectionTime,
+                                GlobalParameters.BinWidth,
+                                GlobalParameters.TOFCorrectionTime,
                                 binNumber);
                             nonZeroCount++;
                         }
@@ -3247,7 +3247,7 @@ namespace UIMFLibrary
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
             // Adding 1 to the number of bins to fix a bug in some old IMS data where the bin index could exceed the maximum bins by 1
-            var intensityArray = new int[mGlobalParameters.Bins + 1];
+            var intensityArray = new int[GlobalParameters.Bins + 1];
             var maxIndex = intensityArray.Length - 1;
 
             using (var reader = mGetSpectrumCommand.ExecuteReader())
@@ -3341,7 +3341,7 @@ namespace UIMFLibrary
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
             var intensityDict = new Dictionary<int, int>();
-            maxBin = mGlobalParameters.Bins;
+            maxBin = GlobalParameters.Bins;
 
             using (var reader = mGetSpectrumCommand.ExecuteReader())
             {
@@ -3506,8 +3506,8 @@ namespace UIMFLibrary
                     var mz = ConvertBinToMZ(
                         frameParams.CalibrationSlope,
                         frameParams.CalibrationIntercept,
-                        mGlobalParameters.BinWidth,
-                        mGlobalParameters.TOFCorrectionTime,
+                        GlobalParameters.BinWidth,
+                        GlobalParameters.TOFCorrectionTime,
                         binNumber);
                     mzList.Add(mz);
                     intensityList.Add(intensity);
@@ -3762,8 +3762,8 @@ namespace UIMFLibrary
             var frameParams = GetFrameParams(1);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
-            var binWidth = mGlobalParameters.BinWidth;
-            var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
+            var binWidth = GlobalParameters.BinWidth;
+            var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
             var frameSet = GetFrameSetByFrameType(frameType);
@@ -3879,8 +3879,8 @@ namespace UIMFLibrary
             var frameParams = GetFrameParams(frameNumberMin);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
-            var binWidth = mGlobalParameters.BinWidth;
-            var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
+            var binWidth = GlobalParameters.BinWidth;
+            var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
             var frameSet = GetFrameSetByFrameType(frameType);
@@ -3998,8 +3998,8 @@ namespace UIMFLibrary
             var frameParams = GetFrameParams(1);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
-            var binWidth = mGlobalParameters.BinWidth;
-            var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
+            var binWidth = GlobalParameters.BinWidth;
+            var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
 
             var frameSet = GetFrameSetByFrameType(frameType);
@@ -4111,8 +4111,8 @@ namespace UIMFLibrary
             var frameParams = GetFrameParams(frameNumberMin);
             var slope = frameParams.CalibrationSlope;
             var intercept = frameParams.CalibrationIntercept;
-            var binWidth = mGlobalParameters.BinWidth;
-            var tofCorrectionTime = mGlobalParameters.TOFCorrectionTime;
+            var binWidth = GlobalParameters.BinWidth;
+            var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
             var numScans = scanMax - scanMin + 1;
 
@@ -5023,14 +5023,14 @@ namespace UIMFLibrary
             }
 
             var ms1FrameNumbers = GetFrameNumbers(FrameType.MS1);
-            var ms1FrameTypeInfo = new FrameSetContainer(mGlobalParameters.NumFrames);
+            var ms1FrameTypeInfo = new FrameSetContainer(GlobalParameters.NumFrames);
             foreach (var ms1FrameNumber in ms1FrameNumbers)
             {
                 ms1FrameTypeInfo.AddFrame(ms1FrameNumber);
             }
 
             var ms2FrameNumbers = GetFrameNumbers(FrameType.MS2);
-            var ms2FrameTypeInfo = new FrameSetContainer(mGlobalParameters.NumFrames);
+            var ms2FrameTypeInfo = new FrameSetContainer(GlobalParameters.NumFrames);
             foreach (var ms2FrameNumber in ms2FrameNumbers)
             {
                 ms2FrameTypeInfo.AddFrame(ms2FrameNumber);
@@ -5418,15 +5418,15 @@ namespace UIMFLibrary
             var lowerBin = GetBinClosestToMZ(
                 frameParams.CalibrationSlope,
                 frameParams.CalibrationIntercept,
-                mGlobalParameters.BinWidth,
-                mGlobalParameters.TOFCorrectionTime,
+                GlobalParameters.BinWidth,
+                GlobalParameters.TOFCorrectionTime,
                 lowerMZ);
 
             var upperBin = GetBinClosestToMZ(
                 frameParams.CalibrationSlope,
                 frameParams.CalibrationIntercept,
-                mGlobalParameters.BinWidth,
-                mGlobalParameters.TOFCorrectionTime,
+                GlobalParameters.BinWidth,
+                GlobalParameters.TOFCorrectionTime,
                 upperMZ);
 
             bins[0] = (int)Math.Round(lowerBin, 0);
@@ -5525,7 +5525,7 @@ namespace UIMFLibrary
                 {
                     // StartTime is stored as Ticks in this file
                     // Auto-compute the correct start time
-                    var dateStarted = mGlobalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
+                    var dateStarted = GlobalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
                     if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out DateTime dtRunStarted))
                     {
                         var lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;

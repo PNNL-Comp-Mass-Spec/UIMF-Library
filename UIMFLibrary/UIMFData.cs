@@ -170,7 +170,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Global parameters object
         /// </summary>
-        protected GlobalParams mGlobalParameters { get; private set; }
+        protected GlobalParams GlobalParameters { get; private set; }
 
         /// <summary>
         /// This dictionary tracks the existing of key tables, including whether or not we have actually checked for the table
@@ -233,7 +233,7 @@ namespace UIMFLibrary
             FileSystemInfo uimfFileInfo = new FileInfo(fileName);
             mFilePath = uimfFileInfo.FullName;
 
-            mGlobalParameters = new GlobalParams();
+            GlobalParameters = new GlobalParams();
 
             mTableStatus = new Dictionary<UIMFTableType, TableStatus>();
             foreach (var tableType in Enum.GetValues(typeof(UIMFTableType)).Cast<UIMFTableType>())
@@ -331,7 +331,7 @@ namespace UIMFLibrary
         [Obsolete("Use GetGlobalParams")]
         public GlobalParameters GetGlobalParameters()
         {
-            return GlobalParamUtilities.GetLegacyGlobalParameters(mGlobalParameters);
+            return GlobalParamUtilities.GetLegacyGlobalParameters(GlobalParameters);
         }
 
         /// <summary>
@@ -340,12 +340,12 @@ namespace UIMFLibrary
         /// <returns></returns>
         public GlobalParams GetGlobalParams()
         {
-            if (mGlobalParameters != null)
+            if (GlobalParameters != null)
             {
-                return mGlobalParameters;
+                return GlobalParameters;
             }
 
-            return mGlobalParameters;
+            return GlobalParameters;
         }
 
         /// <summary>
@@ -971,7 +971,7 @@ namespace UIMFLibrary
         #region Methods
 
         /// <summary>
-        /// Read either the global params (or the legacy global parameters) and store them to mGlobalParameters
+        /// Read either the global params (or the legacy global parameters) and store them to GlobalParameters
         /// </summary>
         /// <remarks>The writer uses this function to read the global parameters when appending data to an existing .UIMF file</remarks>
         protected void CacheGlobalParameters()
@@ -984,11 +984,11 @@ namespace UIMFLibrary
                 var legacyGlobalParameters = GetGlobalParametersFromTable(mDbConnection);
 
                 var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                mGlobalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+                GlobalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
                 return;
             }
 
-            mGlobalParameters = new GlobalParams();
+            GlobalParameters = new GlobalParams();
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
@@ -1029,7 +1029,7 @@ namespace UIMFLibrary
                                               paramValue, paramType, dataType));
                         }
 
-                        mGlobalParameters.AddUpdateValue(paramType, paramValueDynamic);
+                        GlobalParameters.AddUpdateValue(paramType, paramValueDynamic);
                     }
                 }
             }
@@ -1113,7 +1113,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
+                (t - (double)GlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
             return (mz * mz) + resMassErr;
         }
@@ -1143,7 +1143,7 @@ namespace UIMFLibrary
 
             var mz =
                 frameParameters.CalibrationSlope *
-                (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
+                (t - (double)GlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
             return (mz * mz) + resMassErr;
         }
