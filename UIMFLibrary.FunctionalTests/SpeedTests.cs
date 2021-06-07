@@ -10,6 +10,7 @@ using System.Diagnostics;
 using BenchmarkIt;
 #endif
 using NUnit.Framework;
+using UIMFLibrary.UnitTests;
 
 namespace UIMFLibrary.FunctionalTests
 {
@@ -204,17 +205,23 @@ namespace UIMFLibrary.FunctionalTests
             var dr = new DataReader(uimfStandardFile1);
             var gp = dr.GetGlobalParams();
 
-            var intensities = new int[gp.Bins];
-            var mzValues = new double[gp.Bins];
+            Console.WriteLine("Frame Count: " + gp.NumFrames);
 
-            // int startFrame = 500;
-            // int stopFrame = 502;
-            // int startScan = 250;
-            // int stopScan = 256;
+            const int startFrame = 500;
+            const int endFrame = 502;
+            const int startScan = 250;
+            const int endScan = 256;
 
-            // int nonZeros = dr.SumScansNonCached(mzValues, intensities, 0, startFrame, stopFrame, startScan, stopScan);
+            var nonZeroCount = dr.GetSpectrum(
+                startFrame, endFrame,
+                UIMFData.FrameType.MS1,
+                startScan, endScan,
+                out var mzArray, out var intensityArray);
 
-            // TestUtilities.displayRawMassSpectrum(mzValues, intensities);
+            Console.WriteLine("Read {0} data points for summed data from frames {1}-{2} and scans {3}-{4}",
+                nonZeroCount, startFrame, endFrame, startScan, endScan);
+
+            TestUtilities.DisplayRawMassSpectrum(mzArray, intensityArray);
         }
 
         #endregion
