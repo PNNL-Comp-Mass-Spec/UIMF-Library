@@ -817,7 +817,9 @@ namespace UIMFLibrary
                                     if (!string.Equals(sCurrentObject, FRAME_SCANS_TABLE, StringComparison.InvariantCultureIgnoreCase) ||
                                         frameTypesToAlwaysCopy == null ||
                                         frameTypesToAlwaysCopy.Count <= 0)
+                                    {
                                         continue;
+                                    }
 
                                     // Explicitly copy data for the frame types defined in eFrameScanFrameTypeDataToAlwaysCopy
                                     foreach (var frameType in frameTypesToAlwaysCopy)
@@ -1691,8 +1693,9 @@ namespace UIMFLibrary
             }
 
             if (mDbConnection == null)
-                throw new Exception("Database connection is null; cannot retrieve frame parameters for frame " +
-                                    frameNumber);
+            {
+                throw new Exception("Database connection is null; cannot retrieve frame parameters for frame " + frameNumber);
+            }
 
             if (mUsingLegacyFrameParameters)
             {
@@ -2579,11 +2582,15 @@ namespace UIMFLibrary
             using (var dbCommand = mDbConnection.CreateCommand())
             {
                 if (mUsingLegacyFrameParameters)
+                {
                     dbCommand.CommandText = "SELECT DISTINCT(FrameNum), FrameType FROM Frame_Parameters";
+                }
                 else
+                {
                     dbCommand.CommandText =
                         "SELECT FrameNum, ParamValue AS FrameType FROM Frame_Params WHERE ParamID = " +
                         (int)FrameParamKeyType.FrameType;
+                }
 
                 using (var reader = dbCommand.ExecuteReader())
                 {
@@ -2643,14 +2650,18 @@ namespace UIMFLibrary
                     frameTypeValue = (int)frameType;
 
                 if (mUsingLegacyFrameParameters)
+                {
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Parameters " +
                                             "WHERE FrameType = :FrameType";
+                }
                 else
+                {
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Params " +
                                             "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
                                             " AND ParamValue = :FrameType";
+                }
 
                 dbCommand.Parameters.Add(new SQLiteParameter("FrameType", frameTypeValue));
 
@@ -4267,14 +4278,18 @@ namespace UIMFLibrary
             using (var dbCommand = mDbConnection.CreateCommand())
             {
                 if (mUsingLegacyFrameParameters)
+                {
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Parameters " +
                                             "WHERE FrameType = :FrameType";
+                }
                 else
+                {
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Params " +
                                             "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
                                             " AND ParamValue = :FrameType";
+                }
 
                 dbCommand.Parameters.Add(new SQLiteParameter("FrameType", (int)FrameType.MS2));
 
@@ -4660,8 +4675,9 @@ namespace UIMFLibrary
             catch (Exception ex)
             {
                 if (!ex.Message.StartsWith("SQL logic error or missing database"))
-                    Console.WriteLine(
-                        "Exception examining pressure column " + columnName + " in table " + tableName + ": " + ex.Message);
+                {
+                    Console.WriteLine("Exception examining pressure column {0} in table {1}: {2}", columnName, tableName, ex.Message);
+                }
             }
 
             return isMillitorr;

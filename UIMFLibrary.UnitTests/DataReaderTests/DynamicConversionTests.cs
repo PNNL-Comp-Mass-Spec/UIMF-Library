@@ -70,7 +70,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
 
             if (convertible)
+            {
                 Assert.IsTrue(success, "Conversion to double failed for {0}", valueText);
+            }
             else
             {
                 Assert.IsFalse(success, "Conversion to double unexpectedly succeeded for {0}", valueText);
@@ -99,7 +101,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
 
             if (convertible)
+            {
                 Assert.IsTrue(success, "Conversion to int failed for {0}", valueText);
+            }
             else
             {
                 Assert.IsFalse(success, "Conversion to int unexpectedly succeeded for {0}", valueText);
