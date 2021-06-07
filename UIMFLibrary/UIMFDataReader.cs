@@ -2175,15 +2175,15 @@ namespace UIMFLibrary
         /// <param name="doReorder">
         /// Whether to re-order the data or not. This can be used to speed up the demultiplexing process.
         /// </param>
+        /// <param name="numFramesToSum">
+        /// Number of frames to sum. Must be an odd number greater than 0.
+        /// e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
+        /// </param>
         /// <param name="pagingFilterStartBin">
         /// Start bin for filtering data; ignored if pagingFilterCount is 0
         /// </param>
         /// <param name="pagingFilterCount">
         /// Number of bins to return when using pagingFilterStartBin
-        /// </param>
-        /// <param name="numFramesToSum">
-        /// Number of frames to sum. Must be an odd number greater than 0.
-        /// e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
         /// </param>
         /// <returns>
         ///  Array of intensities for a given frame; dimensions are bin and scan
