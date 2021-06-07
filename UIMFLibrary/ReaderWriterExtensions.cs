@@ -24,7 +24,7 @@ namespace UIMFLibrary
         {
             try
             {
-                await Task.Run(() => dataWriter.InsertFrame(frameNum, frameParameters));
+                await Task.Run(() => dataWriter.InsertFrame(frameNum, frameParameters)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
