@@ -13,9 +13,9 @@ namespace UIMFLibrary
     using System;
 
     /// <summary>
-    /// The uimf data utilities.
+    /// The UIMF data utilities.
     /// </summary>
-    public class UIMFDataUtilities
+    public static class UIMFDataUtilities
     {
         #region Public Methods and Operators
 

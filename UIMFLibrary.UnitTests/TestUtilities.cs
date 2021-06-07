@@ -14,7 +14,7 @@ namespace UIMFLibrary.UnitTests
     /// <summary>
     /// The test utilities.
     /// </summary>
-    public class TestUtilities
+    public static class TestUtilities
     {
         #region Public Methods and Operators
 

@@ -9,7 +9,7 @@ namespace UIMFLibrary.UnitTests
     /// <summary>
     /// The file refs.
     /// </summary>
-    public class FileRefs
+    public static class FileRefs
     {
         private const string DECONTOOLS_SHARE_PATH = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\";
 

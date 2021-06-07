@@ -44,7 +44,7 @@ namespace UIMFLibrary
     /// <summary>
     /// Improved C# LZF Compressor, a very small data compression library. The compression algorithm is extremely fast.
     /// </summary>
-    public class CLZF2
+    public static class CLZF2
     {
         #region Tunable Constants
 
