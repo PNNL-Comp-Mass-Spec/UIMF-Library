@@ -2332,7 +2332,7 @@ namespace UIMFLibrary
 
             for (var i = 0; i < lstFields.Count; i++)
             {
-                sbSql.Append(lstFields[i].Item1 + " " + lstFields[i].Item2);
+                sbSql.AppendFormat("{0} {1}", lstFields[i].Item1, lstFields[i].Item2);
 
                 if (i < lstFields.Count - 1)
                 {

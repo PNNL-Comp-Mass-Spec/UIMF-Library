@@ -44,40 +44,38 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// Display frame parameters.
         /// </summary>
-        /// <param name="fp">
-        /// The fp.
-        /// </param>
+        /// <param name="fp">Frame parameters</param>
         public static void DisplayFrameParameters(FrameParams fp)
         {
             var sb = new StringBuilder();
 
             var separator = Environment.NewLine;
 
-            sb.Append("avg TOF length = \t" + fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
+            sb.AppendFormat("avg TOF length = \t{0}", fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
             sb.Append(separator);
-            sb.Append("cal intercept = \t" + fp.CalibrationIntercept);
+            sb.AppendFormat("cal intercept = \t{0}", fp.CalibrationIntercept);
             sb.Append(separator);
-            sb.Append("cal slope = \t" + fp.CalibrationSlope);
+            sb.AppendFormat("cal slope = \t{0}", fp.CalibrationSlope);
             sb.Append(separator);
-            sb.Append("frame type = \t" + fp.FrameType);
+            sb.AppendFormat("frame type = \t{0}", fp.FrameType);
             sb.Append(separator);
-            sb.Append("pressure back = \t" + fp.GetValueDouble(FrameParamKeyType.PressureBack, 0));
+            sb.AppendFormat("pressure back = \t{0}", fp.GetValueDouble(FrameParamKeyType.PressureBack, 0));
             sb.Append(separator);
-            sb.Append("pressure front = \t" + fp.GetValueDouble(FrameParamKeyType.PressureFront, 0));
+            sb.AppendFormat("pressure front = \t{0}", fp.GetValueDouble(FrameParamKeyType.PressureFront, 0));
             sb.Append(separator);
-            sb.Append("high pressure funnel pressure= \t" + fp.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0));
+            sb.AppendFormat("high pressure funnel pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0));
             sb.Append(separator);
-            sb.Append("ion funnel trap pressure= \t" + fp.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0));
+            sb.AppendFormat("ion funnel trap pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0));
             sb.Append(separator);
-            sb.Append("quadrupole pressure = \t" + fp.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0));
+            sb.AppendFormat("quadrupole pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0));
             sb.Append(separator);
-            sb.Append("rear ion funnel pressure = \t" + fp.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0));
+            sb.AppendFormat("rear ion funnel pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0));
             sb.Append(separator);
-            sb.Append("start time = \t" + fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0));
+            sb.AppendFormat("start time = \t{0}", fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0));
             sb.Append(separator);
-            sb.Append("num scans = \t" + fp.Scans);
+            sb.AppendFormat("num scans = \t{0}", fp.Scans);
             sb.Append(separator);
-            sb.Append("IMF profile = \t" + fp.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
+            sb.AppendFormat("IMF profile = \t{0}", fp.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
 
             Console.WriteLine(sb.ToString());
         }
@@ -188,7 +186,7 @@ namespace UIMFLibrary.UnitTests
                     }
                     else
                     {
-                        sb.Append(intensityVals[i] + ",");
+                        sb.AppendFormat("{0},", intensityVals[i]);
                     }
                 }
             }
@@ -227,7 +225,7 @@ namespace UIMFLibrary.UnitTests
                     }
                     else
                     {
-                        sb.Append(intensityVals[i] + ",");
+                        sb.AppendFormat("{0},", intensityVals[i]);
                     }
                 }
             }
