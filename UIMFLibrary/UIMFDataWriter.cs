@@ -458,11 +458,9 @@ namespace UIMFLibrary
                 }
 
                 // Now add a log entry
-                cmdPostLogEntry.CommandText = "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " +
-                                              "VALUES ("
-                                              + "datetime('now'), " + "'" + postedBy + "', " + "'" + entryType + "', " +
-                                              "'"
-                                              + message + "')";
+                cmdPostLogEntry.CommandText = string.Format(
+                    "INSERT INTO Log_Entries (Posting_Time, Posted_By, Type, Message) " +
+                    "VALUES (datetime('now'), '{0}', " + "'{1}', '{2}')", postedBy, entryType, message);
 
                 cmdPostLogEntry.ExecuteNonQuery();
             }
