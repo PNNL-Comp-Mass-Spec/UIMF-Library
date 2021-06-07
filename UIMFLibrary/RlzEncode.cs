@@ -43,7 +43,6 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
             tic = 0;
             bpi = 0;
             indexOfMaxIntensity = 0;
@@ -161,7 +160,6 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
             tic = 0;
             bpi = 0;
             indexOfMaxIntensity = 0;
@@ -279,7 +277,6 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
             tic = 0;
             bpi = 0;
             indexOfMaxIntensity = 0;
@@ -397,7 +394,6 @@ namespace UIMFLibrary
             out double bpi,
             out int indexOfMaxIntensity)
         {
-            spectra = null;
             tic = 0;
             bpi = 0;
             indexOfMaxIntensity = 0;
