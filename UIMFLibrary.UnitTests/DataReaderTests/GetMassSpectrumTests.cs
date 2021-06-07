@@ -141,6 +141,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
         }
 
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
+
         /// <summary>
         /// The get multiple summed mass spectrums test 1.
         /// </summary>
@@ -154,10 +156,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var testFrameScanInfo2 = new FrameAndScanInfo(500, 550, 250, 256);
 
+                var gp = dr.GetGlobalParams();
+                Console.WriteLine("Frame count: " + gp.NumFrames);
+
                 for (var frame = testFrameScanInfo2.startFrame; frame <= testFrameScanInfo2.stopFrame; frame++)
                 {
-                    var gp = dr.GetGlobalParams();
-
                     var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,
@@ -167,8 +170,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         out var mzValues,
                         out var intensities);
 
+                    Console.WriteLine(
+                        "Data points returned for frame {0}, scan range {1}-{2}: {3}",
+                        frame, testFrameScanInfo2.startScan, testFrameScanInfo2.stopScan, nonZeros);
+
                     // jump back
-                    nonZeros = dr.GetSpectrum(
+                    var nonZerosPreviousFrame = dr.GetSpectrum(
                         frame - 1,
                         frame - 1,
                         UIMFData.FrameType.MS1,
@@ -177,8 +184,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         out mzValues,
                         out intensities);
 
+                    Console.WriteLine(
+                        "Data points returned for frame {0}, scan range {1}-{2}: {3}",
+                        frame - 1, testFrameScanInfo2.startScan, testFrameScanInfo2.stopScan, nonZerosPreviousFrame);
+
                     // and ahead... just testing it's ability to jump around
-                    nonZeros = dr.GetSpectrum(
+                    var nonZerosNextFrame = dr.GetSpectrum(
                         frame + 2,
                         frame + 2,
                         UIMFData.FrameType.MS1,
@@ -186,9 +197,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         testFrameScanInfo2.stopScan,
                         out mzValues,
                         out intensities);
+
+                    Console.WriteLine(
+                        "Data points returned for frame {0}, scan range {1}-{2}: {3}",
+                        frame +2, testFrameScanInfo2.startScan, testFrameScanInfo2.stopScan, nonZerosNextFrame);
                 }
             }
         }
+
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
 
         /// <summary>
         /// The get single summed mass spectrum test 1.
