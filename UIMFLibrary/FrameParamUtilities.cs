@@ -786,247 +786,247 @@ namespace UIMFLibrary
 
                 case FrameParamKeyType.DurationSeconds:
                     return new FrameParamDef(FrameParamKeyType.DurationSeconds,
-                                          FrameParamKeyType.DurationSeconds.ToString(), targetType,
+                                          nameof(FrameParamKeyType.DurationSeconds), targetType,
                                           "Frame duration, in seconds");
 
                 case FrameParamKeyType.Accumulations:
-                    return new FrameParamDef(FrameParamKeyType.Accumulations, FrameParamKeyType.Accumulations.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.Accumulations, nameof(FrameParamKeyType.Accumulations),
                                           targetType,
                                           "Number of collected and summed acquisitions in a frame");
 
                 case FrameParamKeyType.FrameType:
                     // Allowed values are defined by UIMFData.FrameType
-                    return new FrameParamDef(FrameParamKeyType.FrameType, FrameParamKeyType.FrameType.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.FrameType, nameof(FrameParamKeyType.FrameType), targetType,
                                           "Frame Type: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan");
 
                 case FrameParamKeyType.Decoded:
                     // Allowed values are 0 or 1
-                    return new FrameParamDef(FrameParamKeyType.Decoded, FrameParamKeyType.Decoded.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.Decoded, nameof(FrameParamKeyType.Decoded), targetType,
                                           "Tracks whether frame has been decoded: 0 for non-multiplexed or encoded; 1 if decoded");
 
                 case FrameParamKeyType.CalibrationDone:
                     // Allowed values are 0 or 1, though -1 was used in the past instead of 0
                     return new FrameParamDef(FrameParamKeyType.CalibrationDone,
-                                          FrameParamKeyType.CalibrationDone.ToString(), targetType,
+                                          nameof(FrameParamKeyType.CalibrationDone), targetType,
                                           "Tracks whether frame has been calibrated: 1 if calibrated");
 
                 case FrameParamKeyType.Scans:
-                    return new FrameParamDef(FrameParamKeyType.Scans, FrameParamKeyType.Scans.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.Scans, nameof(FrameParamKeyType.Scans), targetType,
                                           "Number of TOF scans in a frame");
 
                 case FrameParamKeyType.MultiplexingEncodingSequence:
                     return new FrameParamDef(FrameParamKeyType.MultiplexingEncodingSequence,
-                                          FrameParamKeyType.MultiplexingEncodingSequence.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MultiplexingEncodingSequence), targetType,
                                           "The name of the sequence used to encode the data when acquiring multiplexed data");
 
                 case FrameParamKeyType.MPBitOrder:
-                    return new FrameParamDef(FrameParamKeyType.MPBitOrder, FrameParamKeyType.MPBitOrder.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.MPBitOrder, nameof(FrameParamKeyType.MPBitOrder), targetType,
                                           "Multiplexing bit order; Determines size of the bit sequence");
 
                 case FrameParamKeyType.TOFLosses:
-                    return new FrameParamDef(FrameParamKeyType.TOFLosses, FrameParamKeyType.TOFLosses.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.TOFLosses, nameof(FrameParamKeyType.TOFLosses), targetType,
                                           "Number of TOF Losses (lost/skipped scans due to I/O problems)");
 
                 case FrameParamKeyType.AverageTOFLength:
                     return new FrameParamDef(FrameParamKeyType.AverageTOFLength,
-                                          FrameParamKeyType.AverageTOFLength.ToString(), targetType,
+                                          nameof(FrameParamKeyType.AverageTOFLength), targetType,
                                           "Average time between TOF trigger pulses, in nanoseconds");
 
                 case FrameParamKeyType.CalibrationSlope:
                     return new FrameParamDef(FrameParamKeyType.CalibrationSlope,
-                                          FrameParamKeyType.CalibrationSlope.ToString(), targetType,
+                                          nameof(FrameParamKeyType.CalibrationSlope), targetType,
                                           "Calibration slope; k is slope / 10000");
 
                 case FrameParamKeyType.CalibrationIntercept:
                     return new FrameParamDef(FrameParamKeyType.CalibrationIntercept,
-                                          FrameParamKeyType.CalibrationIntercept.ToString(), targetType,
+                                          nameof(FrameParamKeyType.CalibrationIntercept), targetType,
                                           "Calibration intercept; t0 is intercept * 10000");
 
                 case FrameParamKeyType.MassCalibrationCoefficienta2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficienta2,
-                                          FrameParamKeyType.MassCalibrationCoefficienta2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficienta2), targetType,
                                           "a2 parameter for residual mass error correction; ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11");
 
                 case FrameParamKeyType.MassCalibrationCoefficientb2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientb2,
-                                          FrameParamKeyType.MassCalibrationCoefficientb2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficientb2), targetType,
                                           "b2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.MassCalibrationCoefficientc2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientc2,
-                                          FrameParamKeyType.MassCalibrationCoefficientc2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficientc2), targetType,
                                           "c2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.MassCalibrationCoefficientd2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientd2,
-                                          FrameParamKeyType.MassCalibrationCoefficientd2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficientd2), targetType,
                                           "db2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.MassCalibrationCoefficiente2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficiente2,
-                                          FrameParamKeyType.MassCalibrationCoefficiente2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficiente2), targetType,
                                           "e2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.MassCalibrationCoefficientf2:
                     return new FrameParamDef(FrameParamKeyType.MassCalibrationCoefficientf2,
-                                          FrameParamKeyType.MassCalibrationCoefficientf2.ToString(), targetType,
+                                          nameof(FrameParamKeyType.MassCalibrationCoefficientf2), targetType,
                                           "f2 parameter for residual mass error correction");
 
                 case FrameParamKeyType.AmbientTemperature:
                     return new FrameParamDef(FrameParamKeyType.AmbientTemperature,
-                                          FrameParamKeyType.AmbientTemperature.ToString(), targetType,
+                                          nameof(FrameParamKeyType.AmbientTemperature), targetType,
                                           "Ambient temperature, in Celsius");
 
                 case FrameParamKeyType.DriftTubeTemperature:
                     return new FrameParamDef(FrameParamKeyType.DriftTubeTemperature,
-                                             FrameParamKeyType.DriftTubeTemperature.ToString(), targetType,
+                                             nameof(FrameParamKeyType.DriftTubeTemperature), targetType,
                                              "Drift tube temperature, in Celsius");
 
                 case FrameParamKeyType.VoltHVRack1:
-                    return new FrameParamDef(FrameParamKeyType.VoltHVRack1, FrameParamKeyType.VoltHVRack1.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltHVRack1, nameof(FrameParamKeyType.VoltHVRack1),
                                           targetType,
                                           "Volt hv rack 1");
 
                 case FrameParamKeyType.VoltHVRack2:
-                    return new FrameParamDef(FrameParamKeyType.VoltHVRack2, FrameParamKeyType.VoltHVRack2.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltHVRack2, nameof(FrameParamKeyType.VoltHVRack2),
                                           targetType,
                                           "Volt hv rack 2");
 
                 case FrameParamKeyType.VoltHVRack3:
-                    return new FrameParamDef(FrameParamKeyType.VoltHVRack3, FrameParamKeyType.VoltHVRack3.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltHVRack3, nameof(FrameParamKeyType.VoltHVRack3),
                                           targetType,
                                           "Volt hv rack 3");
 
                 case FrameParamKeyType.VoltHVRack4:
-                    return new FrameParamDef(FrameParamKeyType.VoltHVRack4, FrameParamKeyType.VoltHVRack4.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltHVRack4, nameof(FrameParamKeyType.VoltHVRack4),
                                           targetType,
                                           "Volt hv rack 4");
 
                 case FrameParamKeyType.VoltCapInlet:
-                    return new FrameParamDef(FrameParamKeyType.VoltCapInlet, FrameParamKeyType.VoltCapInlet.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltCapInlet, nameof(FrameParamKeyType.VoltCapInlet),
                                           targetType,
                                           "Capillary Inlet Voltage");
 
                 case FrameParamKeyType.VoltEntranceHPFIn:
                     return new FrameParamDef(FrameParamKeyType.VoltEntranceHPFIn,
-                                          FrameParamKeyType.VoltEntranceHPFIn.ToString(), targetType,
+                                          nameof(FrameParamKeyType.VoltEntranceHPFIn), targetType,
                                           "HPF In Voltage");
 
                 case FrameParamKeyType.VoltEntranceHPFOut:
                     return new FrameParamDef(FrameParamKeyType.VoltEntranceHPFOut,
-                                          FrameParamKeyType.VoltEntranceHPFOut.ToString(), targetType,
+                                          nameof(FrameParamKeyType.VoltEntranceHPFOut), targetType,
                                           "HPF Out Voltage");
 
                 case FrameParamKeyType.VoltEntranceCondLmt:
                     return new FrameParamDef(FrameParamKeyType.VoltEntranceCondLmt,
-                                          FrameParamKeyType.VoltEntranceCondLmt.ToString(), targetType,
+                                          nameof(FrameParamKeyType.VoltEntranceCondLmt), targetType,
                                           "Entrance Cond Limit Voltage");
 
                 case FrameParamKeyType.VoltTrapOut:
-                    return new FrameParamDef(FrameParamKeyType.VoltTrapOut, FrameParamKeyType.VoltTrapOut.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltTrapOut, nameof(FrameParamKeyType.VoltTrapOut),
                                           targetType,
                                           "Trap Out Voltage");
 
                 case FrameParamKeyType.VoltTrapIn:
-                    return new FrameParamDef(FrameParamKeyType.VoltTrapIn, FrameParamKeyType.VoltTrapIn.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltTrapIn, nameof(FrameParamKeyType.VoltTrapIn), targetType,
                                           "Trap In Voltage");
 
                 case FrameParamKeyType.VoltJetDist:
-                    return new FrameParamDef(FrameParamKeyType.VoltJetDist, FrameParamKeyType.VoltJetDist.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltJetDist, nameof(FrameParamKeyType.VoltJetDist),
                                           targetType,
                                           "Jet Disruptor Voltage");
 
                 case FrameParamKeyType.VoltQuad1:
-                    return new FrameParamDef(FrameParamKeyType.VoltQuad1, FrameParamKeyType.VoltQuad1.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltQuad1, nameof(FrameParamKeyType.VoltQuad1), targetType,
                                           "Fragmentation Quadrupole Voltage 1");
 
                 case FrameParamKeyType.VoltCond1:
-                    return new FrameParamDef(FrameParamKeyType.VoltCond1, FrameParamKeyType.VoltCond1.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltCond1, nameof(FrameParamKeyType.VoltCond1), targetType,
                                           "Fragmentation Conductance Voltage 1");
 
                 case FrameParamKeyType.VoltQuad2:
-                    return new FrameParamDef(FrameParamKeyType.VoltQuad2, FrameParamKeyType.VoltQuad2.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltQuad2, nameof(FrameParamKeyType.VoltQuad2), targetType,
                                           "Fragmentation Quadrupole Voltage 2");
 
                 case FrameParamKeyType.VoltCond2:
-                    return new FrameParamDef(FrameParamKeyType.VoltCond2, FrameParamKeyType.VoltCond2.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltCond2, nameof(FrameParamKeyType.VoltCond2), targetType,
                                           "Fragmentation Conductance Voltage 2");
 
                 case FrameParamKeyType.VoltIMSOut:
-                    return new FrameParamDef(FrameParamKeyType.VoltIMSOut, FrameParamKeyType.VoltIMSOut.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.VoltIMSOut, nameof(FrameParamKeyType.VoltIMSOut), targetType,
                                           "IMS Out Voltage");
 
                 case FrameParamKeyType.VoltExitHPFIn:
-                    return new FrameParamDef(FrameParamKeyType.VoltExitHPFIn, FrameParamKeyType.VoltExitHPFIn.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltExitHPFIn, nameof(FrameParamKeyType.VoltExitHPFIn),
                                           targetType,
                                           "HPF In Voltage");
 
                 case FrameParamKeyType.VoltExitHPFOut:
-                    return new FrameParamDef(FrameParamKeyType.VoltExitHPFOut, FrameParamKeyType.VoltExitHPFOut.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.VoltExitHPFOut, nameof(FrameParamKeyType.VoltExitHPFOut),
                                           targetType,
                                           "HPF Out Voltage");
 
                 case FrameParamKeyType.VoltExitCondLmt:
                     return new FrameParamDef(FrameParamKeyType.VoltExitCondLmt,
-                                          FrameParamKeyType.VoltExitCondLmt.ToString(), targetType,
+                                          nameof(FrameParamKeyType.VoltExitCondLmt), targetType,
                                           "Exit Cond Limit Voltage");
 
                 case FrameParamKeyType.PressureFront:
-                    return new FrameParamDef(FrameParamKeyType.PressureFront, FrameParamKeyType.PressureFront.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.PressureFront, nameof(FrameParamKeyType.PressureFront),
                                           targetType,
                                           "Pressure at front of Drift Tube");
 
                 case FrameParamKeyType.PressureBack:
-                    return new FrameParamDef(FrameParamKeyType.PressureBack, FrameParamKeyType.PressureBack.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.PressureBack, nameof(FrameParamKeyType.PressureBack),
                                           targetType,
                                           "Pressure at back of Drift Tube");
 
                 case FrameParamKeyType.HighPressureFunnelPressure:
                     return new FrameParamDef(FrameParamKeyType.HighPressureFunnelPressure,
-                                          FrameParamKeyType.HighPressureFunnelPressure.ToString(), targetType,
+                                          nameof(FrameParamKeyType.HighPressureFunnelPressure), targetType,
                                           "High pressure funnel pressure");
 
                 case FrameParamKeyType.IonFunnelTrapPressure:
                     return new FrameParamDef(FrameParamKeyType.IonFunnelTrapPressure,
-                                          FrameParamKeyType.IonFunnelTrapPressure.ToString(), targetType,
+                                          nameof(FrameParamKeyType.IonFunnelTrapPressure), targetType,
                                           "Ion funnel trap pressure");
 
                 case FrameParamKeyType.RearIonFunnelPressure:
                     return new FrameParamDef(FrameParamKeyType.RearIonFunnelPressure,
-                                          FrameParamKeyType.RearIonFunnelPressure.ToString(), targetType,
+                                          nameof(FrameParamKeyType.RearIonFunnelPressure), targetType,
                                           "Rear ion funnel pressure");
 
                 case FrameParamKeyType.QuadrupolePressure:
                     return new FrameParamDef(FrameParamKeyType.QuadrupolePressure,
-                                          FrameParamKeyType.QuadrupolePressure.ToString(), targetType,
+                                          nameof(FrameParamKeyType.QuadrupolePressure), targetType,
                                           "Quadrupole pressure");
 
                 case FrameParamKeyType.ESIVoltage:
-                    return new FrameParamDef(FrameParamKeyType.ESIVoltage, FrameParamKeyType.ESIVoltage.ToString(), targetType,
+                    return new FrameParamDef(FrameParamKeyType.ESIVoltage, nameof(FrameParamKeyType.ESIVoltage), targetType,
                                           "ESI voltage");
 
                 case FrameParamKeyType.FloatVoltage:
-                    return new FrameParamDef(FrameParamKeyType.FloatVoltage, FrameParamKeyType.FloatVoltage.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.FloatVoltage, nameof(FrameParamKeyType.FloatVoltage),
                                           targetType,
                                           "Float voltage");
 
                 case FrameParamKeyType.FragmentationProfile:
                     return new FrameParamDef(FrameParamKeyType.FragmentationProfile,
-                                          FrameParamKeyType.FragmentationProfile.ToString(), targetType,
+                                          nameof(FrameParamKeyType.FragmentationProfile), targetType,
                                           "Voltage profile used in fragmentation (array of doubles, converted to an array of bytes, then stored as a Base 64 encoded string)");
 
                 case FrameParamKeyType.ScanNumFirst:
-                    return new FrameParamDef(FrameParamKeyType.ScanNumFirst, FrameParamKeyType.ScanNumFirst.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.ScanNumFirst, nameof(FrameParamKeyType.ScanNumFirst),
                                           targetType,
                                           "First scan");
 
                 case FrameParamKeyType.ScanNumLast:
-                    return new FrameParamDef(FrameParamKeyType.ScanNumLast, FrameParamKeyType.ScanNumLast.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.ScanNumLast, nameof(FrameParamKeyType.ScanNumLast),
                                           targetType,
                                           "Last scan");
 
                 case FrameParamKeyType.PressureUnits:
-                    return new FrameParamDef(FrameParamKeyType.PressureUnits, FrameParamKeyType.PressureUnits.ToString(),
+                    return new FrameParamDef(FrameParamKeyType.PressureUnits, nameof(FrameParamKeyType.PressureUnits),
                                           targetType,
                                           "Units for pressure");
 
