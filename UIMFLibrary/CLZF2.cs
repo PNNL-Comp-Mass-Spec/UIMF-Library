@@ -247,7 +247,7 @@ namespace UIMFLibrary
             {
                 Array.Clear(HashTable, 0, (int)HSIZE);
 
-                for (; ; )
+                while (true)
                 {
                     if (inputIndex < inputLength - 2)
                     {
