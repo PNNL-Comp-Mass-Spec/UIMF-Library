@@ -706,10 +706,9 @@ namespace UIMFLibrary
             if (!mTaskStartTime.ContainsKey(taskHeader))
             {
                 mTaskStartTime.Add(taskHeader, DateTime.UtcNow);
-                if (mTaskProgressMessageTime.ContainsKey(taskHeader))
-                    mTaskProgressMessageTime[taskHeader] = DateTime.UtcNow;
-                else
-                    mTaskProgressMessageTime.Add(taskHeader, DateTime.UtcNow);
+
+                // Add/update the dictionary
+                mTaskProgressMessageTime[taskHeader] = DateTime.UtcNow;
             }
             else
             {

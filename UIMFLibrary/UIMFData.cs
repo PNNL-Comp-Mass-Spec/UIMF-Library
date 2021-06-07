@@ -340,11 +340,6 @@ namespace UIMFLibrary
         /// <returns></returns>
         public GlobalParams GetGlobalParams()
         {
-            if (GlobalParameters != null)
-            {
-                return GlobalParameters;
-            }
-
             return GlobalParameters;
         }
 

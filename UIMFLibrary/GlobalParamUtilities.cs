@@ -260,7 +260,7 @@ namespace UIMFLibrary
                     // See MSDN's "Enum.Parse Method" page at http://msdn.microsoft.com/en-us/library/essfb559.aspx
                     var ignoreCase = iteration > 0;
                     var paramType = (GlobalParamKeyType)Enum.Parse(typeof(GlobalParamKeyType), paramName, ignoreCase);
-                    if (Enum.IsDefined(typeof(GlobalParamKeyType), paramType) | paramType.ToString().Contains(","))
+                    if (Enum.IsDefined(typeof(GlobalParamKeyType), paramType) || paramType.ToString().Contains(","))
                     {
                         // Match found
                         return paramType;

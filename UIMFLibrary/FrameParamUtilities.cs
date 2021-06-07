@@ -308,7 +308,7 @@ namespace UIMFLibrary
 
             // Voltage profile used in fragmentation
             // Legacy parameter, likely never used
-            if (frameParameters.FragmentationProfile != null && frameParameters.FragmentationProfile.Length > 0)
+            if (frameParameters.FragmentationProfile?.Length > 0)
             {
                 // Convert the fragmentation profile (array of doubles) into an array of bytes
                 var byteArray = ConvertToBlob(frameParameters.FragmentationProfile);
@@ -689,7 +689,7 @@ namespace UIMFLibrary
                     // See MSDN's "Enum.Parse Method" page at http://msdn.microsoft.com/en-us/library/essfb559.aspx
                     var ignoreCase = iteration > 0;
                     var paramType = (FrameParamKeyType)Enum.Parse(typeof(FrameParamKeyType), paramName, ignoreCase);
-                    if (Enum.IsDefined(typeof(FrameParamKeyType), paramType) | paramType.ToString().Contains(","))
+                    if (Enum.IsDefined(typeof(FrameParamKeyType), paramType) || paramType.ToString().Contains(","))
                     {
                         // Match found
                         return paramType;

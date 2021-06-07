@@ -1311,7 +1311,7 @@ namespace UIMFLibrary
         /// </remarks>
         public void FlushUimf(bool forceFlush)
         {
-            if (forceFlush | DateTime.UtcNow.Subtract(mLastFlush).TotalSeconds >= MINIMUM_FLUSH_INTERVAL_SECONDS)
+            if (forceFlush || DateTime.UtcNow.Subtract(mLastFlush).TotalSeconds >= MINIMUM_FLUSH_INTERVAL_SECONDS)
             {
                 mLastFlush = DateTime.UtcNow;
 
@@ -2406,7 +2406,7 @@ namespace UIMFLibrary
             if (legacyFieldName.Count > 0)
             {
                 dbCommand.CommandText = "UPDATE " + GLOBAL_PARAMETERS_TABLE + " " +
-                                        "SET " + legacyFieldName.First() + " = '" + paramValue + "' ";
+                                        "SET " + legacyFieldName[0] + " = '" + paramValue + "' ";
                 dbCommand.ExecuteNonQuery();
             }
             else
@@ -2588,7 +2588,7 @@ namespace UIMFLibrary
             if (legacyFieldName.Count > 0)
             {
                 dbCommand.CommandText = "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
-                                        "SET " + legacyFieldName.First() + " = '" + paramValue + "' " +
+                                        "SET " + legacyFieldName[0] + " = '" + paramValue + "' " +
                                         "WHERE frameNum = " + frameNum;
                 dbCommand.ExecuteNonQuery();
             }

@@ -1845,7 +1845,7 @@ namespace UIMFLibrary
                                                       "Scan index \"" + scan + "\" not found in Frame \"" + frameNumber + "\"");
             }
 
-            return matches.First();
+            return matches[0];
         }
 
         /// <summary>
@@ -2135,7 +2135,7 @@ namespace UIMFLibrary
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
 
-                    if (compressedBinIntensity.Length <= 0)
+                    if (compressedBinIntensity.Length == 0)
                     {
                         continue;
                     }
@@ -2310,7 +2310,7 @@ namespace UIMFLibrary
                     var scanNum = GetInt32(reader, "ScanNum");
                     ValidateScanNumber(scanNum);
 
-                    if (compressedBinIntensity.Length <= 0)
+                    if (compressedBinIntensity.Length == 0)
                     {
                         continue;
                     }
@@ -2380,7 +2380,7 @@ namespace UIMFLibrary
 
                     var currentBinDictionary = dictionaryArray[scanNum];
 
-                    if (compressedBinIntensity.Length <= 0)
+                    if (compressedBinIntensity.Length == 0)
                     {
                         continue;
                     }
@@ -3254,7 +3254,7 @@ namespace UIMFLibrary
                 {
                     var compressedBinIntensity = (byte[])reader["Intensities"];
 
-                    if (compressedBinIntensity.Length <= 0)
+                    if (compressedBinIntensity.Length == 0)
                     {
                         continue;
                     }
@@ -3347,7 +3347,7 @@ namespace UIMFLibrary
                 {
                     var compressedBinIntensity = (byte[])reader["Intensities"];
 
-                    if (compressedBinIntensity.Length <= 0)
+                    if (compressedBinIntensity.Length == 0)
                     {
                         continue;
                     }
@@ -4357,7 +4357,7 @@ namespace UIMFLibrary
 
                     if (iFrameCount > 0)
                     {
-                        iFrameTypeCount += 1;
+                        iFrameTypeCount++;
 
                         dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                                 "FROM Frame_Params " +
@@ -4376,7 +4376,7 @@ namespace UIMFLibrary
 
                                 if (iFrameCount == iCalibratedFrameCount)
                                 {
-                                    iFrameTypeCountCalibrated += 1;
+                                    iFrameTypeCountCalibrated++;
                                 }
                             }
                         }
@@ -4422,10 +4422,10 @@ namespace UIMFLibrary
 
                             if (iMaxFrameTypeToExamine < 0 || iFrameType <= (int)iMaxFrameTypeToExamine)
                             {
-                                iFrameTypeCount += 1;
+                                iFrameTypeCount++;
                                 if (iFrameCount == iCalibratedFrameCount)
                                 {
-                                    iFrameTypeCountCalibrated += 1;
+                                    iFrameTypeCountCalibrated++;
                                 }
                             }
                         }
@@ -5015,7 +5015,7 @@ namespace UIMFLibrary
         /// </summary>
         private void FillOutFrameInfo()
         {
-            if (mFrameTypeInfo.Any())
+            if (mFrameTypeInfo.Count > 0)
             {
                 return;
             }
@@ -5109,7 +5109,7 @@ namespace UIMFLibrary
                     {
                         var compressedBinIntensity = (byte[])reader["Intensities"];
 
-                        if (compressedBinIntensity.Length <= 0)
+                        if (compressedBinIntensity.Length == 0)
                         {
                             continue;
                         }
@@ -5780,8 +5780,7 @@ namespace UIMFLibrary
             {
                 // The .UIMF file was created with an old version of the writer that used SMALLINT for the ScanNum field in the Frame_Params table, thus limiting the scan range to 0 to 32765
                 // In May 2016 we switched to a 32-bit integer for ScanNum
-                var msg = "Scan number larger than 32765 for file with the ScanNum field as a SMALLINT; change the field type to INTEGER";
-                throw new Exception(msg);
+                throw new Exception("Scan number larger than 32765 for file with the ScanNum field as a SMALLINT; change the field type to INTEGER");
             }
         }
 

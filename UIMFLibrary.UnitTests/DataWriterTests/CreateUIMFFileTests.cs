@@ -68,7 +68,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                     for (var scanNumber = 1; scanNumber <= 600; scanNumber++)
                     {
-                        if (scanNumber == 1 | scanNumber % 100 == 0)
+                        if (scanNumber == 1 || scanNumber % 100 == 0)
                             Console.WriteLine("Adding frame " + frameNum + ", scan " + scanNumber);
 
                         var intensities = new int[148000];

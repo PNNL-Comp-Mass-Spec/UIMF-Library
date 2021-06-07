@@ -184,12 +184,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     {
                         var intensity = (int)result[i, j];
 
-                        if (!(intensity > 0))
+                        if (intensity <= 0)
                             continue;
 
                         nonZeroCount++;
 
-                        if (!(intensity > 1))
+                        if (intensity <= 1)
                             continue;
 
                         valuesOverOne++;
