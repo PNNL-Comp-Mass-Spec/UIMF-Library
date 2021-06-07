@@ -5407,8 +5407,9 @@ namespace UIMFLibrary
 
             if (polynomialCalibrantsAreUsed)
             {
-                // note: the reason for this is that we are trying to get the closest bin for a given m/z.  But when a polynomial formula is used to adjust the m/z, it gets
-                // much more complicated.  So someone else can figure that out  :)
+                // Note: the reason for this is that we are trying to get the closest bin for a given m/z.
+                // However, when a polynomial formula is used to adjust the m/z, it gets much more complicated.
+                // So someone else can figure that out  :)
                 throw new NotImplementedException(
                     "DriftTime profile extraction hasn't been implemented for UIMF files containing polynomial calibration constants.");
             }

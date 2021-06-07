@@ -2084,13 +2084,11 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Update frame parameters using parallel lists
         /// </summary>
-        /// <param name="frameNumber">
-        /// </param>
-        /// <param name="parameters">
-        /// </param>
-        /// <param name="values">
-        /// </param>
+        /// <param name="frameNumber">Frame number</param>
+        /// <param name="parameters">List of parameter names</param>
+        /// <param name="values">List of values</param>
         [Obsolete("Use AddUpdateFrameParameter")]
         public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
         {
@@ -2223,6 +2221,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Store an array of bytes in a table (as a BLOB)
         /// </summary>
         /// <param name="tableName">
         /// </param>
@@ -2419,6 +2418,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Insert a scan into the Frame_Scans table
         /// </summary>
         /// <param name="frameNumber">
         /// </param>
