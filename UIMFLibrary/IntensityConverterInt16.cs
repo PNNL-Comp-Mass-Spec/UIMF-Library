@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
-    static class IntensityConverterInt16
+    internal static class IntensityConverterInt16
     {
         /// <summary>
         /// Convert an array of intensities to a zero length encoded byte array

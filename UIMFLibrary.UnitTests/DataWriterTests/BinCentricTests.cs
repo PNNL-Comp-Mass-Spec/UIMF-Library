@@ -187,7 +187,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             return null;
         }
 
-        void BinCentricTableCreator_ProgressEvent(object sender, ProgressEventArgs e)
+        private void BinCentricTableCreator_ProgressEvent(object sender, ProgressEventArgs e)
         {
             if (DateTime.UtcNow.Subtract(mLastProgressUpdateTime).TotalSeconds >= 5)
             {
@@ -196,7 +196,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             }
         }
 
-        void BinCentricTableCreator_MessageEvent(object sender, MessageEventArgs e)
+        private void BinCentricTableCreator_MessageEvent(object sender, MessageEventArgs e)
         {
             if (DateTime.UtcNow.Subtract(mLastProgressMessageTime).TotalSeconds >= 30)
             {

@@ -2,7 +2,7 @@
 
 namespace UIMFLibrary
 {
-    static class IntensityConverterDouble
+    internal static class IntensityConverterDouble
     {
         /// <summary>
         /// Convert an array of intensities to a zero length encoded byte array
