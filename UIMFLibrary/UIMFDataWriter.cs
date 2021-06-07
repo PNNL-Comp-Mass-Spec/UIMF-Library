@@ -724,7 +724,7 @@ namespace UIMFLibrary
 
         private void AddVersionInfo(Assembly entryAssembly = null)
         {
-            var defaultName = "Unknown";
+            const string DEFAULT_NAME = "Unknown";
             var defaultVersion = new Version(0, 0, 0, 0);
 
             // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
@@ -741,14 +741,14 @@ namespace UIMFLibrary
                     software = entryAssembly.GetName();
                 }
 
-                var softwareName = software?.Name ?? defaultName;
+                var softwareName = software?.Name ?? DEFAULT_NAME;
                 var softwareVersion = software?.Version ?? defaultVersion;
 
                 AddVersionInfo(softwareName, softwareVersion);
             }
             catch
             {
-                AddVersionInfo(defaultName, defaultVersion);
+                AddVersionInfo(DEFAULT_NAME, defaultVersion);
             }
         }
 
