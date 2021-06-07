@@ -248,11 +248,9 @@ namespace UIMFLibrary
         // ReSharper disable once UnusedMember.Global
         public static GlobalParamKeyType GetParamTypeByName(string paramName)
         {
-            var iteration = 0;
-
             // On the first iteration of the while loop, we require a case-sensitive match
             // If no match is found, then on the second iteration we use a case-insensitive match
-            while (iteration < 2)
+            for (var iteration = 0; iteration < 2; iteration++)
             {
                 try
                 {
@@ -273,8 +271,6 @@ namespace UIMFLibrary
                 {
                     // No match
                 }
-
-                iteration++;
             }
 
             return GlobalParamKeyType.Unknown;
