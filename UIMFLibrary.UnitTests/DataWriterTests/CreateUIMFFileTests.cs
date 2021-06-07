@@ -24,10 +24,26 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
             var fiTarget = new FileInfo(FileRefs.WriterTest10Frames);
+            var attemptNumber = 0;
 
-            if (fiTarget.Exists)
+            while (fiTarget.Exists && attemptNumber < 10)
             {
-                fiTarget.Delete();
+                attemptNumber++;
+                try
+                {
+                    fiTarget.Delete();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error deleting file {0} on attempt {1}: {2}", fiTarget.FullName, attemptNumber, ex.Message);
+
+                    var sleepSeconds = attemptNumber * 10;
+                    Console.WriteLine("Sleeping for {0} seconds", sleepSeconds);
+
+                    System.Threading.Thread.Sleep(sleepSeconds * 1000);
+                }
+
+                fiTarget.Refresh();
             }
 
             var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
