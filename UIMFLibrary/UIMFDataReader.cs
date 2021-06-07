@@ -4388,12 +4388,7 @@ namespace UIMFLibrary
                 }
             }
 
-            if (iFrameTypeCount > 0 && iFrameTypeCount == iFrameTypeCountCalibrated)
-            {
-                return true;
-            }
-
-            return false;
+            return iFrameTypeCount > 0 && iFrameTypeCount == iFrameTypeCountCalibrated;
         }
 
         /// <summary>
@@ -4447,12 +4442,7 @@ namespace UIMFLibrary
                 }
             }
 
-            if (iFrameTypeCount == iFrameTypeCountCalibrated)
-            {
-                return true;
-            }
-
-            return false;
+            return iFrameTypeCount == iFrameTypeCountCalibrated;
         }
 
         /// <summary>
@@ -5781,10 +5771,7 @@ namespace UIMFLibrary
         {
             hasLegacyFrameParameters = TableExists(FRAME_PARAMETERS_TABLE);
 
-            if (TableExists(FRAME_PARAMS_TABLE))
-                return false;
-
-            return true;
+            return !TableExists(FRAME_PARAMS_TABLE);
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
