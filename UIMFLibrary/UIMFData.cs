@@ -1115,9 +1115,7 @@ namespace UIMFLibrary
                 frameParameters.CalibrationSlope *
                 (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
-            mz = (mz * mz) + resMassErr;
-
-            return mz;
+            return (mz * mz) + resMassErr;
         }
 
         /// <summary>
@@ -1147,9 +1145,7 @@ namespace UIMFLibrary
                 frameParameters.CalibrationSlope *
                 (t - (double)mGlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
 
-            mz = (mz * mz) + resMassErr;
-
-            return mz;
+            return (mz * mz) + resMassErr;
         }
 
         /// <summary>
