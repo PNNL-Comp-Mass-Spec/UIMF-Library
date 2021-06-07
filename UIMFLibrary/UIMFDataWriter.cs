@@ -670,14 +670,12 @@ namespace UIMFLibrary
                                         "call method CreateTables before calling AddUpdateGlobalParameter");
                 }
 
-                if (mCreateLegacyParametersTables)
+                if (mCreateLegacyParametersTables && !HasLegacyParameterTables)
                 {
-                    if (!HasLegacyParameterTables)
-                        throw new Exception(
-                            "The Global_Parameters table does not exist (and mCreateLegacyParametersTables=true); " +
-                            "call method CreateTables before calling AddUpdateGlobalParameter");
+                    throw new Exception(
+                        "The Global_Parameters table does not exist (and mCreateLegacyParametersTables=true); " +
+                        "call method CreateTables before calling AddUpdateGlobalParameter");
                 }
-
                 // SQLite does not have a merge statement
                 // We therefore must first try an Update query
                 // If no rows are matched, then run an insert query
@@ -1383,12 +1381,11 @@ namespace UIMFLibrary
             if (!HasFrameParamsTable)
                 throw new Exception("The Frame_Params table does not exist; call method CreateTables before calling InsertFrame");
 
-            if (mCreateLegacyParametersTables)
+            if (mCreateLegacyParametersTables && !HasLegacyParameterTables)
             {
-                if (!HasLegacyParameterTables)
-                    throw new Exception(
-                        "The Frame_Parameters table does not exist (and mCreateLegacyParametersTables=true); " +
-                        "call method CreateTables before calling InsertFrame");
+                throw new Exception(
+                    "The Frame_Parameters table does not exist (and mCreateLegacyParametersTables=true); " +
+                    "call method CreateTables before calling InsertFrame");
             }
 
             // Make sure the Frame_Param_Keys table has the required keys
