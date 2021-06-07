@@ -123,9 +123,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var gp = dr.GetGlobalParams();
 
-                var bRunTest = false;
-                if (bRunTest)
+                // Manually change to true to enable the test
+                if (false)
                 {
+#pragma warning disable 162
                     var nonZeros = dr.GetSpectrum(
                         testFrameScanInfo1.startFrame,
                         testFrameScanInfo1.stopFrame,
@@ -135,6 +136,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         out var mzValues,
                         out var intensities);
                     TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
+#pragma warning restore 162
                 }
             }
         }
