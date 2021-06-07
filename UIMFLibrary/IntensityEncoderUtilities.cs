@@ -29,9 +29,6 @@ namespace UIMFLibrary
             const int dataTypeSize = 2;
 
             spectra = null;
-            tic = 0;
-            bpi = 0;
-            indexOfMaxIntensity = 0;
 
             nonZeroCount = RlzEncode.Encode(intensities, out var runLengthZeroEncodedData, out tic, out bpi, out indexOfMaxIntensity);
 
