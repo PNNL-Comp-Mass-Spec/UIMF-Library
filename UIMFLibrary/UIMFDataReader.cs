@@ -5120,13 +5120,10 @@ namespace UIMFLibrary
                         minScan = Math.Min(minScan, scanNum);
                         maxScan = Math.Max(maxScan, scanNum);
 
-                        while (true)
+                        // Possibly add one or more additional items to listOfIntensityDictionaries
+                        while (scanNum >= listOfIntensityDictionaries.Count)
                         {
-                            // Possibly add one or more additional items to listOfIntensityDictionaries
-                            if (scanNum >= listOfIntensityDictionaries.Count)
-                                listOfIntensityDictionaries.Add(new SortedList<int, int>());
-                            else
-                                break;
+                            listOfIntensityDictionaries.Add(new SortedList<int, int>());
                         }
 
                         var currentIntensityDictionary = listOfIntensityDictionaries[scanNum];
