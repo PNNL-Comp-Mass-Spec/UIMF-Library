@@ -7,7 +7,6 @@ namespace UIMFLibrary
 {
     internal class FrameNumShifter
     {
-
         #region "Events"
 
         /// <summary>
@@ -42,7 +41,6 @@ namespace UIMFLibrary
 
         private static string GetFrameRanges(IReadOnlyList<int> frameNums)
         {
-
             var frameRanges = new List<string>();
             var startFrame = frameNums[0];
 
@@ -76,7 +74,6 @@ namespace UIMFLibrary
         {
             using (var dbCommand = DBConnection.CreateCommand())
             {
-
                 // Obtain a list of the current frame numbers
                 var frameNums = new List<int>();
 
@@ -152,7 +149,6 @@ namespace UIMFLibrary
 
                         needToAddFirstCalibrationFrame = false;
                     }
-
                 }
 
                 if (!renumberRequired)
@@ -187,9 +183,7 @@ namespace UIMFLibrary
                 }
 
                 ShiftFramesInBatch(dbCommand, frameNumsInBatch, deltaForBatch);
-
             }
-
         }
 
         /// <summary>
@@ -231,7 +225,6 @@ namespace UIMFLibrary
             var frameRanges = GetFrameRanges(frameNums);
 
             OnFramesShifted(decrementAmount, frameRanges);
-
         }
 
         private void OnFramesShifted(int decrementAmount, string frameRanges)
@@ -244,7 +237,6 @@ namespace UIMFLibrary
             {
                 Console.WriteLine("Decremented frame number by {0} for frames {1}", decrementAmount, frameRanges);
             }
-
         }
     }
 }

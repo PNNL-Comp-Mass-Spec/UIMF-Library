@@ -2,7 +2,6 @@
 
 namespace UIMFLibrary
 {
-
     /// <summary>
     /// The m/z calibrator.
     /// </summary>

@@ -6,7 +6,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     [TestFixture]
     public class DynamicConversionTests
     {
-
         [Test]
         [TestCase("Test data", typeof(string), true)]
         [TestCase("3", typeof(byte), true)]
@@ -50,7 +49,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
 
             Console.WriteLine("Converted {0} to {1}", value, targetType);
-
         }
 
         [Test]
@@ -131,7 +129,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             success = frameParams.TryGetValue(FrameParamKeyType.FrameType, out var frameType);
             Assert.IsTrue(success, "FrameType could not be retrieved");
             Assert.AreEqual((int)frameParameters.FrameType, frameType);
-
         }
 
         [Test]
@@ -140,7 +137,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var frameParameters = GetExampleFrameParameters();
             var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(frameParameters);
             var frameParams = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
-
 
             var startTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
             Assert.AreEqual(frameParameters.StartTime, startTime, 0.00001);
@@ -154,7 +150,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var startTimeDynamic= frameParams.GetValue(FrameParamKeyType.StartTimeMinutes);
             Assert.AreEqual(frameParameters.StartTime, startTimeDynamic, 0.00001);
 
-
             var scans = frameParams.GetValueInt32(FrameParamKeyType.Scans);
             Assert.AreEqual(frameParameters.Scans, scans);
 
@@ -164,7 +159,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var scansDynamicDouble = frameParams.GetValue(FrameParamKeyType.Scans, 0.0);
             Assert.AreEqual(frameParameters.Scans, scansDynamicDouble, 0.00001);
 
-
             var calibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope);
             Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlope, 0.00001);
 
@@ -173,7 +167,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 0.0);
             Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDynamicDouble, 0.00001);
-
 
             // Remove the slope and try again
             frameParams.Values.Remove(FrameParamKeyType.CalibrationSlope);
@@ -186,7 +179,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 2.5);
             Assert.AreEqual(2.5, calibrationSlopeDynamicDouble, 0.00001);
 
-
             var frameType = frameParams.GetValueInt32(FrameParamKeyType.FrameType);
             Assert.AreEqual((int)frameParameters.FrameType, frameType);
 
@@ -196,7 +188,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var frameTypeDynamicDouble = frameParams.GetValue(FrameParamKeyType.FrameType, 0.0);
             Assert.AreEqual((double)frameParameters.FrameType, frameTypeDynamicDouble, 0.00001);
 
-
             var imfProfile = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence);
             Assert.AreEqual(imfProfile, "Seq");
 
@@ -205,7 +196,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var imfProfileString = frameParams.GetValueString(FrameParamKeyType.MultiplexingEncodingSequence);
             Assert.AreEqual(imfProfileString, "Seq");
-
         }
 
         [Test]
@@ -225,7 +215,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             success = globalParams.TryGetValue(GlobalParamKeyType.BinWidth, out var binWidth);
             Assert.IsTrue(success, "BinWidth could not be retrieved");
             Assert.AreEqual(globalParameters.BinWidth, binWidth, 0.00001);
-
         }
 
         [Test]
@@ -236,7 +225,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
 
-
             var instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
             Assert.AreEqual(globalParameters.InstrumentName, instName);
 
@@ -245,7 +233,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
             Assert.AreEqual(globalParameters.InstrumentName, instNameDynamicWithDefault);
-
 
             // Remove the instrument name then test again
             globalParams.Values.Remove(GlobalParamKeyType.InstrumentName);
@@ -262,7 +249,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
             Assert.AreEqual("", instNameDynamicWithDefault);
 
-
             var numFrames = globalParams.GetValueInt32(GlobalParamKeyType.NumFrames);
             Assert.AreEqual(globalParameters.NumFrames, numFrames);
 
@@ -272,7 +258,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var numFramesDynamicDouble = globalParams.GetValue(GlobalParamKeyType.NumFrames, 0.0);
             Assert.AreEqual(globalParameters.NumFrames, numFramesDynamicDouble, 0.00001);
 
-
             var binWidth = globalParams.GetValueInt32(GlobalParamKeyType.BinWidth);
             Assert.AreEqual(globalParameters.BinWidth, binWidth);
 
@@ -281,14 +266,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var binWidthDynamicDouble = globalParams.GetValue(GlobalParamKeyType.BinWidth, 0.0);
             Assert.AreEqual(globalParameters.BinWidth, binWidthDynamicDouble, 0.00001);
-
         }
 
 #pragma warning disable 612, 618
 
         private FrameParameters GetExampleFrameParameters()
         {
-
             var frameParameters = new FrameParameters
             {
                 FrameNum = 2,
@@ -320,7 +303,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             return frameParameters;
         }
 
-
         private GlobalParameters GetExampleGlobalParameters()
         {
             var globalParameters = new GlobalParameters
@@ -345,7 +327,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             return globalParameters;
         }
-
 
 #pragma warning restore 612, 618
 

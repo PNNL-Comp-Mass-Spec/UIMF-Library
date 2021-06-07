@@ -30,7 +30,6 @@ namespace UIMFLibrary.FunctionalTests
 
         #region Public Methods and Operators
 
-
         public static void PrintMethodName(System.Reflection.MethodBase methodInfo)
         {
             // Call with PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
@@ -56,7 +55,6 @@ namespace UIMFLibrary.FunctionalTests
             }
 
             Console.WriteLine($"{Environment.NewLine}{Environment.NewLine}===== " + methodDescriptor + " =====");
-
         }
 
 #if (EXPERIMENTAL)
@@ -156,7 +154,6 @@ namespace UIMFLibrary.FunctionalTests
 
             using (var dr = new DataReader(uimfStandardFile1))
             {
-
                 const int frameStart = 500;
                 const int frameStop = frameStart + numIterations;
                 const int scanStart = 250;
@@ -170,7 +167,6 @@ namespace UIMFLibrary.FunctionalTests
                 sw.Start();
                 for (var frame = frameStart; frame < frameStop; frame++)
                 {
-
                     var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,
@@ -193,7 +189,6 @@ namespace UIMFLibrary.FunctionalTests
                 Console.WriteLine($"Average time/scan = {sw.ElapsedMilliseconds / (double)numIterations} msec");
 
                 Console.WriteLine("Read {0} data points, of which {1} were non-zero", mzValuesRead, nonZeroValues);
-
             }
         }
 

@@ -287,7 +287,6 @@ namespace UIMFLibrary
     /// </summary>
     public class FrameParamDef
     {
-
         #region Properties
 
         /// <summary>
@@ -394,6 +393,5 @@ namespace UIMFLibrary
         {
             return ParamType + " (" + DataType + ")";
         }
-
     }
 }

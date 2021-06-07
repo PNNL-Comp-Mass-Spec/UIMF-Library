@@ -5,13 +5,11 @@ using System.Collections.Generic;
 
 namespace UIMFLibrary
 {
-
     /// <summary>
     /// Global parameters container
     /// </summary>
     public class GlobalParams
     {
-
         #region Properties
 
         /// <summary>
@@ -154,7 +152,6 @@ namespace UIMFLibrary
         /// <param name="value">Value (string)</param>
         private GlobalParams AddUpdateValueDynamic(GlobalParamKeyType paramType, dynamic value)
         {
-
             if (Values.TryGetValue(paramType, out var paramEntry))
             {
                 paramEntry.Value = value;

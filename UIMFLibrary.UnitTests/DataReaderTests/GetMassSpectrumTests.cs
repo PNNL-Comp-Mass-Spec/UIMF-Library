@@ -156,7 +156,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 {
                     var gp = dr.GetGlobalParams();
 
-
                     var nonZeros = dr.GetSpectrum(
                         frame,
                         frame,

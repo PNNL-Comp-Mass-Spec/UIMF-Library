@@ -142,7 +142,6 @@ namespace UIMFLibrary
     /// </summary>
     public class GlobalParam
     {
-
         /// <summary>
         /// Parameter Type
         /// </summary>
@@ -230,7 +229,6 @@ namespace UIMFLibrary
 
             switch (paramType)
             {
-
                 case GlobalParamKeyType.InstrumentName:
                     InitializeByType("InstrumentName", dataType, "Instrument name");
                     break;
@@ -319,7 +317,6 @@ namespace UIMFLibrary
                 default:
                     throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized global param enum for paramType: " + (int)paramType);
             }
-
         }
 
         private void InitializeByType(string name, Type dataType, string description)
@@ -328,6 +325,5 @@ namespace UIMFLibrary
             DataType = dataType;
             Description = description;
         }
-
     }
 }

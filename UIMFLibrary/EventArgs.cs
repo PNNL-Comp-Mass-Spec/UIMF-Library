@@ -73,7 +73,6 @@ namespace UIMFLibrary
         #endregion
     }
 
-
     /// <summary>
     /// The progress event args.
     /// </summary>

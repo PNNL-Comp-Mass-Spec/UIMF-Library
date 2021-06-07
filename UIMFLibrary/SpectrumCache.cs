@@ -45,7 +45,6 @@ namespace UIMFLibrary
             ListOfIntensityDictionaries = listOfIntensityDictionaries;
             SummedIntensityDictionary = summedIntensityDictionary;
 
-
             FindFirstLastScan(listOfIntensityDictionaries, out var firstScan, out var lastScan);
 
             FirstScan = firstScan;
@@ -152,7 +151,6 @@ namespace UIMFLibrary
 
         private void FindFirstLastScan(IList<SortedList<int, int>> listOfIntensityDictionaries, out int firstScan, out int lastScan)
         {
-
             firstScan = int.MaxValue;
             lastScan = int.MinValue;
 

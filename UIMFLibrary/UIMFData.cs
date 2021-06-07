@@ -523,7 +523,6 @@ namespace UIMFLibrary
                         {
                             throw new Exception("Frame_Param_Keys table contains invalid entries: " + ex.Message, ex);
                         }
-
                     }
                 }
             }
@@ -720,7 +719,6 @@ namespace UIMFLibrary
             }
 
             frameParamKeys.Add(paramType, paramDef);
-
         }
 
         /// <summary>
@@ -820,7 +818,6 @@ namespace UIMFLibrary
                             globalParameters.DateStarted = UIMFDataUtilities.StandardizeDate(dtReportedDateStarted);
                         }
                     }
-
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
@@ -967,7 +964,6 @@ namespace UIMFLibrary
                 Console.WriteLine("Ignoring frame parameter " + paramName + " (ID " + paramID + "); " +
                                   "you need an updated copy of the UIMFLibrary that supports this new parameter");
             }
-
         }
 
         #endregion
@@ -1164,7 +1160,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParametersFields()
         {
-
             var lstFields = new List<Tuple<string, string, string>>
             {
                 Tuple.Create("FrameNum", "INTEGER PRIMARY KEY", "int"),
@@ -1219,7 +1214,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1230,7 +1224,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParamKeysFields()
         {
-
             var lstFields = new List<Tuple<string, string, string>>
             {
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
@@ -1240,7 +1233,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1252,7 +1244,6 @@ namespace UIMFLibrary
         /// <remarks>This table has a dual-column primary key, enforced using an index</remarks>
         protected internal List<Tuple<string, string, string>> GetFrameParamsFields()
         {
-
             var lstFields = new List<Tuple<string, string, string>>
             {
                 Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
@@ -1261,7 +1252,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1275,7 +1265,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameScansFields(string dataType)
         {
-
             string sqlDataType;
             string dotNetDataType;
 
@@ -1310,7 +1299,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1342,7 +1330,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1353,7 +1340,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetGlobalParamsFields()
         {
-
             var lstFields = new List<Tuple<string, string, string>>
             {
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
@@ -1364,7 +1350,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>
@@ -1375,7 +1360,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal Dictionary<string, FrameParamKeyType> GetLegacyFrameParameterMapping()
         {
-
             var fieldMapping = new Dictionary<string, FrameParamKeyType>
             {
                 {"StartTime", FrameParamKeyType.StartTimeMinutes},
@@ -1439,7 +1423,6 @@ namespace UIMFLibrary
         /// </returns>
         protected internal Dictionary<string, GlobalParamKeyType> GetLegacyGlobalParameterMapping()
         {
-
             var fieldMapping = new Dictionary<string, GlobalParamKeyType>
             {
                 {"DateStarted", GlobalParamKeyType.DateStarted},
@@ -1481,7 +1464,6 @@ namespace UIMFLibrary
             };
 
             return lstFields;
-
         }
 
         /// <summary>

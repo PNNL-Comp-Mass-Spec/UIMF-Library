@@ -59,7 +59,6 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 Console.WriteLine("Updated {0} to have slope {1} and intercept {2}", uimfPath, slope, intercept);
             }
-
         }
     }
 }

@@ -203,8 +203,6 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 Console.WriteLine(e.Message);
                 mLastProgressMessageTime = DateTime.UtcNow;
             }
-
         }
-
     }
 }

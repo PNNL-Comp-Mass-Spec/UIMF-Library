@@ -8,7 +8,6 @@ namespace UIMFLibrary
     /// </summary>
     public static class FrameParamUtilities
     {
-
         #region Member variables
 
         private static readonly Dictionary<Type, dynamic> mDefaultValuesByType = new Dictionary<Type, dynamic>();
@@ -417,7 +416,6 @@ namespace UIMFLibrary
                 {
                     return value;
                 }
-
             }
             catch (Exception ex)
             {
@@ -569,7 +567,6 @@ namespace UIMFLibrary
                 return dataType;
 
             throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
-
         }
 
 #pragma warning disable 612, 618
@@ -686,7 +683,6 @@ namespace UIMFLibrary
             // If no match is found, then on the second iteration we use a case-insensitive match
             while (iteration < 2)
             {
-
                 try
                 {
                     // Note that this conversion works for both the names in the FrameParamKeyType enum and for the integer values
@@ -755,7 +751,6 @@ namespace UIMFLibrary
                 default:
                     return FrameParamKeyType.Unknown;
             }
-
         }
 
         /// <summary>
@@ -789,7 +784,6 @@ namespace UIMFLibrary
 
             switch (paramType)
             {
-
                 case FrameParamKeyType.StartTimeMinutes:
                     return new FrameParamDef(FrameParamKeyType.StartTimeMinutes, "StartTime", targetType,
                                           "Start time of frame, in minutes");
@@ -1040,13 +1034,9 @@ namespace UIMFLibrary
                                           targetType,
                                           "Units for pressure");
 
-
                 default:
                     throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
             }
-
         }
-
     }
-
 }

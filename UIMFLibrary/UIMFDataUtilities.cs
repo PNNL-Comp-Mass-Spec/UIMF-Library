@@ -72,7 +72,6 @@ namespace UIMFLibrary
             return value.ToString(CultureInfo.InvariantCulture);
         }
 
-
         /// <summary>
         /// Filters xData and yData to only contain data with mass between 1 and 100000 m/z, and with intensity > 0
         /// </summary>

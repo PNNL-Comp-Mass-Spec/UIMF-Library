@@ -55,7 +55,6 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 for (var frameNum = 1; frameNum <= frameCountToWrite; frameNum++)
                 {
-
                     var fp = new FrameParams();
 
                     fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFData.FrameType.MS1)
@@ -81,21 +80,16 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                                 intensities[i] = 0;
                             else
                                 intensities[i] = nextRandom;
-
                         }
 
                         writer.InsertScan(frameNum, fp, scanNumber, intensities, globalParameters.BinWidth);
                     }
-
                 }
 
                 writer.UpdateGlobalStats();
 
                 Console.WriteLine("Wrote 10 frames of data to " + fiTarget.FullName);
-
             }
-
-
         }
     }
 }

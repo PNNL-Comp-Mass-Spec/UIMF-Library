@@ -224,7 +224,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Assert.AreEqual(6525, intensityVals[100]);
                 Assert.AreEqual(3199, intensityVals[105]);
                 Assert.AreEqual(255, intensityVals[111]);
-
             }
         }
 
@@ -248,7 +247,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const double targetMZ = 636.8466; // see frame 1000, scan 170
                 const double toleranceInPPM = 20;
                 const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
-
 
                 // mReader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
                 var sw = new Stopwatch();
@@ -300,7 +298,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
             using (mReader = new DataReader(FileRefs.LegacyFile1))
             {
-
                 // int[] scanVals = null;
 
                 var sw = new Stopwatch();

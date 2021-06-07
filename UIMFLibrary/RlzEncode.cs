@@ -11,7 +11,6 @@ namespace UIMFLibrary
     /// </summary>
     public static class RlzEncode
     {
-
         /// <summary>
         /// Convert an array of intensities to a zero length encoded array
         /// </summary>

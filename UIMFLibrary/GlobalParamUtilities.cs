@@ -8,7 +8,6 @@ namespace UIMFLibrary
     /// </summary>
     public static class GlobalParamUtilities
     {
-
         #region Member variables
 
         private static readonly Dictionary<GlobalParamKeyType, Type> mGlobalParamKeyTypes = new Dictionary<GlobalParamKeyType, Type>();
@@ -134,7 +133,6 @@ namespace UIMFLibrary
             return "System.Object";
         }
 
-
         /// <summary>
         /// Get the default value for the data type associated with the given frame param key
         /// </summary>
@@ -187,7 +185,6 @@ namespace UIMFLibrary
                 return dataType;
 
             throw new ArgumentOutOfRangeException(nameof(paramType), "Unrecognized frame param enum for paramType: " + (int)paramType);
-
         }
 
 #pragma warning disable 612, 618
@@ -257,7 +254,6 @@ namespace UIMFLibrary
             // If no match is found, then on the second iteration we use a case-insensitive match
             while (iteration < 2)
             {
-
                 try
                 {
                     // Note that this conversion works for both the names in the GlobalParamKeyType enum and for the integer values
@@ -282,9 +278,6 @@ namespace UIMFLibrary
             }
 
             return GlobalParamKeyType.Unknown;
-
         }
-
     }
-
 }

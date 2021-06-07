@@ -240,7 +240,6 @@ namespace UIMFLibrary
                     command.ExecuteNonQuery();
                 }
             }
-
         }
 
         /// <summary>
@@ -333,7 +332,6 @@ namespace UIMFLibrary
                         var percentComplete = 37 + (i / (double)numBins) * 30;
                         UpdateProgress(percentComplete, progressMessage);
                     }
-
                 }
             }
         }
@@ -705,7 +703,6 @@ namespace UIMFLibrary
 
         private bool ReportProgressAsMessage(string taskHeader)
         {
-
             if (!mTaskStartTime.ContainsKey(taskHeader))
             {
                 mTaskStartTime.Add(taskHeader, DateTime.UtcNow);

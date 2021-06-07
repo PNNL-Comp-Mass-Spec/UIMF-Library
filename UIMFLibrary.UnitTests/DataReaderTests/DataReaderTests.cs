@@ -57,7 +57,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
 
             Console.WriteLine("\n\n===== " + methodDescriptor + " =====");
-
         }
 
         /// <summary>
@@ -233,10 +232,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     Console.Write(lastNValueList[i] + ", ");
                     Assert.AreEqual(expectedLastNValuesOverOne[i], lastNValueList[i], "Expected value mismatch (at the end of the results)");
                 }
-
-
             }
-
         }
 
         /// <summary>
@@ -269,7 +265,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(11.986007612613742, mzArray[0]);
                 Assert.AreEqual(1, intensityArray[0]);
-
             }
         }
 
@@ -326,7 +321,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Assert.AreEqual(hasMSn, frameCountMS2 > 0, "HasMSMSData result disagrees with frameCountMS2");
             }
-
         }
 
         /// <summary>
@@ -344,7 +338,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-
                 var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
                     UIMFData.FrameType.MS1,
@@ -370,7 +363,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
-
                 var nonZeroCount = reader.GetSpectrum(
                     frameNumber,
                     UIMFData.FrameType.MS1,
@@ -446,7 +438,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-
                 const double testMZ = 627.2655682;
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
@@ -505,7 +496,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
-
                 const double testMZ = 627.2655682;
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
@@ -569,7 +559,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(filePath))
             {
-
                 var nonZeroCount = reader.GetSpectrum(
                     frameStart,
                     frameStop,
@@ -604,7 +593,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
-
                 var nonZeroCount = reader.GetSpectrum(
                     frameStart,
                     frameStop,
@@ -790,7 +778,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(2028, bpiList[70], float.Epsilon);
             }
-
         }
 
         [Test]
@@ -816,7 +803,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 10, 20, 50);
                 Assert.AreEqual(bpiList[7], 831, float.Epsilon);
             }
-
         }
 
         [Test]
@@ -843,7 +829,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(3649, ticList[70], float.Epsilon);
-
             }
 
             // File with updated parameter tables
@@ -852,7 +837,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(3649, ticList[70], float.Epsilon);
             }
-
         }
 
         [Test]
@@ -877,9 +861,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
                 Assert.AreEqual(16224, ticList[11], float.Epsilon);
-
             }
-
         }
 
         [Test]
@@ -913,7 +895,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             SQLiteTableHasColumnWork(uimfFile2.FullName, "Global_Params", "ParamID", true);
             SQLiteTableHasColumnWork(uimfFile2.FullName, "Frame_Param_Keys", "ParamDataType", true);
             SQLiteTableHasColumnWork(uimfFile2.FullName, "Frame_Scans", "MZs", false);
-
         }
 
         private void SQLiteTableHasColumnWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
@@ -972,7 +953,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Parameters", "NumFrames", true);
             SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Parameters", "NoColumn", false);
             SQLiteColumnExistsWork(uimfFile2.FullName, "Global_Params", "ParamID", true);
-
         }
 
         private void SQLiteColumnExistsWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
@@ -984,7 +964,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var tableExists = reader.TableExists(tableName);
                 if (!tableExists)
                 {
-
                     Assert.AreEqual(columnExistsExpected, false,
                                     "Table " + tableName + " not found in the UIMF file, but column " + columnName + " was expected to exist" +
                                     "; See file " + Path.GetFileName(filePath));

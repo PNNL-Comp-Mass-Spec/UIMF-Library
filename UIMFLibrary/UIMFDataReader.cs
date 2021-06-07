@@ -562,7 +562,6 @@ namespace UIMFLibrary
 
             for (var currentFrameNumber = startFrameNumber; currentFrameNumber <= endFrameNumber; currentFrameNumber++)
             {
-
                 // Create a calibration lookup table -- for speed
                 mCalibrationTable = new double[height];
                 if (flagTOF)
@@ -603,7 +602,6 @@ namespace UIMFLibrary
 
                     using (var reader = dbCommand.ExecuteReader())
                     {
-
                         // accumulate the data into the plot_data
                         if (yCompression <= 1)
                         {
@@ -751,7 +749,6 @@ namespace UIMFLibrary
                 // Get list of views in source DB
                 var dctViewInfo = CloneUIMFGetObjects("view");
 
-
                 if (File.Exists(targetDBPath))
                 {
                     File.Delete(targetDBPath);
@@ -767,7 +764,6 @@ namespace UIMFLibrary
                     cnTargetDB.Open();
                     using (var cmdTargetDB = cnTargetDB.CreateCommand())
                     {
-
                         // Create each table
                         foreach (var kvp in dctTableInfo)
                         {
@@ -862,7 +858,6 @@ namespace UIMFLibrary
                         {
                             throw new Exception("Error copying data into cloned database, table " + sCurrentObject, ex);
                         }
-
                     }
                     cnTargetDB.Close();
                 }
@@ -1230,7 +1225,6 @@ namespace UIMFLibrary
                     {
                         countPerFrame = reader.IsDBNull(0) ? 1 : Convert.ToInt32(reader[0], mCultureInfoUS);
                     }
-
                 }
             }
             catch (Exception ex)
@@ -1416,7 +1410,6 @@ namespace UIMFLibrary
                         byteBuffer = (byte[])reader["FileText"];
                     }
                 }
-
             }
 
             return byteBuffer;
@@ -1580,7 +1573,6 @@ namespace UIMFLibrary
             {
                 PreCacheFrameParams();
             }
-
         }
 
         private void PreCacheFrameParams()
@@ -1629,15 +1621,12 @@ namespace UIMFLibrary
                         }
 
                         ReadFrameParamValue(reader, idColIndex, valueColIndex, frameParamKeys, frameParameters);
-
                     }
 
                     // Store the previous frame's parameters
                     if (!mCachedFrameParameters.ContainsKey(currentFrameNum))
                         mCachedFrameParameters.Add(currentFrameNum, frameParameters);
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -1658,7 +1647,6 @@ namespace UIMFLibrary
 
                     while (reader.Read())
                     {
-
                         var legacyFrameParams = GetLegacyFrameParameters(reader);
                         var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
                         var frameParameters = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
@@ -1674,12 +1662,8 @@ namespace UIMFLibrary
                             Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " +
                                               mGlobalParameters.NumFrames);
                         }
-
                     }
-
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -1745,7 +1729,6 @@ namespace UIMFLibrary
                     {
                         ReadFrameParamValue(reader, idColIndex, valueColIndex, frameParamKeys, frameParameters);
                     }
-
                 }
             }
 
@@ -1803,7 +1786,6 @@ namespace UIMFLibrary
         /// <returns>Frame pressure, in torr</returns>
         private double GetFramePressureForCalculationOfDriftTime(FrameParams frameParameters)
         {
-
             /*
              * [April 2011] A little history from Gordon Slysz
              * Earlier UIMF files have the column 'PressureBack' but not the
@@ -1934,7 +1916,6 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-
                     var scanNumber = reader.GetInt32(0);        // ScanNum
 
                     var scanInfo = new ScanInfo(frameNumber, scanNumber)
@@ -1967,7 +1948,6 @@ namespace UIMFLibrary
         /// </returns>
         public FrameType GetFrameTypeForFrame(int frameNumber)
         {
-
             var frameParams = GetFrameParams(frameNumber);
             if (frameParams == null)
             {
@@ -2061,7 +2041,6 @@ namespace UIMFLibrary
 
         private FrameSetContainer GetFrameSetByFrameType(FrameType frameType)
         {
-
             if (!mFrameTypeInfo.ContainsKey(frameType))
             {
                 throw new KeyNotFoundException("UIMF file does not have any frames of type " + frameType);
@@ -2219,7 +2198,6 @@ namespace UIMFLibrary
             int pagingFilterStartBin = 0,
             int pagingFilterCount = 0)
         {
-
             if (numFramesToSum < 1 || numFramesToSum % 2 != 1)
             {
                 throw new Exception(
@@ -2776,7 +2754,6 @@ namespace UIMFLibrary
         {
             return GetSpectrum(frameNumber, frameNumber, FrameType.MS1, scanNumber, scanNumber, out mzArray, out intensityArray);
         }
-
 
         /// <summary>
         /// Extracts m/z values and intensities from given frame number and scan number.
@@ -4333,7 +4310,6 @@ namespace UIMFLibrary
         /// </returns>
         public bool IsCalibrated(FrameType iMaxFrameTypeToExamine)
         {
-
             if (mUsingLegacyFrameParameters)
             {
                 return IsCalibratedLegacy(iMaxFrameTypeToExamine);
@@ -4353,7 +4329,6 @@ namespace UIMFLibrary
 
                 while (currentFrameType <= (int)iMaxFrameTypeToExamine)
                 {
-
                     dbCommand.CommandText = "SELECT COUNT(DISTINCT(FrameNum)) AS FrameCount " +
                                             "FROM Frame_Params " +
                                             "WHERE ParamID = " + (int)FrameParamKeyType.FrameType +
@@ -4392,14 +4367,12 @@ namespace UIMFLibrary
                                 {
                                     iFrameTypeCountCalibrated += 1;
                                 }
-
                             }
                         }
                     }
 
                     currentFrameType++;
                 }
-
             }
 
             if (iFrameTypeCount > 0 && iFrameTypeCount == iFrameTypeCountCalibrated)
@@ -4601,7 +4574,6 @@ namespace UIMFLibrary
                 {
                     PressureIsMilliTorr = true;
                 }
-
             }
             catch (Exception ex)
             {
@@ -4633,7 +4605,6 @@ namespace UIMFLibrary
                 }
             }
 
-
             if (!mLegacyFrameParametersMissingColumns.Contains("IonFunnelTrapPressure"))
             {
                 isMilliTorr = ColumnIsMilliTorr(dbCommand, FRAME_PARAMETERS_TABLE, "IonFunnelTrapPressure");
@@ -4643,7 +4614,6 @@ namespace UIMFLibrary
                     return;
                 }
             }
-
 
             if (!mLegacyFrameParametersMissingColumns.Contains("RearIonFunnelPressure"))
             {
@@ -4990,7 +4960,6 @@ namespace UIMFLibrary
             }
         }
 
-
         /// <summary>
         /// Determines if the MS1 Frames of this file are labeled as 0 or 1.
         /// Note that MS1 frames should recorded as '1'. But we need to
@@ -5020,7 +4989,6 @@ namespace UIMFLibrary
                         frameTypeList.Add(GetInt32(reader, "FrameType"));
                     }
                 }
-
             }
 
             if (frameTypeList.Contains(0))
@@ -5127,10 +5095,8 @@ namespace UIMFLibrary
             var minScan = numScansInFrame;
             var maxScan = -1;
 
-
             using (var reader = mGetSpectrumCommand.ExecuteReader())
             {
-
                 var recordIndex = 0;
 
                 while (reader.Read())
@@ -5139,7 +5105,6 @@ namespace UIMFLibrary
 
                     try
                     {
-
                         var compressedBinIntensity = (byte[])reader["Intensities"];
 
                         if (compressedBinIntensity.Length <= 0)
@@ -5189,7 +5154,6 @@ namespace UIMFLibrary
                                 }
                             }
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -5201,7 +5165,6 @@ namespace UIMFLibrary
                     recordIndex++;
                 }
             }
-
 
             // Remove the oldest spectrum in the cache
             if (mSpectrumCacheList.Count >= mSpectraToCache)
@@ -5222,7 +5185,6 @@ namespace UIMFLibrary
                 {
                     break;
                 }
-
             }
 
             if (maxScan < 0)
@@ -5283,7 +5245,6 @@ namespace UIMFLibrary
 
             var data = dctTicOrBPI.Values.ToArray();
 
-
             return data;
         }
 
@@ -5324,7 +5285,6 @@ namespace UIMFLibrary
             }
 
             var dctTicOrBPI = new SortedDictionary<int, double>();
-
 
             // Construct the SQL
             var sql = " SELECT Frame_Scans.FrameNum, Sum(Frame_Scans." + fieldName + ") AS Value " +
@@ -5386,7 +5346,6 @@ namespace UIMFLibrary
             {
                 sql += " WHERE " + whereClause;
             }
-
 
             // Finalize the Sql command
             sql += " GROUP BY Frame_Scans.FrameNum ORDER BY Frame_Scans.FrameNum";

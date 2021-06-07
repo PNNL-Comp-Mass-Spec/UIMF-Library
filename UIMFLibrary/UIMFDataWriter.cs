@@ -182,7 +182,6 @@ namespace UIMFLibrary
                 {
                     AddVersionInfo(entryAssembly);
                 }
-
             }
             catch (Exception ex)
             {
@@ -430,7 +429,6 @@ namespace UIMFLibrary
             // Check whether the Log_Entries table needs to be created
             using (var cmdPostLogEntry = mDbConnection.CreateCommand())
             {
-
                 if (!TableExists(mDbConnection, "Log_Entries"))
                 {
                     // Log_Entries not found; need to create it
@@ -500,7 +498,6 @@ namespace UIMFLibrary
         /// <remarks>Does not add any values if the legacy tables already exist</remarks>
         public void AddLegacyParameterTablesUsingExistingParamTables()
         {
-
             if (HasLegacyParameterTables)
             {
                 // Nothing to do
@@ -530,7 +527,6 @@ namespace UIMFLibrary
                     var frameParams = uimfReader.GetFrameParams(frame.Key);
                     frameParamsList.Add(frame.Key, frameParams);
                 }
-
             }
 
             using (var dbCommand = mDbConnection.CreateCommand())
@@ -554,7 +550,6 @@ namespace UIMFLibrary
             }
 
             FlushUimf(true);
-
         }
 
         /// <summary>
@@ -618,7 +613,6 @@ namespace UIMFLibrary
                 }
 
                 FlushUimf(false);
-
             }
             catch (Exception ex)
             {
@@ -661,7 +655,6 @@ namespace UIMFLibrary
             return AddUpdateGlobalParameter(paramKeyType, UIMFDataUtilities.StandardizeDate(value));
         }
 
-
         /// <summary>
         /// Add or update a global parameter
         /// </summary>
@@ -671,7 +664,6 @@ namespace UIMFLibrary
         {
             try
             {
-
                 if (!HasGlobalParamsTable)
                 {
                     throw new Exception("The Global_Params table does not exist; " +
@@ -762,7 +754,6 @@ namespace UIMFLibrary
             {
                 AddVersionInfo(defaultName, defaultVersion);
             }
-
         }
 
         /// <summary>
@@ -826,7 +817,6 @@ namespace UIMFLibrary
             int frameNumStart = 0,
             int frameNumEnd = 0)
         {
-
             if (string.IsNullOrEmpty(paramValue))
                 paramValue = string.Empty;
 
@@ -845,7 +835,6 @@ namespace UIMFLibrary
             var rowsAdded = dbCommand.ExecuteNonQuery();
 
             return rowsAdded;
-
         }
 
         /// <summary>
@@ -913,7 +902,6 @@ namespace UIMFLibrary
         /// <remarks>This method is used by the UIMFDemultiplexer when the first frame to process is not frame 1</remarks>
         public void RenumberFrames()
         {
-
             try
             {
                 var frameShifter = new FrameNumShifter(mDbConnection, HasLegacyParameterTables);
@@ -928,7 +916,6 @@ namespace UIMFLibrary
                 ReportError("Error renumbering frames: " + ex.Message, ex);
                 throw;
             }
-
         }
 
         /// <summary>
@@ -936,7 +923,6 @@ namespace UIMFLibrary
         /// </summary>
         private void CreateFrameParamsTables(IDbCommand dbCommand)
         {
-
             if (HasFrameParamsTable && TableExists(FRAME_PARAM_KEYS_TABLE))
             {
                 // The tables already exist
@@ -975,7 +961,6 @@ namespace UIMFLibrary
             dbCommand.ExecuteNonQuery();
 
             UpdateTableCheckedStatus(UIMFTableType.FrameParams, false);
-
         }
 
         private void CreateFrameScansTable(IDbCommand dbCommand, string dataType)
@@ -998,8 +983,6 @@ namespace UIMFLibrary
             // Create the unique index on Frame_Scans
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameScans on " + FRAME_SCANS_TABLE + "(FrameNum, ScanNum);";
             dbCommand.ExecuteNonQuery();
-
-
         }
 
         /// <summary>
@@ -1023,7 +1006,6 @@ namespace UIMFLibrary
             dbCommand.ExecuteNonQuery();
 
             UpdateTableCheckedStatus(UIMFTableType.GlobalParams, false);
-
         }
 
         private void CreateVersionInfoTable(IDbCommand dbCommand, Assembly entryAssembly)
@@ -1060,7 +1042,6 @@ namespace UIMFLibrary
                 var lstFields = GetGlobalParametersFields();
                 dbCommand.CommandText = GetCreateTableSql(GLOBAL_PARAMETERS_TABLE, lstFields);
                 dbCommand.ExecuteNonQuery();
-
             }
 
             if (!TableExists(FRAME_PARAMETERS_TABLE))
@@ -1089,7 +1070,6 @@ namespace UIMFLibrary
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 // Create the Global_Params Table
                 CreateGlobalParamsTable(dbCommand);
 
@@ -1153,7 +1133,6 @@ namespace UIMFLibrary
         {
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " " +
                                         "WHERE FrameNum IN " +
                                         "   (SELECT DISTINCT FrameNum " +
@@ -1187,7 +1166,6 @@ namespace UIMFLibrary
 
                 // Open a new transaction
                 TransactionBegin();
-
             }
         }
 
@@ -1203,7 +1181,6 @@ namespace UIMFLibrary
         {
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
                 dbCommand.ExecuteNonQuery();
 
@@ -1232,7 +1209,6 @@ namespace UIMFLibrary
         {
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
                 dbCommand.ExecuteNonQuery();
 
@@ -1252,7 +1228,6 @@ namespace UIMFLibrary
                         dbCommand.ExecuteNonQuery();
                     }
                 }
-
             }
 
             FlushUimf(false);
@@ -1272,7 +1247,6 @@ namespace UIMFLibrary
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum IN (" + sFrameList + "); ";
                 dbCommand.ExecuteNonQuery();
 
@@ -1289,7 +1263,6 @@ namespace UIMFLibrary
                 {
                     DecrementFrameCount(dbCommand, frameNums.Count);
                 }
-
             }
 
             FlushUimf(true);
@@ -1656,9 +1629,7 @@ namespace UIMFLibrary
             mDbCommandInsertLegacyFrameParameterRow.ExecuteNonQuery();
 
             mFrameNumsInLegacyFrameParametersTable.Add(frameParameters.FrameNum);
-
         }
-
 
         /// <summary>
         /// Insert a row into the legacy Global_Parameters table
@@ -1695,7 +1666,6 @@ namespace UIMFLibrary
             dbCommand.Parameters.Add(new SQLiteParameter(":Instrument_name", globalParameters.InstrumentName));
 
             dbCommand.ExecuteNonQuery();
-
         }
 
         /// <summary>
@@ -1731,7 +1701,6 @@ namespace UIMFLibrary
 
             InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
             mDbCommandInsertScan.ExecuteNonQuery();
-
         }
 
         /// <summary>
@@ -1770,7 +1739,6 @@ namespace UIMFLibrary
 
             InsertScanAddParameters(frameNumber, scanNum, nonZeroCount, bpi, bpiMz, tic, spectra);
             mDbCommandInsertScan.ExecuteNonQuery();
-
         }
 
         /// <summary>Insert a new scan using an array of intensities (as integers) along with binWidth</summary>
@@ -1813,7 +1781,6 @@ namespace UIMFLibrary
             double binWidth,
             out int nonZeroCount)
         {
-
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
 
@@ -1836,7 +1803,6 @@ namespace UIMFLibrary
             nonZeroCount = IntensityConverterCLZF.Compress(intensities.ToList(), out var spectrum, out var tic, out var bpi, out var indexOfMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
-
         }
 
         /// <summary>
@@ -1860,7 +1826,6 @@ namespace UIMFLibrary
             double binWidth,
             int timeOffset)
         {
-
             var binToIntensityMapCopy = new List<Tuple<int, int>>(binToIntensityMap.Count);
             binToIntensityMapCopy.AddRange(binToIntensityMap.Select(item => new Tuple<int, int>(item.Key, item.Value)));
 
@@ -1887,7 +1852,6 @@ namespace UIMFLibrary
             double binWidth,
             int timeOffset)
         {
-
             if (frameParameters == null)
                 throw new ArgumentNullException(nameof(frameParameters));
 
@@ -1927,7 +1891,6 @@ namespace UIMFLibrary
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, binNumberMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
 
             return nonZeroCount;
-
         }
 
         /// <summary>
@@ -2021,7 +1984,6 @@ namespace UIMFLibrary
 
                 // Add new values for any frames that do not have slope or intercept defined as frame params
                 AssureAllFramesHaveFrameParam(dbCommand, FrameParamKeyType.CalibrationDone, newCalibrationDone);
-
             }
         }
 
@@ -2122,7 +2084,6 @@ namespace UIMFLibrary
                 throw new ArgumentOutOfRangeException(nameof(parameterName), "Unrecognized parameter name " + parameterName + "; cannot update");
 
             AddUpdateFrameParameter(frameNumber, paramType, parameterValue);
-
         }
 
         /// <summary>
@@ -2198,7 +2159,6 @@ namespace UIMFLibrary
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "SELECT Count (Distinct FrameNum) FROM " + FRAME_PARAMS_TABLE;
                 var frameCountObj = dbCommand.ExecuteScalar();
 
@@ -2213,7 +2173,6 @@ namespace UIMFLibrary
             object maxScanFromQuery;
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-
                 dbCommand.CommandText = "SELECT Max(ScanNum) FROM " + FRAME_SCANS_TABLE;
                 maxScanFromQuery = dbCommand.ExecuteScalar();
             }
@@ -2353,7 +2312,6 @@ namespace UIMFLibrary
                                         "SET " + parameterName + " = " + defaultValue + " " +
                                         "WHERE " + parameterName + " IS NULL";
                 dbCommand.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -2400,11 +2358,9 @@ namespace UIMFLibrary
         /// <param name="frameParameters"></param>
         private void InsertLegacyFrameParams(int frameNum, FrameParams frameParameters)
         {
-
             var legacyFrameParameters = FrameParamUtilities.GetLegacyFrameParameters(frameNum, frameParameters);
 
             InitializeFrameParametersRow(legacyFrameParameters);
-
         }
 
         /// <summary>
@@ -2557,7 +2513,6 @@ namespace UIMFLibrary
                   + ":voltIMSOut,:voltExitHPFIn,:voltExitHPFOut,:voltExitCondLmt, "
                   + ":PressureFront,:PressureBack,:MPBitOrder,:FragmentationProfile, " + ":HPPressure, :IPTrapPressure, "
                   + ":RIFunnelPressure, :QuadPressure, :ESIVoltage, :FloatVoltage, :CalibrationDone, :Decoded);";
-
         }
 
         /// <summary>
@@ -2595,7 +2550,6 @@ namespace UIMFLibrary
             mDbCommandInsertScan.CommandText =
                 "INSERT INTO " + FRAME_SCANS_TABLE + " (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) "
                 + "VALUES(:FrameNum, :ScanNum, :NonZeroCount, :BPI, :BPI_MZ, :TIC, :Intensities);";
-
         }
 
         /// <summary>
@@ -2647,7 +2601,6 @@ namespace UIMFLibrary
             {
                 Console.WriteLine("Skipping unsupported key type, " + paramKeyType);
             }
-
         }
 
         /// <summary>
@@ -2712,7 +2665,6 @@ namespace UIMFLibrary
                     mFrameParameterKeys.Add(paramDef.ParamType, paramDef);
                 }
             }
-
         }
 
         /// <summary>
@@ -2770,7 +2722,6 @@ namespace UIMFLibrary
 
         private void FrameShifter_FrameShiftEvent(object sender, FrameNumShiftEventArgs e)
         {
-
             PostLogEntry(
                 "Normal",
                 string.Format("Decremented frame number by {0} for frames {1}", e.DecrementAmount, e.FrameRanges),

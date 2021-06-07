@@ -11,7 +11,6 @@ namespace UIMFLibrary
     /// </summary>
     public class ScanInfo
     {
-
         /// <summary>
         /// Frame number for scan
         /// </summary>
@@ -71,6 +70,5 @@ namespace UIMFLibrary
         {
             return string.Format("Frame {0}, scan {1}, TIC {2:F0}, BPI {3:F0}, BPI_Mz {4:F4}", Frame, Scan, TIC, BPI, BPI_MZ);
         }
-
     }
 }
