@@ -347,8 +347,9 @@ namespace UIMFLibrary
                 output[outputIndex++] = (byte)(lit - 1);
                 lit = -lit;
                 do
+                {
                     output[outputIndex++] = input[inputIndex + lit];
-                while (++lit != 0);
+                } while (++lit != 0);
             }
 
             return (int)outputIndex;
@@ -384,8 +385,9 @@ namespace UIMFLibrary
                     }
 
                     do
+                    {
                         output[outputIndex++] = input[inputIndex++];
-                    while (--ctrl != 0);
+                    } while (--ctrl != 0);
                 }
                 else /* back reference */
                 {
@@ -414,8 +416,9 @@ namespace UIMFLibrary
                     output[outputIndex++] = output[reference++];
 
                     do
+                    {
                         output[outputIndex++] = output[reference++];
-                    while (--len != 0);
+                    } while (--len != 0);
                 }
             }
             while (inputIndex < inputLength);
