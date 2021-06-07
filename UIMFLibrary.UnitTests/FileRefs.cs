@@ -21,7 +21,7 @@ namespace UIMFLibrary.UnitTests
         /// UIMF file with encoded spectra (data before demultiplexing)
         /// </summary>
         /// <remarks>\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf</remarks>
-        public static string EncodedUIMF = DECONTOOLS_SHARE_PATH + @"Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
+        public static string EncodedUIMF = DECONTOOLS_SHARE_PATH + "Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf";
 
         /// <summary>
         /// UIMF file with MS/MS data
@@ -33,19 +33,19 @@ namespace UIMFLibrary.UnitTests
         /// Demultiplexed UIMF file (legacy tables)
         /// </summary>
         /// <remarks>\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf</remarks>
-        public static string LegacyDemultiplexedFile1 = SHARE_PATH + @"Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
+        public static string LegacyDemultiplexedFile1 = SHARE_PATH + "Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
         /// <summary>
         /// Standard UIMF file (legacy tables)
         /// </summary>
         /// <remarks>\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf</remarks>
-        public static string LegacyFile1 = SHARE_PATH + @"Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
+        public static string LegacyFile1 = SHARE_PATH + "Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
         /// <summary>
         /// Same data as LegacyFile1 but with the new Global_Params and Frame_Params tables
         /// </summary>
         /// <remarks>\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3.uimf</remarks>
-        public static string StandardFile1 = SHARE_PATH + @"Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3.uimf";
+        public static string StandardFile1 = SHARE_PATH + "Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000_v3.uimf";
 
         /// <summary>
         /// File for bin-centric tests
@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// File for writing test data
         /// </summary>
-        public static string WriterTest10Frames = @"WriterTest_10Frames.uimf";
+        public static string WriterTest10Frames = "WriterTest_10Frames.uimf";
 
         /// <summary>
         /// UIMF file with 25 frames
