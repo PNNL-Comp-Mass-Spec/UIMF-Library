@@ -262,8 +262,7 @@ namespace UIMFLibrary
                             && reference > 0
                             && input[reference + 0] == input[inputIndex + 0]
                             && input[reference + 1] == input[inputIndex + 1]
-                            && input[reference + 2] == input[inputIndex + 2]
-                        )
+                            && input[reference + 2] == input[inputIndex + 2])
                         {
                             /* match found at *reference++ */
                             uint len = 2;
@@ -274,16 +273,18 @@ namespace UIMFLibrary
                                 return 0;
 
                             do
+                            {
                                 len++;
-                            while (len < maxLength && input[reference + len] == input[inputIndex + len]);
+                            } while (len < maxLength && input[reference + len] == input[inputIndex + len]);
 
                             if (lit != 0)
                             {
                                 output[outputIndex++] = (byte)(lit - 1);
                                 lit = -lit;
                                 do
+                                {
                                     output[outputIndex++] = input[inputIndex + lit];
-                                while (++lit != 0);
+                                } while (++lit != 0);
                             }
 
                             len -= 2;
@@ -315,7 +316,9 @@ namespace UIMFLibrary
                         }
                     }
                     else if (inputIndex == inputLength)
+                    {
                         break;
+                    }
 
                     /* one more literal byte we must copy */
                     lit++;
@@ -329,8 +332,9 @@ namespace UIMFLibrary
                         output[outputIndex++] = (byte)(MAX_LIT - 1);
                         lit = -lit;
                         do
+                        {
                             output[outputIndex++] = input[inputIndex + lit];
-                        while (++lit != 0);
+                        } while (++lit != 0);
                     }
                 } // for
             } // lock
