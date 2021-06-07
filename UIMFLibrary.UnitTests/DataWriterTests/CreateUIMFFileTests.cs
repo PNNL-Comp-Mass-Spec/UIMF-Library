@@ -23,31 +23,46 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         {
             DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var fiTarget = new FileInfo(FileRefs.WriterTest10Frames);
-            var attemptNumber = 0;
+            var targetFile = new FileInfo(FileRefs.WriterTest10Frames);
 
-            while (fiTarget.Exists && attemptNumber < 10)
+            var attemptNumber = 0;
+            var rand = new Random();
+            var nameCustomized = false;
+
+            while (targetFile.Exists && attemptNumber < 10)
             {
                 attemptNumber++;
+
                 try
                 {
-                    fiTarget.Delete();
+                    Console.WriteLine("Deleting file {0}", targetFile.FullName);
+                    targetFile.Delete();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error deleting file {0} on attempt {1}: {2}", fiTarget.FullName, attemptNumber, ex.Message);
+                    Console.WriteLine("Error deleting file {0} on attempt {1}: {2}", targetFile.FullName, attemptNumber, ex.Message);
 
                     var sleepSeconds = attemptNumber * 10;
                     Console.WriteLine("Sleeping for {0} seconds", sleepSeconds);
-
                     System.Threading.Thread.Sleep(sleepSeconds * 1000);
+
+                    // Customize the filename by appending a random number
+                    targetFile = new FileInfo(Path.Combine(
+                        targetFile.DirectoryName ?? string.Empty,
+                        string.Format("{0}_{1}{2}",
+                            Path.GetFileNameWithoutExtension(targetFile.Name),
+                            rand.Next(1000),
+                            Path.GetExtension(targetFile.Name))));
+
+                    Console.WriteLine("Updated target file: {0}", targetFile.FullName);
+                    nameCustomized = true;
                 }
 
-                fiTarget.Refresh();
+                targetFile.Refresh();
             }
 
             var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-            using (var writer = new DataWriter(fiTarget.FullName, executingAssembly))
+            using (var writer = new DataWriter(targetFile.FullName, executingAssembly))
             {
                 writer.CreateTables("int");
 
@@ -104,7 +119,21 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 writer.UpdateGlobalStats();
 
-                Console.WriteLine("Wrote 10 frames of data to " + fiTarget.FullName);
+                Console.WriteLine("Wrote 10 frames of data to " + targetFile.FullName);
+            }
+
+            if (!nameCustomized)
+            {
+                return;
+            }
+
+            try
+            {
+                targetFile.Delete();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error deleting customized target file {0}: {1}", targetFile.FullName, ex.Message);
             }
         }
     }
