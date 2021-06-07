@@ -143,14 +143,14 @@ namespace UIMFLibrary
             if (outputBuffer == null || outputBuffer.Length < outputByteCountGuess)
                 outputBuffer = new byte[outputByteCountGuess];
 
-            var byteCount = lzf_compress(inputBytes, ref outputBuffer, inputLength);
+            var byteCount = LZF_Compress(inputBytes, ref outputBuffer, inputLength);
 
             // If byteCount is 0, increase buffer size and try again.
             while (byteCount == 0)
             {
                 outputByteCountGuess *= 2;
                 outputBuffer = new byte[outputByteCountGuess];
-                byteCount = lzf_compress(inputBytes, ref outputBuffer, inputLength);
+                byteCount = LZF_Compress(inputBytes, ref outputBuffer, inputLength);
             }
 
             return byteCount;
@@ -207,14 +207,14 @@ namespace UIMFLibrary
             if (outputBuffer == null || outputBuffer.Length < outputByteCountGuess)
                 outputBuffer = new byte[outputByteCountGuess];
 
-            var byteCount = lzf_decompress(inputBytes, ref outputBuffer, inputLength);
+            var byteCount = LZF_Decompress(inputBytes, ref outputBuffer, inputLength);
 
             // If byteCount is 0, increase buffer size and try again.
             while (byteCount == 0)
             {
                 outputByteCountGuess *= 2;
                 outputBuffer = new byte[outputByteCountGuess];
-                byteCount = lzf_decompress(inputBytes, ref outputBuffer, inputLength);
+                byteCount = LZF_Decompress(inputBytes, ref outputBuffer, inputLength);
             }
 
             return byteCount;
@@ -232,7 +232,7 @@ namespace UIMFLibrary
         /// <param name="inputLength">Length of input bytes to process</param>
         /// <returns>The size of the compressed archive in the output buffer</returns>
         // ReSharper disable once SuggestBaseTypeForParameter
-        private static int lzf_compress(byte[] input, ref byte[] output, int inputLength)
+        private static int LZF_Compress(byte[] input, ref byte[] output, int inputLength)
         {
             var outputLength = output.Length;
 
@@ -363,7 +363,7 @@ namespace UIMFLibrary
         /// <param name="inputLength">Length of input bytes to process</param>
         /// <returns>The size of the decompressed archive in the output buffer</returns>
         // ReSharper disable once SuggestBaseTypeForParameter
-        private static int lzf_decompress(byte[] input, ref byte[] output, int inputLength)
+        private static int LZF_Decompress(byte[] input, ref byte[] output, int inputLength)
         {
             var outputLength = output.Length;
 
