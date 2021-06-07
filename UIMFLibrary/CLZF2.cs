@@ -95,8 +95,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Compress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to compress.</param>
-        /// <returns>Compressed bytes.</returns>
+        /// <param name="inputBytes">Bytes to compress (minimum length: 2)</param>
+        /// <returns>Compressed bytes</returns>
         public static byte[] Compress(byte[] inputBytes)
         {
             return Compress(inputBytes, inputBytes.Length);
@@ -105,9 +105,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Compress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to compress.</param>
-        /// <param name="inputLength">Length of data in inputBytes to decompress.</param>
-        /// <returns>Compressed bytes.</returns>
+        /// <param name="inputBytes">Bytes to compress (minimum length: 2)</param>
+        /// <param name="inputLength">Length of data in inputBytes to decompress</param>
+        /// <returns>Compressed bytes</returns>
         public static byte[] Compress(byte[] inputBytes, int inputLength)
         {
             byte[] tempBuffer = null;
@@ -121,9 +121,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Compress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to compress.</param>
-        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output.</param>
-        /// <returns>Length of output.</returns>
+        /// <param name="inputBytes">Bytes to compress (minimum length: 2)</param>
+        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output</param>
+        /// <returns>Length of output</returns>
         public static int Compress(byte[] inputBytes, ref byte[] outputBuffer)
         {
             return Compress(inputBytes, ref outputBuffer, inputBytes.Length);
@@ -132,10 +132,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Compress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to compress.</param>
-        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output.</param>
-        /// <param name="inputLength">Length of data in inputBytes.</param>
-        /// <returns>Length of output.</returns>
+        /// <param name="inputBytes">Bytes to compress (minimum length: 2)</param>
+        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output</param>
+        /// <param name="inputLength">Length of data in inputBytes</param>
+        /// <returns>Length of output</returns>
         public static int Compress(byte[] inputBytes, ref byte[] outputBuffer, int inputLength)
         {
             // Estimate necessary output buffer size.
@@ -159,8 +159,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Decompress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to decompress.</param>
-        /// <returns>Decompressed bytes.</returns>
+        /// <param name="inputBytes">Bytes to decompress</param>
+        /// <returns>Decompressed bytes</returns>
         public static byte[] Decompress(byte[] inputBytes)
         {
             return Decompress(inputBytes, inputBytes.Length);
@@ -169,9 +169,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Decompress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to decompress.</param>
-        /// <param name="inputLength">Length of data in inputBytes to decompress.</param>
-        /// <returns>Decompressed bytes.</returns>
+        /// <param name="inputBytes">Bytes to decompress</param>
+        /// <param name="inputLength">Length of data in inputBytes to decompress</param>
+        /// <returns>Decompressed bytes</returns>
         public static byte[] Decompress(byte[] inputBytes, int inputLength)
         {
             byte[] tempBuffer = null;
@@ -185,9 +185,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Decompress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to decompress.</param>
-        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output.</param>
-        /// <returns>Length of output.</returns>
+        /// <param name="inputBytes">Bytes to decompress</param>
+        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output</param>
+        /// <returns>Length of output</returns>
         public static int Decompress(byte[] inputBytes, ref byte[] outputBuffer)
         {
             return Decompress(inputBytes, ref outputBuffer, inputBytes.Length);
@@ -196,10 +196,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Decompress input bytes.
         /// </summary>
-        /// <param name="inputBytes">Bytes to decompress.</param>
-        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output.</param>
-        /// <param name="inputLength">Length of data in inputBytes.</param>
-        /// <returns>Length of output.</returns>
+        /// <param name="inputBytes">Bytes to decompress</param>
+        /// <param name="outputBuffer">Output/work buffer. Upon completion, will contain the output</param>
+        /// <param name="inputLength">Length of data in inputBytes</param>
+        /// <returns>Length of output</returns>
         public static int Decompress(byte[] inputBytes, ref byte[] outputBuffer, int inputLength)
         {
             // Estimate necessary output buffer size.
@@ -227,10 +227,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Compresses the data using LibLZF algorithm.
         /// </summary>
-        /// <param name="input">Reference to the data to compress.</param>
-        /// <param name="output">Reference to a buffer which will contain the compressed data.</param>
-        /// <param name="inputLength">Length of input bytes to process.</param>
-        /// <returns>The size of the compressed archive in the output buffer.</returns>
+        /// <param name="input">Reference to the data to compress (minimum length: 2)</param>
+        /// <param name="output">Reference to a buffer which will contain the compressed data</param>
+        /// <param name="inputLength">Length of input bytes to process</param>
+        /// <returns>The size of the compressed archive in the output buffer</returns>
         // ReSharper disable once SuggestBaseTypeForParameter
         private static int lzf_compress(byte[] input, ref byte[] output, int inputLength)
         {
@@ -357,10 +357,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Decompresses the data using LibLZF algorithm.
         /// </summary>
-        /// <param name="input">Reference to the data to decompress.</param>
-        /// <param name="output">Reference to a buffer which will contain the decompressed data.</param>
-        /// <param name="inputLength">Length of input bytes to process.</param>
-        /// <returns>The size of the decompressed archive in the output buffer.</returns>
+        /// <param name="input">Reference to the data to decompress</param>
+        /// <param name="output">Reference to a buffer which will contain the decompressed data</param>
+        /// <param name="inputLength">Length of input bytes to process</param>
+        /// <returns>The size of the decompressed archive in the output buffer</returns>
         // ReSharper disable once SuggestBaseTypeForParameter
         private static int lzf_decompress(byte[] input, ref byte[] output, int inputLength)
         {

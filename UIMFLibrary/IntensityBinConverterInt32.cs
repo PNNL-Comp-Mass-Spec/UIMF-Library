@@ -111,6 +111,7 @@ namespace UIMFLibrary
                 Buffer.BlockCopy(runLengthZeroEncodedData, 0, spectra, 0, encodedDataLength * dataTypeSize);
                 spectra = CLZF2.Compress(spectra);
             }
+
             return nonZeroCount;
         }
 

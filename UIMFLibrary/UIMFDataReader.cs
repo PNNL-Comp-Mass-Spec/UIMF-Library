@@ -370,7 +370,7 @@ namespace UIMFLibrary
         public bool HasLegacyFrameParameters => mHasLegacyFrameParameters;
 
         /// <summary>
-        /// Gets or sets a value indicating whether pressure is millitorr.
+        /// Gets or sets a value indicating whether pressure is milliTorr.
         /// </summary>
         public bool PressureIsMilliTorr { get; set; }
 
@@ -4682,7 +4682,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Check whether a pressure param contains millitorr values
+        /// Check whether a pressure param contains milliTorr values
         /// </summary>
         /// <param name="cmd">
         /// SQLiteCommand object
@@ -4691,7 +4691,7 @@ namespace UIMFLibrary
         /// Param key to query
         /// </param>
         /// <returns>
-        /// True if the pressure column in the given table is in millitorr<see cref="bool"/>.
+        /// True if the pressure column in the given table is in milliTorr<see cref="bool"/>.
         /// </returns>
         /// <remarks>
         /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
