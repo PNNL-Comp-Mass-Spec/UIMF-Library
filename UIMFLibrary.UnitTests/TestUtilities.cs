@@ -124,20 +124,20 @@ namespace UIMFLibrary.UnitTests
         /// <param name="values">
         /// The values.
         /// </param>
-        /// <param name="xcoord">
-        /// The xcoord of the maximum value
+        /// <param name="xCoordinate">
+        /// The x-coordinate of the maximum value
         /// </param>
-        /// <param name="ycoord">
-        /// The ycoord of the maximum value
+        /// <param name="yCoordinate">
+        /// The y-coordinate of the maximum value
         /// </param>
         /// <returns>
         /// Maximum value<see cref="int"/>.
         /// </returns>
-        public static int GetMax(int[][] values, out int xcoord, out int ycoord)
+        public static int GetMax(int[][] values, out int xCoordinate, out int yCoordinate)
         {
             var max = 0;
-            xcoord = 0;
-            ycoord = 0;
+            xCoordinate = 0;
+            yCoordinate = 0;
 
             for (var i = 0; i < values.Length; i++)
             {
@@ -146,8 +146,8 @@ namespace UIMFLibrary.UnitTests
                     if (values[i][j] > max)
                     {
                         max = values[i][j];
-                        xcoord = i;
-                        ycoord = j;
+                        xCoordinate = i;
+                        yCoordinate = j;
                     }
                 }
             }
