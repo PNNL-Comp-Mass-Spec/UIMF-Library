@@ -148,7 +148,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void GetMultipleSummedMassSpectrumsTest1()
+        public void GetMultipleSummedMassSpectraTest1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
