@@ -462,7 +462,7 @@ namespace UIMFLibrary
                 {
                     binIndex += -(int)decodedIntensityValue;
                 }
-                else if (Math.Abs(decodedIntensityValue) < double.Epsilon && (previousValue.Equals(short.MinValue) || previousValue.Equals(double.MinValue)))
+                else if (Math.Abs(decodedIntensityValue) < float.Epsilon && (previousValue.Equals(short.MinValue) || previousValue.Equals(double.MinValue)))
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
