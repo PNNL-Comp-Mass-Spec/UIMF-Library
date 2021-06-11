@@ -383,6 +383,12 @@ namespace UIMFLibrary
                     if (string.IsNullOrEmpty(value))
                         return float.NaN;
 
+                    if (value.Equals("Inf", StringComparison.OrdinalIgnoreCase))
+                        return float.MaxValue;
+
+                    if (value.Equals("-Inf", StringComparison.OrdinalIgnoreCase))
+                        return float.MinValue;
+
                     if (float.TryParse(value, out var parsed))
                         return parsed;
 
@@ -395,6 +401,12 @@ namespace UIMFLibrary
                     // Interpret null or empty string as NaN
                     if (string.IsNullOrEmpty(value))
                         return double.NaN;
+
+                    if (value.Equals("Inf", StringComparison.OrdinalIgnoreCase))
+                        return double.MaxValue;
+
+                    if (value.Equals("-Inf", StringComparison.OrdinalIgnoreCase))
+                        return double.MinValue;
 
                     if (double.TryParse(value, out var parsed))
                         return parsed;
