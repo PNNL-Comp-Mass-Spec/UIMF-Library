@@ -11,6 +11,9 @@ namespace UIMFLibrary.UnitTests
     /// </summary>
     public static class FileRefs
     {
+        // Ignore Spelling: demultiplexed, demultiplexing
+
+        // ReSharper disable once IdentifierTypo
         private const string DECONTOOLS_SHARE_PATH = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\";
 
         public const string SHARE_PATH = @"\\proto-2\unitTest_Files\UIMF_Library\";

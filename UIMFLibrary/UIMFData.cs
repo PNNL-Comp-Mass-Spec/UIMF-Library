@@ -15,6 +15,8 @@ namespace UIMFLibrary
     /// </summary>
     public abstract class UIMFData : IDisposable
     {
+        // Ignore Spelling: bool, datetime, floyd, Prescan, Structs
+
         #region Constants
 
         /// <summary>
@@ -205,7 +207,7 @@ namespace UIMFLibrary
         public bool HasVersionInfoTable => CheckHasVersionInfoTable();
 
         /// <summary>
-        /// Gets the uimf file path.
+        /// Gets the UIMF file path.
         /// </summary>
         public string UimfFilePath => mFilePath;
 
@@ -420,10 +422,10 @@ namespace UIMFLibrary
         /// Intercept.
         /// </param>
         /// <param name="binWidth">
-        /// Bin width (in ns)
+        /// Bin width (in nanoseconds)
         /// </param>
         /// <param name="correctionTimeForTOF">
-        /// Correction time for tof.
+        /// Correction time for TOF.
         /// </param>
         /// <param name="bin">
         /// Bin number
@@ -451,7 +453,7 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="intercept">
         /// </param>
-        /// <param name="binWidth">Bin width (in ns)
+        /// <param name="binWidth">Bin width (in nanoseconds)
         /// </param>
         /// <param name="correctionTimeForTOF">
         /// </param>
@@ -803,7 +805,7 @@ namespace UIMFLibrary
                         if (dtReportedDateStarted.Year < 450)
                         {
                             // Some .UIMF files have DateStarted values represented by huge integers, e.g. 127805472000000000 or 129145004045937500; example: BATs_TS_01_c4_Eagle_10-02-06_0000
-                            //  These numbers are the number of ticks since 1 January 1601 (where each tick is 100 ns)
+                            //  These numbers are the number of ticks since 1 January 1601 (where each tick is 100 nanoseconds)
                             //  This value is returned by function GetSystemTimeAsFileTime (see http://en.wikipedia.org/wiki/System_time)
 
                             //  When SQLite parses these numbers, it converts them to years around 0410
@@ -1089,7 +1091,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="binNumber">
         /// </param>
-        /// <param name="binWidth">Bin width (in ns)
+        /// <param name="binWidth">Bin width (in nanoseconds)
         /// </param>
         /// <param name="frameParameters">
         /// </param>
@@ -1118,7 +1120,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="binNumber">
         /// </param>
-        /// <param name="binWidth">Bin width (in ns)
+        /// <param name="binWidth">Bin width (in nanoseconds)
         /// </param>
         /// <param name="frameParameters">
         /// </param>
@@ -1147,7 +1149,7 @@ namespace UIMFLibrary
         /// Gets the field names for the legacy Frame_Parameters table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParametersFields()
         {
@@ -1211,7 +1213,7 @@ namespace UIMFLibrary
         /// Gets the field names for the Frame_Param_Keys table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParamKeysFields()
         {
@@ -1230,7 +1232,7 @@ namespace UIMFLibrary
         /// Gets the field names for the Frame_Params table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         /// <remarks>This table has a dual-column primary key, enforced using an index</remarks>
         protected internal List<Tuple<string, string, string>> GetFrameParamsFields()
@@ -1252,7 +1254,7 @@ namespace UIMFLibrary
         /// double, float, or int
         /// </param>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameScansFields(string dataType)
         {
@@ -1296,7 +1298,7 @@ namespace UIMFLibrary
         /// Gets the field names for the Global_Parameters table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetGlobalParametersFields()
         {
@@ -1327,7 +1329,7 @@ namespace UIMFLibrary
         /// Gets the field names for the Global_Params table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetGlobalParamsFields()
         {
@@ -1441,7 +1443,7 @@ namespace UIMFLibrary
         /// Gets the field names for the Version_Info table
         /// </summary>
         /// <returns>
-        /// List of Tuples where Item1 is FieldName, Item2 is Sql data type, and Item3 is .NET data type
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetVersionInfoFields()
         {

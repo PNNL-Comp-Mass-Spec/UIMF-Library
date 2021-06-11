@@ -8,6 +8,8 @@ namespace UIMFLibrary
     /// </summary>
     public static class GlobalParamUtilities
     {
+        // Ignore Spelling: bool, uint, ulong, ushort, sbyte
+
         #region Member variables
 
         private static readonly Dictionary<GlobalParamKeyType, Type> mGlobalParamKeyTypes = new Dictionary<GlobalParamKeyType, Type>();

@@ -14,7 +14,7 @@ namespace UIMFLibrary
     /// </summary>
     internal class FrameSetContainer
     {
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Constructor
@@ -39,7 +39,7 @@ namespace UIMFLibrary
         public Dictionary<int, int> FrameIndexes { get; }
 
         /// <summary>
-        /// Gets the num frames.
+        /// Gets the number of frames.
         /// </summary>
         public int NumFrames { get; private set; }
 

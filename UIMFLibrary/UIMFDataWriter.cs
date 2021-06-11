@@ -31,6 +31,8 @@ namespace UIMFLibrary
     /// </summary>
     public class DataWriter : UIMFData
     {
+        // Ignore Spelling: Cond, datetime, Frag, Prescan, quantitation, workflows
+
         #region Constants
 
         /// <summary>
@@ -129,7 +131,7 @@ namespace UIMFLibrary
 
             var usingExistingDatabase = File.Exists(mFilePath);
 
-            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in read-only folders
             var connectionString = "Data Source = " + filePath + "; Version=3; DateTimeFormat=Ticks;";
             mDbConnection = new SQLiteConnection(connectionString, true);
             mLastFlush = DateTime.UtcNow;
@@ -765,7 +767,7 @@ namespace UIMFLibrary
         /// <param name="softwareVersion">Version of the data acquisition software</param>
         public void AddVersionInfo(string softwareName, Version softwareVersion)
         {
-            // File version is dependent on the major.minor version of the uimf library
+            // File version is dependent on the major.minor version of the UIMF library
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var fileFormatVersion = version.ToString(2);
 
@@ -941,11 +943,11 @@ namespace UIMFLibrary
             dbCommand.CommandText = GetCreateTableSql(FRAME_PARAMS_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
-            // Create the unique index index on Frame_Param_Keys
+            // Create the unique index on Frame_Param_Keys
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParamKeys on " + FRAME_PARAM_KEYS_TABLE + "(ParamID);";
             dbCommand.ExecuteNonQuery();
 
-            // Create the unique index index on Frame_Params
+            // Create the unique index on Frame_Params
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_FrameParams on " + FRAME_PARAMS_TABLE + "(FrameNum, ParamID);";
             dbCommand.ExecuteNonQuery();
 
@@ -1003,7 +1005,7 @@ namespace UIMFLibrary
             dbCommand.CommandText = GetCreateTableSql(GLOBAL_PARAMS_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
-            // Create the unique index index on Global_Params
+            // Create the unique index on Global_Params
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_GlobalParams on " + GLOBAL_PARAMS_TABLE + "(ParamID);";
             dbCommand.ExecuteNonQuery();
 
@@ -1023,7 +1025,7 @@ namespace UIMFLibrary
             dbCommand.CommandText = GetCreateTableSql(VERSION_INFO_TABLE, lstFields);
             dbCommand.ExecuteNonQuery();
 
-            // Create the unique index index on Version_Info
+            // Create the unique index on Version_Info
             dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_VersionInfo on " + VERSION_INFO_TABLE + "(Version_ID);";
             dbCommand.ExecuteNonQuery();
 
@@ -1683,7 +1685,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameParameters">Legacy frame parameters</param>
         /// <param name="scanNum">scan number</param>
-        /// <param name="binWidth">Bin width (in ns)</param>
+        /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
         /// <param name="nonZeroCount">Count of non-zero values</param>
         /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
@@ -1722,7 +1724,7 @@ namespace UIMFLibrary
         /// Scan number
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
-        /// <param name="binWidth">Bin width (in ns)</param>
+        /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
         /// <param name="nonZeroCount">Count of non-zero values</param>
         /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
@@ -1761,7 +1763,7 @@ namespace UIMFLibrary
         /// <param name="intensities">Array of intensities, including all zeros</param>
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <returns>Number of non-zero data points</returns>
-        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         public void InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1782,7 +1784,7 @@ namespace UIMFLibrary
         /// <param name="intensities">Array of intensities, including all zeros</param>
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <param name="nonZeroCount">Number of non-zero data points (output)</param>
-        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeroes</remarks>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         public void InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1823,7 +1825,7 @@ namespace UIMFLibrary
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">Scan number</param>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
-        /// <param name="binWidth">Bin width (in ns)</param>
+        /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
         /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
@@ -1850,7 +1852,7 @@ namespace UIMFLibrary
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">Scan number</param>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
-        /// <param name="binWidth">Bin width (in ns)</param>
+        /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
         /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
@@ -2133,10 +2135,10 @@ namespace UIMFLibrary
         /// It is used in the NUnit tests
         /// </summary>
         /// <param name="startFrameNum">
-        /// The start Frame Num.
+        /// The start Frame Number
         /// </param>
         /// <param name="endFrameNum">
-        /// The end Frame Num.
+        /// The end Frame Number
         /// </param>
         public void UpdateFrameType(int startFrameNum, int endFrameNum)
         {

@@ -40,7 +40,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameAndScanInfo"/> class.
@@ -144,7 +144,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 
         /// <summary>
-        /// The get multiple summed mass spectrums test 1.
+        /// Get multiple summed mass spectra test 1.
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -230,7 +230,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var intensities);
 
                 var nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
-                Console.WriteLine("Num xy datapoints = " + nonZeroCount);
+                Console.WriteLine("Number of x/y data points = " + nonZeroCount);
 
                 Assert.AreEqual(1137, nonZeros);
             }

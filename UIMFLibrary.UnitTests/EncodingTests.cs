@@ -151,7 +151,7 @@ namespace UIMFLibrary.UnitTests
                 {
                     if (zeroCount == short.MinValue)
                     {
-                        // Too many zeroes; need to append two points to rlzeDataList to avoid an overflow
+                        // Too many zeros; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add((short)zeroCount);
                         rlzeDataList.Add((short)0); // This is the bug.
                         zeroCount = 0;
@@ -161,7 +161,7 @@ namespace UIMFLibrary.UnitTests
                     zeroCount--;
                 }
             }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
+            // We don't care about any zeros/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             return rlzeDataList.ToArray();
         }

@@ -79,7 +79,7 @@ namespace UIMFLibrary
                 {
                     if (zeroCount == int.MinValue)
                     {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
+                        // Too many zeros; append the current count to rlzeDataList and reset the count to avoid an underflow
                         rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
@@ -88,7 +88,7 @@ namespace UIMFLibrary
                     zeroCount--;
                 }
             }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
+            // We don't care about any zeros/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             spectra = rlzeDataList.ToArray();
             return nonZeroCount;
@@ -115,7 +115,7 @@ namespace UIMFLibrary
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                    // consecutive zeroes to hit the underflow limit
+                    // consecutive zeros to hit the underflow limit
                     // Really, the encoding we are using should never output a zero.
                 }
                 else
@@ -196,7 +196,7 @@ namespace UIMFLibrary
                 {
                     if (zeroCount == short.MinValue)
                     {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
+                        // Too many zeros; append the current count to rlzeDataList and reset the count to avoid an underflow
                         rlzeDataList.Add((short)zeroCount);
                         zeroCount = 0;
                     }
@@ -205,7 +205,7 @@ namespace UIMFLibrary
                     zeroCount--;
                 }
             }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
+            // We don't care about any zeros/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             spectra = rlzeDataList.ToArray();
             return nonZeroCount;
@@ -232,7 +232,7 @@ namespace UIMFLibrary
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                    // consecutive zeroes to hit the underflow limit
+                    // consecutive zeros to hit the underflow limit
                     // Really, the encoding we are using should never output a zero.
                 }
                 else
@@ -313,7 +313,7 @@ namespace UIMFLibrary
                 {
                     if (zeroCount == short.MinValue)
                     {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
+                        // Too many zeros; append the current count to rlzeDataList and reset the count to avoid an underflow
                         rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
@@ -322,7 +322,7 @@ namespace UIMFLibrary
                     zeroCount--;
                 }
             }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
+            // We don't care about any zeros/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             spectra = rlzeDataList.ToArray();
             return nonZeroCount;
@@ -349,7 +349,7 @@ namespace UIMFLibrary
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                    // consecutive zeroes to hit the underflow limit
+                    // consecutive zeros to hit the underflow limit
                     // Really, the encoding we are using should never output a zero.
                 }
                 else
@@ -430,7 +430,7 @@ namespace UIMFLibrary
                 {
                     if (zeroCount == short.MinValue)
                     {
-                        // Too many zeroes; append the current count to rlzeDataList and reset the count to avoid an underflow
+                        // Too many zeros; append the current count to rlzeDataList and reset the count to avoid an underflow
                         rlzeDataList.Add(zeroCount);
                         zeroCount = 0;
                     }
@@ -439,7 +439,7 @@ namespace UIMFLibrary
                     zeroCount--;
                 }
             }
-            // We don't care about any zeroes/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
+            // We don't care about any zeros/zeroCount after the last non-zero value; it's better if we don't append them to rlzeDataList.
 
             spectra = rlzeDataList.ToArray();
             return nonZeroCount;
@@ -466,7 +466,7 @@ namespace UIMFLibrary
                 {
                     // Do nothing: this is to handle an old bug in the run-length zero encoding, that would do a
                     // double-output of a zero (output a zero, and add it to the zero count) if there were enough
-                    // consecutive zeroes to hit the underflow limit
+                    // consecutive zeros to hit the underflow limit
                     // Really, the encoding we are using should never output a zero.
                 }
                 else

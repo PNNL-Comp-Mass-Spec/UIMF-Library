@@ -1116,7 +1116,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// The bin width.
         /// </param>
         /// <param name="correctionTimeForTOF">
-        /// The correction time for tof.
+        /// The correction time for TOF.
         /// </param>
         /// <param name="bin">
         /// The bin.

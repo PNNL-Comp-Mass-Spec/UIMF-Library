@@ -18,7 +18,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MzCalibrator"/> class.
@@ -84,7 +84,7 @@ namespace UIMFLibrary
         /// Convert TOF value to m/z
         /// </summary>
         /// <param name="TOFValue">
-        /// The tof value
+        /// The TOF value
         /// </param>
         /// <returns>
         /// m/z<see cref="double"/>.
@@ -185,7 +185,7 @@ namespace UIMFLibrary
         /// Convert TOF value to m/z
         /// </summary>
         /// <param name="tofValue">
-        /// The tof value
+        /// The TOF value
         /// </param>
         /// <param name="factor">
         /// The scaling factor

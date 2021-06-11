@@ -8,7 +8,7 @@ namespace UIMFLibrary
     using System;
 
     /// <summary>
-    /// Message event args
+    /// Message event arguments
     /// </summary>
     public class MessageEventArgs : EventArgs
     {
@@ -21,7 +21,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageEventArgs"/> class.
@@ -38,7 +38,7 @@ namespace UIMFLibrary
     }
 
     /// <summary>
-    /// FrameNum shift event args
+    /// FrameNum shift event arguments
     /// </summary>
     public class FrameNumShiftEventArgs : EventArgs
     {
@@ -57,7 +57,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameNumShiftEventArgs"/> class.
@@ -74,7 +74,7 @@ namespace UIMFLibrary
     }
 
     /// <summary>
-    /// The progress event args.
+    /// The progress event arguments.
     /// </summary>
     public class ProgressEventArgs : EventArgs
     {
@@ -87,7 +87,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProgressEventArgs"/> class.

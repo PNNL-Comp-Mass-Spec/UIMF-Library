@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <summary>
-//   Create uimf file tests.
+//   Create UIMF file tests.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The create uimf file tests.
+    /// The create UIMF file tests.
     /// </summary>
     [TestFixture]
     public class CreateUIMFFileTests

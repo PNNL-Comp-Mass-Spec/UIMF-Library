@@ -16,7 +16,7 @@ namespace UIMFLibrary
     /// </summary>
     public class SpectrumCache
     {
-        #region Constructors and Destructors
+        #region Constructors
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SpectrumCache"/> class.

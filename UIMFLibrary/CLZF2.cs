@@ -55,7 +55,7 @@ namespace UIMFLibrary
         private const int BUFFER_SIZE_ESTIMATE = 2;
 
         /// <summary>
-        /// Size of hashtable is 2^HLOG bytes.
+        /// Size of hash table is 2^HLOG bytes.
         /// Decompression is independent of the hash table size.
         /// The difference between 15 and 14 is very small
         /// for small blocks (and 14 is usually a bit faster).
@@ -78,12 +78,12 @@ namespace UIMFLibrary
         #region Fields
 
         /// <summary>
-        /// Hashtable, that can be allocated only once.
+        /// Hash table, that can be allocated only once.
         /// </summary>
         private static readonly long[] HashTable = new long[HSIZE];
 
         /// <summary>
-        /// Lock object for access to hashtable so that we can keep things thread safe.
+        /// Lock object for access to the hash table so that we can keep things thread safe.
         /// Still up to the caller to make sure any shared outputBuffer use is thread safe.
         /// </summary>
         private static readonly object locker = new object();
@@ -242,7 +242,7 @@ namespace UIMFLibrary
             var hValue = (uint)((input[inputIndex] << 8) | input[inputIndex + 1]); // FRST(in_data, inputIndex);
             var lit = 0;
 
-            // Lock so we have exclusive access to hashtable.
+            // Lock so we have exclusive access to the hash table.
             lock (locker)
             {
                 Array.Clear(HashTable, 0, (int)HSIZE);

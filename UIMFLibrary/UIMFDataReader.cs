@@ -29,6 +29,12 @@ namespace UIMFLibrary
     /// </summary>
     public class DataReader : UIMFData
     {
+        // ReSharper disable CommentTypo
+
+        // Ignore Spelling: Atreyu, Cond, demultiplexing, floyd, millitorr, nameof, Prescan, Slysz, sql, Thomsons
+
+        // ReSharper restore CommentTypo
+
         #region Constants
 
         /// <summary>
@@ -210,7 +216,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataReader"/> class.
@@ -246,7 +252,7 @@ namespace UIMFLibrary
                 throw new FileNotFoundException("UIMF file not found: " + uimfFileInfo.FullName);
             }
 
-            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in read-only folders
             var connectionString = "Data Source=" + uimfFileInfo.FullName + "; Version=3; DateTimeFormat=Ticks; Read Only=True;";
             mDbConnection = new SQLiteConnection(connectionString, true);
 
@@ -311,7 +317,7 @@ namespace UIMFLibrary
                         GetFrameParams(firstFrameNumber);
                     }
 
-                    // Lookup whether the pressure columns are in torr or mTorr
+                    // Lookup whether the pressure columns are in Torr or mTorr
                     DeterminePressureUnits(firstFrameNumber);
 
                     // Find out if the MS1 Frames are labeled as 0 or 1.
@@ -756,7 +762,7 @@ namespace UIMFLibrary
 
                 try
                 {
-                    // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+                    // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in read-only folders
                     var sTargetConnectionString = "Data Source = " + targetDBPath +
                                                   "; Version=3; DateTimeFormat=Ticks;";
                     var cnTargetDB = new SQLiteConnection(sTargetConnectionString, true);
@@ -1280,7 +1286,7 @@ namespace UIMFLibrary
                 return driftTime;
             }
 
-            // Get the frame pressure (in torr)
+            // Get the frame pressure (in Torr)
             var framePressure = GetFramePressureForCalculationOfDriftTime(frameParams);
 
             if (double.IsNaN(framePressure) || Math.Abs(framePressure) < double.Epsilon)
@@ -1772,7 +1778,7 @@ namespace UIMFLibrary
         /// <param name="frameNumber">
         /// </param>
         /// <returns>
-        /// Frame pressure used in drift time calc
+        /// Frame pressure used in drift time calculation
         /// </returns>
         public double GetFramePressureForCalculationOfDriftTime(int frameNumber)
         {
@@ -1784,7 +1790,7 @@ namespace UIMFLibrary
         /// Gets the frame pressure, which is used when computing normalized drift time
         /// </summary>
         /// <param name="frameParameters"></param>
-        /// <returns>Frame pressure, in torr</returns>
+        /// <returns>Frame pressure, in Torr</returns>
         private double GetFramePressureForCalculationOfDriftTime(FrameParams frameParameters)
         {
             /*
@@ -4515,7 +4521,7 @@ namespace UIMFLibrary
         #region Methods
 
         /// <summary>
-        /// Examines the pressure columns to determine whether they are in torr or mTorr
+        /// Examines the pressure columns to determine whether they are in Torr or mTorr
         /// </summary>
         /// <param name="firstFrameNumber">Frame number of the first frame</param>
         internal void DeterminePressureUnits(int firstFrameNumber)
@@ -5829,7 +5835,7 @@ namespace UIMFLibrary
         /// Raise the error event
         /// </summary>
         /// <param name="e">
-        /// Message event args
+        /// Message event arguments
         /// </param>
         public void OnErrorMessage(MessageEventArgs e)
         {
@@ -5850,7 +5856,7 @@ namespace UIMFLibrary
         /// Raise the message event
         /// </summary>
         /// <param name="e">
-        /// Message event args
+        /// Message event arguments
         /// </param>
         public void OnMessage(MessageEventArgs e)
         {

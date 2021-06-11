@@ -16,16 +16,18 @@ namespace UIMFLibrary.UnitTests
     /// </summary>
     public static class TestUtilities
     {
+        // Ignore Spelling: num
+
         #region Public Methods and Operators
 
         /// <summary>
         /// Display 2D chromatogram.
         /// </summary>
         /// <param name="frameORScanVals">
-        /// The frame or scan vals.
+        /// The frame or scan values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity vals.
+        /// The intensity values
         /// </param>
         public static void Display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
         {
@@ -104,7 +106,7 @@ namespace UIMFLibrary.UnitTests
         }
 
         /// <summary>
-        /// Get the max value in a list of ints
+        /// Get the max value in a list of integers
         /// </summary>
         /// <param name="values">
         /// The values.
@@ -119,7 +121,7 @@ namespace UIMFLibrary.UnitTests
         }
 
         /// <summary>
-        /// Get the max value in a 2D array of ints
+        /// Get the max value in a 2D array of integers
         /// </summary>
         /// <param name="values">
         /// The values.
@@ -159,10 +161,10 @@ namespace UIMFLibrary.UnitTests
         /// Print data as a matrix
         /// </summary>
         /// <param name="frameVals">
-        /// The frame vals.
+        /// The frame values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity vals.
+        /// The intensity values
         /// </param>
         /// <param name="cutoff">
         /// The cutoff.
@@ -198,10 +200,10 @@ namespace UIMFLibrary.UnitTests
         /// Print data as a matrix
         /// </summary>
         /// <param name="frameVals">
-        /// The frame vals.
+        /// The frame values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity vals.
+        /// The intensity values
         /// </param>
         /// <param name="cutoff">
         /// The cutoff.

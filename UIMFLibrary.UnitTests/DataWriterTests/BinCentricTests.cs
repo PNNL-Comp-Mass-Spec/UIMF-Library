@@ -72,7 +72,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
             using (var uimfReader = new DataReader(fiTarget.FullName))
             {
-                // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on a remote UNC share or in readonly folders
+                // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on a remote UNC share or in read-only folders
                 var connectionString = "Data Source = " + fiTarget.FullName;
                 using (var dbConnection = new System.Data.SQLite.SQLiteConnection(connectionString, true))
                 {

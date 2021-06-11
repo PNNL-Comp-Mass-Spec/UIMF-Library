@@ -14,6 +14,8 @@ namespace UIMFLibrary
     /// </summary>
     public static class IntensityConverterCLZF
     {
+        // Ignore Spelling: sizeof
+
         /// <summary>
         /// Convert an array of intensities to a zero run length encoded and LZF compressed byte array
         /// </summary>

@@ -12,7 +12,7 @@ namespace UIMFLibrary
     /// </summary>
     public class IntensityPoint : IComparable<IntensityPoint>
     {
-        #region Constructors and Destructors
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IntensityPoint"/> class.

@@ -117,7 +117,7 @@ namespace UIMFLibrary
                 }
             }
 
-            // resize arrays cutting off the zeroes at the end.
+            // resize arrays cutting off the zeros at the end.
             Array.Resize(ref xData, targetIndex);
             Array.Resize(ref yData, targetIndex);
         }

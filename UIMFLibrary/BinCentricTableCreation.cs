@@ -126,7 +126,7 @@ namespace UIMFLibrary
             // Create the temporary database
             var temporaryDatabaseLocation = CreateTemporaryDatabase(uimfReader, workingDirectory);
 
-            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in read-only folders
             var connectionString = "Data Source=" + temporaryDatabaseLocation + ";";
             using (var temporaryDatabaseConnection = new SQLiteConnection(connectionString, true))
             {
@@ -152,7 +152,7 @@ namespace UIMFLibrary
         /// Raise the error event
         /// </summary>
         /// <param name="e">
-        /// Message event args
+        /// Message event arguments
         /// </param>
         // ReSharper disable once UnusedMember.Global
         public void OnErrorMessage(MessageEventArgs e)
@@ -173,7 +173,7 @@ namespace UIMFLibrary
         /// Raise the message event
         /// </summary>
         /// <param name="e">
-        /// Message event args
+        /// Message event arguments
         /// </param>
         public void OnMessage(MessageEventArgs e)
         {
@@ -191,7 +191,7 @@ namespace UIMFLibrary
         /// Raise the progress event
         /// </summary>
         /// <param name="e">
-        /// Message event args
+        /// Message event arguments
         /// </param>
         public void OnProgressUpdate(ProgressEventArgs e)
         {
@@ -281,7 +281,7 @@ namespace UIMFLibrary
 
             var tablesCreated = 0;
 
-            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in readonly folders
+            // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on UNC or in read-only folders
             using (var connection = new SQLiteConnection(connectionString, true))
             {
                 connection.Open();
@@ -668,6 +668,7 @@ namespace UIMFLibrary
                 // int nlzf = LZFCompressionUtil.Compress(ref byteBuffer, dataCount * 4, ref compressedRecord, compressedRecord.Length);
                 // byte[] spectra = new byte[nlzf];
                 // Array.Copy(compressedRecord, spectra, nlzf);
+
                 insertCommand.Parameters.Add(new SQLiteParameter(":MZ_BIN", binNumber));
                 insertCommand.Parameters.Add(new SQLiteParameter(":INTENSITIES", byteBuffer));
 

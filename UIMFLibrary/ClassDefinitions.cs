@@ -8,6 +8,12 @@ namespace UIMFLibrary
 {
     using System;
 
+    // ReSharper disable CommentTypo
+
+    // Ignore Spelling: Cond, electrospray, Frag, hv, Prescan, M/d/yyyy, hh:mm:ss tt
+
+    // ReSharper restore CommentTypo
+
     /// <summary>
     /// The global parameters.
     /// </summary>
@@ -17,7 +23,7 @@ namespace UIMFLibrary
         #region Fields
 
         /// <summary>
-        ///Width of TOF bins (in ns)
+        ///Width of TOF bins (in nanoseconds)
         /// </summary>
         public double BinWidth;
 
@@ -405,7 +411,7 @@ namespace UIMFLibrary
 
         #endregion
 
-        #region Constructors and Destructors
+        #region Constructors
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameParameters"/> class.
