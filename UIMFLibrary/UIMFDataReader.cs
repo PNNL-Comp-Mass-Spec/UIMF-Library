@@ -5697,6 +5697,7 @@ namespace UIMFLibrary
             // FrameNum, ParamID, ParamValue
 
             var paramID = reader.GetInt32(idColIndex);
+
             // If NULL was stored as the value (for some reason), reader.GetString() will fail. Check for null first.
             string paramValue = null;
             if (!reader.IsDBNull(valueColIndex))
@@ -5712,7 +5713,7 @@ namespace UIMFLibrary
             if (paramValueDynamic == null)
             {
                 throw new InvalidCastException(
-                    string.Format("TestConvertStringToDynamic could not convert value of '{0}' for frame parameter {1} to {2}",
+                    string.Format("ConvertStringToDynamic could not convert value of '{0}' for frame parameter {1} to {2}",
                                   paramValue, paramType, dataType));
             }
 
