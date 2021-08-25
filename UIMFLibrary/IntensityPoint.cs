@@ -89,7 +89,7 @@ namespace UIMFLibrary
         /// Right point
         /// </param>
         /// <returns>
-        /// /// True if the points are not equivalent
+        /// True if the points are not equivalent
         /// </returns>
         public static bool operator !=(IntensityPoint left, IntensityPoint right)
         {

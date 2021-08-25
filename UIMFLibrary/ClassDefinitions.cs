@@ -346,7 +346,7 @@ namespace UIMFLibrary
         /// <summary>
         /// HPF In Voltage
         /// </summary>
-        /// /// <remarks>
+        /// <remarks>
         /// Renamed from voltExitIFTIn to voltExitHPFIn in July 2011
         /// </remarks>
         public double voltExitHPFIn;
@@ -354,7 +354,7 @@ namespace UIMFLibrary
         /// <summary>
         /// HPF Out Voltage
         /// </summary>
-        /// /// <remarks>
+        /// <remarks>
         /// Renamed from voltExitIFTOut to voltExitHPFOut in July 2011
         /// </remarks>
         public double voltExitHPFOut;
