@@ -104,9 +104,9 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
+        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         /// <param name="filePath">Full path to the data file</param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
-        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public DataWriter(string filePath, Assembly entryAssembly)
             : this(filePath, true, entryAssembly)
         {
@@ -116,10 +116,10 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="DataWriter"/> class.
         /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
+        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         /// <param name="filePath">Full path to the data file</param>
         /// <param name="createLegacyParametersTables">When true, create and populate legacy tables Global_Parameters and Frame_Parameters</param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
-        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         public DataWriter(string filePath, bool createLegacyParametersTables = true, Assembly entryAssembly = null)
             : base(filePath)
         {
@@ -414,6 +414,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
+        /// <remarks>
+        /// The Log_Entries table will be created if it doesn't exist
+        /// </remarks>
         /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
@@ -423,9 +426,6 @@ namespace UIMFLibrary
         /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
         public void PostLogEntry(string entryType, string message, string postedBy)
         {
             // Check whether the Log_Entries table needs to be created
@@ -471,6 +471,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
+        /// <remarks>
+        /// The Log_Entries table will be created if it doesn't exist
+        /// </remarks>
         /// <param name="oConnection">
         /// Database connection object
         /// </param>
@@ -483,9 +486,6 @@ namespace UIMFLibrary
         /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
         [Obsolete("Use the non-static PostLogEntry function", true)]
         public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
         {
@@ -1062,11 +1062,11 @@ namespace UIMFLibrary
         /// <summary>
         /// Create the table structure within a UIMF file
         /// </summary>
-        /// <param name="dataType">Data type of intensity in the Frame_Scans table: double, float, short, or int </param>
-        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         /// <remarks>
         /// This must be called after opening a new file to create the default tables that are required for IMS data.
         /// </remarks>
+        /// <param name="dataType">Data type of intensity in the Frame_Scans table: double, float, short, or int </param>
+        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
         public void CreateTables(string dataType = "int", Assembly entryAssembly = null)
         {
             // Detailed information on columns is at
@@ -1123,6 +1123,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Deletes the scans for all frames in the file.  In addition, updates the Scans column to 0 in Frame_Params for all frames.
         /// </summary>
+        /// <remarks>
+        /// As an alternative to using this function, use CloneUIMF() in the DataReader class
+        /// </remarks>
         /// <param name="frameType">
         /// </param>
         /// <param name="updateScanCountInFrameParams">
@@ -1130,9 +1133,6 @@ namespace UIMFLibrary
         /// </param>
         /// <param name="bShrinkDatabaseAfterDelete">
         /// </param>
-        /// <remarks>
-        /// As an alternative to using this function, use CloneUIMF() in the DataReader class
-        /// </remarks>
         public void DeleteAllFrameScans(int frameType, bool updateScanCountInFrameParams, bool bShrinkDatabaseAfterDelete)
         {
             using (var dbCommand = mDbConnection.CreateCommand())
@@ -1313,10 +1313,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Commits the currently open transaction, then starts a new one
         /// </summary>
-        /// <param name="forceFlush">True to force a flush; otherwise, will only flush if the last one was 5 or more seconds ago</param>
         /// <remarks>
         /// Note that a transaction is started when the UIMF file is opened, then committed when the class is disposed
         /// </remarks>
+        /// <param name="forceFlush">True to force a flush; otherwise, will only flush if the last one was 5 or more seconds ago</param>
         public void FlushUimf(bool forceFlush)
         {
             if (forceFlush || DateTime.UtcNow.Subtract(mLastFlush).TotalSeconds >= MINIMUM_FLUSH_INTERVAL_SECONDS)
@@ -1754,6 +1754,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>Insert a new scan using an array of intensities (as integers) along with binWidth</summary>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters">Frame parameters</param>
         /// <param name="scanNum">
@@ -1763,7 +1764,6 @@ namespace UIMFLibrary
         /// <param name="intensities">Array of intensities, including all zeros</param>
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <returns>Number of non-zero data points</returns>
-        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         public void InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1775,6 +1775,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>Insert a new scan using an array of intensities (as integers) along with binWidth</summary>
+        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters">Frame parameters</param>
         /// <param name="scanNum">
@@ -1784,7 +1785,6 @@ namespace UIMFLibrary
         /// <param name="intensities">Array of intensities, including all zeros</param>
         /// <param name="binWidth">Bin width (in nanoseconds, used to compute m/z value of the BPI data point)</param>
         /// <param name="nonZeroCount">Number of non-zero data points (output)</param>
-        /// <remarks>The intensities array should contain an intensity for every bin, including all of the zeros</remarks>
         public void InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1821,6 +1821,7 @@ namespace UIMFLibrary
         /// This method takes in a list of intensity information by bin and converts the data to a run length encoded array
         /// which is later compressed at the byte level for reduced size
         /// </summary>
+        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
         /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">Scan number</param>
@@ -1828,7 +1829,6 @@ namespace UIMFLibrary
         /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
-        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
         [Obsolete("Use the version of InsertScan that takes a list of Tuples")]
         public int InsertScan(
             int frameNumber,
@@ -1848,6 +1848,7 @@ namespace UIMFLibrary
         /// This method takes in a list of intensity information by bin and converts the data to a run length encoded array
         /// which is later compressed at the byte level for reduced size
         /// </summary>
+        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
         /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">FrameParams</param>
         /// <param name="scanNum">Scan number</param>
@@ -1855,7 +1856,6 @@ namespace UIMFLibrary
         /// <param name="binWidth">Bin width (in nanoseconds)</param>
         /// <param name="timeOffset">Time offset</param>
         /// <returns>Non-zero data count<see cref="int"/></returns>
-        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
         public int InsertScan(
             int frameNumber,
             FrameParams frameParameters,
@@ -1908,6 +1908,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for all frames
         /// </summary>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="slope">
         /// The slope value for the calibration.
         /// </param>
@@ -1922,7 +1923,6 @@ namespace UIMFLibrary
         /// Optional argument that should be set to true if manually defining the calibration slope and intercept. Defaults to false.
         /// When true, sets CalibrationDone to -1
         /// </param>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public void UpdateAllCalibrationCoefficients(
             double slope,
             double intercept,
@@ -2002,6 +2002,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for all frames
         /// </summary>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="dBConnection"></param>
         /// <param name="slope">
         /// The slope value for the calibration.
@@ -2012,7 +2013,6 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateAllCalibrationCoefficients.", true)]
         public static void UpdateAllCalibrationCoefficients(
             SQLiteConnection dBConnection,
@@ -2026,6 +2026,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for the given frame
         /// </summary>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="frameNumber">
         /// The frame number to update.
         /// </param>
@@ -2038,7 +2039,6 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         public void UpdateCalibrationCoefficients(int frameNumber, double slope, double intercept, bool isAutoCalibrating = false)
         {
             AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationSlope, slope.ToString(CultureInfo.InvariantCulture));
@@ -2052,6 +2052,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Update the slope and intercept for the given frame
         /// </summary>
+        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="dBConnection"></param>
         /// <param name="frameNumber">
         /// The frame number to update.
@@ -2065,7 +2066,6 @@ namespace UIMFLibrary
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
         /// </param>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateCalibrationCoefficients.")]
         public static void UpdateCalibrationCoefficients(
             SQLiteConnection dBConnection,
@@ -2279,13 +2279,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Add a column to the legacy Frame_Parameters table
         /// </summary>
+        /// <remarks>
+        /// The new column will have Null values for all existing rows
+        /// </remarks>
         /// <param name="parameterName">
         /// </param>
         /// <param name="parameterType">
         /// </param>
-        /// <remarks>
-        /// The new column will have Null values for all existing rows
-        /// </remarks>
         private void AddFrameParameter(string parameterName, string parameterType)
         {
             try
@@ -2339,7 +2339,6 @@ namespace UIMFLibrary
         /// <param name="lstFields">
         /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </param>
-        /// <returns></returns>
         private string GetCreateTableSql(string tableName, IList<Tuple<string, string, string>> lstFields)
         {
             // Construct a SQL Statement of the form

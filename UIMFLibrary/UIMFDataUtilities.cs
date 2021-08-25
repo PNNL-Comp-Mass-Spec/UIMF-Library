@@ -23,7 +23,6 @@ namespace UIMFLibrary
         /// Convert a double to a string, forcing invariant culture
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static string DoubleToString(double value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
@@ -33,7 +32,6 @@ namespace UIMFLibrary
         /// Convert a float to a string, forcing invariant culture
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static string FloatToString(double value)
         {
             return FloatToString((float)value);
@@ -43,7 +41,6 @@ namespace UIMFLibrary
         /// Convert a double to a string, forcing invariant culture
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static string FloatToString(float value)
         {
             if (value - (int)value < float.Epsilon * 2)
@@ -56,7 +53,6 @@ namespace UIMFLibrary
         /// Convert an int to a string, forcing invariant culture
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static string IntToString(double value)
         {
             return IntToString((int)value);
@@ -66,7 +62,6 @@ namespace UIMFLibrary
         /// Convert a int to a string, forcing invariant culture
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static string IntToString(int value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
@@ -126,7 +121,6 @@ namespace UIMFLibrary
         /// Force date string output to an invariant culture format
         /// </summary>
         /// <param name="dateString"></param>
-        /// <returns></returns>
         public static string StandardizeDate(string dateString)
         {
             if (string.IsNullOrWhiteSpace(dateString))
@@ -144,7 +138,6 @@ namespace UIMFLibrary
         /// Force date string output to an invariant culture format
         /// </summary>
         /// <param name="dateValue"></param>
-        /// <returns></returns>
         public static string StandardizeDate(DateTime dateValue)
         {
             if (dateValue > DateTime.MinValue)

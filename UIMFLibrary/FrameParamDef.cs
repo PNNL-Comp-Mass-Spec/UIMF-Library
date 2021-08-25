@@ -329,11 +329,11 @@ namespace UIMFLibrary
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         /// <param name="paramType">Strongly typed enum of the new parameter</param>
         /// <param name="name">Parameter name</param>
         /// <param name="dataType">Parameter .NET data type (as a string)</param>
         /// <param name="description">Parameter description</param>
-        /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         public FrameParamDef(FrameParamKeyType paramType, string name, string dataType, string description = "")
         {
             ParamType = paramType;
@@ -361,11 +361,11 @@ namespace UIMFLibrary
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         /// <param name="paramType">Strongly typed enum of the new parameter</param>
         /// <param name="name">Parameter name</param>
         /// <param name="dataType">Parameter .NET data type (as a Type)</param>
         /// <param name="description">Parameter description</param>
-        /// <remarks>Does not verify that paramID is a valid member of FrameParamKeyType</remarks>
         public FrameParamDef(FrameParamKeyType paramType, string name, Type dataType, string description = "")
         {
             ParamType = paramType;
@@ -377,7 +377,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Clone this frame parameter definition (deep copy)
         /// </summary>
-        /// <returns></returns>
         // ReSharper disable once UnusedMember.Global
         public FrameParamDef CopyTo()
         {
@@ -388,7 +387,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Customized ToString()
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return ParamType + " (" + DataType + ")";

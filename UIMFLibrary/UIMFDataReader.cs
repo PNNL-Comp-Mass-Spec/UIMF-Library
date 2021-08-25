@@ -393,6 +393,7 @@ namespace UIMFLibrary
         /// Looks for the given column on the given table in the SqLite database
         /// Note that table names are case sensitive
         /// </summary>
+        /// <remarks>This function does not work with Views; use method TableHasColumn instead</remarks>
         /// <param name="uimfConnection">
         /// </param>
         /// <param name="tableName">
@@ -403,7 +404,6 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the column exists<see cref="bool"/>.
         /// </returns>
-        /// <remarks>This function does not work with Views; use method TableHasColumn instead</remarks>
         [Obsolete("Use method TableHasColumn", true)]
         public static bool ColumnExists(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
@@ -504,6 +504,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Retrieves a given frame (or frames) and sums them in order to be viewed on a heat map view or other 2D representation visually.
         /// </summary>
+        /// <remarks>
+        /// This function is used by the UIMF Viewer and by Atreyu
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// </param>
         /// <param name="endFrameNumber">
@@ -525,9 +528,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Frame data to be utilized in visualization as a multidimensional array
         /// </returns>
-        /// <remarks>
-        /// This function is used by the UIMF Viewer and by Atreyu
-        /// </remarks>
         public double[,] AccumulateFrameData(
             int startFrameNumber,
             int endFrameNumber,
@@ -1071,6 +1071,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts BPI from startFrame to endFrame and startScan to endScan and returns an array
         /// </summary>
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="frameType">Frame type
         /// </param>
         /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
@@ -1084,9 +1087,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Array of intensity values, one per frame
         /// </returns>
-        /// <remarks>
-        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public double[] GetBPI(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, BPI);
@@ -1095,6 +1095,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts BPI (base peak intensity, aka the largest intensity) from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
         /// </summary>
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// If startFrameNumber and endFrameNumber are 0, then returns all frames
         /// </param>
@@ -1110,9 +1113,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the BPI value
         /// </returns>
-        /// <remarks>
-        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public SortedDictionary<int, double> GetBPIByFrame(
             int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
@@ -1130,6 +1130,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts BPI from startFrame to endFrame and startScan to endScan and returns a dictionary of the specified frame type
         /// </summary>
+        /// <remarks>
+        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// If startFrameNumber and endFrameNumber are 0, then returns all frames
         /// </param>
@@ -1148,9 +1151,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the BPI value
         /// </returns>
-        /// <remarks>
-        /// To obtain BPI values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public SortedDictionary<int, double> GetBPIByFrame(
             int startFrameNumber,
             int endFrameNumber,
@@ -1458,13 +1458,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns the frame numbers for the specified frame_type
         /// </summary>
+        /// <remarks>Use GetMasterFrameList() to obtain all of the frame numbers, regardless of frameType</remarks>
         /// <param name="frameType">
         /// The frame Type.
         /// </param>
         /// <returns>
         /// Array of frame numbers
         /// </returns>
-        /// <remarks>Use GetMasterFrameList() to obtain all of the frame numbers, regardless of frameType</remarks>
         public int[] GetFrameNumbers(FrameType frameType)
         {
             var frameNumberList = new List<int>();
@@ -1681,7 +1681,6 @@ namespace UIMFLibrary
         /// Get frame parameters
         /// </summary>
         /// <param name="frameNumber"></param>
-        /// <returns></returns>
         public FrameParams GetFrameParams(int frameNumber)
         {
             if (frameNumber < 0)
@@ -2577,8 +2576,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Constructs a dictionary that has the frame numbers as the key and the frame type as the value.
         /// </summary>
-        /// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
         /// <remarks>The first frame should be Frame Number 1</remarks>
+        /// <returns>Returns a dictionary object that has frame number as the key and frame type as the value.</returns>
         public Dictionary<int, FrameType> GetMasterFrameList()
         {
             var masterFrameDictionary = new Dictionary<int, FrameType>();
@@ -2684,13 +2683,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the minimum TOF bin arrival time value for the given pixel bin
         /// </summary>
+        /// <remarks>The function name is misleading; does not return an m/z</remarks>
         /// <param name="bin">
         /// Bin number
         /// </param>
         /// <returns>
         /// TOF bin arrive time<see cref="double"/>.
         /// </returns>
-        /// <remarks>The function name is misleading; does not return an m/z</remarks>
         [Obsolete("Misleading name. Use GetBinForPixel(pixel)")]
         public double GetPixelMZ(int bin)
         {
@@ -3397,6 +3396,9 @@ namespace UIMFLibrary
         /// Each entry into mzArray will be the m/z value that contained a non-zero intensity value.
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// The start frame number of the desired spectrum.
         /// </param>
@@ -3428,9 +3430,6 @@ namespace UIMFLibrary
         /// <returns>
         /// The number of non-zero m/z values found in the resulting spectrum.
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public int GetSpectrumBinCentric(
             int startFrameNumber,
             int endFrameNumber,
@@ -3527,6 +3526,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns an array
         /// </summary>
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="frameType">Frame type
         /// </param>
         /// <param name="startFrameNumber">Start frame number (if startFrameNumber and endFrameNumber are zero, then sum across all frames)
@@ -3540,9 +3542,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Array of intensity values, one per frame
         /// </returns>
-        /// <remarks>
-        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public double[] GetTIC(FrameType frameType, int startFrameNumber, int endFrameNumber, int startScan, int endScan)
         {
             return GetTicOrBpi(frameType, startFrameNumber, endFrameNumber, startScan, endScan, TIC);
@@ -3583,6 +3582,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns a dictionary for all frames
         /// </summary>
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// If startFrameNumber and endFrameNumber are 0, then returns all frames
         /// </param>
@@ -3598,9 +3600,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the TIC value
         /// </returns>
-        /// <remarks>
-        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public SortedDictionary<int, double> GetTICByFrame(
             int startFrameNumber, int endFrameNumber,
             int startScan, int endScan)
@@ -3618,6 +3617,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Extracts TIC from startFrame to endFrame and startScan to endScan and returns a dictionary of the specified frame type
         /// </summary>
+        /// <remarks>
+        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
+        /// </remarks>
         /// <param name="startFrameNumber">
         /// If startFrameNumber and endFrameNumber are 0, then returns all frames
         /// </param>
@@ -3636,9 +3638,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Dictionary where keys are frame number and values are the TIC value
         /// </returns>
-        /// <remarks>
-        /// To obtain TIC values for all scans in a given Frame, use GetFrameScans
-        /// </remarks>
         public SortedDictionary<int, double> GetTICByFrame(
             int startFrameNumber,
             int endFrameNumber,
@@ -3659,6 +3658,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the extracted ion chromatogram at the given bin for the specified frame type
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="targetBin">
         /// Target bin number
         /// </param>
@@ -3668,9 +3670,6 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public List<IntensityPoint> GetXic(int targetBin, FrameType frameType)
         {
             if (!mDoesContainBinCentricData)
@@ -3734,6 +3733,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the extracted ion chromatogram for a given m/z for the specified frame type
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="targetMz">
         /// Target mz.
         /// </param>
@@ -3749,9 +3751,6 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public List<IntensityPoint> GetXic(
             double targetMz,
             double tolerance,
@@ -3839,6 +3838,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the extracted ion chromatogram for a given m/z for the specified frame type, limiting by frame range and scan range
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="targetMz">
         /// Target mz.
         /// </param>
@@ -3862,9 +3864,6 @@ namespace UIMFLibrary
         /// <returns>
         /// IntensityPoint list
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public List<IntensityPoint> GetXic(
             double targetMz,
             double tolerance,
@@ -3973,6 +3972,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the extracted ion chromatogram for a given m/z for the specified frame type
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="targetMz">
         /// Target mz.
         /// </param>
@@ -3988,9 +3990,6 @@ namespace UIMFLibrary
         /// <returns>
         /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public double[,] GetXicAsArray(double targetMz, double tolerance, FrameType frameType,
                                        ToleranceType toleranceType)
         {
@@ -4067,6 +4066,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the extracted ion chromatogram for a given m/z for the specified frame type, limiting by frame range and scan range
         /// </summary>
+        /// <remarks>
+        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
+        /// </remarks>
         /// <param name="targetMz">
         /// Target mz.
         /// </param>
@@ -4094,9 +4096,6 @@ namespace UIMFLibrary
         /// <returns>
         /// 2D array of XIC values; dimensions are frame, scan
         /// </returns>
-        /// <remarks>
-        /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
-        /// </remarks>
         public double[,] GetXicAsArray(
             double targetMz,
             double tolerance,
@@ -4452,6 +4451,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Post a new log entry to table Log_Entries
         /// </summary>
+        /// <remarks>
+        /// The Log_Entries table will be created if it doesn't exist
+        /// </remarks>
         /// <param name="entryType">
         /// Log entry type (typically Normal, Error, or Warning)
         /// </param>
@@ -4461,9 +4463,6 @@ namespace UIMFLibrary
         /// <param name="postedBy">
         /// Process or application posting the log message
         /// </param>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
         [Obsolete("Use the PostLogEntry function in the DataWriter class", true)]
         public void PostLogEntry(string entryType, string message, string postedBy)
         {
@@ -4678,6 +4677,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Check whether a pressure param contains milliTorr values
         /// </summary>
+        /// <remarks>
+        /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
+        /// If the average is greater than 100, then we assume the values are milliTorr
+        /// </remarks>
         /// <param name="cmd">
         /// SQLiteCommand object
         /// </param>
@@ -4687,10 +4690,6 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the pressure column in the given table is in milliTorr<see cref="bool"/>.
         /// </returns>
-        /// <remarks>
-        /// This is an empirical check where we compute the average of the first 25 non-zero pressure values
-        /// If the average is greater than 100, then we assume the values are milliTorr
-        /// </remarks>
         private bool ColumnIsMilliTorr(IDbCommand cmd, FrameParamKeyType paramType)
         {
             var isMillitorr = false;
@@ -4727,6 +4726,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Remove zero-intensity entries from parallel arrays
         /// </summary>
+        /// <typeparam name="T">
+        /// </typeparam>
         /// <param name="nonZeroCount">
         /// Non zero count.
         /// </param>
@@ -4736,8 +4737,6 @@ namespace UIMFLibrary
         /// <param name="yDataArray">
         /// y data array.
         /// </param>
-        /// <typeparam name="T">
-        /// </typeparam>
         private static void StripZerosFromArrays<T>(int nonZeroCount, ref T[] xDataArray, ref int[] yDataArray)
         {
             var xArrayList = new List<T>(nonZeroCount);

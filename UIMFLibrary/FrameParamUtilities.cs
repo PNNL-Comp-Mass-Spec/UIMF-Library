@@ -43,7 +43,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="value"></param>
         /// <param name="convertedValue"></param>
-        /// <returns></returns>
         public static bool ConvertDynamicToDouble(dynamic value, out double convertedValue)
         {
             if (value is double || value is float || value is int || value is short || value is byte)
@@ -78,7 +77,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="value"></param>
         /// <param name="convertedValue"></param>
-        /// <returns></returns>
         public static bool ConvertDynamicToInt32(dynamic value, out int convertedValue)
         {
             if (value is int || value is short || value is byte)
@@ -328,14 +326,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Convert the string value to a dynamic variable of the given type
         /// </summary>
-        /// <param name="targetType"></param>
-        /// <param name="value"></param>
-        /// <param name="returnNullOnError">When true, return null if the conversion fails; when false, return the value as a string</param>
-        /// <returns></returns>
         /// <remarks>
         /// Supports byte, short, int, float, double, and DateTime
         /// All other types will continue to be strings
         /// </remarks>
+        /// <param name="targetType"></param>
+        /// <param name="value"></param>
+        /// <param name="returnNullOnError">When true, return null if the conversion fails; when false, return the value as a string</param>
         public static dynamic ConvertStringToDynamic(Type targetType, string value, bool returnNullOnError = true)
         {
             try
@@ -443,7 +440,6 @@ namespace UIMFLibrary
         /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
         /// </summary>
         /// <param name="frameParamsByType"></param>
-        /// <returns></returns>
         [Obsolete("Superseded by ConvertDynamicParamsToFrameParams")]
         // ReSharper disable once UnusedMember.Global
         public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
@@ -462,7 +458,6 @@ namespace UIMFLibrary
         /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
         /// </summary>
         /// <param name="frameParamsByType"></param>
-        /// <returns></returns>
         public static FrameParams ConvertDynamicParamsToFrameParams(Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
         {
             var frameParams = new FrameParams();
@@ -479,7 +474,6 @@ namespace UIMFLibrary
         /// Get the default value for the data type associated with the given frame param key
         /// </summary>
         /// <param name="paramType"></param>
-        /// <returns></returns>
         public static dynamic GetDefaultValueByType(FrameParamKeyType paramType)
         {
             var dataType = GetFrameParamKeyDataType(paramType);
@@ -489,9 +483,8 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the default value for the given data type
         /// </summary>
-        /// <param name="dataType"></param>
-        /// <returns></returns>
         /// <remarks>This method is used by this class and by GlobalParamUtilities</remarks>
+        /// <param name="dataType"></param>
         public static dynamic GetDefaultValueByType(Type dataType)
         {
             if (!dataType.IsValueType)
@@ -512,7 +505,6 @@ namespace UIMFLibrary
         /// Get the system data type associated with a given frame parameter key
         /// </summary>
         /// <param name="paramType"></param>
-        /// <returns></returns>
         public static Type GetFrameParamKeyDataType(FrameParamKeyType paramType)
         {
             if (mFrameParamKeyTypes.Count == 0)
@@ -785,9 +777,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Obtain a frame parameter definition instance given a parameter key type enum value
         /// </summary>
+        /// <remarks>Will include the official parameter name, description, and data type for the given param key</remarks>
         /// <param name="paramType">Param key type enum</param>
         /// <returns><see cref="FrameParamDef"/> instance</returns>
-        /// <remarks>Will include the official parameter name, description, and data type for the given param key</remarks>
         public static FrameParamDef GetParamDefByType(FrameParamKeyType paramType)
         {
             var targetType = GetFrameParamKeyDataType(paramType);

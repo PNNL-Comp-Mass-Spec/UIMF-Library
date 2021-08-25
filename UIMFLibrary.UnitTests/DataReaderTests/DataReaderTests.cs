@@ -920,11 +920,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// <summary>
         /// Test DataReader.ColumnExists
         /// </summary>
+        /// <remarks>Note that the ColumnExists method does not work with views</remarks>
         /// <param name="filePath"></param>
         /// <param name="tableName"></param>
         /// <param name="columnName"></param>
         /// <param name="columnExistsExpected"></param>
-        /// <remarks>Note that the ColumnExists method does not work with views</remarks>
         [Test]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NumFrames", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NoColumn", false)]

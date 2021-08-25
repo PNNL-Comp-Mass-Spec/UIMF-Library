@@ -168,9 +168,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the value for a parameter
         /// </summary>
+        /// <remarks>Returns an empty string if not defined</remarks>
         /// <param name="paramType">Parameter type</param>
         /// <returns>Value (dynamic)</returns>
-        /// <remarks>Returns an empty string if not defined</remarks>
         public dynamic GetValue(GlobalParamKeyType paramType)
         {
             var defaultValue = GlobalParamUtilities.GetDefaultValueByType(paramType);
@@ -196,9 +196,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the value for a parameter
         /// </summary>
+        /// <remarks>Returns 0 if not defined</remarks>
         /// <param name="paramType">Parameter type</param>
         /// <returns>Value (double)</returns>
-        /// <remarks>Returns 0 if not defined</remarks>
         public double GetValueDouble(GlobalParamKeyType paramType)
         {
             return GetValueDouble(paramType, 0.0);
@@ -224,9 +224,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the value for a parameter
         /// </summary>
+        /// <remarks>Returns 0 if not defined</remarks>
         /// <param name="paramType">Parameter type</param>
         /// <returns>Value (int)</returns>
-        /// <remarks>Returns 0 if not defined</remarks>
         public int GetValueInt32(GlobalParamKeyType paramType)
         {
             return GetValueInt32(paramType, 0);

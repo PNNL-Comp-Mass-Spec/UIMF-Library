@@ -9,6 +9,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Convert a list of intensity information by bin to a zero length encoded byte array
         /// </summary>
+        /// <remarks>
+        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
+        /// </remarks>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
         /// <param name="timeOffset">Time offset</param>
         /// <param name="spectra">Spectra intensity bytes (output)</param>
@@ -18,9 +21,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Number of non-zero data points
         /// </returns>
-        /// <remarks>
-        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
-        /// </remarks>
         [Obsolete("Use the version of Encode that takes a list of Tuples")]
         public static int Encode(
             IList<KeyValuePair<int, int>> binToIntensityMap,
@@ -39,6 +39,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Convert a list of intensity information by bin to a zero length encoded byte array
         /// </summary>
+        /// <remarks>
+        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
+        /// </remarks>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
         /// <param name="timeOffset">Time offset</param>
         /// <param name="spectra">Spectra intensity bytes (output)</param>
@@ -48,9 +51,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Number of non-zero data points
         /// </returns>
-        /// <remarks>
-        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
-        /// </remarks>
         public static int Encode(
             IList<Tuple<int, int>> binToIntensityMap,
             int timeOffset,
@@ -119,6 +119,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Convert a list of intensity information by bin to a zero length encoded byte array
         /// </summary>
+        /// <remarks>
+        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
+        /// </remarks>
         /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
         /// <param name="timeOffset">Time offset</param>
         /// <param name="spectra">Spectra intensity bytes (output)</param>
@@ -128,9 +131,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Number of non-zero data points
         /// </returns>
-        /// <remarks>
-        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
-        /// </remarks>
         public static int Encode(
             IList<(int, int)> binToIntensityMap,
             int timeOffset,

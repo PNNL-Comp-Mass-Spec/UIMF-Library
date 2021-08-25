@@ -50,7 +50,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Customized ToString()
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return Value == null ? Definition.ToString() : Value.ToString();

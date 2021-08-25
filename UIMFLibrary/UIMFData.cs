@@ -224,10 +224,10 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="UIMFData"/> class.
         /// Constructor for UIMF DataWriter that takes the filename and begins the transaction.
         /// </summary>
+        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         /// <param name="fileName">
         /// Full path to the data file
         /// </param>
-        /// <remarks>When creating a brand new .UIMF file, you must call CreateTables() after instantiating the writer</remarks>
         protected UIMFData(string fileName)
         {
             mErrMessageCounter = 0;
@@ -339,7 +339,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Return the global parameters <see cref="GlobalParams"/>
         /// </summary>
-        /// <returns></returns>
         public GlobalParams GetGlobalParams()
         {
             return GlobalParameters;
@@ -390,6 +389,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Check whether a table has a specific column
         /// </summary>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// However, an exception is thrown if the table does not exist
+        /// </remarks>
         /// <param name="tableName">
         /// Table name.
         /// </param>
@@ -399,10 +402,6 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the table or view has the specified column<see cref="bool"/>.
         /// </returns>
-        /// <remarks>
-        /// This method works properly with tables that have no rows of data
-        /// However, an exception is thrown if the table does not exist
-        /// </remarks>
         public bool TableHasColumn(string tableName, string columnName)
         {
             return TableHasColumn(mDbConnection, tableName, columnName);
@@ -631,6 +630,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Check whether a table has a column
         /// </summary>
+        /// <remarks>
+        /// This method works properly with tables that have no rows of data
+        /// However, an exception is thrown if the table does not exist
+        /// </remarks>
         /// <param name="uimfConnection">
         /// SQLite connection
         /// </param>
@@ -643,10 +646,6 @@ namespace UIMFLibrary
         /// <returns>
         /// True if the table or view has the specified column<see cref="bool"/>.
         /// </returns>
-        /// <remarks>
-        /// This method works properly with tables that have no rows of data
-        /// However, an exception is thrown if the table does not exist
-        /// </remarks>
         public static bool TableHasColumn(SQLiteConnection uimfConnection, string tableName, string columnName)
         {
             bool hasColumn;
@@ -831,7 +830,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static bool GetBoolean(IDataRecord reader, string fieldName)
         {
             return Convert.ToBoolean(reader[fieldName], mCultureInfoUS);
@@ -842,7 +840,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static double GetDouble(IDataRecord reader, string fieldName)
         {
             return Convert.ToDouble(reader[fieldName], mCultureInfoUS);
@@ -853,7 +850,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static short GetInt16(IDataRecord reader, string fieldName)
         {
             return Convert.ToInt16(reader[fieldName], mCultureInfoUS);
@@ -864,7 +860,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static int GetInt32(IDataRecord reader, string fieldName)
         {
             return Convert.ToInt32(reader[fieldName], mCultureInfoUS);
@@ -875,7 +870,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static float GetSingle(IDataRecord reader, string fieldName)
         {
             return Convert.ToSingle(reader[fieldName], mCultureInfoUS);
@@ -886,7 +880,6 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldName"></param>
-        /// <returns></returns>
         protected internal static string GetString(IDataRecord reader, string fieldName)
         {
             return Convert.ToString(reader[fieldName], mCultureInfoUS);
@@ -1035,7 +1028,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns true if the Frame_Params table exists
         /// </summary>
-        /// <returns></returns>
         private bool CheckHasFrameParamsTable()
         {
             return CheckHasTable(UIMFTableType.FrameParams, FRAME_PARAMS_TABLE);
@@ -1044,7 +1036,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns true if the Global_Params table exists
         /// </summary>
-        /// <returns></returns>
         private bool CheckHasGlobalParamsTable()
         {
             return CheckHasTable(UIMFTableType.GlobalParams, GLOBAL_PARAMS_TABLE);
@@ -1053,7 +1044,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns true if the Global_Parameters table exists
         /// </summary>
-        /// <returns></returns>
         private bool CheckHasLegacyParameterTables()
         {
             return CheckHasTable(UIMFTableType.LegacyGlobalParameters, GLOBAL_PARAMETERS_TABLE);
@@ -1080,7 +1070,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns true if the Version_Info table exists
         /// </summary>
-        /// <returns></returns>
         private bool CheckHasVersionInfoTable()
         {
             return CheckHasTable(UIMFTableType.VersionInfo, VERSION_INFO_TABLE);
@@ -1231,10 +1220,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Gets the field names for the Frame_Params table
         /// </summary>
+        /// <remarks>This table has a dual-column primary key, enforced using an index</remarks>
         /// <returns>
         /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
         /// </returns>
-        /// <remarks>This table has a dual-column primary key, enforced using an index</remarks>
         protected internal List<Tuple<string, string, string>> GetFrameParamsFields()
         {
             var lstFields = new List<Tuple<string, string, string>>
@@ -1462,7 +1451,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Get the last VersionInfo row stored in the Version_Info table
         /// </summary>
-        /// <returns></returns>
         public VersionInfo GetLastVersionInfo()
         {
             return GetVersionInfo().Last();
@@ -1586,7 +1574,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns true if the legacy global parameters table exists and the Global_Params table does not
         /// </summary>
-        /// <returns></returns>
         private bool UsingLegacyGlobalParams()
         {
             var usingLegacyParams = TableExists(GLOBAL_PARAMETERS_TABLE);

@@ -103,7 +103,6 @@ namespace UIMFLibrary_Demo
         /// Search for a .uimf file in the current directory and all subdirectories
         /// If not files are found, move up one level and try again
         /// </summary>
-        /// <returns></returns>
         private static DirectoryInfo FindDirectoryWithUimfFile()
         {
             // Look for the first directory with a UIMF file

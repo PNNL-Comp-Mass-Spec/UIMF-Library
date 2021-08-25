@@ -189,10 +189,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Shift the frame number for the frames in frameNums, shifting down by decrementAmount
         /// </summary>
+        /// <remarks>Used by RenumberFrames when adjusting frames to start at frame 1 and to not have any gaps</remarks>
         /// <param name="dbCommand"></param>
         /// <param name="frameNums"></param>
         /// <param name="decrementAmount"></param>
-        /// <remarks>Used by RenumberFrames when adjusting frames to start at frame 1 and to not have any gaps</remarks>
         private void ShiftFramesInBatch(IDbCommand dbCommand, IReadOnlyList<int> frameNums, int decrementAmount)
         {
             if (frameNums.Count == 0)

@@ -88,7 +88,6 @@ namespace UIMFLibrary
         /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
         /// </summary>
         /// <param name="GlobalParamsByType"></param>
-        /// <returns></returns>
         [Obsolete("Superseded by ConvertDynamicParamsToGlobalParams")]
         // ReSharper disable once UnusedMember.Global
         public static GlobalParams ConvertStringParamsToGlobalParams(Dictionary<GlobalParamKeyType, string> GlobalParamsByType)
@@ -107,7 +106,6 @@ namespace UIMFLibrary
         /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
         /// </summary>
         /// <param name="GlobalParamsByType"></param>
-        /// <returns></returns>
         public static GlobalParams ConvertDynamicParamsToGlobalParams(Dictionary<GlobalParamKeyType, dynamic> GlobalParamsByType)
         {
             var globalParams = new GlobalParams();
@@ -123,9 +121,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Lookup the official .NET data type given the string name of a data type
         /// </summary>
+        /// <remarks>Returns System.Object if not match</remarks>
         /// <param name="alias"></param>
         /// <returns>Official .NET data type</returns>
-        /// <remarks>Returns System.Object if not match</remarks>
         public static string GetDataTypeFromAlias(string alias)
         {
             if (mDataTypeAliasMap.TryGetValue(alias, out var systemDataType))
@@ -139,7 +137,6 @@ namespace UIMFLibrary
         /// Get the default value for the data type associated with the given frame param key
         /// </summary>
         /// <param name="paramType"></param>
-        /// <returns></returns>
         public static dynamic GetDefaultValueByType(GlobalParamKeyType paramType)
         {
             var dataType = GetGlobalParamKeyDataType(paramType);
@@ -150,7 +147,6 @@ namespace UIMFLibrary
         /// Get the system data type associated with a given global parameter key
         /// </summary>
         /// <param name="paramType"></param>
-        /// <returns></returns>
         public static Type GetGlobalParamKeyDataType(GlobalParamKeyType paramType)
         {
             if (mGlobalParamKeyTypes.Count == 0)

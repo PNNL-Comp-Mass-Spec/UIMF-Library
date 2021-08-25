@@ -23,6 +23,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Initializes a new instance of the <see cref="MzCalibrator"/> class.
         /// </summary>
+        /// <remarks>
+        /// mass = (k * (t-t0))^2
+        /// </remarks>
         /// <param name="k">
         /// k
         /// </param>
@@ -32,9 +35,6 @@ namespace UIMFLibrary
         /// <param name="binWidthNs">
         /// bin width, in nanoseconds
         /// </param>
-        /// <remarks>
-        /// mass = (k * (t-t0))^2
-        /// </remarks>
         public MzCalibrator(double k, double t0, double binWidthNs = 1)
         {
             K = k;
@@ -120,7 +120,6 @@ namespace UIMFLibrary
         /// Convert from a bin number to a TOF value
         /// </summary>
         /// <param name="bin"></param>
-        /// <returns></returns>
         public double BinToTOF(double bin)
         {
             return bin * TenthsOfNanoSecondsPerBin;
@@ -130,7 +129,6 @@ namespace UIMFLibrary
         /// Convert from a TOF value to bin number
         /// </summary>
         /// <param name="TOF"></param>
-        /// <returns></returns>
         public double TOFtoBin(double TOF)
         {
             return TOF / TenthsOfNanoSecondsPerBin;
@@ -147,6 +145,9 @@ namespace UIMFLibrary
         /// <summary>
         /// Initializes a new instance of the <see cref="MzCalibratorFtms"/> class.
         /// </summary>
+        /// <remarks>
+        /// mass = (k * (t-t0))^2
+        /// </remarks>
         /// <param name="k">
         /// k
         /// </param>
@@ -156,9 +157,6 @@ namespace UIMFLibrary
         /// <param name="binWidthNs">
         /// bin width, in nanoseconds
         /// </param>
-        /// <remarks>
-        /// mass = (k * (t-t0))^2
-        /// </remarks>
         public MzCalibratorFtms(double k, double t0, double binWidthNs = 1) : base(k, t0, binWidthNs)
         {
         }
