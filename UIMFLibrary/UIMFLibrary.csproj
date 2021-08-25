@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;net461;net47</TargetFrameworks>
+    <TargetFrameworks>net45;net461;net472;net48</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
-    <Version>3.7.6.0</Version>
+    <Version>3.7.7.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
