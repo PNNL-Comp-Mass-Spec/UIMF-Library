@@ -115,7 +115,7 @@ namespace UIMFLibrary
             return nonZeroCount;
         }
 
-#if NET47
+#if NET472
         /// <summary>
         /// Convert a list of intensity information by bin to a zero length encoded byte array
         /// </summary>

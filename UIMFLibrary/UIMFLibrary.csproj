@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;net461;net472;net48</TargetFrameworks>
+    <!-- net45 and net461 match support by System.Data.SQLite.Core; net472 is to support a ValueTuple method in IntensityBinConverterInt32 -->
+    <TargetFrameworks>net45;net461;net472</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
     <Version>3.7.7.0</Version>
@@ -23,7 +24,7 @@
   <PropertyGroup Condition="'$(Configuration)'=='Experimental_Release'">
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net45' OR '$(TargetFramework)'=='net461' OR '$(TargetFramework)'=='net47'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net45' OR '$(TargetFramework)'=='net461' OR '$(TargetFramework)'=='net472'">
     <!-- Needed for use of the 'dynamic' type -->
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
@@ -40,9 +41,6 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="IntensityConverterCLZF.tt">
