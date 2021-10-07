@@ -12,6 +12,8 @@ The UIMFLibrary is available on NuGet at:
 
 ### Continuous Integration
 
+The latest version of the application may be available on the [AppVeyor CI server](https://ci.appveyor.com/project/PNNLCompMassSpec/uimf-library/build/artifacts), 
+but builds are deleted after 6 months. \
 [![Build status](https://ci.appveyor.com/api/projects/status/fe9k281a3r5s1ec3?svg=true)](https://ci.appveyor.com/project/PNNLCompMassSpec/uimf-library)
 
 ## How to use the UIMFLibrary in C#:
@@ -225,7 +227,7 @@ Contributors include: \
 Kevin Crowell, Bill Danielson, Bryson Gibbons, Matthew Monroe, Spencer Prost, Yan Shi, Anuj Shah, Gordon Slysz
 
 E-mail: matthew.monroe@pnnl.gov or proteomics@pnl.gov \
-Website: http://omics.pnl.gov/software/
+Website: https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library
 
 ## License
 
