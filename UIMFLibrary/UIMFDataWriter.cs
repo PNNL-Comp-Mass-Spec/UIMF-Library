@@ -469,30 +469,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Post a new log entry to table Log_Entries
-        /// </summary>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
-        /// <param name="oConnection">
-        /// Database connection object
-        /// </param>
-        /// <param name="entryType">
-        /// Log entry type (typically Normal, Error, or Warning)
-        /// </param>
-        /// <param name="message">
-        /// Log message
-        /// </param>
-        /// <param name="postedBy">
-        /// Process or application posting the log message
-        /// </param>
-        [Obsolete("Use the non-static PostLogEntry function", true)]
-        public static void PostLogEntry(SQLiteConnection oConnection, string entryType, string message, string postedBy)
-        {
-            throw new Exception("Static PostLogEntry is obsolete, use non-static PostLogEntry");
-        }
-
-        /// <summary>
         /// Creates the Global_Parameters and Frame_Parameters tables using existing data in tables Global_Params and Frame_Params
         /// </summary>
         /// <remarks>Does not add any values if the legacy tables already exist</remarks>
@@ -1354,7 +1330,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="frameParameters">
         /// </param>
-        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with 'Dictionary<FrameParamKeyType, dynamic> frameParameters'")]
+        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with 'Dictionary<FrameParamKeyType, dynamic> frameParameters'", true)]
         public void InsertFrame(FrameParameters frameParameters)
         {
             var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
@@ -1441,7 +1417,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <param name="globalParameters">
         /// </param>
-        [Obsolete("Use AddUpdateGlobalParameter or use InsertGlobal with 'GlobalParams globalParameters'")]
+        [Obsolete("Use AddUpdateGlobalParameter or use InsertGlobal with 'GlobalParams globalParameters'", true)]
         public void InsertGlobal(GlobalParameters globalParameters)
         {
             var globalParams = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
@@ -1691,7 +1667,7 @@ namespace UIMFLibrary
         /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
         /// <param name="tic">Total ion intensity</param>
         /// <param name="spectra">Mass spectra intensities</param>
-        [Obsolete("Use InsertScanStoreBytes that accepts a FrameParams object")]
+        [Obsolete("Use InsertScanStoreBytes that accepts a FrameParams object", true)]
         // ReSharper disable once UnusedMember.Local
         private void InsertScanStoreBytes(
             FrameParameters frameParameters,
@@ -1815,33 +1791,6 @@ namespace UIMFLibrary
             nonZeroCount = IntensityConverterCLZF.Compress(intensities.ToList(), out var spectrum, out var tic, out var bpi, out var indexOfMaxIntensity);
 
             InsertScanStoreBytes(frameNumber, frameParameters, scanNum, binWidth, indexOfMaxIntensity, nonZeroCount, (int)bpi, (long)tic, spectrum);
-        }
-
-        /// <summary>
-        /// This method takes in a list of intensity information by bin and converts the data to a run length encoded array
-        /// which is later compressed at the byte level for reduced size
-        /// </summary>
-        /// <remarks>Assumes that all data in binToIntensityMap has positive (non-zero) intensities</remarks>
-        /// <param name="frameNumber">Frame number</param>
-        /// <param name="frameParameters">FrameParams</param>
-        /// <param name="scanNum">Scan number</param>
-        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
-        /// <param name="binWidth">Bin width (in nanoseconds)</param>
-        /// <param name="timeOffset">Time offset</param>
-        /// <returns>Non-zero data count<see cref="int"/></returns>
-        [Obsolete("Use the version of InsertScan that takes a list of Tuples")]
-        public int InsertScan(
-            int frameNumber,
-            FrameParams frameParameters,
-            int scanNum,
-            IList<KeyValuePair<int, int>> binToIntensityMap,
-            double binWidth,
-            int timeOffset)
-        {
-            var binToIntensityMapCopy = new List<Tuple<int, int>>(binToIntensityMap.Count);
-            binToIntensityMapCopy.AddRange(binToIntensityMap.Select(item => new Tuple<int, int>(item.Key, item.Value)));
-
-            return InsertScan(frameNumber, frameParameters, scanNum, binToIntensityMapCopy, binWidth, timeOffset);
         }
 
         /// <summary>
@@ -2000,30 +1949,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Update the slope and intercept for all frames
-        /// </summary>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
-        /// <param name="dBConnection"></param>
-        /// <param name="slope">
-        /// The slope value for the calibration.
-        /// </param>
-        /// <param name="intercept">
-        /// The intercept for the calibration.
-        /// </param>
-        /// <param name="isAutoCalibrating">
-        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
-        /// </param>
-        [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateAllCalibrationCoefficients.", true)]
-        public static void UpdateAllCalibrationCoefficients(
-            SQLiteConnection dBConnection,
-            double slope,
-            double intercept,
-            bool isAutoCalibrating = false)
-        {
-            throw new Exception("Static UpdateAllCalibrationCoefficients is obsolete, use non-static UpdateAllCalibrationCoefficients");
-        }
-
-        /// <summary>
         /// Update the slope and intercept for the given frame
         /// </summary>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
@@ -2046,73 +1971,6 @@ namespace UIMFLibrary
             if (isAutoCalibrating)
             {
                 AddUpdateFrameParameter(frameNumber, FrameParamKeyType.CalibrationDone, "1");
-            }
-        }
-
-        /// <summary>
-        /// Update the slope and intercept for the given frame
-        /// </summary>
-        /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
-        /// <param name="dBConnection"></param>
-        /// <param name="frameNumber">
-        /// The frame number to update.
-        /// </param>
-        /// <param name="slope">
-        /// The slope value for the calibration.
-        /// </param>
-        /// <param name="intercept">
-        /// The intercept for the calibration.
-        /// </param>
-        /// <param name="isAutoCalibrating">
-        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
-        /// </param>
-        [Obsolete("Instantiate a DataWriter, and use the non-static version of UpdateCalibrationCoefficients.")]
-        public static void UpdateCalibrationCoefficients(
-            SQLiteConnection dBConnection,
-            int frameNumber,
-            double slope,
-            double intercept,
-            bool isAutoCalibrating = false)
-        {
-            throw new Exception("Static UpdateCalibrationCoefficients is obsolete, use non-static UpdateCalibrationCoefficients");
-        }
-
-        /// <summary>
-        /// Add or update a the value of a given parameter in a frame
-        /// </summary>
-        /// <param name="frameNumber">
-        /// </param>
-        /// <param name="parameterName">
-        /// </param>
-        /// <param name="parameterValue">
-        /// </param>
-        [Obsolete("Use AddUpdateFrameParameter")]
-        public void UpdateFrameParameter(int frameNumber, string parameterName, string parameterValue)
-        {
-            // Resolve parameter name to param key
-            var paramType = FrameParamUtilities.GetParamTypeByName(parameterName);
-
-            if (paramType == FrameParamKeyType.Unknown)
-                throw new ArgumentOutOfRangeException(nameof(parameterName), "Unrecognized parameter name " + parameterName + "; cannot update");
-
-            AddUpdateFrameParameter(frameNumber, paramType, parameterValue);
-        }
-
-        /// <summary>
-        /// Update frame parameters using parallel lists
-        /// </summary>
-        /// <param name="frameNumber">Frame number</param>
-        /// <param name="parameters">List of parameter names</param>
-        /// <param name="values">List of values</param>
-        [Obsolete("Use AddUpdateFrameParameter")]
-        public void UpdateFrameParameters(int frameNumber, List<string> parameters, List<string> values)
-        {
-            for (var i = 0; i < parameters.Count - 1; i++)
-            {
-                if (i >= values.Count)
-                    break;
-
-                UpdateFrameParameter(frameNumber, parameters[i], values[i]);
             }
         }
 
@@ -2147,15 +2005,6 @@ namespace UIMFLibrary
                 var frameType = i % 4 == 0 ? 1 : 2;
                 AddUpdateFrameParameter(i, FrameParamKeyType.FrameType, frameType.ToString(CultureInfo.InvariantCulture));
             }
-        }
-
-        /// <summary>
-        /// Assures that NumFrames in the Global_Params table matches the number of frames in the Frame_Params table
-        /// </summary>
-        [Obsolete("Use UpdateGlobalStats")]
-        public void UpdateGlobalFrameCount()
-        {
-            UpdateGlobalStats();
         }
 
         /// <summary>

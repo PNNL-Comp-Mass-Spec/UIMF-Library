@@ -88,24 +88,6 @@ namespace UIMFLibrary
         /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
         /// </summary>
         /// <param name="GlobalParamsByType"></param>
-        [Obsolete("Superseded by ConvertDynamicParamsToGlobalParams")]
-        // ReSharper disable once UnusedMember.Global
-        public static GlobalParams ConvertStringParamsToGlobalParams(Dictionary<GlobalParamKeyType, string> GlobalParamsByType)
-        {
-            var globalParams = new GlobalParams();
-
-            foreach (var paramItem in GlobalParamsByType)
-            {
-                globalParams.AddUpdateValue(paramItem.Key, paramItem.Value);
-            }
-
-            return globalParams;
-        }
-
-        /// <summary>
-        /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
-        /// </summary>
-        /// <param name="GlobalParamsByType"></param>
         public static GlobalParams ConvertDynamicParamsToGlobalParams(Dictionary<GlobalParamKeyType, dynamic> GlobalParamsByType)
         {
             var globalParams = new GlobalParams();

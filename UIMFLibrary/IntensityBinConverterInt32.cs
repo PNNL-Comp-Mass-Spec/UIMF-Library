@@ -21,36 +21,6 @@ namespace UIMFLibrary
         /// <returns>
         /// Number of non-zero data points
         /// </returns>
-        [Obsolete("Use the version of Encode that takes a list of Tuples")]
-        public static int Encode(
-            IList<KeyValuePair<int, int>> binToIntensityMap,
-            int timeOffset,
-            out byte[] spectra,
-            out double tic,
-            out double bpi,
-            out int binNumberMaxIntensity)
-        {
-            var binToIntensityMapCopy = new List<Tuple<int, int>>(binToIntensityMap.Count);
-            binToIntensityMapCopy.AddRange(binToIntensityMap.Select(item => new Tuple<int, int>(item.Key, item.Value)));
-
-            return Encode(binToIntensityMapCopy, timeOffset, out spectra, out tic, out bpi, out binNumberMaxIntensity);
-        }
-
-        /// <summary>
-        /// Convert a list of intensity information by bin to a zero length encoded byte array
-        /// </summary>
-        /// <remarks>
-        /// This function assumes that all data in binToIntensityMap has positive (non-zero) intensities
-        /// </remarks>
-        /// <param name="binToIntensityMap">Keys are bin numbers and values are intensity values; intensity values are assumed to all be non-zero</param>
-        /// <param name="timeOffset">Time offset</param>
-        /// <param name="spectra">Spectra intensity bytes (output)</param>
-        /// <param name="tic">TIC (output)</param>
-        /// <param name="bpi">Base peak intensity (output)</param>
-        /// <param name="binNumberMaxIntensity">Bin number of the BPI</param>
-        /// <returns>
-        /// Number of non-zero data points
-        /// </returns>
         public static int Encode(
             IList<Tuple<int, int>> binToIntensityMap,
             int timeOffset,

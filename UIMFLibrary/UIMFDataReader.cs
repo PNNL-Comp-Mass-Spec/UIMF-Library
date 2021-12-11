@@ -360,12 +360,6 @@ namespace UIMFLibrary
         #region Public Properties
 
         /// <summary>
-        /// The connection to the SQLite database
-        /// </summary>
-        [Obsolete("Use a DataWriter to write!", true)]
-        public SQLiteConnection DBConnection => mDbConnection;
-
-        /// <summary>
         /// Whether the database has a "FrameParams" table
         /// </summary>
         public new bool HasFrameParamsTable => !mUsingLegacyFrameParameters;
@@ -388,73 +382,6 @@ namespace UIMFLibrary
         #endregion
 
         #region Public Methods and Operators
-
-        /// <summary>
-        /// Looks for the given column on the given table in the SqLite database
-        /// Note that table names are case sensitive
-        /// </summary>
-        /// <remarks>This function does not work with Views; use method TableHasColumn instead</remarks>
-        /// <param name="uimfConnection">
-        /// </param>
-        /// <param name="tableName">
-        /// </param>
-        /// <param name="columnName">
-        /// The column Name.
-        /// </param>
-        /// <returns>
-        /// True if the column exists<see cref="bool"/>.
-        /// </returns>
-        [Obsolete("Use method TableHasColumn", true)]
-        public static bool ColumnExists(SQLiteConnection uimfConnection, string tableName, string columnName)
-        {
-            using (
-                var cmd = new SQLiteCommand(uimfConnection)
-                {
-                    // Lookup the table creation SQL, for example (newlines added here for readability):
-                    //  CREATE TABLE Global_Parameters (
-                    //   DateStarted STRING,
-                    //   NumFrames INT(4) NOT NULL,
-                    //   BinWidth DOUBLE NOT NULL,
-                    //   Bins INT(4) NOT NULL,
-                    //   TOFCorrectionTime FLOAT NOT NULL,
-                    //   TOFIntensityType TEXT NOT NULL,
-                    //   DatasetType TEXT,
-                    //   Prescan_Continuous BOOL)
-                    CommandText =
-                        "SELECT sql FROM sqlite_master WHERE type='table' And tbl_name = '"
-                        + tableName + "'"
-                })
-            {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        var sql = reader.GetString(0);
-
-                        // Replace the first open parentheses with a comma
-                        var charIndex = sql.IndexOf("(", StringComparison.Ordinal);
-                        if (charIndex > 0)
-                        {
-                            sql = sql.Substring(0, charIndex - 1) + ',' + sql.Substring(charIndex + 1);
-                        }
-
-                        // Extract the column names using a RegEx
-                        // This RegEx assumes the column names do not have spaces
-                        var reColumns = new Regex(@", *([\w()0-9]+)", RegexOptions.Compiled);
-                        var reMatches = reColumns.Matches(sql);
-
-                        var lstColumns = (from Match reMatch in reMatches select reMatch.Groups[1].Value).ToList();
-
-                        if (lstColumns.Contains(columnName))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
 
         /// <summary>
         /// Compute the spacing between the two midpoint bins in a given frame
@@ -1254,7 +1181,7 @@ namespace UIMFLibrary
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <returns>Drift time (milliseconds)</returns>
-        [Obsolete("For clarity, use GetDriftTime with parameter normalizeByPressure")]
+        [Obsolete("For clarity, use GetDriftTime with parameter normalizeByPressure", true)]
         public double GetDriftTime(int frameNum, int scanNum)
         {
             return GetDriftTime(frameNum, scanNum, normalizeByPressure: true);
@@ -1522,7 +1449,7 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        [Obsolete("Use GetFrameParams instead")]
+        [Obsolete("Use GetFrameParams instead", true)]
         public FrameParameters GetFrameParameters(int frameNumber)
         {
             if (frameNumber < 0)
@@ -2162,190 +2089,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Gets a set of intensity values that will be used for demultiplexing.
-        /// Optionally limit the bin range using binStart and binEnd
-        /// </summary>
-        /// <param name="frameNumber">
-        /// The frame where the intensity data should come from.
-        /// </param>
-        /// <param name="frameType">
-        /// The type of frame the intensity data should come from.
-        /// </param>
-        /// <param name="segmentLength">
-        /// The length of the demultiplexing segment.
-        /// </param>
-        /// <param name="scanToIndexMap">
-        /// The map that defines the re-ordering process of demultiplexing. Can be empty or null if doReorder is false.
-        /// </param>
-        /// <param name="doReorder">
-        /// Whether to re-order the data or not. This can be used to speed up the demultiplexing process.
-        /// </param>
-        /// <param name="numFramesToSum">
-        /// Number of frames to sum. Must be an odd number greater than 0.
-        /// e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.
-        /// </param>
-        /// <param name="pagingFilterStartBin">
-        /// Start bin for filtering data; ignored if pagingFilterCount is 0
-        /// </param>
-        /// <param name="pagingFilterCount">
-        /// Number of bins to return when using pagingFilterStartBin
-        /// </param>
-        /// <returns>
-        ///  Array of intensities for a given frame; dimensions are bin and scan
-        /// </returns>
-        [Obsolete("Moved to UIMFDemultiplexer.UIMFDemultiplexer")]
-        public double[][] GetIntensityBlockForDemultiplexing(
-            int frameNumber,
-            FrameType frameType,
-            int segmentLength,
-            Dictionary<int, int> scanToIndexMap,
-            bool doReorder,
-            int numFramesToSum = 1,
-            int pagingFilterStartBin = 0,
-            int pagingFilterCount = 0)
-        {
-            if (numFramesToSum < 1 || numFramesToSum % 2 != 1)
-            {
-                throw new Exception(
-                    "Number of frames to sum must be an odd number greater than 0;" +
-                    "e.g. numFramesToSum of 3 will be +- 1 around the given frameNumber.");
-            }
-
-            // This will be the +- number of frames
-            var numFramesAroundCenter = numFramesToSum / 2;
-
-            var frameParams = GetFrameParams(frameNumber);
-
-            var minFrame = frameNumber - numFramesAroundCenter;
-            var maxFrame = frameNumber + numFramesAroundCenter;
-
-            // Keep track of the total number of frames so we can alter intensity values
-            double totalFrames = 1;
-
-            // Make sure we are grabbing frames only with the given frame type
-            for (var i = frameNumber + 1; i <= maxFrame; i++)
-            {
-                if (maxFrame > GlobalParameters.NumFrames)
-                {
-                    maxFrame = i - 1;
-                    break;
-                }
-
-                var testFrameParams = GetFrameParams(i);
-
-                if (testFrameParams.FrameType == frameType)
-                {
-                    totalFrames++;
-                }
-                else
-                {
-                    maxFrame++;
-                }
-            }
-
-            for (var i = frameNumber - 1; i >= minFrame; i--)
-            {
-                if (minFrame < 1)
-                {
-                    minFrame = i + 1;
-                    break;
-                }
-
-                var testFrameParams = GetFrameParams(i);
-
-                if (testFrameParams.FrameType == frameType)
-                {
-                    totalFrames++;
-                }
-                else
-                {
-                    minFrame--;
-                }
-            }
-
-            var divisionFactor = 1 / totalFrames;
-
-            int startBin;
-            int endBin;
-            var numBins = GlobalParameters.Bins;
-
-            if (pagingFilterCount > 0)
-            {
-                // Limited bin range
-                startBin = pagingFilterStartBin;
-                endBin = pagingFilterStartBin + pagingFilterCount - 1;
-                numBins = pagingFilterCount;
-            }
-            else
-            {
-                startBin = 0;
-                endBin = numBins - 1;
-            }
-
-            var numScans = frameParams.Scans;
-
-            // The number of scans has to be divisible by the given segment length
-            if (numScans % segmentLength != 0)
-            {
-                throw new Exception(
-                    "Number of scans of " + numScans + " is not divisible by the given segment length of " +
-                    segmentLength);
-            }
-
-            // Initialize the intensities 2-D array
-            var intensities = new double[numBins][];
-            for (var i = 0; i < numBins; i++)
-            {
-                intensities[i] = new double[numScans];
-            }
-
-            // Now setup queries to retrieve data
-            mGetSpectrumCommand.Parameters.Clear();
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", minFrame));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", maxFrame));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
-
-            using (var reader = mGetSpectrumCommand.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    var compressedBinIntensity = (byte[])reader["Intensities"];
-                    var scanNum = GetInt32(reader, "ScanNum");
-                    ValidateScanNumber(scanNum);
-
-                    if (compressedBinIntensity.Length == 0)
-                    {
-                        continue;
-                    }
-
-                    var binIntensities = IntensityConverterCLZF.Decompress(compressedBinIntensity, out int _);
-
-                    foreach (var binIntensity in binIntensities)
-                    {
-                        var binIndex = binIntensity.Item1;
-                        if (binIndex >= startBin && binIndex <= endBin)
-                        {
-                            var targetBinIndex = binIndex - startBin;
-
-                            if (doReorder)
-                            {
-                                intensities[targetBinIndex][scanToIndexMap[scanNum]] += binIntensity.Item2 * divisionFactor;
-                            }
-                            else
-                            {
-                                intensities[targetBinIndex][scanNum] += binIntensity.Item2 * divisionFactor;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return intensities;
-        }
-
-        /// <summary>
         /// Get intensity values by bin for a frame
         /// </summary>
         /// <param name="frameNumber">
@@ -2690,7 +2433,7 @@ namespace UIMFLibrary
         /// <returns>
         /// TOF bin arrive time<see cref="double"/>.
         /// </returns>
-        [Obsolete("Misleading name. Use GetBinForPixel(pixel)")]
+        [Obsolete("Misleading name. Use GetBinForPixel(pixel)", true)]
         public double GetPixelMZ(int bin)
         {
             return GetBinForPixel(bin);
@@ -4446,73 +4189,6 @@ namespace UIMFLibrary
             }
 
             return iFrameTypeCount == iFrameTypeCountCalibrated;
-        }
-
-        /// <summary>
-        /// Post a new log entry to table Log_Entries
-        /// </summary>
-        /// <remarks>
-        /// The Log_Entries table will be created if it doesn't exist
-        /// </remarks>
-        /// <param name="entryType">
-        /// Log entry type (typically Normal, Error, or Warning)
-        /// </param>
-        /// <param name="message">
-        /// Log message
-        /// </param>
-        /// <param name="postedBy">
-        /// Process or application posting the log message
-        /// </param>
-        [Obsolete("Use the PostLogEntry function in the DataWriter class", true)]
-        public void PostLogEntry(string entryType, string message, string postedBy)
-        {
-            // Obsolete because this writes to the connection, which is now read-only
-            throw new Exception("DataReader.PostLogEntry is obsolete, use DataWriter.PostLogEntry");
-        }
-
-        /// <summary>
-        /// Update the calibration coefficients for all frames
-        /// </summary>
-        /// <param name="slope">
-        /// The slope value for the calibration.
-        /// </param>
-        /// <param name="intercept">
-        /// The intercept for the calibration.
-        /// </param>
-        /// <param name="isAutoCalibrating">
-        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
-        /// </param>
-        [Obsolete("Use the UpdateAllCalibrationCoefficients function in the DataWriter class", true)]
-        public void UpdateAllCalibrationCoefficients(double slope, double intercept, bool isAutoCalibrating = false)
-        {
-            // Obsolete because this writes to the connection, which is now read-only
-            throw new Exception("DataReader.UpdateAllCalibrationCoefficients is obsolete, use DataWriter.UpdateAllCalibrationCoefficients");
-        }
-
-        /// <summary>
-        /// Update the calibration coefficients for a single frame
-        /// </summary>
-        /// <param name="frameNumber">
-        /// The frame number to update.
-        /// </param>
-        /// <param name="slope">
-        /// The slope value for the calibration.
-        /// </param>
-        /// <param name="intercept">
-        /// The intercept for the calibration.
-        /// </param>
-        /// <param name="isAutoCalibrating">
-        /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
-        /// </param>
-        [Obsolete("Use the UpdateCalibrationCoefficients function in the DataWriter class")]
-        public void UpdateCalibrationCoefficients(
-            int frameNumber,
-            double slope,
-            double intercept,
-            bool isAutoCalibrating = false)
-        {
-            // Obsolete because this writes to the connection, which is now read-only
-            throw new Exception("DataReader.UpdateCalibrationCoefficients is obsolete, use DataWriter.UpdateCalibrationCoefficients");
         }
 
         #endregion

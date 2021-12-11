@@ -440,24 +440,6 @@ namespace UIMFLibrary
         /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
         /// </summary>
         /// <param name="frameParamsByType"></param>
-        [Obsolete("Superseded by ConvertDynamicParamsToFrameParams")]
-        // ReSharper disable once UnusedMember.Global
-        public static FrameParams ConvertStringParamsToFrameParams(Dictionary<FrameParamKeyType, string> frameParamsByType)
-        {
-            var frameParams = new FrameParams();
-
-            foreach (var paramItem in frameParamsByType)
-            {
-                frameParams.AddUpdateValue(paramItem.Key, paramItem.Value);
-            }
-
-            return frameParams;
-        }
-
-        /// <summary>
-        /// Convert a frame parameter dictionary to an instance of the <see cref="FrameParams"/> class
-        /// </summary>
-        /// <param name="frameParamsByType"></param>
         public static FrameParams ConvertDynamicParamsToFrameParams(Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
         {
             var frameParams = new FrameParams();

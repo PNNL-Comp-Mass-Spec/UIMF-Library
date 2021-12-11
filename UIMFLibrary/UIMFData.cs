@@ -330,7 +330,7 @@ namespace UIMFLibrary
         /// <returns>
         /// Global parameters class<see cref="GlobalParameters"/>.
         /// </returns>
-        [Obsolete("Use GetGlobalParams")]
+        [Obsolete("Use GetGlobalParams", true)]
         public GlobalParameters GetGlobalParameters()
         {
             return GlobalParamUtilities.GetLegacyGlobalParameters(GlobalParameters);
@@ -1087,7 +1087,7 @@ namespace UIMFLibrary
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
-        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object")]
+        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object", true)]
         public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
         {
             // mz = (k * (t-t0))^2
