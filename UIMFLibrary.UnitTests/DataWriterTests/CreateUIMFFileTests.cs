@@ -86,7 +86,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 for (var frameNum = 1; frameNum <= frameCountToWrite; frameNum++)
                 {
-                    var fp = new FrameParams();
+                    var fp = new FrameParams(frameNum);
 
                     fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFData.FrameType.MS1)
                       .AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481)

@@ -6,7 +6,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Design", "RCS1075:Avoid empty catch clause that catches System.Exception.", Justification = "Ignore here", Scope = "member", Target = "~M:UIMFLibrary.UIMFData.GetGlobalParametersFromTable(System.Data.SQLite.SQLiteConnection)~UIMFLibrary.GlobalParameters")]
 [assembly: SuppressMessage("General", "RCS1079:Throwing of new NotImplementedException.", Justification = "Ignore here", Scope = "member", Target = "~M:UIMFLibrary.DataReader.GetUpperLowerBinsFromMz(System.Int32,System.Double,System.Double)~System.Int32[]")]
 [assembly: SuppressMessage("Readability", "RCS1123:Add parentheses when necessary.", Justification = "Parentheses not needed", Scope = "member", Target = "~M:UIMFLibrary.BinCentricTableCreation.CreateIndexes(System.String,System.Int32)")]
 [assembly: SuppressMessage("Readability", "RCS1123:Add parentheses when necessary.", Justification = "Parentheses not needed", Scope = "member", Target = "~M:UIMFLibrary.BinCentricTableCreation.CreateTemporaryDatabase(UIMFLibrary.DataReader,System.String)~System.String")]

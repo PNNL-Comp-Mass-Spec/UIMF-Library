@@ -521,7 +521,7 @@ namespace UIMFLibrary
 
                 foreach (var frameParams in frameParamsList)
                 {
-                    InsertLegacyFrameParams(frameParams.Key, frameParams.Value);
+                    InsertLegacyFrameParams(frameParams.Value);
                 }
             }
 
@@ -566,14 +566,7 @@ namespace UIMFLibrary
 
                             if (rowCount < 1)
                             {
-#pragma warning disable 612, 618
-                                var legacyFrameParameters = new FrameParameters
-                                {
-                                    FrameNum = frameNum
-                                };
-#pragma warning restore 612, 618
-
-                                InitializeFrameParametersRow(legacyFrameParameters);
+                                InitializeFrameParametersRow(new FrameParams(frameNum));
                             }
                             mFrameNumsInLegacyFrameParametersTable.Add(frameNum);
                         }
@@ -1421,13 +1414,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Insert a row into the legacy Frame_Parameters table
         /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-#pragma warning disable 612, 618
-        private void InitializeFrameParametersRow(FrameParameters frameParameters)
-#pragma warning restore 612, 618
+        /// <param name="frameParameters"></param>
+        private void InitializeFrameParametersRow(FrameParams frameParameters)
         {
-            if (mFrameNumsInLegacyFrameParametersTable.Contains(frameParameters.FrameNum))
+            if (mFrameNumsInLegacyFrameParametersTable.Contains(frameParameters.FrameNumber))
             {
                 // Row already exists; don't try to re-add it
                 return;
@@ -1439,17 +1429,17 @@ namespace UIMFLibrary
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Clear();
 
             // Frame number (primary key)
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNum));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FrameNum", frameParameters.FrameNumber));
 
             // Start time of frame, in minutes
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.StartTime));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":StartTime", frameParameters.GetValueDouble(FrameParamKeyType.StartTimeMinutes)));
 
             // Duration of frame, in seconds
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.Duration));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Duration", frameParameters.GetValueDouble(FrameParamKeyType.DurationSeconds)));
 
             // Number of collected and summed acquisitions in a frame
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":Accumulations", frameParameters.Accumulations));
+                new SQLiteParameter(":Accumulations", frameParameters.GetValueInt32(FrameParamKeyType.Accumulations)));
 
             // Bitmap: 0=MS (Legacy); 1=MS (Regular); 2=MS/MS (Frag); 3=Calibration; 4=Prescan
             // See also the FrameType enum in the UIMFData class
@@ -1459,146 +1449,155 @@ namespace UIMFLibrary
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Scans", frameParameters.Scans));
 
             // IMFProfile Name; this stores the name of the sequence used to encode the data when acquiring data multiplexed
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.IMFProfile));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":IMFProfile", frameParameters.GetValueString(FrameParamKeyType.MultiplexingEncodingSequence)));
 
             // Number of TOF Losses
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.TOFLosses));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":TOFLosses", frameParameters.GetValueDouble(FrameParamKeyType.TOFLosses)));
 
             // Average time between TOF trigger pulses
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":AverageTOFLength", frameParameters.AverageTOFLength));
+                new SQLiteParameter(":AverageTOFLength", frameParameters.GetValueDouble(FrameParamKeyType.AverageTOFLength)));
 
             // Value of k0
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":CalibrationSlope", frameParameters.CalibrationSlope));
+                new SQLiteParameter(":CalibrationSlope", frameParameters.GetValueDouble(FrameParamKeyType.CalibrationSlope)));
 
             // Value of t0
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":CalibrationIntercept", frameParameters.CalibrationIntercept));
+                new SQLiteParameter(":CalibrationIntercept", frameParameters.GetValueDouble(FrameParamKeyType.CalibrationIntercept)));
 
             // These six parameters below are coefficients for residual mass error correction
             //   ResidualMassError=a2t+b2t^3+c2t^5+d2t^7+e2t^9+f2t^11
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":a2", frameParameters.a2));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":b2", frameParameters.b2));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":c2", frameParameters.c2));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":d2", frameParameters.d2));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":e2", frameParameters.e2));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":f2", frameParameters.f2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":a2", frameParameters.MassCalibrationCoefficients.a2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":b2", frameParameters.MassCalibrationCoefficients.b2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":c2", frameParameters.MassCalibrationCoefficients.c2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":d2", frameParameters.MassCalibrationCoefficients.d2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":e2", frameParameters.MassCalibrationCoefficients.e2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":f2", frameParameters.MassCalibrationCoefficients.f2));
 
             // Ambient temperature
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.Temperature));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Temperature", frameParameters.GetValueDouble(FrameParamKeyType.AmbientTemperature)));
 
             // Voltage setting in the IMS system
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.voltHVRack1));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack1", frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack1)));
 
             // Voltage setting in the IMS system
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.voltHVRack2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack2", frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack2)));
 
             // Voltage setting in the IMS system
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.voltHVRack3));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack3", frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack3)));
 
             // Voltage setting in the IMS system
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.voltHVRack4));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltHVRack4", frameParameters.GetValueDouble(FrameParamKeyType.VoltHVRack4)));
 
             // Capillary Inlet Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.voltCapInlet));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCapInlet", frameParameters.GetValueDouble(FrameParamKeyType.VoltCapInlet)));
 
             // HPF In Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltEntranceHPFIn", frameParameters.voltEntranceHPFIn));
+                new SQLiteParameter(":voltEntranceHPFIn", frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceHPFIn)));
 
             // HPF Out Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltEntranceHPFOut", frameParameters.voltEntranceHPFOut));
+                new SQLiteParameter(":voltEntranceHPFOut", frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceHPFOut)));
 
             // Cond Limit Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltEntranceCondLmt", frameParameters.voltEntranceCondLmt));
+                new SQLiteParameter(":voltEntranceCondLmt", frameParameters.GetValueDouble(FrameParamKeyType.VoltEntranceCondLmt)));
 
             // Trap Out Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.voltTrapOut));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltTrapOut", frameParameters.GetValueDouble(FrameParamKeyType.VoltTrapOut)));
 
             // Trap In Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.voltTrapIn));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltTrapIn", frameParameters.GetValueDouble(FrameParamKeyType.VoltTrapIn)));
 
             // Jet Disruptor Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.voltJetDist));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltJetDist", frameParameters.GetValueDouble(FrameParamKeyType.VoltJetDist)));
 
             // Fragmentation Quadrupole Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.voltQuad1));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltQuad1", frameParameters.GetValueDouble(FrameParamKeyType.VoltQuad1)));
 
             // Fragmentation Conductance Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.voltCond1));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCond1", frameParameters.GetValueDouble(FrameParamKeyType.VoltCond1)));
 
             // Fragmentation Quadrupole Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.voltQuad2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltQuad2", frameParameters.GetValueDouble(FrameParamKeyType.VoltQuad2)));
 
             // Fragmentation Conductance Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.voltCond2));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltCond2", frameParameters.GetValueDouble(FrameParamKeyType.VoltCond2)));
 
             // IMS Out Voltage
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.voltIMSOut));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":voltIMSOut", frameParameters.GetValueDouble(FrameParamKeyType.VoltIMSOut)));
 
             // HPF In Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltExitHPFIn", frameParameters.voltExitHPFIn));
+                new SQLiteParameter(":voltExitHPFIn", frameParameters.GetValueDouble(FrameParamKeyType.VoltExitHPFIn)));
 
             // HPF Out Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltExitHPFOut", frameParameters.voltExitHPFOut));
+                new SQLiteParameter(":voltExitHPFOut", frameParameters.GetValueDouble(FrameParamKeyType.VoltExitHPFOut)));
 
             // Cond Limit Voltage
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":voltExitCondLmt", frameParameters.voltExitCondLmt));
+                new SQLiteParameter(":voltExitCondLmt", frameParameters.GetValueDouble(FrameParamKeyType.VoltExitCondLmt)));
 
             // Pressure at front of Drift Tube
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":PressureFront", frameParameters.PressureFront));
+                new SQLiteParameter(":PressureFront", frameParameters.GetValueDouble(FrameParamKeyType.PressureFront)));
 
             // Pressure at back of Drift Tube
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.PressureBack));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":PressureBack", frameParameters.GetValueDouble(FrameParamKeyType.PressureBack)));
 
             // Determines original size of bit sequence
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.MPBitOrder));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":MPBitOrder", frameParameters.GetValueInt32(FrameParamKeyType.MPBitOrder)));
 
             // Voltage profile used in fragmentation
             // Convert the array of doubles to an array of bytes
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":FragmentationProfile", FrameParamUtilities.ConvertToBlob(frameParameters.FragmentationProfile)));
+            var fragProfile = frameParameters.GetValueString(FrameParamKeyType.FragmentationProfile, string.Empty);
+            var fragArray = new double[0];
+            if (!string.IsNullOrEmpty(fragProfile))
+            {
+                // The fragmentation profile was stored as an array of bytes, encoded as base 64
+
+                // Convert back to bytes
+                var byteArray = Convert.FromBase64String(fragProfile);
+
+                // Now convert from array of bytes to array of doubles
+                fragArray = FrameParamUtilities.ConvertByteArrayToFragmentationSequence(byteArray);
+            }
 
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":HPPressure", frameParameters.HighPressureFunnelPressure));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":IPTrapPressure", frameParameters.IonFunnelTrapPressure));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":RIFunnelPressure", frameParameters.RearIonFunnelPressure));
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":QuadPressure", frameParameters.QuadrupolePressure));
+                new SQLiteParameter(":FragmentationProfile", FrameParamUtilities.ConvertToBlob(fragArray)));
 
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.ESIVoltage));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
+                new SQLiteParameter(":HPPressure", frameParameters.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure)));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
+                new SQLiteParameter(":IPTrapPressure", frameParameters.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure)));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
+                new SQLiteParameter(":RIFunnelPressure", frameParameters.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure)));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
+                new SQLiteParameter(":QuadPressure", frameParameters.GetValueDouble(FrameParamKeyType.QuadrupolePressure)));
 
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.FloatVoltage));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":ESIVoltage", frameParameters.GetValueDouble(FrameParamKeyType.ESIVoltage)));
+
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":FloatVoltage", frameParameters.GetValueDouble(FrameParamKeyType.FloatVoltage)));
 
             // Set to 1 after a frame has been calibrated
             mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(
-                new SQLiteParameter(":CalibrationDone", frameParameters.CalibrationDone));
+                new SQLiteParameter(":CalibrationDone", frameParameters.GetValueInt32(FrameParamKeyType.CalibrationDone)));
 
             // Set to 1 after a frame has been decoded (added June 27, 2011)
-            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.Decoded));
+            mDbCommandInsertLegacyFrameParameterRow.Parameters.Add(new SQLiteParameter(":Decoded", frameParameters.GetValueInt32(FrameParamKeyType.Decoded)));
 
             mDbCommandInsertLegacyFrameParameterRow.ExecuteNonQuery();
 
-            mFrameNumsInLegacyFrameParametersTable.Add(frameParameters.FrameNum);
+            mFrameNumsInLegacyFrameParametersTable.Add(frameParameters.FrameNumber);
         }
 
         /// <summary>
         /// Insert a row into the legacy Global_Parameters table
         /// </summary>
-        /// <param name="globalParameters">
-        /// </param>
-#pragma warning disable 612, 618
-        private void InitializeGlobalParametersRow(GlobalParameters globalParameters)
-#pragma warning restore 612, 618
+        private void InitializeGlobalParametersRow()
         {
             var dbCommand = mDbConnection.CreateCommand();
 
@@ -1608,22 +1607,22 @@ namespace UIMFLibrary
                 + "VALUES(:DateStarted, :NumFrames, :TimeOffset, :BinWidth, :Bins, :TOFCorrectionTime, :FrameDataBlobVersion, :ScanDataBlobVersion, "
                 + ":TOFIntensityType, :DatasetType, :Prescan_TOFPulses, :Prescan_Accumulations, :Prescan_TICThreshold, :Prescan_Continuous, :Prescan_Profile, :Instrument_name);";
 
-            dbCommand.Parameters.Add(new SQLiteParameter(":DateStarted", globalParameters.DateStarted));
-            dbCommand.Parameters.Add(new SQLiteParameter(":NumFrames", globalParameters.NumFrames));
-            dbCommand.Parameters.Add(new SQLiteParameter(":TimeOffset", globalParameters.TimeOffset));
-            dbCommand.Parameters.Add(new SQLiteParameter(":BinWidth", globalParameters.BinWidth));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Bins", globalParameters.Bins));
-            dbCommand.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", globalParameters.TOFCorrectionTime));
-            dbCommand.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", globalParameters.FrameDataBlobVersion));
-            dbCommand.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", globalParameters.ScanDataBlobVersion));
-            dbCommand.Parameters.Add(new SQLiteParameter(":TOFIntensityType", globalParameters.TOFIntensityType));
-            dbCommand.Parameters.Add(new SQLiteParameter(":DatasetType", globalParameters.DatasetType));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", globalParameters.Prescan_TOFPulses));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", globalParameters.Prescan_Accumulations));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", globalParameters.Prescan_TICThreshold));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", globalParameters.Prescan_Continuous));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Profile", globalParameters.Prescan_Profile));
-            dbCommand.Parameters.Add(new SQLiteParameter(":Instrument_name", globalParameters.InstrumentName));
+            dbCommand.Parameters.Add(new SQLiteParameter(":DateStarted", string.Empty));
+            dbCommand.Parameters.Add(new SQLiteParameter(":NumFrames", GlobalParameters.NumFrames));
+            dbCommand.Parameters.Add(new SQLiteParameter(":TimeOffset", value: 0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":BinWidth", value: 0.0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Bins", value: 0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":TOFCorrectionTime", value: 0F));
+            dbCommand.Parameters.Add(new SQLiteParameter(":FrameDataBlobVersion", value: 0F));
+            dbCommand.Parameters.Add(new SQLiteParameter(":ScanDataBlobVersion", value: 0F));
+            dbCommand.Parameters.Add(new SQLiteParameter(":TOFIntensityType", string.Empty));
+            dbCommand.Parameters.Add(new SQLiteParameter(":DatasetType", value: null));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TOFPulses", value: 0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Accumulations", value: 0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_TICThreshold", value: 0));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Continuous", value: false));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Prescan_Profile", string.Empty));
+            dbCommand.Parameters.Add(new SQLiteParameter(":Instrument_name", string.Empty));
 
             dbCommand.ExecuteNonQuery();
         }
@@ -2150,13 +2149,10 @@ namespace UIMFLibrary
         /// <summary>
         /// Add entries to the legacy Frame_Parameters table
         /// </summary>
-        /// <param name="frameNum"></param>
         /// <param name="frameParameters"></param>
-        private void InsertLegacyFrameParams(int frameNum, FrameParams frameParameters)
+        private void InsertLegacyFrameParams(FrameParams frameParameters)
         {
-            var legacyFrameParameters = FrameParamUtilities.GetLegacyFrameParameters(frameNum, frameParameters);
-
-            InitializeFrameParametersRow(legacyFrameParameters);
+            InitializeFrameParametersRow(frameParameters);
         }
 
         /// <summary>
@@ -2166,9 +2162,9 @@ namespace UIMFLibrary
         /// <param name="frameParamsByType"></param>
         private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
         {
-            var frameParams = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
+            var frameParams = new FrameParams(frameNum, frameParamsByType);
 
-            InsertLegacyFrameParams(frameNum, frameParams);
+            InsertLegacyFrameParams(frameParams);
         }
 
         /// <summary>
@@ -2187,18 +2183,7 @@ namespace UIMFLibrary
 
                 if (rowCount < 1)
                 {
-#pragma warning disable 612, 618
-                    var legacyGlobalParameters = new GlobalParameters
-                    {
-                        DateStarted = string.Empty,
-                        NumFrames = GlobalParameters.NumFrames,
-                        InstrumentName = string.Empty,
-                        Prescan_Profile = string.Empty,
-                        TOFIntensityType = string.Empty
-                    };
-#pragma warning restore 612, 618
-
-                    InitializeGlobalParametersRow(legacyGlobalParameters);
+                    InitializeGlobalParametersRow();
                 }
                 mLegacyGlobalParametersTableHasData = true;
             }

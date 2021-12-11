@@ -10,11 +10,7 @@ namespace UIMFLibrary
     {
         // Ignore Spelling: bool, uint, ulong, ushort, sbyte
 
-        #region Member variables
-
         private static readonly Dictionary<GlobalParamKeyType, Type> mGlobalParamKeyTypes = new Dictionary<GlobalParamKeyType, Type>();
-
-        #endregion
 
         /// <summary>
         /// Map between .net data type aliases and official data type names
@@ -46,59 +42,6 @@ namespace UIMFLibrary
                 {"Int16", "System.Int16"},
                 {"UInt16", "System.UInt16"}
             };
-
-        /// <summary>
-        /// Create a Global parameter dictionary using a GlobalParameters class instance
-        /// </summary>
-        /// <param name="globalParameters"></param>
-        /// <returns>Global parameter dictionary</returns>
-#pragma warning disable 612, 618
-        internal static Dictionary<GlobalParamKeyType, dynamic> ConvertGlobalParameters(GlobalParameters globalParameters)
-#pragma warning restore 612, 618
-        {
-            var prescanContinuous = 0;
-
-            if (globalParameters.Prescan_Continuous)
-                prescanContinuous = 1;
-
-            var globalParams = new Dictionary<GlobalParamKeyType, dynamic>
-            {
-                {GlobalParamKeyType.InstrumentName, globalParameters.InstrumentName},
-                {GlobalParamKeyType.DateStarted, globalParameters.DateStarted},
-                {GlobalParamKeyType.NumFrames, globalParameters.NumFrames},
-                {GlobalParamKeyType.TimeOffset, globalParameters.TimeOffset},
-                {GlobalParamKeyType.BinWidth, globalParameters.BinWidth},
-                {GlobalParamKeyType.Bins, globalParameters.Bins},
-                {GlobalParamKeyType.TOFCorrectionTime, globalParameters.TOFCorrectionTime},
-                // Obsolete: {GlobalParamKeyType.FrameDataBlobVersion, globalParameters.FrameDataBlobVersion},
-                // Obsolete: {GlobalParamKeyType.ScanDataBlobVersion, globalParameters.ScanDataBlobVersion},
-                {GlobalParamKeyType.TOFIntensityType, globalParameters.TOFIntensityType},
-                {GlobalParamKeyType.DatasetType, globalParameters.DatasetType},
-                {GlobalParamKeyType.PrescanTOFPulses, globalParameters.Prescan_TOFPulses},
-                {GlobalParamKeyType.PrescanAccumulations, globalParameters.Prescan_Accumulations},
-                {GlobalParamKeyType.PrescanTICThreshold, globalParameters.Prescan_TICThreshold},
-                {GlobalParamKeyType.PrescanContinuous, prescanContinuous},
-                {GlobalParamKeyType.PrescanProfile, globalParameters.Prescan_Profile}
-            };
-
-            return globalParams;
-        }
-
-        /// <summary>
-        /// Convert a Global parameter dictionary to an instance of the <see cref="GlobalParams"/> class
-        /// </summary>
-        /// <param name="GlobalParamsByType"></param>
-        public static GlobalParams ConvertDynamicParamsToGlobalParams(Dictionary<GlobalParamKeyType, dynamic> GlobalParamsByType)
-        {
-            var globalParams = new GlobalParams();
-
-            foreach (var paramItem in GlobalParamsByType)
-            {
-                globalParams.AddUpdateValue(paramItem.Key, paramItem.Value);
-            }
-
-            return globalParams;
-        }
 
         /// <summary>
         /// Lookup the official .NET data type given the string name of a data type

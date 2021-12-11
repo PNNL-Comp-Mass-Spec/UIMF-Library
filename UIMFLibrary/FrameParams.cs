@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 
+// Allows the UnitTests project to access internal methods
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("UIMFLibrary.UnitTests")]
+
 // ReSharper disable UnusedMember.Global
 
 namespace UIMFLibrary
@@ -61,6 +64,11 @@ namespace UIMFLibrary
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Frame Number
+        /// </summary>
+        public int FrameNumber { get; }
 
         /// <summary>
         /// Frame parameters dictionary
@@ -146,9 +154,25 @@ namespace UIMFLibrary
         /// <summary>
         /// Constructor
         /// </summary>
-        public FrameParams()
+        /// <param name="frameNumber"></param>
+        public FrameParams(int frameNumber)
         {
+            FrameNumber = frameNumber;
             Values = new Dictionary<FrameParamKeyType, FrameParam>();
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="frameNumber"></param>
+        /// <param name="frameParamsByType">Parameter types and values</param>
+        internal FrameParams(int frameNumber, Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
+            : this(frameNumber)
+        {
+            foreach (var paramItem in frameParamsByType)
+            {
+                AddUpdateValue(paramItem.Key, paramItem.Value);
+            }
         }
 
         /// <summary>

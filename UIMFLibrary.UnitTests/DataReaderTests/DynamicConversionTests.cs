@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using UIMFLibrary.UnitTests.Legacy;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
@@ -116,7 +117,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void TestConvertFrameParametersToDictionary()
         {
             var frameParameters = GetExampleFrameParameters();
-            var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
+#pragma warning disable CS0618 // Type or member is obsolete
+            var frameParams = FrameParameters.ConvertFrameParameters(frameParameters);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var success = frameParams.TryGetValue(FrameParamKeyType.StartTimeMinutes, out var startTime);
             Assert.IsTrue(success, "Start time could not be retrieved");
@@ -136,11 +139,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
-        public void TestConverFrameParametersToClass()
+        public void TestConvertFrameParametersToClass()
         {
             var frameParameters = GetExampleFrameParameters();
-            var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(frameParameters);
-            var frameParams = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
+#pragma warning disable CS0618 // Type or member is obsolete
+            var frameParamsByType = FrameParameters.ConvertFrameParameters(frameParameters);
+#pragma warning restore CS0618 // Type or member is obsolete
+            var frameParams = new FrameParams(frameParameters.FrameNum, frameParamsByType);
 
             var startTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
             Assert.AreEqual(frameParameters.StartTime, startTime, 0.00001);
@@ -206,7 +211,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         public void TestConvertGlobalParametersToDictionary()
         {
             var globalParameters = GetExampleGlobalParameters();
-            var globalParams = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
+#pragma warning disable CS0618 // Type or member is obsolete
+            var globalParams = GlobalParameters.ConvertGlobalParameters(globalParameters);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var success = globalParams.TryGetValue(GlobalParamKeyType.InstrumentName, out var instName);
             Assert.IsTrue(success, "Instrument name could not be retrieved");
@@ -224,10 +231,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void TestConvertGlobalParametersToClass()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var globalParameters = GetExampleGlobalParameters();
-            var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
-
-            var globalParams = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+            var globalParamsByType = GlobalParameters.ConvertGlobalParameters(globalParameters);
+            var globalParams = GlobalParameters.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
             Assert.AreEqual(globalParameters.InstrumentName, instName);

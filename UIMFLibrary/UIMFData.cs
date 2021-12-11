@@ -706,7 +706,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Get global parameters from table.
+        /// Get global parameters from the legacy Global_Parameters table.
         /// </summary>
         /// <param name="uimfConnection">
         /// UIMF database connection.
@@ -716,11 +716,9 @@ namespace UIMFLibrary
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
-#pragma warning disable 612, 618
-        private static GlobalParameters GetGlobalParametersFromTable(SQLiteConnection uimfConnection)
+        private static GlobalParams GetGlobalParametersFromLegacyTable(SQLiteConnection uimfConnection)
         {
-            var globalParameters = new GlobalParameters();
-#pragma warning restore 612, 618
+            var globalParameters = new GlobalParams();
 
             using (var dbCommand = uimfConnection.CreateCommand())
             {
@@ -732,15 +730,15 @@ namespace UIMFLibrary
                     {
                         try
                         {
-                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
-                            globalParameters.DateStarted = GetString(reader, "DateStarted");
-                            globalParameters.NumFrames = GetInt32(reader, "NumFrames");
-                            globalParameters.TimeOffset = GetInt32(reader, "TimeOffset");
-                            globalParameters.BinWidth = GetDouble(reader, "BinWidth");
-                            globalParameters.Bins = GetInt32(reader, "Bins");
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, GetDouble(reader, "BinWidth"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, GetString(reader, "DateStarted"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.NumFrames, GetInt32(reader, "NumFrames"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.TimeOffset, GetInt32(reader, "TimeOffset"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, GetDouble(reader, "BinWidth"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.Bins, GetInt32(reader, "Bins"));
                             try
                             {
-                                globalParameters.TOFCorrectionTime = GetSingle(reader, "TOFCorrectionTime");
+                                globalParameters.AddUpdateValue(GlobalParamKeyType.TOFCorrectionTime, GetSingle(reader, "TOFCorrectionTime"));
                             }
                             catch
                             {
@@ -749,26 +747,24 @@ namespace UIMFLibrary
                                     "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                             }
 
-                            globalParameters.Prescan_TOFPulses = GetInt32(reader, "Prescan_TOFPulses");
-                            globalParameters.Prescan_Accumulations = GetInt32(reader, "Prescan_Accumulations");
-                            globalParameters.Prescan_TICThreshold = GetInt32(reader, "Prescan_TICThreshold");
-                            globalParameters.Prescan_Continuous = GetBoolean(reader, "Prescan_Continuous");
-                            globalParameters.Prescan_Profile = GetString(reader, "Prescan_Profile");
-                            globalParameters.FrameDataBlobVersion =
-                                GetSingle(reader, "FrameDataBlobVersion");
-                            globalParameters.ScanDataBlobVersion =
-                                GetSingle(reader, "ScanDataBlobVersion");
-                            globalParameters.TOFIntensityType = GetString(reader, "TOFIntensityType");
-                            globalParameters.DatasetType = GetString(reader, "DatasetType");
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanTOFPulses, GetInt32(reader, "Prescan_TOFPulses"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanAccumulations, GetInt32(reader, "Prescan_Accumulations"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanTICThreshold, GetInt32(reader, "Prescan_TICThreshold"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanContinuous, GetBoolean(reader, "Prescan_Continuous") ? 1 : 0);
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanProfile, GetString(reader, "Prescan_Profile"));
+                            // Obsolete: gParams.AddUpdateValue(GlobalParamKeyType.FrameDataBlobVersion, GetSingle(reader, "FrameDataBlobVersion"));
+                            // Obsolete: gParams.AddUpdateValue(GlobalParamKeyType.ScanDataBlobVersion, GetSingle(reader, "ScanDataBlobVersion"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, GetString(reader, "TOFIntensityType"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.DatasetType, GetString(reader, "DatasetType"));
                             try
                             {
-                                globalParameters.InstrumentName = GetString(reader, "Instrument_Name");
+                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, GetString(reader, "Instrument_Name"));
                             }
                             // ReSharper disable once EmptyGeneralCatchClause
                             catch
                             {
                                 // Likely an old .UIMF file that does not have column Instrument_Name
-                                globalParameters.InstrumentName = string.Empty;
+                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, string.Empty);
                             }
                         }
                         catch (Exception ex)
@@ -785,7 +781,7 @@ namespace UIMFLibrary
 
                 try
                 {
-                    var reportedDateStarted = globalParameters.DateStarted;
+                    var reportedDateStarted = globalParameters.GetValueString(GlobalParamKeyType.DateStarted, string.Empty);
 
                     if (DateTime.TryParse(reportedDateStarted, mCultureInfoUS, DateTimeStyles.None, out var dtReportedDateStarted))
                     {
@@ -799,7 +795,7 @@ namespace UIMFLibrary
                             //  To get the correct year, simply add 1600
 
                             dtReportedDateStarted = dtReportedDateStarted.AddYears(1600);
-                            globalParameters.DateStarted = UIMFDataUtilities.StandardizeDate(dtReportedDateStarted);
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, UIMFDataUtilities.StandardizeDate(dtReportedDateStarted));
                         }
                     }
                 }
@@ -959,10 +955,7 @@ namespace UIMFLibrary
             if (usingLegacyGlobalParameters)
             {
                 // Populate the global parameters object
-                var legacyGlobalParameters = GetGlobalParametersFromTable(mDbConnection);
-
-                var globalParamsByType = GlobalParamUtilities.ConvertGlobalParameters(legacyGlobalParameters);
-                GlobalParameters = GlobalParamUtilities.ConvertDynamicParamsToGlobalParams(globalParamsByType);
+                GlobalParameters = GetGlobalParametersFromLegacyTable(mDbConnection);
                 return;
             }
 

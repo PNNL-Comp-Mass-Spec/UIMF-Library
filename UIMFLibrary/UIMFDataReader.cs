@@ -1454,7 +1454,7 @@ namespace UIMFLibrary
             try
             {
                 var frameParamKeys = GetFrameParameterKeys();
-                var frameParameters = new FrameParams();
+                FrameParams frameParameters = null;
                 var currentFrameNum = -1;
 
                 var dbCommand = mDbConnection.CreateCommand();
@@ -1484,7 +1484,7 @@ namespace UIMFLibrary
                             }
 
                             currentFrameNum = frameNum;
-                            frameParameters = new FrameParams();
+                            frameParameters = new FrameParams(frameNum);
 
                             if (DateTime.UtcNow.Subtract(dtLastStatusUpdate).TotalSeconds >= 2)
                             {
@@ -1521,11 +1521,9 @@ namespace UIMFLibrary
 
                     while (reader.Read())
                     {
-                        var legacyFrameParams = GetLegacyFrameParameters(reader);
-                        var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-                        var frameParameters = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
+                        var frameParameters = GetLegacyFrameParameters(reader);
 
-                        var currentFrameNum = legacyFrameParams.FrameNum;
+                        var currentFrameNum = frameParameters.FrameNumber;
 
                         if (!mCachedFrameParameters.ContainsKey(currentFrameNum))
                             mCachedFrameParameters.Add(currentFrameNum, frameParameters);
@@ -1577,16 +1575,14 @@ namespace UIMFLibrary
                 {
                     if (reader.Read())
                     {
-                        var legacyFrameParams = GetLegacyFrameParameters(reader);
-                        var frameParamsByType = FrameParamUtilities.ConvertFrameParameters(legacyFrameParams);
-                        frameParameters = FrameParamUtilities.ConvertDynamicParamsToFrameParams(frameParamsByType);
+                        frameParameters = GetLegacyFrameParameters(reader);
                     }
                 }
             }
             else
             {
                 var frameParamKeys = GetFrameParameterKeys();
-                frameParameters = new FrameParams();
+                frameParameters = new FrameParams(frameNumber);
 
                 mGetFrameParamsCommand.Parameters.Clear();
                 mGetFrameParamsCommand.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
@@ -5107,117 +5103,118 @@ namespace UIMFLibrary
         /// </param>
         /// <exception cref="Exception">
         /// </exception>
-#pragma warning disable 612, 618
-        private FrameParameters GetLegacyFrameParameters(IDataRecord reader)
-#pragma warning restore 612, 618
+        private FrameParams GetLegacyFrameParameters(IDataRecord reader)
         {
             try
             {
                 bool columnMissing;
 
-#pragma warning disable 612, 618
-                var fp = new FrameParameters
-#pragma warning restore 612, 618
-                {
-                    FrameNum = GetInt32(reader, "FrameNum"),
-                    StartTime = GetDouble(reader, "StartTime")
-                };
+                var fp = new FrameParams(GetInt32(reader, "FrameNum"));
 
-                if (fp.StartTime > 1E+17)
+                fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, GetDouble(reader, "StartTime"));
+
+                if (fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0) > 1E+17)
                 {
                     // StartTime is stored as Ticks in this file
                     // Auto-compute the correct start time
                     var dateStarted = GlobalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
                     if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out DateTime dtRunStarted))
                     {
-                        var lngTickDifference = (Int64)fp.StartTime - dtRunStarted.Ticks;
+                        var lngTickDifference = (long)fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes) - dtRunStarted.Ticks;
                         if (lngTickDifference >= 0)
                         {
-                            fp.StartTime = dtRunStarted.AddTicks(lngTickDifference).Subtract(dtRunStarted).TotalMinutes;
+                            fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, dtRunStarted.AddTicks(lngTickDifference).Subtract(dtRunStarted).TotalMinutes);
                         }
                     }
                 }
 
-                fp.Duration = GetDouble(reader, "Duration");
-                fp.Accumulations = GetInt32(reader, "Accumulations");
+                fp.AddUpdateValue(FrameParamKeyType.DurationSeconds, GetDouble(reader, "Duration"));
+                fp.AddUpdateValue(FrameParamKeyType.Accumulations, GetInt32(reader, "Accumulations"));
 
                 int frameTypeInt = GetInt16(reader, "FrameType");
 
                 // If the frameType is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
                 if (frameTypeInt == 0)
                 {
-                    fp.FrameType = FrameType.MS1;
+                    fp.AddUpdateValue(FrameParamKeyType.FrameType, FrameType.MS1);
                 }
                 else
                 {
-                    fp.FrameType = (FrameType)frameTypeInt;
+                    fp.AddUpdateValue(FrameParamKeyType.FrameType, (FrameType)frameTypeInt);
                 }
 
-                fp.Scans = GetInt32(reader, "Scans");
-                fp.IMFProfile = GetString(reader, "IMFProfile");
-                fp.TOFLosses = GetDouble(reader, "TOFLosses");
-                fp.AverageTOFLength = GetDouble(reader, "AverageTOFLength");
-                fp.CalibrationSlope = GetDouble(reader, "CalibrationSlope");
-                fp.CalibrationIntercept = GetDouble(reader, "CalibrationIntercept");
-                fp.Temperature = GetDouble(reader, "Temperature");
-                fp.voltHVRack1 = GetDouble(reader, "voltHVRack1");
-                fp.voltHVRack2 = GetDouble(reader, "voltHVRack2");
-                fp.voltHVRack3 = GetDouble(reader, "voltHVRack3");
-                fp.voltHVRack4 = GetDouble(reader, "voltHVRack4");
-                fp.voltCapInlet = GetDouble(reader, "voltCapInlet"); // 14, Capillary Inlet Voltage
+                fp.AddUpdateValue(FrameParamKeyType.Scans, GetInt32(reader, "Scans"));
+                fp.AddUpdateValue(FrameParamKeyType.MultiplexingEncodingSequence, GetString(reader, "IMFProfile"));
+                fp.AddUpdateValue(FrameParamKeyType.TOFLosses, GetDouble(reader, "TOFLosses"));
+                fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, GetDouble(reader, "AverageTOFLength"));
+                fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, GetDouble(reader, "CalibrationSlope"));
+                fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, GetDouble(reader, "CalibrationIntercept"));
+                fp.AddUpdateValue(FrameParamKeyType.AmbientTemperature, GetDouble(reader, "Temperature"));
+                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack1, GetDouble(reader, "voltHVRack1"));
+                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack2, GetDouble(reader, "voltHVRack2"));
+                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack3, GetDouble(reader, "voltHVRack3"));
+                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack4, GetDouble(reader, "voltHVRack4"));
+                fp.AddUpdateValue(FrameParamKeyType.VoltCapInlet, GetDouble(reader, "voltCapInlet")); // 14, Capillary Inlet Voltage
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltEntranceHPFIn"))
                     columnMissing = true;
                 else
-                    fp.voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing)); // 15, HPF In Voltag)e
 
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTIn", 0);
-                    fp.voltEntranceHPFOut = GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTOut", 0);
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTIn", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTOut", 0));
                 }
                 else
                 {
-                    fp.voltEntranceHPFOut = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFOut", 0); // 16, HPF Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFOut", 0)); // 16, HPF Out Voltage
                 }
 
-                fp.voltEntranceCondLmt = GetDouble(reader, "voltEntranceCondLmt"); // 17, Cond Limit Voltage
-                fp.voltTrapOut = GetDouble(reader, "voltTrapOut"); // 18, Trap Out Voltage
-                fp.voltTrapIn = GetDouble(reader, "voltTrapIn"); // 19, Trap In Voltage
-                fp.voltJetDist = GetDouble(reader, "voltJetDist"); // 20, Jet Disruptor Voltage
-                fp.voltQuad1 = GetDouble(reader, "voltQuad1"); // 21, Fragmentation Quadrupole Voltage
-                fp.voltCond1 = GetDouble(reader, "voltCond1"); // 22, Fragmentation Conductance Voltage
-                fp.voltQuad2 = GetDouble(reader, "voltQuad2"); // 23, Fragmentation Quadrupole Voltage
-                fp.voltCond2 = GetDouble(reader, "voltCond2"); // 24, Fragmentation Conductance Voltage
-                fp.voltIMSOut = GetDouble(reader, "voltIMSOut"); // 25, IMS Out Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltEntranceCondLmt, GetDouble(reader, "voltEntranceCondLmt")); // 17, Cond Limit Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltTrapOut, GetDouble(reader, "voltTrapOut")); // 18, Trap Out Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltTrapIn, GetDouble(reader, "voltTrapIn")); // 19, Trap In Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltJetDist, GetDouble(reader, "voltJetDist")); // 20, Jet Disruptor Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltQuad1, GetDouble(reader, "voltQuad1")); // 21, Fragmentation Quadrupole Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltCond1, GetDouble(reader, "voltCond1")); // 22, Fragmentation Conductance Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltQuad2, GetDouble(reader, "voltQuad2")); // 23, Fragmentation Quadrupole Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltCond2, GetDouble(reader, "voltCond2")); // 24, Fragmentation Conductance Voltage
+                fp.AddUpdateValue(FrameParamKeyType.VoltIMSOut, GetDouble(reader, "voltIMSOut")); // 25, IMS Out Voltage
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltExitHPFIn"))
                     columnMissing = true;
                 else
-                    fp.voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing)); // 26, HPF In Voltage
 
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitIFTIn", 0);
-                    fp.voltExitHPFOut = GetLegacyFrameParamOrDefault(reader, "voltExitIFTOut", 0);
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, GetLegacyFrameParamOrDefault(reader, "voltExitIFTIn", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, GetLegacyFrameParamOrDefault(reader, "voltExitIFTOut", 0));
                 }
                 else
                 {
-                    fp.voltExitHPFOut = GetLegacyFrameParamOrDefault(reader, "voltExitHPFOut", 0); // 27, HPF Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, GetLegacyFrameParamOrDefault(reader, "voltExitHPFOut", 0)); // 27, HPF Out Voltage
                 }
 
-                fp.voltExitCondLmt = GetDouble(reader, "voltExitCondLmt"); // 28, Cond Limit Voltage
-                fp.PressureFront = GetDouble(reader, "PressureFront");
-                fp.PressureBack = GetDouble(reader, "PressureBack");
-                fp.MPBitOrder = GetInt16(reader, "MPBitOrder");
-                fp.FragmentationProfile = FrameParamUtilities.ConvertByteArrayToFragmentationSequence((byte[])reader["FragmentationProfile"]);
+                fp.AddUpdateValue(FrameParamKeyType.VoltExitCondLmt, GetDouble(reader, "voltExitCondLmt")); // 28, Cond Limit Voltage
+                fp.AddUpdateValue(FrameParamKeyType.PressureFront, GetDouble(reader, "PressureFront"));
+                fp.AddUpdateValue(FrameParamKeyType.PressureBack, GetDouble(reader, "PressureBack"));
+                fp.AddUpdateValue(FrameParamKeyType.MPBitOrder, GetInt16(reader, "MPBitOrder"));
+                fp.AddUpdateValue(FrameParamKeyType.FragmentationProfile, FrameParamUtilities.ConvertByteArrayToFragmentationSequence((byte[])reader["FragmentationProfile"]));
+
+                var pressureConversionDivisor = 1.0;
+                if (PressureIsMilliTorr)
+                {
+                    // Divide each of the pressures by 1000 to convert from milliTorr to Torr
+                    pressureConversionDivisor = 1000.0;
+                }
 
                 if (mLegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
                     columnMissing = true;
                 else
-                    fp.HighPressureFunnelPressure = GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing);
+                    fp.AddUpdateValue(FrameParamKeyType.HighPressureFunnelPressure, GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing) / pressureConversionDivisor);
 
                 if (columnMissing)
                 {
@@ -5230,36 +5227,27 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    fp.IonFunnelTrapPressure = GetLegacyFrameParamOrDefault(reader, "IonFunnelTrapPressure", 0);
-                    fp.RearIonFunnelPressure = GetLegacyFrameParamOrDefault(reader, "RearIonFunnelPressure", 0);
-                    fp.QuadrupolePressure = GetLegacyFrameParamOrDefault(reader, "QuadrupolePressure", 0);
-                    fp.ESIVoltage = GetLegacyFrameParamOrDefault(reader, "ESIVoltage", 0);
-                    fp.FloatVoltage = GetLegacyFrameParamOrDefault(reader, "FloatVoltage", 0);
-                    fp.CalibrationDone = GetLegacyFrameParamOrDefaultInt32(reader, "CalibrationDone", 0);
-                    fp.Decoded = GetLegacyFrameParamOrDefaultInt32(reader, "Decoded", 0);
-
-                    if (PressureIsMilliTorr)
-                    {
-                        // Divide each of the pressures by 1000 to convert from milliTorr to Torr
-                        fp.HighPressureFunnelPressure /= 1000.0;
-                        fp.IonFunnelTrapPressure /= 1000.0;
-                        fp.RearIonFunnelPressure /= 1000.0;
-                        fp.QuadrupolePressure /= 1000.0;
-                    }
+                    fp.AddUpdateValue(FrameParamKeyType.IonFunnelTrapPressure, GetLegacyFrameParamOrDefault(reader, "IonFunnelTrapPressure", 0) / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.RearIonFunnelPressure, GetLegacyFrameParamOrDefault(reader, "RearIonFunnelPressure", 0) / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.QuadrupolePressure, GetLegacyFrameParamOrDefault(reader, "QuadrupolePressure", 0) / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.ESIVoltage, GetLegacyFrameParamOrDefault(reader, "ESIVoltage", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.FloatVoltage, GetLegacyFrameParamOrDefault(reader, "FloatVoltage", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.CalibrationDone, GetLegacyFrameParamOrDefaultInt32(reader, "CalibrationDone", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.Decoded, GetLegacyFrameParamOrDefaultInt32(reader, "Decoded", 0));
                 }
 
                 if (mLegacyFrameParametersMissingColumns.Contains("a2"))
                     columnMissing = true;
                 else
-                    fp.a2 = GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficienta2, GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing));
 
                 if (columnMissing)
                 {
-                    fp.b2 = 0;
-                    fp.c2 = 0;
-                    fp.d2 = 0;
-                    fp.e2 = 0;
-                    fp.f2 = 0;
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, 0);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, 0);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, 0);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, 0);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, 0);
                     if (mErrMessageCounter < 2)
                     {
                         Console.WriteLine(
@@ -5269,11 +5257,11 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    fp.b2 = GetLegacyFrameParamOrDefault(reader, "b2", 0);
-                    fp.c2 = GetLegacyFrameParamOrDefault(reader, "c2", 0);
-                    fp.d2 = GetLegacyFrameParamOrDefault(reader, "d2", 0);
-                    fp.e2 = GetLegacyFrameParamOrDefault(reader, "e2", 0);
-                    fp.f2 = GetLegacyFrameParamOrDefault(reader, "f2", 0);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, GetLegacyFrameParamOrDefault(reader, "b2", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, GetLegacyFrameParamOrDefault(reader, "c2", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, GetLegacyFrameParamOrDefault(reader, "d2", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, GetLegacyFrameParamOrDefault(reader, "e2", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, GetLegacyFrameParamOrDefault(reader, "f2", 0));
                 }
 
                 return fp;
