@@ -1171,24 +1171,6 @@ namespace UIMFLibrary
 
         /// <summary>
         /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
-        /// The drift time is normalized using 'drift time * STANDARD_PRESSURE / framePressure' where STANDARD_PRESSURE = 4
-        /// </summary>
-        /// <param name="frameNum">
-        /// Frame number (1-based)
-        /// </param>
-        /// <param name="scanNum">
-        /// IMS scan number
-        /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
-        /// </param>
-        /// <returns>Drift time (milliseconds)</returns>
-        [Obsolete("For clarity, use GetDriftTime with parameter normalizeByPressure", true)]
-        public double GetDriftTime(int frameNum, int scanNum)
-        {
-            return GetDriftTime(frameNum, scanNum, normalizeByPressure: true);
-        }
-
-        /// <summary>
-        /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
         /// </summary>
         /// <param name="frameNum">
         /// Frame number (1-based)
@@ -1436,47 +1418,6 @@ namespace UIMFLibrary
             }
 
             return frameNumberList.ToArray();
-        }
-
-        /// <summary>
-        /// Get frame parameters for specified frame
-        /// </summary>
-        /// <param name="frameNumber">
-        /// Frame number.
-        /// </param>
-        /// <returns>
-        /// Frame Parameters for the given frame<see cref="FrameParameters"/>.
-        /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// </exception>
-        [Obsolete("Use GetFrameParams instead", true)]
-        public FrameParameters GetFrameParameters(int frameNumber)
-        {
-            if (frameNumber < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(frameNumber),
-                                                      "FrameNumber should be greater than or equal to zero.");
-            }
-
-            // Check in cache first
-            if (mCachedFrameParameters.TryGetValue(frameNumber, out var frameParameters))
-            {
-                return FrameParamUtilities.GetLegacyFrameParameters(frameNumber, frameParameters);
-            }
-
-            frameParameters = GetFrameParams(frameNumber);
-
-            if (frameParameters == null)
-            {
-                if (frameNumber < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(frameNumber),
-                                                          "FrameNumber " + frameNumber + " not found in .UIMF file");
-                }
-            }
-
-            var legacyFrameParams = FrameParamUtilities.GetLegacyFrameParameters(frameNumber, frameParameters);
-            return legacyFrameParams;
         }
 
         /// <summary>
@@ -2421,22 +2362,6 @@ namespace UIMFLibrary
             }
 
             return count;
-        }
-
-        /// <summary>
-        /// Get the minimum TOF bin arrival time value for the given pixel bin
-        /// </summary>
-        /// <remarks>The function name is misleading; does not return an m/z</remarks>
-        /// <param name="bin">
-        /// Bin number
-        /// </param>
-        /// <returns>
-        /// TOF bin arrive time<see cref="double"/>.
-        /// </returns>
-        [Obsolete("Misleading name. Use GetBinForPixel(pixel)", true)]
-        public double GetPixelMZ(int bin)
-        {
-            return GetBinForPixel(bin);
         }
 
         /// <summary>

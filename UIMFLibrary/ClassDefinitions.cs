@@ -4,6 +4,10 @@
 // </summary>
 //
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("UIMFLibrary.UnitTests")]
+
 namespace UIMFLibrary
 {
     using System;
@@ -18,7 +22,7 @@ namespace UIMFLibrary
     /// The global parameters.
     /// </summary>
     [Obsolete("This class has been superseded by the GlobalParams class")]
-    public class GlobalParameters
+    internal class GlobalParameters
     {
         #region Fields
 
@@ -120,7 +124,7 @@ namespace UIMFLibrary
     /// The frame parameters.
     /// </summary>
     [Obsolete("This class has been superseded by the FrameParams class")]
-    public class FrameParameters
+    internal class FrameParameters
     {
         #region Fields
 

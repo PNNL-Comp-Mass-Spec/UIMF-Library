@@ -134,7 +134,7 @@ namespace UIMFLibrary
         /// <param name="frameParameters"></param>
         /// <returns>Frame parameter dictionary</returns>
 #pragma warning disable 612, 618
-        public static Dictionary<FrameParamKeyType, dynamic> ConvertFrameParameters(FrameParameters frameParameters)
+        internal static Dictionary<FrameParamKeyType, dynamic> ConvertFrameParameters(FrameParameters frameParameters)
 #pragma warning restore 612, 618
         {
             var frameParams = new Dictionary<FrameParamKeyType, dynamic>
@@ -564,7 +564,7 @@ namespace UIMFLibrary
         /// <param name="frameNumber">Frame Number</param>
         /// <param name="frameParameters"><see cref="FrameParams"/> instance</param>
         /// <returns>A new <see cref="FrameParameters"/> instance</returns>
-        public static FrameParameters GetLegacyFrameParameters(int frameNumber, FrameParams frameParameters)
+        internal static FrameParameters GetLegacyFrameParameters(int frameNumber, FrameParams frameParameters)
         {
             if (frameParameters == null)
                 return new FrameParameters();

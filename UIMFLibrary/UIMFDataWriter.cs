@@ -1328,19 +1328,6 @@ namespace UIMFLibrary
         /// <summary>
         /// Method to insert details related to each IMS frame
         /// </summary>
-        /// <param name="frameParameters">
-        /// </param>
-        [Obsolete("Use AddUpdateFrameParameter or use InsertFrame with 'Dictionary<FrameParamKeyType, dynamic> frameParameters'", true)]
-        public void InsertFrame(FrameParameters frameParameters)
-        {
-            var frameParams = FrameParamUtilities.ConvertFrameParameters(frameParameters);
-
-            InsertFrame(frameParameters.FrameNum, frameParams);
-        }
-
-        /// <summary>
-        /// Method to insert details related to each IMS frame
-        /// </summary>
         /// <param name="frameNum">Frame number</param>
         /// <param name="frameParameters">FrameParams object</param>
         /// <returns>
@@ -1410,21 +1397,6 @@ namespace UIMFLibrary
             }
 
             return this;
-        }
-
-        /// <summary>
-        /// Method to enter the details of the global parameters for the experiment
-        /// </summary>
-        /// <param name="globalParameters">
-        /// </param>
-        [Obsolete("Use AddUpdateGlobalParameter or use InsertGlobal with 'GlobalParams globalParameters'", true)]
-        public void InsertGlobal(GlobalParameters globalParameters)
-        {
-            var globalParams = GlobalParamUtilities.ConvertGlobalParameters(globalParameters);
-            foreach (var globalParam in globalParams)
-            {
-                AddUpdateGlobalParameter(globalParam.Key, globalParam.Value);
-            }
         }
 
         /// <summary>
@@ -1654,41 +1626,6 @@ namespace UIMFLibrary
             dbCommand.Parameters.Add(new SQLiteParameter(":Instrument_name", globalParameters.InstrumentName));
 
             dbCommand.ExecuteNonQuery();
-        }
-
-        /// <summary>
-        /// Write out the compressed intensity data to the UIMF file
-        /// </summary>
-        /// <param name="frameParameters">Legacy frame parameters</param>
-        /// <param name="scanNum">scan number</param>
-        /// <param name="binWidth">Bin width (in nanoseconds)</param>
-        /// <param name="indexOfMaxIntensity">index of maximum intensity (for determining the base peak m/z)</param>
-        /// <param name="nonZeroCount">Count of non-zero values</param>
-        /// <param name="bpi">Base peak intensity (intensity of bin indexOfMaxIntensity)</param>
-        /// <param name="tic">Total ion intensity</param>
-        /// <param name="spectra">Mass spectra intensities</param>
-        [Obsolete("Use InsertScanStoreBytes that accepts a FrameParams object", true)]
-        // ReSharper disable once UnusedMember.Local
-        private void InsertScanStoreBytes(
-            FrameParameters frameParameters,
-            int scanNum,
-            double binWidth,
-            int indexOfMaxIntensity,
-            int nonZeroCount,
-            double bpi,
-            Int64 tic,
-            IEnumerable<byte> spectra)
-        {
-            if (nonZeroCount <= 0)
-                return;
-
-            var bpiMz = ConvertBinToMz(indexOfMaxIntensity, binWidth, frameParameters);
-
-            // Insert records.
-            ValidateFrameScansExists("InsertScanStoreBytes");
-
-            InsertScanAddParameters(frameParameters.FrameNum, scanNum, nonZeroCount, (int)bpi, bpiMz, tic, spectra);
-            mDbCommandInsertScan.ExecuteNonQuery();
         }
 
         /// <summary>

@@ -325,18 +325,6 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Return the global parameters using the legacy GlobalParameters object
-        /// </summary>
-        /// <returns>
-        /// Global parameters class<see cref="GlobalParameters"/>.
-        /// </returns>
-        [Obsolete("Use GetGlobalParams", true)]
-        public GlobalParameters GetGlobalParameters()
-        {
-            return GlobalParamUtilities.GetLegacyGlobalParameters(GlobalParameters);
-        }
-
-        /// <summary>
         /// Return the global parameters <see cref="GlobalParams"/>
         /// </summary>
         public GlobalParams GetGlobalParams()
@@ -1073,35 +1061,6 @@ namespace UIMFLibrary
         private bool CheckHasVersionInfoTable()
         {
             return CheckHasTable(UIMFTableType.VersionInfo, VERSION_INFO_TABLE);
-        }
-
-        /// <summary>
-        /// Convert bin number to m/z value
-        /// </summary>
-        /// <param name="binNumber">
-        /// </param>
-        /// <param name="binWidth">Bin width (in nanoseconds)
-        /// </param>
-        /// <param name="frameParameters">
-        /// </param>
-        /// <returns>
-        /// m/z<see cref="double"/>.
-        /// </returns>
-        [Obsolete("Use ConvertBinToMz that accepts a FrameParams object", true)]
-        public double ConvertBinToMz(int binNumber, double binWidth, FrameParameters frameParameters)
-        {
-            // mz = (k * (t-t0))^2
-            var t = binNumber * binWidth / 1000;
-
-            var resMassErr = frameParameters.a2 * t + frameParameters.b2 * Math.Pow(t, 3) +
-                             frameParameters.c2 * Math.Pow(t, 5) + frameParameters.d2 * Math.Pow(t, 7) +
-                             frameParameters.e2 * Math.Pow(t, 9) + frameParameters.f2 * Math.Pow(t, 11);
-
-            var mz =
-                frameParameters.CalibrationSlope *
-                (t - (double)GlobalParameters.TOFCorrectionTime / 1000 - frameParameters.CalibrationIntercept);
-
-            return (mz * mz) + resMassErr;
         }
 
         /// <summary>
