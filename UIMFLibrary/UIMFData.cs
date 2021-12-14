@@ -730,7 +730,16 @@ namespace UIMFLibrary
                     {
                         try
                         {
-                            globalParameters.AddUpdateValue(GlobalParamKeyType.BinWidth, GetDouble(reader, "BinWidth"));
+                            try
+                            {
+                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, GetString(reader, "Instrument_Name"));
+                            }
+                            // ReSharper disable once EmptyGeneralCatchClause
+                            catch
+                            {
+                                // Likely an old .UIMF file that does not have column Instrument_Name
+                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, string.Empty);
+                            }
                             globalParameters.AddUpdateValue(GlobalParamKeyType.DateStarted, GetString(reader, "DateStarted"));
                             globalParameters.AddUpdateValue(GlobalParamKeyType.NumFrames, GetInt32(reader, "NumFrames"));
                             globalParameters.AddUpdateValue(GlobalParamKeyType.TimeOffset, GetInt32(reader, "TimeOffset"));
@@ -747,6 +756,8 @@ namespace UIMFLibrary
                                     "Warning: this UIMF file is created with an old version of IMF2UIMF (TOFCorrectionTime is missing from the Global_Parameters table), please get the newest version from \\\\floyd\\software");
                             }
 
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, GetString(reader, "TOFIntensityType"));
+                            globalParameters.AddUpdateValue(GlobalParamKeyType.DatasetType, GetString(reader, "DatasetType"));
                             globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanTOFPulses, GetInt32(reader, "Prescan_TOFPulses"));
                             globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanAccumulations, GetInt32(reader, "Prescan_Accumulations"));
                             globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanTICThreshold, GetInt32(reader, "Prescan_TICThreshold"));
@@ -754,18 +765,6 @@ namespace UIMFLibrary
                             globalParameters.AddUpdateValue(GlobalParamKeyType.PrescanProfile, GetString(reader, "Prescan_Profile"));
                             // Obsolete: gParams.AddUpdateValue(GlobalParamKeyType.FrameDataBlobVersion, GetSingle(reader, "FrameDataBlobVersion"));
                             // Obsolete: gParams.AddUpdateValue(GlobalParamKeyType.ScanDataBlobVersion, GetSingle(reader, "ScanDataBlobVersion"));
-                            globalParameters.AddUpdateValue(GlobalParamKeyType.TOFIntensityType, GetString(reader, "TOFIntensityType"));
-                            globalParameters.AddUpdateValue(GlobalParamKeyType.DatasetType, GetString(reader, "DatasetType"));
-                            try
-                            {
-                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, GetString(reader, "Instrument_Name"));
-                            }
-                            // ReSharper disable once EmptyGeneralCatchClause
-                            catch
-                            {
-                                // Likely an old .UIMF file that does not have column Instrument_Name
-                                globalParameters.AddUpdateValue(GlobalParamKeyType.InstrumentName, string.Empty);
-                            }
                         }
                         catch (Exception ex)
                         {
