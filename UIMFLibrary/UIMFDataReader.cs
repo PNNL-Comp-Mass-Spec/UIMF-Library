@@ -5109,112 +5109,151 @@ namespace UIMFLibrary
             {
                 bool columnMissing;
 
-                var fp = new FrameParams(GetInt32(reader, "FrameNum"));
+                var frameNum = GetInt32(reader, "FrameNum");
 
-                fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, GetDouble(reader, "StartTime"));
+                var startTimeMinutes = GetDouble(reader, "StartTime");
 
-                if (fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0) > 1E+17)
+                if (startTimeMinutes > 1E+17)
                 {
                     // StartTime is stored as Ticks in this file
                     // Auto-compute the correct start time
                     var dateStarted = GlobalParameters.GetValue(GlobalParamKeyType.DateStarted, string.Empty);
                     if (DateTime.TryParse(dateStarted, mCultureInfoUS, DateTimeStyles.None, out DateTime dtRunStarted))
                     {
-                        var lngTickDifference = (long)fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes) - dtRunStarted.Ticks;
+                        var lngTickDifference = (long)startTimeMinutes - dtRunStarted.Ticks;
                         if (lngTickDifference >= 0)
                         {
-                            fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, dtRunStarted.AddTicks(lngTickDifference).Subtract(dtRunStarted).TotalMinutes);
+                            startTimeMinutes = dtRunStarted.AddTicks(lngTickDifference).Subtract(dtRunStarted).TotalMinutes;
                         }
                     }
                 }
 
-                fp.AddUpdateValue(FrameParamKeyType.DurationSeconds, GetDouble(reader, "Duration"));
-                fp.AddUpdateValue(FrameParamKeyType.Accumulations, GetInt32(reader, "Accumulations"));
+                var durationSeconds = GetDouble(reader, "Duration");
+                var accumulations = GetInt32(reader, "Accumulations");
 
                 int frameTypeInt = GetInt16(reader, "FrameType");
 
                 // If the frameType is 0, then this is an older UIMF file where the MS1 frames were labeled as 0.
                 if (frameTypeInt == 0)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.FrameType, FrameType.MS1);
+                    frameTypeInt = 1;
+                }
+
+                var scans = GetInt32(reader, "Scans");
+                var multiplexingEncodingSequence = GetString(reader, "IMFProfile");
+                var tofLosses = GetDouble(reader, "TOFLosses");
+                var averageTOFLength = GetDouble(reader, "AverageTOFLength");
+                var calibrationSlope = GetDouble(reader, "CalibrationSlope");
+                var calibrationIntercept = GetDouble(reader, "CalibrationIntercept");
+                var ambientTemperature = GetDouble(reader, "Temperature");
+
+                // These six parameters are coefficients for residual mass error correction
+                // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
+                double a2 = 0;
+                double b2 = 0;
+                double c2 = 0;
+                double d2 = 0;
+                double e2 = 0;
+                double f2 = 0;
+                if (mLegacyFrameParametersMissingColumns.Contains("a2"))
+                    columnMissing = true;
+                else
+                    a2 = GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing);
+
+                if (columnMissing)
+                {
+                    if (mErrMessageCounter < 2)
+                    {
+                        Console.WriteLine(
+                            "Warning: this UIMF file is created with an old version of IMF2UIMF (b2 calibration column is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");
+                        mErrMessageCounter++;
+                    }
                 }
                 else
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.FrameType, (FrameType)frameTypeInt);
+                    b2 = GetLegacyFrameParamOrDefault(reader, "b2", 0);
+                    c2 = GetLegacyFrameParamOrDefault(reader, "c2", 0);
+                    d2 = GetLegacyFrameParamOrDefault(reader, "d2", 0);
+                    e2 = GetLegacyFrameParamOrDefault(reader, "e2", 0);
+                    f2 = GetLegacyFrameParamOrDefault(reader, "f2", 0);
                 }
 
-                fp.AddUpdateValue(FrameParamKeyType.Scans, GetInt32(reader, "Scans"));
-                fp.AddUpdateValue(FrameParamKeyType.MultiplexingEncodingSequence, GetString(reader, "IMFProfile"));
-                fp.AddUpdateValue(FrameParamKeyType.TOFLosses, GetDouble(reader, "TOFLosses"));
-                fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, GetDouble(reader, "AverageTOFLength"));
-                fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, GetDouble(reader, "CalibrationSlope"));
-                fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, GetDouble(reader, "CalibrationIntercept"));
-                fp.AddUpdateValue(FrameParamKeyType.AmbientTemperature, GetDouble(reader, "Temperature"));
-                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack1, GetDouble(reader, "voltHVRack1"));
-                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack2, GetDouble(reader, "voltHVRack2"));
-                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack3, GetDouble(reader, "voltHVRack3"));
-                fp.AddUpdateValue(FrameParamKeyType.VoltHVRack4, GetDouble(reader, "voltHVRack4"));
-                fp.AddUpdateValue(FrameParamKeyType.VoltCapInlet, GetDouble(reader, "voltCapInlet")); // 14, Capillary Inlet Voltage
+                // Voltage settings in the IMS system
+                var voltHVRack1 = GetDouble(reader, "voltHVRack1");
+                var voltHVRack2 = GetDouble(reader, "voltHVRack2");
+                var voltHVRack3 = GetDouble(reader, "voltHVRack3");
+                var voltHVRack4 = GetDouble(reader, "voltHVRack4");
+
+                // Capillary Inlet Voltage
+                // HPF In Voltage
+                // HPF Out Voltage
+                // Cond Limit Voltage
+                var voltCapInlet = GetDouble(reader, "voltCapInlet"); // 14, Capillary Inlet Voltage
+                double voltEntranceHPFIn = 0;
+                double voltEntranceHPFOut = 0;
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltEntranceHPFIn"))
                     columnMissing = true;
                 else
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing)); // 15, HPF In Voltag)e
+                    voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFIn", 0, out columnMissing); // 15, HPF In Voltage
 
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTIn", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTOut", 0));
+                    voltEntranceHPFIn = GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTIn", 0);
+                    voltEntranceHPFOut = GetLegacyFrameParamOrDefault(reader, "voltEntranceIFTOut", 0);
                 }
                 else
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFOut", 0)); // 16, HPF Out Voltage
+                    voltEntranceHPFOut = GetLegacyFrameParamOrDefault(reader, "voltEntranceHPFOut", 0); // 16, HPF Out Voltage
                 }
 
-                fp.AddUpdateValue(FrameParamKeyType.VoltEntranceCondLmt, GetDouble(reader, "voltEntranceCondLmt")); // 17, Cond Limit Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltTrapOut, GetDouble(reader, "voltTrapOut")); // 18, Trap Out Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltTrapIn, GetDouble(reader, "voltTrapIn")); // 19, Trap In Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltJetDist, GetDouble(reader, "voltJetDist")); // 20, Jet Disruptor Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltQuad1, GetDouble(reader, "voltQuad1")); // 21, Fragmentation Quadrupole Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltCond1, GetDouble(reader, "voltCond1")); // 22, Fragmentation Conductance Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltQuad2, GetDouble(reader, "voltQuad2")); // 23, Fragmentation Quadrupole Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltCond2, GetDouble(reader, "voltCond2")); // 24, Fragmentation Conductance Voltage
-                fp.AddUpdateValue(FrameParamKeyType.VoltIMSOut, GetDouble(reader, "voltIMSOut")); // 25, IMS Out Voltage
+                var voltEntranceCondLmt = GetDouble(reader, "voltEntranceCondLmt"); // 17, Cond Limit Voltage
+                var voltTrapOut = GetDouble(reader, "voltTrapOut"); // 18, Trap Out Voltage
+                var voltTrapIn = GetDouble(reader, "voltTrapIn"); // 19, Trap In Voltage
+                var voltJetDist = GetDouble(reader, "voltJetDist"); // 20, Jet Disruptor Voltage
+                var voltQuad1 = GetDouble(reader, "voltQuad1"); // 21, Fragmentation Quadrupole Voltage
+                var voltCond1 = GetDouble(reader, "voltCond1"); // 22, Fragmentation Conductance Voltage
+                var voltQuad2 = GetDouble(reader, "voltQuad2"); // 23, Fragmentation Quadrupole Voltage
+                var voltCond2 = GetDouble(reader, "voltCond2"); // 24, Fragmentation Conductance Voltage
+                var voltIMSOut = GetDouble(reader, "voltIMSOut"); // 25, IMS Out Voltage
+                double voltExitHPFIn = 0;
+                double voltExitHPFOut = 0;
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltExitHPFIn"))
                     columnMissing = true;
                 else
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing)); // 26, HPF In Voltage
+                    voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitHPFIn", 0, out columnMissing); // 26, HPF In Voltage
 
                 if (columnMissing)
                 {
                     // Legacy column names are present
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, GetLegacyFrameParamOrDefault(reader, "voltExitIFTIn", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, GetLegacyFrameParamOrDefault(reader, "voltExitIFTOut", 0));
+                    voltExitHPFIn = GetLegacyFrameParamOrDefault(reader, "voltExitIFTIn", 0);
+                    voltExitHPFOut = GetLegacyFrameParamOrDefault(reader, "voltExitIFTOut", 0);
                 }
                 else
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, GetLegacyFrameParamOrDefault(reader, "voltExitHPFOut", 0)); // 27, HPF Out Voltage
+                    voltExitHPFOut = GetLegacyFrameParamOrDefault(reader, "voltExitHPFOut", 0); // 27, HPF Out Voltage
                 }
 
-                fp.AddUpdateValue(FrameParamKeyType.VoltExitCondLmt, GetDouble(reader, "voltExitCondLmt")); // 28, Cond Limit Voltage
-                fp.AddUpdateValue(FrameParamKeyType.PressureFront, GetDouble(reader, "PressureFront"));
-                fp.AddUpdateValue(FrameParamKeyType.PressureBack, GetDouble(reader, "PressureBack"));
-                fp.AddUpdateValue(FrameParamKeyType.MPBitOrder, GetInt16(reader, "MPBitOrder"));
-                fp.AddUpdateValue(FrameParamKeyType.FragmentationProfile, FrameParamUtilities.ConvertByteArrayToFragmentationSequence((byte[])reader["FragmentationProfile"]));
+                var voltExitCondLmt = GetDouble(reader, "voltExitCondLmt"); // 28, Cond Limit Voltage
+                var pressureFront = GetDouble(reader, "PressureFront");
+                var pressureBack = GetDouble(reader, "PressureBack");
+                var mpBitOrder = GetInt16(reader, "MPBitOrder");
+                var fragProfile = (byte[])reader["FragmentationProfile"];
 
-                var pressureConversionDivisor = 1.0;
-                if (PressureIsMilliTorr)
-                {
-                    // Divide each of the pressures by 1000 to convert from milliTorr to Torr
-                    pressureConversionDivisor = 1000.0;
-                }
-
+                double highPressureFunnelPressure = 0;
+                double ionFunnelTrapPressure = 0;
+                double rearIonFunnelPressure = 0;
+                double quadrupolePressure = 0;
+                double esiVoltage = 0;
+                double floatVoltage = 0;
+                var calibrationDone = -1;
+                var decoded = 0;
                 if (mLegacyFrameParametersMissingColumns.Contains("HighPressureFunnelPressure"))
                     columnMissing = true;
                 else
-                    fp.AddUpdateValue(FrameParamKeyType.HighPressureFunnelPressure, GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing) / pressureConversionDivisor);
+                    highPressureFunnelPressure = GetLegacyFrameParamOrDefault(reader, "HighPressureFunnelPressure", 0, out columnMissing);
 
                 if (columnMissing)
                 {
@@ -5227,41 +5266,160 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.IonFunnelTrapPressure, GetLegacyFrameParamOrDefault(reader, "IonFunnelTrapPressure", 0) / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.RearIonFunnelPressure, GetLegacyFrameParamOrDefault(reader, "RearIonFunnelPressure", 0) / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.QuadrupolePressure, GetLegacyFrameParamOrDefault(reader, "QuadrupolePressure", 0) / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.ESIVoltage, GetLegacyFrameParamOrDefault(reader, "ESIVoltage", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.FloatVoltage, GetLegacyFrameParamOrDefault(reader, "FloatVoltage", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.CalibrationDone, GetLegacyFrameParamOrDefaultInt32(reader, "CalibrationDone", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.Decoded, GetLegacyFrameParamOrDefaultInt32(reader, "Decoded", 0));
+                    ionFunnelTrapPressure = GetLegacyFrameParamOrDefault(reader, "IonFunnelTrapPressure", 0);
+                    rearIonFunnelPressure = GetLegacyFrameParamOrDefault(reader, "RearIonFunnelPressure", 0);
+                    quadrupolePressure = GetLegacyFrameParamOrDefault(reader, "QuadrupolePressure", 0);
+                    esiVoltage = GetLegacyFrameParamOrDefault(reader, "ESIVoltage", 0);
+                    floatVoltage = GetLegacyFrameParamOrDefault(reader, "FloatVoltage", 0);
+                    calibrationDone = GetLegacyFrameParamOrDefaultInt32(reader, "CalibrationDone", -1);
+                    decoded = GetLegacyFrameParamOrDefaultInt32(reader, "Decoded", 0);
                 }
 
-                if (mLegacyFrameParametersMissingColumns.Contains("a2"))
-                    columnMissing = true;
-                else
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficienta2, GetLegacyFrameParamOrDefault(reader, "a2", 0, out columnMissing));
+                // Now store to FrameParams, in order (for compatibility and comparison)
+                var fp = new FrameParams(frameNum);
 
-                if (columnMissing)
+                fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, startTimeMinutes);
+                fp.AddUpdateValue(FrameParamKeyType.DurationSeconds, durationSeconds);
+                fp.AddUpdateValue(FrameParamKeyType.Accumulations, accumulations);
+                fp.AddUpdateValue(FrameParamKeyType.FrameType, frameTypeInt);
+                fp.AddUpdateValue(FrameParamKeyType.Decoded, decoded);
+                fp.AddUpdateValue(FrameParamKeyType.CalibrationDone, calibrationDone);
+                fp.AddUpdateValue(FrameParamKeyType.Scans, scans);
+                fp.AddUpdateValue(FrameParamKeyType.MultiplexingEncodingSequence, multiplexingEncodingSequence);
+                fp.AddUpdateValue(FrameParamKeyType.MPBitOrder, mpBitOrder);
+                fp.AddUpdateValue(FrameParamKeyType.TOFLosses, tofLosses);
+                fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, averageTOFLength);
+                fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, calibrationSlope);
+                fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, calibrationIntercept);
+
+                // These six parameters are coefficients for residual mass error correction
+                // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
+                if (Math.Abs(a2) > float.Epsilon || Math.Abs(b2) > float.Epsilon || Math.Abs(c2) > float.Epsilon ||
+                    Math.Abs(d2) > float.Epsilon || Math.Abs(e2) > float.Epsilon || Math.Abs(f2) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, 0);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, 0);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, 0);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, 0);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, 0);
-                    if (mErrMessageCounter < 2)
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficienta2, a2);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, b2);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, c2);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, d2);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, e2);
+                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, f2);
+                }
+
+                // Ambient temperature
+                fp.AddUpdateValue(FrameParamKeyType.AmbientTemperature, ambientTemperature);
+
+                // Voltage settings in the IMS system
+                if (Math.Abs(voltHVRack1) > float.Epsilon || Math.Abs(voltHVRack2) > float.Epsilon ||
+                    Math.Abs(voltHVRack3) > float.Epsilon || Math.Abs(voltHVRack4) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack1, voltHVRack1);
+                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack2, voltHVRack2);
+                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack3, voltHVRack3);
+                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack4, voltHVRack4);
+                }
+
+                // Capillary Inlet Voltage
+                // HPF In Voltage
+                // HPF Out Voltage
+                // Cond Limit Voltage
+                if (Math.Abs(voltEntranceHPFIn) > float.Epsilon || Math.Abs(voltEntranceHPFIn) > float.Epsilon ||
+                    Math.Abs(voltEntranceHPFOut) > float.Epsilon || Math.Abs(voltEntranceCondLmt) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltCapInlet, voltCapInlet); // 14, Capillary Inlet Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, voltEntranceHPFIn); // 15, HPF In Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, voltEntranceHPFOut); // 16, HPF Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceCondLmt, voltEntranceCondLmt); // 17, Cond Limit Voltage
+                }
+
+                // Trap Out Voltage
+                // Trap In Voltage
+                // Jet Disruptor Voltage
+                if (Math.Abs(voltTrapOut) > float.Epsilon || Math.Abs(voltTrapIn) > float.Epsilon ||
+                    Math.Abs(voltJetDist) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltTrapOut, voltTrapOut); // 18, Trap Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltTrapIn, voltTrapIn); // 19, Trap In Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltJetDist, voltJetDist); // 20, Jet Disruptor Voltage
+                }
+
+                // Fragmentation Quadrupole 1 Voltage
+                // Fragmentation Conductance 1 Voltage
+                if (Math.Abs(voltQuad1) > float.Epsilon || Math.Abs(voltCond1) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltQuad1, voltQuad1); // 21, Fragmentation Quadrupole Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltCond1, voltCond1); // 22, Fragmentation Conductance Voltage
+                }
+
+                // Fragmentation Quadrupole 2 Voltage
+                // Fragmentation Conductance 2 Voltage
+                if (Math.Abs(voltQuad2) > float.Epsilon || Math.Abs(voltCond2) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltQuad2, voltQuad2); // 23, Fragmentation Quadrupole Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltCond2, voltCond2); // 24, Fragmentation Conductance Voltage
+                }
+
+                // IMS Out Voltage
+                // HPF In Voltage
+                // HPF Out Voltage
+                if (Math.Abs(voltIMSOut) > float.Epsilon || Math.Abs(voltExitHPFIn) > float.Epsilon ||
+                    Math.Abs(voltExitHPFOut) > float.Epsilon || Math.Abs(voltExitCondLmt) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.VoltIMSOut, voltIMSOut); // 25, IMS Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, voltExitHPFIn); // 26, HPF In Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, voltExitHPFOut); // 27, HPF Out Voltage
+                    fp.AddUpdateValue(FrameParamKeyType.VoltExitCondLmt, voltExitCondLmt); // 28, Cond Limit Voltage
+                }
+
+                // Pressure at front of Drift Tube
+                // Pressure at back of Drift Tube
+                if (Math.Abs(pressureFront) > float.Epsilon || Math.Abs(pressureBack) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.PressureFront, pressureFront);
+                    fp.AddUpdateValue(FrameParamKeyType.PressureBack, pressureBack);
+                }
+
+                // High pressure funnel pressure
+                // Ion funnel trap pressure
+                // Rear ion funnel pressure
+                // Quadruple pressure
+                if (Math.Abs(highPressureFunnelPressure) > float.Epsilon || Math.Abs(ionFunnelTrapPressure) > float.Epsilon ||
+                    Math.Abs(rearIonFunnelPressure) > float.Epsilon || Math.Abs(quadrupolePressure) > float.Epsilon)
+                {
+                    var pressureConversionDivisor = 1.0;
+                    if (PressureIsMilliTorr)
                     {
-                        Console.WriteLine(
-                            "Warning: this UIMF file is created with an old version of IMF2UIMF (b2 calibration column is missing from the Frame_Parameters table); please get the newest version from \\\\floyd\\software");
-                        mErrMessageCounter++;
+                        // Divide each of the pressures by 1000 to convert from milliTorr to Torr
+                        pressureConversionDivisor = 1000.0;
                     }
+
+                    fp.AddUpdateValue(FrameParamKeyType.HighPressureFunnelPressure, highPressureFunnelPressure / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.IonFunnelTrapPressure, ionFunnelTrapPressure / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.RearIonFunnelPressure, rearIonFunnelPressure / pressureConversionDivisor);
+                    fp.AddUpdateValue(FrameParamKeyType.QuadrupolePressure, quadrupolePressure / pressureConversionDivisor);
                 }
-                else
+
+                // ESI Voltage
+                if (Math.Abs(esiVoltage) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, GetLegacyFrameParamOrDefault(reader, "b2", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, GetLegacyFrameParamOrDefault(reader, "c2", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, GetLegacyFrameParamOrDefault(reader, "d2", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, GetLegacyFrameParamOrDefault(reader, "e2", 0));
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, GetLegacyFrameParamOrDefault(reader, "f2", 0));
+                    fp.AddUpdateValue(FrameParamKeyType.ESIVoltage, esiVoltage);
+                }
+
+                // Float Voltage
+                if (Math.Abs(floatVoltage) > float.Epsilon)
+                {
+                    fp.AddUpdateValue(FrameParamKeyType.FloatVoltage, floatVoltage);
+                }
+
+                // Voltage profile used in fragmentation
+                // Legacy parameter, likely never used
+                if (fragProfile != null && fragProfile.Length > 0)
+                {
+                    // Read from the file as a BLOB, an array of bytes
+                    // Now convert to a base-64 encoded string
+                    var base64String = Convert.ToBase64String(fragProfile, 0, fragProfile.Length);
+
+                    // Finally, store in frameParams
+                    fp.AddUpdateValue(FrameParamKeyType.FragmentationProfile, base64String);
                 }
 
                 return fp;
