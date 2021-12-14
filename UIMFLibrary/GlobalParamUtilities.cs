@@ -97,7 +97,9 @@ namespace UIMFLibrary
                     {GlobalParamKeyType.PpmBinBasedEndMz, typeof(double)},      // Only used when InstrumentClass is 1 (ppm bin-based)
                     {GlobalParamKeyType.DriftTubeLength, typeof(double)},       // Only used for IMS
                     {GlobalParamKeyType.DriftGas, typeof(string)},
-                    {GlobalParamKeyType.ADCName, typeof(string)}
+                    {GlobalParamKeyType.ADCName, typeof(string)},
+                    {GlobalParamKeyType.OneBasedDriftScans, typeof(bool)},
+                    {GlobalParamKeyType.AcquisitionMethod, typeof(string)},
                 };
 
                 foreach (var item in keyTypes)

@@ -116,7 +116,17 @@ namespace UIMFLibrary
         /// <summary>
         /// Key: Analog to Digital Converter name
         /// </summary>
-        ADCName = 20
+        ADCName = 20,
+
+        /// <summary>
+        /// Key: Set to true or false based on if the drift scans are indexed from 0..n-1 (0-based, false), or 1..n (1-based, true). Read with a nullable bool to allow an existence check.
+        /// </summary>
+        OneBasedDriftScans = 21,
+
+        /// <summary>
+        /// Key: Acquisition method string
+        /// </summary>
+        AcquisitionMethod = 22,
     }
 
     /// <summary>
@@ -308,6 +318,14 @@ namespace UIMFLibrary
 
                 case GlobalParamKeyType.ADCName:
                     InitializeByType("ADCName", dataType, "Analog to Digital Converter name");
+                    break;
+
+                case GlobalParamKeyType.OneBasedDriftScans:
+                    InitializeByType("OneBasedDriftScans", dataType, "Flag to mark if drift scans are in range 0..n-1, or 1..n");
+                    break;
+
+                case GlobalParamKeyType.AcquisitionMethod:
+                    InitializeByType("AcquisitionMethod", dataType, "Acquisition method string");
                     break;
 
                 case GlobalParamKeyType.Unknown:
