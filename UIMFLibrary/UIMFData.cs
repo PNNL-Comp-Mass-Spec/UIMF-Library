@@ -54,6 +54,11 @@ namespace UIMFLibrary
         /// </summary>
         public const string VERSION_INFO_TABLE = "Version_Info";
 
+        /// <summary>
+        /// Name of table containing software info
+        /// </summary>
+        public const string SOFTWARE_INFO_TABLE = "Software_Info";
+
         #endregion
 
         #region Enums and Structs
@@ -112,7 +117,12 @@ namespace UIMFLibrary
             /// <summary>
             /// Version info table
             /// </summary>
-            VersionInfo = 4
+            VersionInfo = 4,
+
+            /// <summary>
+            /// Software info table
+            /// </summary>
+            SoftwareInfo = 5
         }
 
         /// <summary>
@@ -205,6 +215,12 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>When opening a .UIMF file without the Version_Info table, the writer will auto-add it</remarks>
         public bool HasVersionInfoTable => CheckHasVersionInfoTable();
+
+        /// <summary>
+        /// True if the UIMF file has table Software_Info
+        /// </summary>
+        /// <remarks>When opening a .UIMF file without the Software_Info table, the writer will auto-add it</remarks>
+        public bool HasSoftwareInfoTable => CheckHasSoftwareInfoTable();
 
         /// <summary>
         /// Gets the UIMF file path.
@@ -1056,6 +1072,14 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Returns true if the Software_Info table exists
+        /// </summary>
+        private bool CheckHasSoftwareInfoTable()
+        {
+            return CheckHasTable(UIMFTableType.SoftwareInfo, SOFTWARE_INFO_TABLE);
+        }
+
+        /// <summary>
         /// Convert bin number to m/z value
         /// </summary>
         /// <param name="binNumber">
@@ -1400,6 +1424,28 @@ namespace UIMFLibrary
         }
 
         /// <summary>
+        /// Gets the field names for the Software_Info table
+        /// </summary>
+        /// <returns>
+        /// List of Tuples where Item1 is FieldName, Item2 is SQL data type, and Item3 is .NET data type
+        /// </returns>
+        protected internal List<Tuple<string, string, string>> GetSoftwareInfoFields()
+        {
+            var lstFields = new List<Tuple<string, string, string>>
+            {
+                Tuple.Create("ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
+                Tuple.Create("Name", "TEXT NOT NULL", "string"),
+                Tuple.Create("Software_Type", "TEXT NOT NULL", "string"),
+                Tuple.Create("Note", "TEXT NOT NULL", "string"),
+                Tuple.Create("Version", "TEXT NOT NULL", "string"),
+                Tuple.Create("ExeDate", "TEXT NOT NULL", "string"),
+                Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
+            };
+
+            return lstFields;
+        }
+
+        /// <summary>
         /// Get the last VersionInfo row stored in the Version_Info table
         /// </summary>
         public VersionInfo GetLastVersionInfo()
@@ -1477,6 +1523,67 @@ namespace UIMFLibrary
             }
 
             return versions;
+        }
+
+        /// <summary>
+        /// Get software info from table.
+        /// </summary>
+        /// <returns>
+        /// List of software info
+        /// </returns>
+        /// <exception cref="Exception">
+        /// </exception>
+        protected List<SoftwareInfo> GetSoftwareInfo()
+        {
+            var software = new List<SoftwareInfo>();
+            if (HasSoftwareInfoTable)
+            {
+                using (var dbCommand = mDbConnection.CreateCommand())
+                {
+                    dbCommand.CommandText = "SELECT * FROM " + SOFTWARE_INFO_TABLE;
+
+                    using (var reader = dbCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            try
+                            {
+                                var softwareInfo = new SoftwareInfo
+                                {
+                                    Id = GetInt32(reader, "ID"),
+                                    Name = GetString(reader, "Name"),
+                                    SoftwareType = GetString(reader, "Software_Type"),
+                                    Note = GetString(reader, "Note"),
+                                    SoftwareVersion = new Version(),
+                                    SoftwareExeDate = DateTime.MinValue,
+                                    DateEntered = DateTime.MaxValue
+                                };
+
+                                if (Version.TryParse(GetString(reader, "Version"), out var version))
+                                {
+                                    softwareInfo.SoftwareVersion = version;
+                                }
+
+                                if (DateTime.TryParseExact(GetString(reader, "ExeDate"), "yyyy-MM-dd HH:mm:ss",
+                                    mCultureInfoUS, DateTimeStyles.None, out var exeDate))
+                                {
+                                    softwareInfo.SoftwareExeDate = exeDate;
+                                }
+
+                                // Add 'Z' to the date entered, since it is in UTC time
+                                softwareInfo.DateEntered = DateTime.ParseExact(GetString(reader, "Entered") + "Z", "yyyy-MM-dd HH:mm:ssK", mCultureInfoUS);
+                                software.Add(softwareInfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("Failed to get version info " + ex);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return software;
         }
 
         /// <summary>

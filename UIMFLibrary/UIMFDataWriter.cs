@@ -711,7 +711,8 @@ namespace UIMFLibrary
 
                 if (entryAssembly == null)
                 {
-                    software = Assembly.GetEntryAssembly()?.GetName();
+                    entryAssembly = Assembly.GetEntryAssembly();
+                    software = entryAssembly?.GetName();
                 }
                 else
                 {
@@ -721,7 +722,13 @@ namespace UIMFLibrary
                 var softwareName = software?.Name ?? DEFAULT_NAME;
                 var softwareVersion = software?.Version ?? defaultVersion;
 
-                AddVersionInfo(softwareName, softwareVersion);
+                var fileDate = DateTime.MinValue;
+                if (entryAssembly != null)
+                {
+                    fileDate = (new FileInfo(entryAssembly.Location)).LastWriteTime;
+                }
+
+                AddVersionInfo(softwareName, softwareVersion, fileDate);
             }
             catch
             {
@@ -732,25 +739,173 @@ namespace UIMFLibrary
         /// <summary>
         /// Add version information to the version table
         /// </summary>
-        /// <param name="softwareName">Name of the data acquisition software</param>
-        /// <param name="softwareVersion">Version of the data acquisition software</param>
-        public void AddVersionInfo(string softwareName, Version softwareVersion)
+        /// <param name="softwareName">Name of the writing software</param>
+        /// <param name="softwareVersion">Version of the writing software</param>
+        /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        public void AddVersionInfo(string softwareName, Version softwareVersion, DateTime softwareLastModifiedDate = default(DateTime))
         {
             // File version is dependent on the major.minor version of the UIMF library
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var fileFormatVersion = version.ToString(2);
+            var softwareVersionString = (softwareVersion ?? new Version()).ToString();
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
+                // Check for a matching entry within the last 30 seconds
+                var minMatchDate = DateTime.UtcNow.AddSeconds(-30).ToString("yyyy-MM-dd HH:mm:ss");
+                dbCommand.CommandText = "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " "
+                                        + "WHERE File_Version = ':Version' AND "
+                                        + "Calling_Assembly_Name = ':SoftwareName' AND "
+                                        + "Calling_Assembly_Version = ':SoftwareVersion' AND "
+                                        + "Entered >= ':MinMatchDate';";
+
+                dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareName", softwareName));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersionString));
+                dbCommand.Parameters.Add(new SQLiteParameter(":MinMatchDate", minMatchDate));
+
+                var existingMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
+
+                if (existingMatchCount > 0)
+                {
+                    // There is a matching entry within the last 30 seconds; don't add a duplicate entry
+                    return;
+                }
+
                 dbCommand.CommandText = "INSERT INTO " + VERSION_INFO_TABLE + " "
                                         + "(File_Version, Calling_Assembly_Name, Calling_Assembly_Version) "
                                         + "VALUES(:Version, :SoftwareName, :SoftwareVersion);";
 
                 dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
                 dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareName", softwareName));
-                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersion));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersionString));
 
                 dbCommand.ExecuteNonQuery();
+            }
+
+            AddUpdateSoftwareInfo(softwareName, softwareVersion, softwareLastModifiedDate: softwareLastModifiedDate);
+        }
+
+        /// <summary>
+        /// Add version information to the version table
+        /// </summary>
+        /// <param name="softwareName">Name of the data acquisition software</param>
+        /// <param name="softwareVersion">Version of the data acquisition software</param>
+        /// <param name="softwareType">Type of software (acquisition, conversion, post-processing)</param>
+        /// <param name="note">A note on what the software did, or short log message</param>
+        /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        public void AddUpdateSoftwareInfo(string softwareName, Version softwareVersion, string softwareType = "", string note = "", DateTime softwareLastModifiedDate = default(DateTime))
+        {
+            if (string.IsNullOrWhiteSpace(softwareName))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(softwareType))
+            {
+                softwareType = "";
+            }
+
+            if (string.IsNullOrWhiteSpace(note))
+            {
+                note = "";
+            }
+
+            var softwareVersionString = (softwareVersion ?? new Version()).ToString();
+            var lastModifiedDate = softwareLastModifiedDate.ToString("yyyy-MM-dd HH:mm:ss");
+            if (softwareLastModifiedDate == DateTime.MinValue)
+            {
+                lastModifiedDate = "??";
+            }
+
+            using (var dbCommand = mDbConnection.CreateCommand())
+            {
+                // Check for a matching entry
+                dbCommand.CommandText = "SELECT COUNT(*) FROM " + SOFTWARE_INFO_TABLE + " "
+                                        + "WHERE Name = ':Name' AND "
+                                        + "Software_Type = ':SoftwareType' AND "
+                                        + "Note = ':Note' AND "
+                                        + "Version = ':Version' AND "
+                                        + "ExeDate = ':ExeDate';";
+
+                dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
+                dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", lastModifiedDate));
+
+                var exactMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
+
+                if (exactMatchCount > 0)
+                {
+                    // There is a matching entry; don't add a duplicate entry
+                    return;
+                }
+
+                var lastEntryIdIfCloseMatch = -1;
+                // Check for a close match within the last 24 hours, if software type or note is supplied
+                if (!string.IsNullOrWhiteSpace(softwareType) || !string.IsNullOrWhiteSpace(note))
+                {
+                    var minMatchDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss");
+                    dbCommand.CommandText = "SELECT ID FROM " + SOFTWARE_INFO_TABLE + " ORDER BY ID DESC LIMIT 1";
+
+                    var lastId = (int)(dbCommand.ExecuteScalar() ?? -1);
+
+                    dbCommand.CommandText = "SELECT ID FROM " + SOFTWARE_INFO_TABLE + " "
+                                            + "WHERE Name = ':Name' AND "
+                                            + "(Software_Type = ':SoftwareType' OR Software_Type IS NULL OR Software_Type = '') AND "
+                                            + "(Note = ':Note' OR Note IS NULL OR Note = '') AND "
+                                            + "Version = ':Version' AND "
+                                            + "ExeDate = ':ExeDate' AND "
+                                            + "Entered >= ':MinMatchDate' "
+                                            + "ORDER BY ID DESC LIMIT 1;";
+
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", lastModifiedDate));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":MinMatchDate", minMatchDate));
+
+                    var lastCloseMatchId = (int)(dbCommand.ExecuteScalar() ?? -1);
+
+                    if (lastCloseMatchId > 0 && lastCloseMatchId == lastId)
+                    {
+                        lastEntryIdIfCloseMatch = lastCloseMatchId;
+                    }
+                }
+
+                if (lastEntryIdIfCloseMatch > 0)
+                {
+                    // Update query
+                    dbCommand.CommandText = "UPDATE " + SOFTWARE_INFO_TABLE + " SET "
+                                            + "Software_Type = ':SoftwareType', "
+                                            + "Note = ':Note' "
+                                            + "WHERE ID = ':ID' AND "
+                                            + "(Name, Software_Type, Note, Version, ExeDate) "
+                                            + "VALUES(:Name, :SoftwareType, :Note, :Version, :ExeDate);";
+
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ID", lastEntryIdIfCloseMatch));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+
+                    dbCommand.ExecuteNonQuery();
+                }
+                else
+                {
+                    // Insert new row
+                    dbCommand.CommandText = "INSERT INTO " + SOFTWARE_INFO_TABLE + " "
+                                            + "(Name, Software_Type, Note, Version, ExeDate) "
+                                            + "VALUES(:Name, :SoftwareType, :Note, :Version, :ExeDate);";
+
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", lastModifiedDate));
+
+                    dbCommand.ExecuteNonQuery();
+                }
             }
         }
 
@@ -1000,7 +1155,29 @@ namespace UIMFLibrary
 
             UpdateTableCheckedStatus(UIMFTableType.VersionInfo, false);
 
+            CreateSoftwareInfoTable(dbCommand);
+
             AddVersionInfo(entryAssembly);
+        }
+
+        private void CreateSoftwareInfoTable(IDbCommand dbCommand)
+        {
+            if (HasSoftwareInfoTable)
+            {
+                // The table already exists
+                return;
+            }
+
+            // Create the Software_Info Table
+            var lstFields = GetSoftwareInfoFields();
+            dbCommand.CommandText = GetCreateTableSql(SOFTWARE_INFO_TABLE, lstFields);
+            dbCommand.ExecuteNonQuery();
+
+            // Create the unique index on Version_Info
+            dbCommand.CommandText = "CREATE UNIQUE INDEX pk_index_SoftwareInfo on " + SOFTWARE_INFO_TABLE + "(ID);";
+            dbCommand.ExecuteNonQuery();
+
+            UpdateTableCheckedStatus(UIMFTableType.SoftwareInfo, false);
         }
 
         /// <summary>
