@@ -5189,7 +5189,7 @@ namespace UIMFLibrary
                 // Cond Limit Voltage
                 var voltCapInlet = GetDouble(reader, "voltCapInlet"); // 14, Capillary Inlet Voltage
                 double voltEntranceHPFIn = 0;
-                double voltEntranceHPFOut = 0;
+                double voltEntranceHPFOut;
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltEntranceHPFIn"))
                     columnMissing = true;
@@ -5217,7 +5217,7 @@ namespace UIMFLibrary
                 var voltCond2 = GetDouble(reader, "voltCond2"); // 24, Fragmentation Conductance Voltage
                 var voltIMSOut = GetDouble(reader, "voltIMSOut"); // 25, IMS Out Voltage
                 double voltExitHPFIn = 0;
-                double voltExitHPFOut = 0;
+                double voltExitHPFOut;
 
                 if (mLegacyFrameParametersMissingColumns.Contains("voltExitHPFIn"))
                     columnMissing = true;
