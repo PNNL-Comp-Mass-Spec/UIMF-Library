@@ -259,8 +259,7 @@ namespace UIMFLibrary
                 mTableStatus.Add(tableType, new TableStatus());
             }
 
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            UimfFormatVersion = version;
+            UimfFormatVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         }
 
         #endregion
