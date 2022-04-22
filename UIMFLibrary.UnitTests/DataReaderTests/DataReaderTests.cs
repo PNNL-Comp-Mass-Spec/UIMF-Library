@@ -886,6 +886,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Console.WriteLine("{0,-27} {1}", "Creating Software Name:", mostRecentVersion.SoftwareName);
             Console.WriteLine("{0,-27} {1}", "Creating Software Version:", mostRecentVersion.SoftwareVersion);
             Console.WriteLine("{0,-27} {1}", "Date Entered:", mostRecentVersion.DateEntered);
+
+            Assert.IsTrue(mostRecentVersion.UimfVersion > new Version(), "UIMF file does not have a valid version: " + mostRecentVersion.UimfVersion);
         }
 
         [Test]
