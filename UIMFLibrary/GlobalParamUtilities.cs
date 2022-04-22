@@ -103,7 +103,9 @@ namespace UIMFLibrary
                 };
 
                 foreach (var item in keyTypes)
+                {
                     mGlobalParamKeyTypes.Add(item.Key, item.Value);
+                }
             }
 
             if (mGlobalParamKeyTypes.TryGetValue(paramType, out var dataType))

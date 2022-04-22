@@ -337,7 +337,9 @@ namespace UIMFLibrary
                 };
 
                 foreach (var item in keyTypes)
+                {
                     mFrameParamKeyTypes.Add(item.Key, item.Value);
+                }
             }
 
             if (mFrameParamKeyTypes.TryGetValue(paramType, out var dataType))
