@@ -22,7 +22,6 @@ namespace UIMFLibrary
     using System.Data.SQLite;
     using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
 
     /// <summary>
     /// UIMF Data Reader Class
