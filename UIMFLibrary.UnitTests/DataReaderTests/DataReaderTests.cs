@@ -865,6 +865,30 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         [Test]
+        public void ReadFileVersionTest()
+        {
+            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+
+            var dataFile = new FileInfo(FileRefs.WriterTest10Frames);
+
+            if (!dataFile.Exists)
+            {
+                Console.WriteLine("Warning: file not found; cannot read the version: " + dataFile.FullName);
+                return;
+            }
+
+            var reader = new DataReader(dataFile.FullName);
+
+            var mostRecentVersion = reader.GetLastVersionInfo();
+
+            Console.WriteLine("{0,-27} {1}", "UIMF Version ID:", mostRecentVersion.VersionId);
+            Console.WriteLine("{0,-27} {1}", "UIMF Version:", mostRecentVersion.UimfVersion);
+            Console.WriteLine("{0,-27} {1}", "Creating Software Name:", mostRecentVersion.SoftwareName);
+            Console.WriteLine("{0,-27} {1}", "Creating Software Version:", mostRecentVersion.SoftwareVersion);
+            Console.WriteLine("{0,-27} {1}", "Date Entered:", mostRecentVersion.DateEntered);
+        }
+
+        [Test]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NumFrames", true)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Global_Parameters", "NoColumn", false)]
         [TestCase(@"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19_encoded.uimf", "Calib_26", "FileText", true)]
