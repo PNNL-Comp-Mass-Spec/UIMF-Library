@@ -281,7 +281,6 @@ namespace UIMFLibrary
         /// Key: Temperature of the drift tube, in Celsius
         /// </summary>
         DriftTubeTemperature = 52,
-
     }
 
     #endregion
