@@ -39,6 +39,8 @@
 
 using System;
 
+// ReSharper disable UnusedMember.Global
+
 namespace UIMFLibrary
 {
     /// <summary>

@@ -460,9 +460,7 @@ namespace UIMFLibrary.UnitTests.Legacy
         /// </summary>
         /// <param name="frameParameters"></param>
         /// <returns>Frame parameter dictionary</returns>
-#pragma warning disable 612, 618
         internal static Dictionary<FrameParamKeyType, dynamic> ConvertFrameParameters(FrameParameters frameParameters)
-#pragma warning restore 612, 618
         {
             var frameParams = new Dictionary<FrameParamKeyType, dynamic>
             {
@@ -649,6 +647,8 @@ namespace UIMFLibrary.UnitTests.Legacy
 
             return frameParams;
         }
+
+        // ReSharper disable once UnusedMember.Global
 
         /// <summary>
         /// Obtain a FrameParameters instance from a FrameParams instance

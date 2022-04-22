@@ -83,6 +83,8 @@ namespace UIMFLibrary
         /// </summary>
         CalibrationIntercept = 13,
 
+        // ReSharper disable IdentifierTypo
+
         /// <summary>
         /// Key: Mass Calibration Coefficient: a2
         /// </summary>
@@ -112,6 +114,8 @@ namespace UIMFLibrary
         /// Key: Mass Calibration Coefficient: f2
         /// </summary>
         MassCalibrationCoefficientf2 = 19,
+
+        // ReSharper restore IdentifierTypo
 
         /// <summary>
         /// Key: Ambient temperature, in Celsius
