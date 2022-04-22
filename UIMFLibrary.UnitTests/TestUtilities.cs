@@ -12,7 +12,7 @@ namespace UIMFLibrary.UnitTests
     using System.Text;
 
     /// <summary>
-    /// The test utilities.
+    /// Test utilities
     /// </summary>
     public static class TestUtilities
     {
@@ -24,10 +24,10 @@ namespace UIMFLibrary.UnitTests
         /// Display 2D chromatogram.
         /// </summary>
         /// <param name="frameORScanVals">
-        /// The frame or scan values
+        /// Frame or scan values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity values
+        /// Intensity values
         /// </param>
         public static void Display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
         {
@@ -86,10 +86,10 @@ namespace UIMFLibrary.UnitTests
         /// Display raw mass spectrum.
         /// </summary>
         /// <param name="mzValues">
-        /// The mz values.
+        /// m/z values
         /// </param>
         /// <param name="intensities">
-        /// The intensities.
+        /// Intensities
         /// </param>
         public static void DisplayRawMassSpectrum(double[] mzValues, int[] intensities)
         {
@@ -109,7 +109,7 @@ namespace UIMFLibrary.UnitTests
         /// Get the max value in a list of integers
         /// </summary>
         /// <param name="values">
-        /// The values.
+        /// Values
         /// </param>
         /// <returns>
         /// Maximum value<see cref="int"/>.
@@ -124,13 +124,13 @@ namespace UIMFLibrary.UnitTests
         /// Get the max value in a 2D array of integers
         /// </summary>
         /// <param name="values">
-        /// The values.
+        /// Values
         /// </param>
         /// <param name="xCoordinate">
-        /// The x-coordinate of the maximum value
+        /// X-coordinate of the maximum value
         /// </param>
         /// <param name="yCoordinate">
-        /// The y-coordinate of the maximum value
+        /// Y-coordinate of the maximum value
         /// </param>
         /// <returns>
         /// Maximum value<see cref="int"/>.
@@ -161,13 +161,13 @@ namespace UIMFLibrary.UnitTests
         /// Print data as a matrix
         /// </summary>
         /// <param name="frameVals">
-        /// The frame values
+        /// Frame values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity values
+        /// Intensity values
         /// </param>
         /// <param name="cutoff">
-        /// The cutoff.
+        /// Cutoff
         /// </param>
         public static void PrintAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
         {
@@ -200,13 +200,13 @@ namespace UIMFLibrary.UnitTests
         /// Print data as a matrix
         /// </summary>
         /// <param name="frameVals">
-        /// The frame values
+        /// Frame values
         /// </param>
         /// <param name="intensityVals">
-        /// The intensity values
+        /// Intensity values
         /// </param>
         /// <param name="cutoff">
-        /// The cutoff.
+        /// Cutoff
         /// </param>
         public static void PrintAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
         {

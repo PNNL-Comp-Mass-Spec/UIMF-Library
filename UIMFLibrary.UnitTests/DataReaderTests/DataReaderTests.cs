@@ -16,7 +16,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The data reader tests.
+    /// Data reader tests
     /// </summary>
     [TestFixture]
     public class DataReaderTests
@@ -24,7 +24,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Fields
 
         /// <summary>
-        /// The data reader.
+        /// Data reader
         /// </summary>
         private DataReader mReader;
 
@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frames and scan intensities for a given mz test.
+        /// Get frames and scan intensities for a given mz test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -420,7 +420,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The test get spectrum as bins 2.
+        /// Test get spectrum as bins 2
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -543,7 +543,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The test get spectrum summed 1.
+        /// Test get spectrum summed 1
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -614,7 +614,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The test pressure determination 1.
+        /// Test pressure determination 1
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -664,7 +664,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The display mz value for each bin_ test 1.
+        /// Display mz value for each bin test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -704,7 +704,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frame parameters test.
+        /// Get frame parameters test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -1104,22 +1104,22 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Methods
 
         /// <summary>
-        /// The convert bin to mz.
+        /// Convert bin to mz test
         /// </summary>
         /// <param name="slope">
-        /// The slope.
+        /// Slope
         /// </param>
         /// <param name="intercept">
-        /// The intercept.
+        /// Intercept
         /// </param>
         /// <param name="binWidth">
-        /// The bin width.
+        /// Bin width
         /// </param>
         /// <param name="correctionTimeForTOF">
-        /// The correction time for TOF.
+        /// TOF correction time
         /// </param>
         /// <param name="bin">
-        /// The bin.
+        /// Bin number
         /// </param>
         /// <returns>
         /// mz<see cref="double"/>.

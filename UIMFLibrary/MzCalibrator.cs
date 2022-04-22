@@ -3,7 +3,7 @@
 namespace UIMFLibrary
 {
     /// <summary>
-    /// The m/z calibrator.
+    /// m/z calibrator
     /// </summary>
     /// <remarks>
     /// Calibrate TOF to m/z according to formula: mass = (k * (t-t0))^2
@@ -84,7 +84,7 @@ namespace UIMFLibrary
         /// Convert TOF value to m/z
         /// </summary>
         /// <param name="TOFValue">
-        /// The TOF value
+        /// TOF value
         /// </param>
         /// <returns>
         /// m/z<see cref="double"/>.
@@ -165,10 +165,10 @@ namespace UIMFLibrary
         /// Convert m/z to TOF value
         /// </summary>
         /// <param name="mz">
-        /// mz
+        /// m/z
         /// </param>
         /// <param name="factor">
-        /// The scaling factor
+        /// Scaling factor
         /// </param>
         /// <returns>
         /// TOF value<see cref="int"/>.
@@ -183,10 +183,10 @@ namespace UIMFLibrary
         /// Convert TOF value to m/z
         /// </summary>
         /// <param name="tofValue">
-        /// The TOF value
+        /// TOF value
         /// </param>
         /// <param name="factor">
-        /// The scaling factor
+        /// Scaling factor
         /// </param>
         /// <returns>
         /// m/z<see cref="double"/>.

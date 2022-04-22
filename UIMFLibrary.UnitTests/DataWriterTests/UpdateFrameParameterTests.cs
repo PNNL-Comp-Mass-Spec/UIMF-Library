@@ -12,7 +12,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The update frame parameter tests.
+    /// Update frame parameter tests
     /// </summary>
     [TestFixture]
     public class UpdateFrameParameterTests

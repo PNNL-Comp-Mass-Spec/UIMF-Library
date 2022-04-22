@@ -74,7 +74,7 @@ namespace UIMFLibrary
     }
 
     /// <summary>
-    /// The progress event arguments.
+    /// Progress event arguments
     /// </summary>
     public class ProgressEventArgs : EventArgs
     {

@@ -1355,7 +1355,7 @@ namespace UIMFLibrary
         /// Deletes all of the scans for the specified frame
         /// </summary>
         /// <param name="frameNum">
-        /// The frame number to delete
+        /// Frame number to delete
         /// </param>
         /// <param name="updateScanCountInFrameParams">
         /// If true, then will update the Scans column to be 0 for the deleted frames
@@ -1978,10 +1978,10 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="slope">
-        /// The slope value for the calibration.
+        /// Slope value for the calibration
         /// </param>
         /// <param name="intercept">
-        /// The intercept for the calibration.
+        /// Intercept for the calibration
         /// </param>
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
@@ -2072,13 +2072,13 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>This function is called by the AutoCalibrateUIMF DLL</remarks>
         /// <param name="frameNumber">
-        /// The frame number to update.
+        /// Frame number to update
         /// </param>
         /// <param name="slope">
-        /// The slope value for the calibration.
+        /// Slope value for the calibration
         /// </param>
         /// <param name="intercept">
-        /// The intercept for the calibration.
+        /// Intercept for the calibration
         /// </param>
         /// <param name="isAutoCalibrating">
         /// Optional argument that should be set to true if calibration is automatic. Defaults to false.
@@ -2097,10 +2097,10 @@ namespace UIMFLibrary
         /// Updates the scan count for the given frame
         /// </summary>
         /// <param name="frameNum">
-        /// The frame number to update
+        /// Frame number to update
         /// </param>
         /// <param name="NumScans">
-        /// The new scan count
+        /// New scan count
         /// </param>
         public void UpdateFrameScanCount(int frameNum, int NumScans)
         {
@@ -2112,10 +2112,10 @@ namespace UIMFLibrary
         /// It is used in the NUnit tests
         /// </summary>
         /// <param name="startFrameNum">
-        /// The start Frame Number
+        /// Start Frame Number
         /// </param>
         /// <param name="endFrameNum">
-        /// The end Frame Number
+        /// End Frame Number
         /// </param>
         public void UpdateFrameType(int startFrameNum, int endFrameNum)
         {

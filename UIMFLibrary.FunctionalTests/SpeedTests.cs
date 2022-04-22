@@ -15,7 +15,7 @@ using UIMFLibrary.UnitTests;
 namespace UIMFLibrary.FunctionalTests
 {
     /// <summary>
-    /// The speed tests.
+    /// Speed tests
     /// </summary>
     [TestFixture]
     public class SpeedTests

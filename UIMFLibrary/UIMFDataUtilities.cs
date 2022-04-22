@@ -13,7 +13,7 @@ namespace UIMFLibrary
     using System;
 
     /// <summary>
-    /// The UIMF data utilities.
+    /// UIMF data utilities
     /// </summary>
     public static class UIMFDataUtilities
     {
@@ -73,10 +73,10 @@ namespace UIMFLibrary
         /// Filters xData and yData to only contain data with mass between 1 and 100000 m/z, and with intensity > 0
         /// </summary>
         /// <param name="xData">
-        /// The x values.
+        /// X values
         /// </param>
         /// <param name="yData">
-        /// The y values.
+        /// Y values
         /// </param>
         public static void ParseOutZeroValues(ref double[] xData, ref int[] yData)
         {
@@ -87,16 +87,16 @@ namespace UIMFLibrary
         /// Filters xData and yData to only contain data with mass between minMZ and maxMZ, and with intensity > 0
         /// </summary>
         /// <param name="xData">
-        /// The x values.
+        /// X values
         /// </param>
         /// <param name="yData">
-        /// The y values.
+        /// Y values
         /// </param>
         /// <param name="minMZ">
-        /// The min mz.
+        /// Min m/z
         /// </param>
         /// <param name="maxMZ">
-        /// The max mz.
+        /// Max m/z
         /// </param>
         public static void ParseOutZeroValues(ref double[] xData, ref int[] yData, double minMZ, double maxMZ)
         {

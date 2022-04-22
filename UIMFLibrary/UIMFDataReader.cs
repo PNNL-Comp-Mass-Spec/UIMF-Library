@@ -648,7 +648,7 @@ namespace UIMFLibrary
         /// If a table is skipped, data will still copy for the frame types specified in eFrameScanFrameTypeDataToAlwaysCopy.
         /// </summary>
         /// <param name="targetDBPath">
-        /// The desired path of the newly cloned UIMF file.
+        /// Desired path of the newly cloned UIMF file
         /// </param>
         /// <param name="tablesToSkip">
         /// A list of table names (e.g. Frame_Scans) that should not be copied.
@@ -1138,7 +1138,7 @@ namespace UIMFLibrary
         /// Count the number of non zero data points in a frame
         /// </summary>
         /// <param name="frameNumber">
-        /// The frame number.
+        /// Frame number
         /// </param>
         /// <returns>
         /// Sum of NonZeroCount for the spectra in a frame<see cref="int"/>.
@@ -1368,7 +1368,7 @@ namespace UIMFLibrary
         /// </summary>
         /// <remarks>Use GetMasterFrameList() to obtain all of the frame numbers, regardless of frameType</remarks>
         /// <param name="frameType">
-        /// The frame Type.
+        /// Frame Type
         /// </param>
         /// <returns>
         /// Array of frame numbers
@@ -2408,20 +2408,20 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="frameNumber">
-        /// The frame number of the desired spectrum; must be an MS1 frame
+        /// Frame number of the desired spectrum; must be an MS1 frame
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.
+        /// Scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrum(
             int frameNumber,
@@ -2438,23 +2438,23 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="frameNumber">
-        /// The frame number of the desired spectrum.
+        /// Frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.
+        /// Scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrum(
             int frameNumber,
@@ -2473,29 +2473,29 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrum(
             int startFrameNumber,
@@ -2628,35 +2628,35 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider; only used if the file has Bin-centric tables
+        /// Frame type to consider; only used if the file has Bin-centric tables
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <param name="startMz">
-        /// The start m/z value of the desired spectrum.
+        /// Start m/z value of the desired spectrum
         /// </param>
         /// <param name="endMz">
-        /// The end m/z value of the desired spectrum.
+        /// End m/z value of the desired spectrum
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrum(
             int startFrameNumber,
@@ -2725,35 +2725,35 @@ namespace UIMFLibrary
         /// The index of the m/z value in mzArray will match the index of the corresponding intensity value in intensityArray.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <param name="startBin">
-        /// The start bin index of the desired spectrum.
+        /// Start bin index of the desired spectrum
         /// </param>
         /// <param name="endBin">
-        /// The end bin index of the desired spectrum.
+        /// End bin index of the desired spectrum
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrum(
             int startFrameNumber,
@@ -2858,13 +2858,13 @@ namespace UIMFLibrary
         /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
         /// </summary>
         /// <param name="frameNumber">
-        /// The frame number of the desired spectrum.
+        /// Frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.
+        /// Scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <returns>
@@ -2880,20 +2880,20 @@ namespace UIMFLibrary
         /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <returns>
         /// An array containing an intensity value for each bin location, even if the intensity value is 0.
@@ -2952,13 +2952,13 @@ namespace UIMFLibrary
         /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
         /// </summary>
         /// <param name="frameNumber">
-        /// The frame number of the desired spectrum.
+        /// Frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="scanNumber">
-        /// The scan number of the desired spectrum.
+        /// Scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="maxBin">The maximum bin value for the scan</param>
@@ -2976,20 +2976,20 @@ namespace UIMFLibrary
         /// The intensity values of each bin are summed across the frame range. The result is a spectrum for a single frame.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <param name="maxBin">The maximum bin value for the scan</param>
         /// <param name="sort">If true, data will be sorted before being returned</param>
@@ -3063,35 +3063,35 @@ namespace UIMFLibrary
         /// The UIMF file MUST have BinCentric tables when using this function; add them with method CreateBinCentricTables of the UIMFWriter class
         /// </remarks>
         /// <param name="startFrameNumber">
-        /// The start frame number of the desired spectrum.
+        /// Start frame number of the desired spectrum
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number of the desired spectrum.
+        /// End frame number of the desired spectrum
         /// </param>
         /// <param name="frameType">
-        /// The frame type to consider.
+        /// Frame type to consider
         /// </param>
         /// <param name="startScanNumber">
-        /// The start scan number of the desired spectrum.
+        /// Start scan number of the desired spectrum
         /// Traditionally the first scan in a frame has been scan 0, but we switched to start with Scan 1 in 2015.
         /// </param>
         /// <param name="endScanNumber">
-        /// The end scan number of the desired spectrum.
+        /// End scan number of the desired spectrum
         /// </param>
         /// <param name="startBin">
-        /// The start bin index of the desired spectrum.
+        /// Start bin index of the desired spectrum
         /// </param>
         /// <param name="endBin">
-        /// The end bin index of the desired spectrum.
+        /// End bin index of the desired spectrum
         /// </param>
         /// <param name="mzArray">
-        /// The m/z values that contained non-zero intensity values.
+        /// m/z values that contained non-zero intensity values
         /// </param>
         /// <param name="intensityArray">
-        /// The corresponding intensity values of the non-zero m/z value.
+        /// Corresponding intensity values of the non-zero m/z value
         /// </param>
         /// <returns>
-        /// The number of non-zero m/z values found in the resulting spectrum.
+        /// Number of non-zero m/z values found in the resulting spectrum
         /// </returns>
         public int GetSpectrumBinCentric(
             int startFrameNumber,
@@ -4366,7 +4366,7 @@ namespace UIMFLibrary
         /// Default value.
         /// </param>
         /// <returns>
-        /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
+        /// Frame parameter if found, otherwise defaultValue<see cref="double"/>
         /// </returns>
         private double GetLegacyFrameParamOrDefault(IDataRecord reader, string columnName, double defaultValue)
         {
@@ -4389,7 +4389,7 @@ namespace UIMFLibrary
         /// Output: true if the column is missing
         /// </param>
         /// <returns>
-        /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
+        /// Frame parameter if found, otherwise defaultValue<see cref="double"/>
         /// </returns>
         private double GetLegacyFrameParamOrDefault(
             IDataRecord reader,
@@ -4428,7 +4428,7 @@ namespace UIMFLibrary
         /// Default value.
         /// </param>
         /// <returns>
-        /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
+        /// Frame parameter if found, otherwise defaultValue<see cref="double"/>
         /// </returns>
         private int GetLegacyFrameParamOrDefaultInt32(IDataRecord reader, string columnName, int defaultValue)
         {
@@ -4451,7 +4451,7 @@ namespace UIMFLibrary
         /// Output: true if the column is missing
         /// </param>
         /// <returns>
-        /// The frame parameter if found, otherwise defaultValue<see cref="double"/>.
+        /// Frame parameter if found, otherwise defaultValue<see cref="double"/>
         /// </returns>
         private int GetLegacyFrameParamOrDefaultInt32(
             IDataRecord reader,
@@ -4487,16 +4487,16 @@ namespace UIMFLibrary
         /// Calculates the LC and IMS scans of an encoded index.
         /// </summary>
         /// <param name="encodedIndex">
-        /// The encoded index.
+        /// Encoded index
         /// </param>
         /// <param name="numImsScansInFrame">
-        /// The number of IMS scans.
+        /// Number of IMS scans
         /// </param>
         /// <param name="scanLc">
-        /// The resulting LC Scan number (aka frame number).
+        /// Resulting LC Scan number (aka frame number)
         /// </param>
         /// <param name="scanIms">
-        /// The resulting IMS Scan number.
+        /// Resulting IMS Scan number
         /// </param>
         private void CalculateFrameAndScanForEncodedIndex(
             int encodedIndex,

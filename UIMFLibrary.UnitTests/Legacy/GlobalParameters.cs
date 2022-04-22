@@ -10,7 +10,7 @@ namespace UIMFLibrary.UnitTests.Legacy
     // ReSharper restore CommentTypo
 
     /// <summary>
-    /// The global parameters.
+    /// Global parameters
     /// </summary>
     [Obsolete("This class has been superseded by the GlobalParams class")]
     internal class GlobalParameters

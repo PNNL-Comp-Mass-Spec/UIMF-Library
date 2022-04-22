@@ -12,7 +12,7 @@ namespace UIMFLibrary
     using System.Collections.Generic;
 
     /// <summary>
-    /// The spectrum cache.
+    /// Spectrum cache
     /// </summary>
     public class SpectrumCache
     {
@@ -22,16 +22,16 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="SpectrumCache"/> class.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number.
+        /// Start frame number
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number.
+        /// End frame number
         /// </param>
         /// <param name="listOfIntensityDictionaries">
-        /// The list of intensity dictionaries (previously a list of dictionaries, now a list of SortedList objects)
+        /// List of intensity dictionaries (previously a list of dictionaries, now a list of SortedList objects)
         /// </param>
         /// <param name="summedIntensityDictionary">
-        /// The summed intensity dictionary.
+        /// Summed intensity dictionary
         /// </param>
         // ReSharper disable once UnusedMember.Global
         public SpectrumCache(
@@ -57,16 +57,16 @@ namespace UIMFLibrary
         /// Initializes a new instance of the <see cref="SpectrumCache"/> class.
         /// </summary>
         /// <param name="startFrameNumber">
-        /// The start frame number.
+        /// Start frame number
         /// </param>
         /// <param name="endFrameNumber">
-        /// The end frame number.
+        /// End frame number
         /// </param>
         /// <param name="listOfIntensityDictionaries">
-        /// The list of intensity dictionaries.
+        /// List of intensity dictionaries
         /// </param>
         /// <param name="summedIntensityDictionary">
-        /// The summed intensity dictionary.
+        /// Summed intensity dictionary
         /// </param>
         /// <param name="firstScan">The scan number of the first entry in listOfIntensityDictionaries that has non-zero intensities</param>
         /// <param name="lastScan">The scan number of the last entry in listOfIntensityDictionaries that has non-zero intensities</param>

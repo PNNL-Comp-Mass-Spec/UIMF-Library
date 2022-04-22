@@ -10,7 +10,7 @@ namespace UIMFLibrary.UnitTests.Legacy
     // ReSharper restore CommentTypo
 
     /// <summary>
-    /// The frame parameters.
+    /// Frame parameters
     /// </summary>
     [Obsolete("This class has been superseded by the FrameParams class")]
     class FrameParameters

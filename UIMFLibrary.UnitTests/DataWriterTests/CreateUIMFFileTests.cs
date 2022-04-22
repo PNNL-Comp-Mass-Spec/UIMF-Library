@@ -12,7 +12,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The create UIMF file tests.
+    /// Create UIMF file tests
     /// </summary>
     [TestFixture]
     public class CreateUIMFFileTests

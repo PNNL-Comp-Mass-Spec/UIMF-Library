@@ -13,7 +13,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The bin centric tests.
+    /// Bin centric tests
     /// </summary>
     public class BinCentricTests
     {
@@ -23,7 +23,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         private DateTime mLastProgressMessageTime = DateTime.UtcNow;
 
         /// <summary>
-        /// The test create bin centric tables.
+        /// Test create bin centric tables
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -51,7 +51,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         }
 
         /// <summary>
-        /// The test create bin centric tables.
+        /// Test create bin centric tables
         /// Demonstrates separate method for instantiating BinCentricTableCreation
         /// </summary>
         /// <remarks>For speed purposes, it is important to wrap the call to CreateBinCentricTable in a transaction</remarks>
@@ -109,7 +109,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         }
 
         /// <summary>
-        /// The test create bin centric tables small file.
+        /// Test create bin centric tables small file
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -139,7 +139,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         }
 
         /// <summary>
-        /// The test encode decode functionality.
+        /// Test encode decode functionality
         /// </summary>
         [Test]
         public void TestEncodeDecodeFunctionality()

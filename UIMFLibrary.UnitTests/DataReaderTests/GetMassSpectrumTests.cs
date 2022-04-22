@@ -12,29 +12,29 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The frame and scan info.
+    /// Frame and scan info
     /// </summary>
     internal class FrameAndScanInfo
     {
         #region Fields
 
         /// <summary>
-        /// The start frame.
+        /// Start frame
         /// </summary>
         public int startFrame;
 
         /// <summary>
-        /// The start scan.
+        /// Start scan
         /// </summary>
         public int startScan;
 
         /// <summary>
-        /// The stop frame.
+        /// Stop frame
         /// </summary>
         public int stopFrame;
 
         /// <summary>
-        /// The stop scan.
+        /// Stop scan
         /// </summary>
         public int stopScan;
 
@@ -46,16 +46,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// Initializes a new instance of the <see cref="FrameAndScanInfo"/> class.
         /// </summary>
         /// <param name="iStartFrame">
-        /// The i start frame.
+        /// Start frame
         /// </param>
         /// <param name="iStopFrame">
-        /// The i stop frame.
+        /// Stop frame.
         /// </param>
         /// <param name="iStartScan">
-        /// The i start scan.
+        /// Start scan
         /// </param>
         /// <param name="iStopScan">
-        /// The i stop scan.
+        /// Stop scan
         /// </param>
         public FrameAndScanInfo(int iStartFrame, int iStopFrame, int iStartScan, int iStopScan)
         {
@@ -69,7 +69,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     }
 
     /// <summary>
-    /// The get mass spectrum tests.
+    /// Get mass spectrum tests
     /// </summary>
     [TestFixture]
     public class GetMassSpectrumTests
@@ -77,7 +77,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Fields
 
         /// <summary>
-        /// The test frame scan info 1.
+        /// Test frame scan info 1
         /// </summary>
         private readonly FrameAndScanInfo testFrameScanInfo1 = new FrameAndScanInfo(1, 1, 110, 150);
 
@@ -86,7 +86,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Public Methods and Operators
 
         /// <summary>
-        /// The get frame 0_ m s_ test 1.
+        /// Get frame 0 MS test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -111,7 +111,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frame 0_ m s_demultiplexed data_ test 1.
+        /// Get demultiplexed frame 0
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -144,7 +144,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 
         /// <summary>
-        /// Get multiple summed mass spectra test 1.
+        /// Get multiple summed mass spectra test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -208,7 +208,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
         /// <summary>
-        /// The get single summed mass spectrum test 1.
+        /// Get single summed mass spectrum
         /// </summary>
         [Test]
         [Category("PNL_Domain")]

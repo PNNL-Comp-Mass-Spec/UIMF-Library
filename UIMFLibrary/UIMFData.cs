@@ -228,7 +228,7 @@ namespace UIMFLibrary
         public string UimfFilePath => mFilePath;
 
         /// <summary>
-        /// The format version of the UIMF file
+        /// Format version of the UIMF file
         /// </summary>
         public Version UimfFormatVersion { get; private set; }
 

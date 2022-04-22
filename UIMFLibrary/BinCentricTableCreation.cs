@@ -12,7 +12,7 @@ namespace UIMFLibrary
     using System.IO;
 
     /// <summary>
-    /// The bin centric table creation.
+    /// Bin centric table creation
     /// </summary>
     public class BinCentricTableCreation
     {

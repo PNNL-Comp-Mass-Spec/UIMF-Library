@@ -7,7 +7,7 @@
 namespace UIMFLibrary.UnitTests
 {
     /// <summary>
-    /// The file refs.
+    /// File references
     /// </summary>
     public static class FileRefs
     {

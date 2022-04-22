@@ -13,7 +13,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The frame and scan info tests.
+    /// Frame and scan info tests.
     /// </summary>
     [TestFixture]
     public class FrameAndScanInfoTests
@@ -23,7 +23,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Public Methods and Operators
 
         /// <summary>
-        /// The get avg tof length test 1.
+        /// Get avg TOF length test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -41,7 +41,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frame info_demultiplexed_first frame_ test 1.
+        /// Get demultiplexed frame info, first frame
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -65,7 +65,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frame info_demultiplexed_last frame_ test 1.
+        /// /// Get demultiplexed frame info, last frame
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -92,7 +92,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get frame pressure_last frame.
+        /// Get frame pressure, last frame
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -117,7 +117,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get global params_test 1.
+        /// Get global params
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -135,7 +135,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get number of frames test.
+        /// Get number of frames
         /// </summary>
         [Test]
         [Category("PNL_Domain")]

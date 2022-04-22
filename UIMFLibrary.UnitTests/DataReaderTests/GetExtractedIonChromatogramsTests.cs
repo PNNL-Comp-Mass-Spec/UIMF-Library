@@ -13,15 +13,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The get extracted ion chromatograms tests.
+    /// Extracted ion chromatogram tests.
     /// </summary>
     [TestFixture]
-    public class GetExtractedIonChromatogramsTests
+    public class GetExtractedIonChromatogramTests
     {
         #region Fields
 
         /// <summary>
-        /// The data reader.
+        /// Data reader
         /// </summary>
         private DataReader mReader;
 
@@ -30,7 +30,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         #region Public Methods and Operators
 
         /// <summary>
-        /// The get 3D elution profile_test 1.
+        /// Get 3D elution profile test 1
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -81,7 +81,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get 3D elution profile_test 2.
+        /// Get 3D elution profile test 2
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -130,7 +130,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get 3D elution profile_test 3.
+        /// Get 3D elution profile test 3
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -220,7 +220,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get drift time profile test 1.
+        /// Get drift time profile test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -263,7 +263,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get lc chromatogram test 2.
+        /// Get LC chromatogram test 2
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -317,7 +317,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get lc chromatogram test 3.
+        /// Get LC chromatogram test 3
         /// </summary>
         [Test]
         [Category("PNL_Domain")]

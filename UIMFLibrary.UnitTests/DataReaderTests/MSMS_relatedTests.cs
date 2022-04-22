@@ -11,14 +11,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     using NUnit.Framework;
 
     /// <summary>
-    /// The MSMS related tests.
+    /// MS/MS related tests
     /// </summary>
     public class MSMS_relatedTests
     {
         #region Public Methods and Operators
 
         /// <summary>
-        /// The get frame type test 1.
+        /// Get frame type test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -42,7 +42,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The get msms test 1.
+        /// Get M/MS test
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -77,7 +77,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The contains msms data test 3.
+        /// Contains MS/MS data test 3
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -92,7 +92,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The contains msms data_test 1.
+        /// Contains MS/MS data test 1
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
@@ -107,7 +107,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// The contains msms data_test 2.
+        /// Contains MS/MS data test 2
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
