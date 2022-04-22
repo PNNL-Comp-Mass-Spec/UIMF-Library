@@ -17,6 +17,8 @@ namespace UIMFLibrary
     /// </summary>
     public static class UIMFDataUtilities
     {
+        // Ignore Spelling: yyyy-MM-dd hh:mm:ss tt
+
         #region Public Methods and Operators
 
         /// <summary>

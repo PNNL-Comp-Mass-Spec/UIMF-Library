@@ -9,6 +9,8 @@ namespace UIMFLibrary
     /// </summary>
     public enum FrameParamKeyType
     {
+        // Ignore Spelling: Cond
+
         /// <summary>
         /// Unknown frame parameter key
         /// </summary>

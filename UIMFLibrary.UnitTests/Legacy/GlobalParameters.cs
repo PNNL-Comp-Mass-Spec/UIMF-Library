@@ -15,6 +15,8 @@ namespace UIMFLibrary.UnitTests.Legacy
     [Obsolete("This class has been superseded by the GlobalParams class")]
     internal class GlobalParameters
     {
+        // Ignore Spelling: yyyy hh:mm:ss tt
+
         /// <summary>
         ///Width of TOF bins (in nanoseconds)
         /// </summary>

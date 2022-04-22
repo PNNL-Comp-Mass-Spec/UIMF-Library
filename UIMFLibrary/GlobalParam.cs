@@ -9,6 +9,8 @@ namespace UIMFLibrary
     /// </summary>
     public enum GlobalParamKeyType
     {
+        // Ignore Spelling: bool, nullable, prescan, ProteoWizard, yyyy, hh:mm:ss tt
+
         /// <summary>
         /// Unknown Global Parameter key
         /// </summary>

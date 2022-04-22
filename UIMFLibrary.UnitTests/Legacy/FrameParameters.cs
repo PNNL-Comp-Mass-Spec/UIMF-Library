@@ -5,7 +5,7 @@ namespace UIMFLibrary.UnitTests.Legacy
 {
     // ReSharper disable CommentTypo
 
-    // Ignore Spelling: Cond, Frag, hv, Prescan
+    // Ignore Spelling: Cond, Electrospray, Frag, hv, Prescan
 
     // ReSharper restore CommentTypo
 

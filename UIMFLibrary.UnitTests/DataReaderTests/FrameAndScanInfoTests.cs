@@ -18,6 +18,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     [TestFixture]
     public class FrameAndScanInfoTests
     {
+        // Ignore Spelling: demultiplexed, fp
+
         #region Public Methods and Operators
 
         /// <summary>
