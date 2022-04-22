@@ -742,7 +742,7 @@ namespace UIMFLibrary
         /// <param name="softwareName">Name of the writing software</param>
         /// <param name="softwareVersion">Version of the writing software</param>
         /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
-        public void AddVersionInfo(string softwareName, Version softwareVersion, DateTime softwareLastModifiedDate = default(DateTime))
+        public void AddVersionInfo(string softwareName, Version softwareVersion, DateTime softwareLastModifiedDate = default)
         {
             // File version is dependent on the major.minor version of the UIMF library
             var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -794,7 +794,12 @@ namespace UIMFLibrary
         /// <param name="softwareType">Type of software (acquisition, conversion, post-processing)</param>
         /// <param name="note">A note on what the software did, or short log message</param>
         /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
-        public void AddUpdateSoftwareInfo(string softwareName, Version softwareVersion, string softwareType = "", string note = "", DateTime softwareLastModifiedDate = default(DateTime))
+        public void AddUpdateSoftwareInfo(
+            string softwareName,
+            Version softwareVersion,
+            string softwareType = "",
+            string note = "",
+            DateTime softwareLastModifiedDate = default)
         {
             if (string.IsNullOrWhiteSpace(softwareName))
             {
