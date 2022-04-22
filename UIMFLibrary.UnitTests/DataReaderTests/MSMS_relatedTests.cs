@@ -68,7 +68,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var sb = new StringBuilder();
                 for (var i = 0; i < mzArray.Length; i++)
                 {
-                    sb.Append(mzArray[i] + "\t" + intensityArray[i] + "\n");
+                    sb.AppendFormat("{0}\t{1}", mzArray[i], intensityArray[i]).AppendLine();
                 }
 
                 Assert.IsNotNull(mzArray);

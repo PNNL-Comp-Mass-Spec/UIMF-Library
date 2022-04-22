@@ -114,7 +114,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     foreach (var scanIntensityValue in frameIntensities)
                     {
                         if (scanIntensityValue > 0)
-                            sb.Append(scanIntensityValue + ",");
+                            sb.AppendFormat("{0},", scanIntensityValue);
                     }
 
                     sb.Append(Environment.NewLine);
@@ -173,12 +173,47 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             }
 
             sw.Stop();
-            Console.WriteLine("Time in millisec for extracting 3D profile = " + sw.ElapsedMilliseconds);
+            Console.WriteLine();
+            Console.WriteLine("Time in milliseconds for extracting 3D profile = " + sw.ElapsedMilliseconds);
+            Console.WriteLine();
 
             var sb = new StringBuilder();
+            sb.AppendFormat("{0,-5}\t{1,-5}\t{2}", "Frame", "Scan", "Intensity").AppendLine();
+
+            var nonZeroIntensities = 0;
+            var previousIntensity = -1;
+
+            var mostRecentLine = string.Empty;
+            var previousValueStored = false;
+
             for (var i = 0; i < frameVals.Length; i++)
             {
-                sb.Append(frameVals[i] + "\t" + scanVals[i] + "\t" + intensityVals[i] + Environment.NewLine);
+                if (previousIntensity == 0 && intensityVals[i] == 0)
+                {
+                    mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameVals[i], scanVals[i], intensityVals[i]);
+                    previousValueStored = false;
+                    continue;
+                }
+
+                if (previousIntensity == 0 && !previousValueStored && mostRecentLine.Length > 0)
+                {
+                    sb.AppendLine(mostRecentLine);
+                }
+
+                mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameVals[i], scanVals[i], intensityVals[i]);
+
+                sb.AppendLine(mostRecentLine);
+                previousValueStored = true;
+
+                previousIntensity = intensityVals[i];
+
+                if (intensityVals[i] <= 0)
+                    continue;
+
+                nonZeroIntensities++;
+
+                if (nonZeroIntensities == 50)
+                    Console.WriteLine(sb.ToString());
             }
 
             // Console.WriteLine(sb.ToString());
