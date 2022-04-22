@@ -1117,7 +1117,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParametersFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("FrameNum", "INTEGER PRIMARY KEY", "int"),
                 Tuple.Create("StartTime", "DOUBLE", "double"),
@@ -1169,8 +1169,6 @@ namespace UIMFLibrary
                 Tuple.Create("CalibrationDone", "INTEGER", "int"),
                 Tuple.Create("Decoded", "INTEGER", "int")
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1181,15 +1179,13 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParamKeysFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
                 Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
                 Tuple.Create("ParamDescription", "TEXT NULL", "string"),
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1201,14 +1197,12 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetFrameParamsFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamValue", "TEXT", "string"),
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1244,7 +1238,7 @@ namespace UIMFLibrary
                 dotNetDataType = "int64";
             }
 
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("FrameNum", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ScanNum", "INTEGER NOT NULL", "int"),         // Switched from SMALLINT to INTEGER in May 2016
@@ -1254,8 +1248,6 @@ namespace UIMFLibrary
                 Tuple.Create("TIC", sqlDataType + " NOT NULL", dotNetDataType),
                 Tuple.Create("Intensities", "BLOB", "object")
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1266,7 +1258,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetGlobalParametersFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("DateStarted", "TEXT", "string"),
                 Tuple.Create("NumFrames", "INTEGER NOT NULL", "int"),
@@ -1285,8 +1277,6 @@ namespace UIMFLibrary
                 Tuple.Create("Prescan_Profile", "TEXT", "string"),
                 Tuple.Create("Instrument_Name", "TEXT", "string")
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1297,7 +1287,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetGlobalParamsFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("ParamID", "INTEGER NOT NULL", "int"),
                 Tuple.Create("ParamName", "TEXT NOT NULL", "string"),
@@ -1305,8 +1295,6 @@ namespace UIMFLibrary
                 Tuple.Create("ParamDataType", "TEXT NOT NULL", "string"),       // ParamDataType tracks .NET data type
                 Tuple.Create("ParamDescription", "TEXT NULL", "string"),
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1317,7 +1305,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal Dictionary<string, FrameParamKeyType> GetLegacyFrameParameterMapping()
         {
-            var fieldMapping = new Dictionary<string, FrameParamKeyType>
+            return new Dictionary<string, FrameParamKeyType>
             {
                 {"StartTime", FrameParamKeyType.StartTimeMinutes},
                 {"Duration", FrameParamKeyType.DurationSeconds},
@@ -1368,8 +1356,6 @@ namespace UIMFLibrary
                 {"CalibrationDone", FrameParamKeyType.CalibrationDone},
                 {"Decoded", FrameParamKeyType.Decoded},
             };
-
-            return fieldMapping;
         }
 
         /// <summary>
@@ -1380,7 +1366,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal Dictionary<string, GlobalParamKeyType> GetLegacyGlobalParameterMapping()
         {
-            var fieldMapping = new Dictionary<string, GlobalParamKeyType>
+            return new Dictionary<string, GlobalParamKeyType>
             {
                 {"DateStarted", GlobalParamKeyType.DateStarted},
                 {"NumFrames", GlobalParamKeyType.NumFrames},
@@ -1399,8 +1385,6 @@ namespace UIMFLibrary
                 {"Prescan_Profile", GlobalParamKeyType.PrescanProfile},
                 {"Instrument_Name", GlobalParamKeyType.InstrumentName}
             };
-
-            return fieldMapping;
         }
 
         /// <summary>
@@ -1411,7 +1395,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetVersionInfoFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("Version_ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
                 Tuple.Create("File_Version", "TEXT NOT NULL", "string"),
@@ -1419,8 +1403,6 @@ namespace UIMFLibrary
                 Tuple.Create("Calling_Assembly_Version", "TEXT", "string"),
                 Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
             };
-
-            return lstFields;
         }
 
         /// <summary>
@@ -1431,7 +1413,7 @@ namespace UIMFLibrary
         /// </returns>
         protected internal List<Tuple<string, string, string>> GetSoftwareInfoFields()
         {
-            var lstFields = new List<Tuple<string, string, string>>
+            return new List<Tuple<string, string, string>>
             {
                 Tuple.Create("ID", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT", "int"),
                 Tuple.Create("Name", "TEXT NOT NULL", "string"),
@@ -1441,8 +1423,6 @@ namespace UIMFLibrary
                 Tuple.Create("ExeDate", "TEXT NOT NULL", "string"),
                 Tuple.Create("Entered", "TEXT NOT NULL DEFAULT current_timestamp", "datetime")
             };
-
-            return lstFields;
         }
 
         /// <summary>

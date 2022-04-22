@@ -284,7 +284,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private FrameParameters GetExampleFrameParameters()
         {
-            var frameParameters = new FrameParameters
+            return new FrameParameters
             {
                 FrameNum = 2,
                 StartTime = 266.95178,
@@ -311,13 +311,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 PressureBack = 3.796,
                 MPBitOrder = 0
             };
-
-            return frameParameters;
         }
 
         private GlobalParameters GetExampleGlobalParameters()
         {
-            var globalParameters = new GlobalParameters
+            return new GlobalParameters
             {
                 InstrumentName = "Test",
                 DateStarted = "08/09/2017 8:00:00 am",
@@ -336,8 +334,6 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 Prescan_Continuous = false,
                 Prescan_Profile = "SA_4ms.txt"
             };
-
-            return globalParameters;
         }
 
 #pragma warning restore 612, 618
