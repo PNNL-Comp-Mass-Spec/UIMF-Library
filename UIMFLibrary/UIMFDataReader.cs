@@ -5412,7 +5412,7 @@ namespace UIMFLibrary
 
                 // Voltage profile used in fragmentation
                 // Legacy parameter, likely never used
-                if (fragProfile != null && fragProfile.Length > 0)
+                if (fragProfile?.Length > 0)
                 {
                     // Read from the file as a BLOB, an array of bytes
                     // Now convert to a base-64 encoded string
