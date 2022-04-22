@@ -1465,6 +1465,7 @@ namespace UIMFLibrary
                                 };
 
                                 // Add 'Z' to the date entered, since it is in UTC time
+                                // The 'K' in the format string indicates that time zone information is included in the date to parse
                                 uimfVersion.DateEntered = DateTime.ParseExact(GetString(reader, "Entered") + "Z", "yyyy-MM-dd HH:mm:ssK", mCultureInfoUS);
                                 versions.Add(uimfVersion);
                             }
@@ -1550,6 +1551,7 @@ namespace UIMFLibrary
                                 }
 
                                 // Add 'Z' to the date entered, since it is in UTC time
+                                // The 'K' in the format string indicates that time zone information is included in the date to parse
                                 softwareInfo.DateEntered = DateTime.ParseExact(GetString(reader, "Entered") + "Z", "yyyy-MM-dd HH:mm:ssK", mCultureInfoUS);
                                 software.Add(softwareInfo);
                             }

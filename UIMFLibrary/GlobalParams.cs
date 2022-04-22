@@ -33,7 +33,7 @@ namespace UIMFLibrary
         }
 
         /// <summary>
-        /// Width of TOF bins (in ns)
+        /// Width of TOF bins (in nanoseconds)
         /// </summary>
         public double BinWidth {
             get

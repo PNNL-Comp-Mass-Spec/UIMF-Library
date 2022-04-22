@@ -7,7 +7,7 @@
 namespace UIMFLibrary
 {
     /// <summary>
-    /// Class for tracking pre-computed information about a given scan
+    /// Class for tracking precomputed information about a given scan
     /// </summary>
     public class ScanInfo
     {

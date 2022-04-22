@@ -219,8 +219,8 @@ namespace UIMFLibrary
 
             if (ParamType == GlobalParamKeyType.DateStarted && Value is DateTime)
             {
-                // Make sure the date is in the standard format expected by Proteowizard
-                // Proteowizard requires that it have AM/PM at the end
+                // Make sure the date is in the standard format expected by ProteoWizard
+                // ProteoWizard requires that it have AM/PM at the end
 
                 return Value.ToString("M/d/yyyy h:mm:ss tt");
             }
@@ -259,7 +259,7 @@ namespace UIMFLibrary
                     break;
 
                 case GlobalParamKeyType.BinWidth:
-                    InitializeByType("BinWidth", dataType, "Width of TOF bins (in ns)");
+                    InitializeByType("BinWidth", dataType, "Width of TOF bins (in nanoseconds)");
                     break;
 
                 case GlobalParamKeyType.Bins:
