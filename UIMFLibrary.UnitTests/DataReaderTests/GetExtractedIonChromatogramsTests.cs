@@ -60,8 +60,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     startScan + 20,
                     targetMZ,
                     toleranceInMZ,
-                    out var frameVals,
-                    out var scanVals,
+                    out _,
+                    out _,
                     out intensityVals);
             }
 
