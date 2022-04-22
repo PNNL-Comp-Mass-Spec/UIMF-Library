@@ -68,14 +68,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             sw.Stop();
 
             var max = TestUtilities.GetMax(intensityVals);
-            var normInten = new float[intensityVals.Length];
+            var normalizedIntensities = new float[intensityVals.Length];
+
             for (var i = 0; i < intensityVals.Length; i++)
             {
-                normInten[i] = (float)intensityVals[i] / max;
+                normalizedIntensities[i] = (float)intensityVals[i] / max;
             }
 
             Assert.AreEqual(1913, max);
-            Assert.AreEqual((float)0.0172503926, normInten[16]);
+            Assert.AreEqual((float)0.0172503926, normalizedIntensities[16]);
 
             Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
         }
