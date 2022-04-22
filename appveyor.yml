@@ -12,7 +12,9 @@ test:
     except:
     - PNL_Domain
 artifacts:
-- path: UIMFLibrary\bin\Release\net461\UIMFLibrary.dll
+- path: UIMFLibrary\bin\Release\net462\UIMFLibrary.dll
+- path: UIMFLibrary\bin\Release\net472\UIMFLibrary.dll
+- path: UIMFLibrary\bin\Release\netstandard2.0\UIMFLibrary.dll
 - path: UIMFLibrary\bin\Release\UIMFLibrary*.nupkg
 deploy:
 - provider: NuGet
