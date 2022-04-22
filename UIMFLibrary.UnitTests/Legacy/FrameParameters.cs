@@ -444,7 +444,7 @@ namespace UIMFLibrary.UnitTests.Legacy
         public static byte[] ConvertToBlob(double[] frag)
         {
             if (frag == null)
-                frag = new double[0];
+                frag = Array.Empty<double>();
 
             // convert the fragmentation profile into an array of bytes
             var length_blob = frag.Length;
@@ -720,7 +720,7 @@ namespace UIMFLibrary.UnitTests.Legacy
 
             if (string.IsNullOrEmpty(fragmentationProfile))
             {
-                legacyFrameParams.FragmentationProfile = new double[0];
+                legacyFrameParams.FragmentationProfile = Array.Empty<double>();
             }
             else
             {

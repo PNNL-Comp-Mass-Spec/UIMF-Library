@@ -239,7 +239,7 @@ namespace UIMFLibrary
             mSpectraToCache = 10;
             mMaxSpectrumCacheMemoryMB = 750;
 
-            mCalibrationTable = new double[0];
+            mCalibrationTable = Array.Empty<double>();
             mSpectrumCacheList = new List<SpectrumCache>();
             mFrameTypeInfo = new Dictionary<FrameType, FrameSetContainer>();
 

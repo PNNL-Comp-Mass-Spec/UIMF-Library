@@ -1731,7 +1731,8 @@ namespace UIMFLibrary
             // Voltage profile used in fragmentation
             // Convert the array of doubles to an array of bytes
             var fragProfile = frameParameters.GetValueString(FrameParamKeyType.FragmentationProfile, string.Empty);
-            var fragArray = new double[0];
+            var fragArray = Array.Empty<double>();
+
             if (!string.IsNullOrEmpty(fragProfile))
             {
                 // The fragmentation profile was stored as an array of bytes, encoded as base 64
