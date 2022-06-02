@@ -185,7 +185,7 @@ namespace UIMFLibrary
         protected GlobalParams GlobalParameters { get; private set; }
 
         /// <summary>
-        /// This dictionary tracks the existing of key tables, including whether or not we have actually checked for the table
+        /// This dictionary tracks the existence of key tables, including whether or not we have actually checked for the table
         /// </summary>
         private readonly Dictionary<UIMFTableType, TableStatus> mTableStatus;
 
