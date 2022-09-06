@@ -45,7 +45,6 @@ namespace UIMFLibrary
         /// <summary>
         /// ToString() override
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return $"{Name} {SoftwareType}";

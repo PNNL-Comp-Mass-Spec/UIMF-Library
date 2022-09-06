@@ -65,7 +65,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         }
 
         /// <summary>
-        /// /// Get demultiplexed frame info, last frame
+        /// Get demultiplexed frame info, last frame
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
