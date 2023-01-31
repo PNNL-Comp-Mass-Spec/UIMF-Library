@@ -25,7 +25,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Creating software version
         /// </summary>
-        public Version SoftwareVersion { get; set; }
+        public string SoftwareVersion { get; set; }
 
         /// <summary>
         /// Date the row was entered

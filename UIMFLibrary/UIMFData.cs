@@ -1460,7 +1460,7 @@ namespace UIMFLibrary
                                     VersionId = GetInt32(reader, "Version_ID"),
                                     UimfVersion = Version.Parse(GetString(reader, "File_Version")),
                                     SoftwareName = GetString(reader, "Calling_Assembly_Name"),
-                                    SoftwareVersion = Version.Parse(GetString(reader, "Calling_Assembly_Version")),
+                                    SoftwareVersion = GetString(reader, "Calling_Assembly_Version"),
                                     DateEntered = DateTime.MaxValue
                                 };
 
@@ -1486,7 +1486,7 @@ namespace UIMFLibrary
                 VersionId = 1,
                 UimfVersion = new Version(0, 0, 0, 0),
                 SoftwareName = "Unknown",
-                SoftwareVersion = new Version(0, 0, 0, 0),
+                SoftwareVersion = "0.0.0.0",
                 DateEntered = DateTime.Now
             };
 

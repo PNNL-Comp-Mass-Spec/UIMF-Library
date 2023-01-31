@@ -702,7 +702,7 @@ namespace UIMFLibrary
         private void AddVersionInfo(Assembly entryAssembly = null)
         {
             const string DEFAULT_NAME = "Unknown";
-            var defaultVersion = new Version(0, 0, 0, 0);
+            var defaultVersion = "0.0.0.0";
 
             // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
             try
@@ -720,7 +720,21 @@ namespace UIMFLibrary
                 }
 
                 var softwareName = software?.Name ?? DEFAULT_NAME;
-                var softwareVersion = software?.Version ?? defaultVersion;
+                string softwareVersion;
+                var infoVersion = entryAssembly?.GetCustomAttributes<AssemblyInformationalVersionAttribute>()?.ToList();
+                var fileVersion = entryAssembly?.GetCustomAttributes<AssemblyFileVersionAttribute>()?.ToList();
+                if (infoVersion?.Count > 0)
+                {
+                    softwareVersion = infoVersion[0].InformationalVersion;
+                }
+                else if (fileVersion?.Count > 0)
+                {
+                    softwareVersion = fileVersion[0].Version;
+                }
+                else
+                {
+                    softwareVersion = software?.Version?.ToString() ?? defaultVersion;
+                }
 
                 var fileDate = DateTime.MinValue;
                 if (entryAssembly != null)
@@ -742,12 +756,24 @@ namespace UIMFLibrary
         /// <param name="softwareName">Name of the writing software</param>
         /// <param name="softwareVersion">Version of the writing software</param>
         /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        [Obsolete("Use overload with softwareVersion as string")]
         public void AddVersionInfo(string softwareName, Version softwareVersion, DateTime softwareLastModifiedDate = default)
+        {
+            AddVersionInfo(softwareName, softwareVersion.ToString(), softwareLastModifiedDate);
+        }
+
+        /// <summary>
+        /// Add version information to the version table
+        /// </summary>
+        /// <param name="softwareName">Name of the writing software</param>
+        /// <param name="softwareVersion">Version of the writing software</param>
+        /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        public void AddVersionInfo(string softwareName, string softwareVersion, DateTime softwareLastModifiedDate = default)
         {
             // File version is dependent on the major.minor version of the UIMF library
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             var fileFormatVersion = version.ToString(2);
-            var softwareVersionString = (softwareVersion ?? new Version()).ToString();
+            var softwareVersionString = softwareVersion ?? "";
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
@@ -794,9 +820,28 @@ namespace UIMFLibrary
         /// <param name="softwareType">Type of software (acquisition, conversion, post-processing)</param>
         /// <param name="note">A note on what the software did, or short log message</param>
         /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        [Obsolete("Use overload with softwareVersion as string")]
         public void AddUpdateSoftwareInfo(
             string softwareName,
             Version softwareVersion,
+            string softwareType = "",
+            string note = "",
+            DateTime softwareLastModifiedDate = default)
+        {
+            AddUpdateSoftwareInfo(softwareName, softwareVersion.ToString(), softwareType, note, softwareLastModifiedDate);
+        }
+
+        /// <summary>
+        /// Add version information to the version table
+        /// </summary>
+        /// <param name="softwareName">Name of the data acquisition software</param>
+        /// <param name="softwareVersion">Version of the data acquisition software</param>
+        /// <param name="softwareType">Type of software (acquisition, conversion, post-processing)</param>
+        /// <param name="note">A note on what the software did, or short log message</param>
+        /// <param name="softwareLastModifiedDate">Last modified date of the writing software executable</param>
+        public void AddUpdateSoftwareInfo(
+            string softwareName,
+            string softwareVersion,
             string softwareType = "",
             string note = "",
             DateTime softwareLastModifiedDate = default)
@@ -816,7 +861,7 @@ namespace UIMFLibrary
                 note = "";
             }
 
-            var softwareVersionString = (softwareVersion ?? new Version()).ToString();
+            var softwareVersionString = (softwareVersion ?? "");
             var lastModifiedDate = softwareLastModifiedDate.ToString("yyyy-MM-dd HH:mm:ss");
             if (softwareLastModifiedDate == DateTime.MinValue)
             {
