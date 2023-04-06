@@ -173,7 +173,7 @@ namespace UIMFLibrary
                 ConvertLegacyFrameParameters();
 
                 // Make sure the Version_Info table exists
-                if (!HasVersionInfoTable)
+                if (!HasVersionInfoTable || !HasSoftwareInfoTable)
                 {
                     using (var dbCommand = mDbConnection.CreateCommand())
                     {
@@ -1190,6 +1190,10 @@ namespace UIMFLibrary
         {
             if (HasVersionInfoTable)
             {
+                // Make sure the software info table exists
+                CreateSoftwareInfoTable(dbCommand);
+                AddVersionInfo(entryAssembly);
+
                 // The table already exists
                 return;
             }
