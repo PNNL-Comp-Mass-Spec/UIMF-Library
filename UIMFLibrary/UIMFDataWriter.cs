@@ -36,6 +36,16 @@ namespace UIMFLibrary
         #region Constants
 
         /// <summary>
+        /// Default software name for storing the UIMF Writer version in the Version_Info table
+        /// </summary>
+        private const string DEFAULT_NAME = "Unknown";
+
+        /// <summary>
+        /// /// Default software version for storing the UIMF Writer version in the Version_Info table
+        /// </summary>
+        private const string DEFAULT_VERSION = "0.0.0.0";
+
+        /// <summary>
         /// Minimum interval between flushing (commit transaction / create new transaction)
         /// </summary>
         private const int MINIMUM_FLUSH_INTERVAL_SECONDS = 5;
@@ -701,9 +711,6 @@ namespace UIMFLibrary
 
         private void AddVersionInfo(Assembly entryAssembly = null)
         {
-            const string DEFAULT_NAME = "Unknown";
-            const string DEFAULT_VERSION = "0.0.0.0";
-
             // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
             try
             {
@@ -785,12 +792,24 @@ namespace UIMFLibrary
 
                 var minMatchDate = DateTime.UtcNow.AddSeconds(-60).ToString("yyyy-MM-dd HH:mm:ss");
 
-                dbCommand.CommandText = string.Format(
-                    "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " " +
-                    "WHERE File_Version = '{0}' AND " +
-                    "Calling_Assembly_Name = '{1}' AND " +
-                    "Calling_Assembly_Version = '{2}' AND " +
-                    "Cast(Entered AS DateTime) >= Cast('{3}' As DateTime);", fileFormatVersion, softwareName, softwareVersionString, minMatchDate);
+                if (softwareName.Equals(DEFAULT_NAME) && softwareVersionString.Equals(DEFAULT_VERSION))
+                {
+                    // Only filter on file version and date when the software name and version are undefined
+                    dbCommand.CommandText = string.Format(
+                        "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " " +
+                        "WHERE File_Version = '{0}' AND " +
+                        "Cast(Entered AS DateTime) >= Cast('{1}' As DateTime);", fileFormatVersion, minMatchDate);
+                }
+                else
+                {
+                    dbCommand.CommandText = string.Format(
+                        "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " " +
+                        "WHERE File_Version = '{0}' AND " +
+                        "Calling_Assembly_Name = '{1}' AND " +
+                        "Calling_Assembly_Version = '{2}' AND " +
+                        "Cast(Entered AS DateTime) >= Cast('{3}' As DateTime);", fileFormatVersion, softwareName, softwareVersionString, minMatchDate);
+                }
+
                 var existingMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
 
                 if (existingMatchCount > 0)
