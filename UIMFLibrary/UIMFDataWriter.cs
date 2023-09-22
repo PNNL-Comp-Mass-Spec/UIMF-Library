@@ -790,24 +790,31 @@ namespace UIMFLibrary
                 // Check for a matching entry within the last 60 seconds
                 // Use UtcNow since SQLite stores UTC-based dates with current_timestamp
 
+                // SQLite timestamps must be formatted with leading zeroes, e.g.  '2023-09-22 04:23:13'
                 var minMatchDate = DateTime.UtcNow.AddSeconds(-60).ToString("yyyy-MM-dd HH:mm:ss");
 
                 if (softwareName.Equals(DEFAULT_NAME) && softwareVersionString.Equals(DEFAULT_VERSION))
                 {
                     // Only filter on file version and date when the software name and version are undefined
                     dbCommand.CommandText = string.Format(
-                        "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " " +
-                        "WHERE File_Version = '{0}' AND " +
-                        "Cast(Entered AS DateTime) >= Cast('{1}' As DateTime);", fileFormatVersion, minMatchDate);
+                        "SELECT COUNT(*) FROM {0} " +
+                        "WHERE File_Version = :Version AND " +
+                        "datetime(Entered) >= datetime('{1}');", VERSION_INFO_TABLE, minMatchDate);
+
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
                 }
                 else
                 {
                     dbCommand.CommandText = string.Format(
-                        "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " " +
-                        "WHERE File_Version = '{0}' AND " +
-                        "Calling_Assembly_Name = '{1}' AND " +
-                        "Calling_Assembly_Version = '{2}' AND " +
-                        "Cast(Entered AS DateTime) >= Cast('{3}' As DateTime);", fileFormatVersion, softwareName, softwareVersionString, minMatchDate);
+                        "SELECT COUNT(*) FROM {0} " +
+                        "WHERE File_Version = :Version AND " +
+                        "Calling_Assembly_Name = :SoftwareName AND " +
+                        "Calling_Assembly_Version = :SoftwareVersion AND " +
+                        "datetime(Entered) >= datetime('{1}');", VERSION_INFO_TABLE, minMatchDate);
+
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareName", softwareName));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersionString));
                 }
 
                 var existingMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
@@ -894,14 +901,20 @@ namespace UIMFLibrary
             using (var dbCommand = mDbConnection.CreateCommand())
             {
                 // Check for a matching entry
+
                 dbCommand.CommandText = string.Format(
-                    "SELECT COUNT(*) FROM " + SOFTWARE_INFO_TABLE + " " +
-                    "WHERE Name = '{0}' AND " +
-                    "Software_Type = '{1}' AND " +
-                    "Note = '{2}' AND " +
-                    "Version = '{3}' AND " +
-                    "ExeDate = '{4}';",
-                    softwareName, softwareType, note, softwareVersionString, lastModifiedDate);
+                    "SELECT COUNT(*) FROM {0} " +
+                    "WHERE Name = :Name AND " +
+                    "Software_Type = :SoftwareType AND " +
+                    "Note = :Note AND " +
+                    "Version = :Version AND " +
+                    "ExeDate = :ExeDate;", SOFTWARE_INFO_TABLE);
+
+                dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
+                dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
+                dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", exeDate));
 
                 var exactMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
 
@@ -926,17 +939,22 @@ namespace UIMFLibrary
                     var minMatchDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss");
 
                     dbCommand.CommandText = string.Format(
-                        "SELECT ID FROM " + SOFTWARE_INFO_TABLE + " " +
-                        "WHERE Name = '{0}' AND " +
-                        "(Software_Type = '{1}' OR Software_Type IS NULL OR Software_Type = '') AND " +
-                        "(Note = '{2}' OR Note IS NULL OR Note = '') AND " +
-                        "Version = '{3}' AND " +
-                        "ExeDate = '{4}' AND " +
-                        "Cast(Entered AS DateTime) >= Cast('{5}' As DateTime) " +
+                        "SELECT ID FROM {0} " +
+                        "WHERE Name = :Name AND " +
+                        "(Software_Type = :SoftwareType OR Software_Type IS NULL OR Software_Type = '') AND " +
+                        "(Note = :Note OR Note IS NULL OR Note = '') AND " +
+                        "Version = :Version AND " +
+                        "ExeDate = :ExeDate AND " +
+                        "datetime(Entered) >= datetime('{1}') " +
                         "ORDER BY ID DESC LIMIT 1;",
-                        softwareName, softwareType, note, softwareVersionString, lastModifiedDate, minMatchDate);
+                        SOFTWARE_INFO_TABLE, minMatchDate);
 
                     var lastCloseMatchIdObj = dbCommand.ExecuteScalar();
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", exeDate));
 
                     var lastCloseMatchId = TryConvertDbScalarToInt(lastCloseMatchIdObj, -1);
 
