@@ -9,6 +9,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     /// </summary>
     public class MSMS_relatedTests
     {
+        // Ignore Spelling: msms
+
         #region Public Methods and Operators
 
         /// <summary>

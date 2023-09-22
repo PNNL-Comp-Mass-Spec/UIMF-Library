@@ -48,6 +48,8 @@ namespace UIMFLibrary
     /// </summary>
     public static class CLZF2
     {
+        // Ignore Spelling: clzf
+
         #region Tunable Constants
 
         /// <summary>

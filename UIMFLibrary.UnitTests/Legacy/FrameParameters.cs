@@ -15,6 +15,8 @@ namespace UIMFLibrary.UnitTests.Legacy
     [Obsolete("This class has been superseded by the FrameParams class")]
     class FrameParameters
     {
+        // Ignore Spelling: Lmt
+
         /// <summary>
         /// Number of collected and summed acquisitions in a frame
         /// </summary>

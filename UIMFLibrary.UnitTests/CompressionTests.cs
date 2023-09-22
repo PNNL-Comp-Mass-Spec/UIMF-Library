@@ -7,6 +7,8 @@ namespace UIMFLibrary.UnitTests
     [TestFixture]
     public class CompressionTests
     {
+        // Ignore Spelling: IMS
+
         private const int BIN_COUNT = 148000;
         private readonly List<KeyValuePair<int, int>> testValues = new List<KeyValuePair<int, int>> { new KeyValuePair<int, int>(49693, 8) };
         private int[] testInputData;

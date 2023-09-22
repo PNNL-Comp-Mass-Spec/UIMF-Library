@@ -7,6 +7,8 @@
     /// </summary>
     public class IntensityPoint : IComparable<IntensityPoint>
     {
+        // Ignore Spelling: ims
+
         #region Constructor
 
         /// <summary>

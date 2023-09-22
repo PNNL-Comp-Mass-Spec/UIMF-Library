@@ -10,6 +10,8 @@ namespace UIMFLibrary
     /// </remarks>
     public class MzCalibrator
     {
+        // Ignore Spelling: ftms, fto, tof, zto
+
         #region Fields
 
         private readonly double binWidth;

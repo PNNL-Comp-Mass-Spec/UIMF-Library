@@ -15,6 +15,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     [TestFixture]
     public class DataReaderTests
     {
+        // Ignore Spelling: uimf
+
         #region Fields
 
         /// <summary>

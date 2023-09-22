@@ -11,6 +11,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
     /// </summary>
     internal class FrameAndScanInfo
     {
+        // Ignore spelling: demultiplexed
+
         #region Fields
 
         /// <summary>

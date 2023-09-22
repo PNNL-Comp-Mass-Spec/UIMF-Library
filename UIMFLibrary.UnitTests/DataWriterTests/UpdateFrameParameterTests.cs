@@ -11,6 +11,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
     [TestFixture]
     public class UpdateFrameParameterTests
     {
+        // Ignore Spelling: uimf
+
         [Test]
         [Category("PNL_Domain")]
         public void UpdateCalibrationCoefficients()
