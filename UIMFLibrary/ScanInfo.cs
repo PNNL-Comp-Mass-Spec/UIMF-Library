@@ -1,10 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <summary>
-//   Tracks information for a given scan
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace UIMFLibrary
+﻿namespace UIMFLibrary
 {
     /// <summary>
     /// Class for tracking precomputed information about a given scan

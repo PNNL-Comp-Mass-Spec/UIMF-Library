@@ -1,10 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <summary>
-//   Defines the UIMFDataUtilities type.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
-using System.Globalization;
+﻿using System.Globalization;
 
 // ReSharper disable UnusedMember.Global
 
