@@ -404,12 +404,12 @@ namespace UIMFLibrary
                         var progressMessage = "Create temporary DB, adding frame: " + frameNumber + " / " + numFrames;
 
                         var frameParams = uimfReader.GetFrameParams(frameNumber);
-                        var numScans = frameParams.Scans;
+                        var scanCount = frameParams.Scans;
 
                         // Get data from UIMF file
                         var frameBinData = uimfReader.GetIntensityBlockOfFrame(frameNumber);
 
-                        for (var scanNumber = 0; scanNumber < numScans; scanNumber++)
+                        for (var scanNumber = 0; scanNumber < scanCount; scanNumber++)
                         {
                             var scanData = frameBinData[scanNumber];
 

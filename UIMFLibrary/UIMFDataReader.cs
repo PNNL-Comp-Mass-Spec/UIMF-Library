@@ -522,7 +522,7 @@ namespace UIMFLibrary
 
                 // This function extracts intensities from selected scans and bins in a single frame
                 // and returns a two-dimensional array intensities[scan][bin]
-                // frameNum is mandatory and all other arguments are optional
+                // Frame number is mandatory and all other arguments are optional
                 using (var dbCommand = mDbConnection.CreateCommand())
                 {
                     // The ScanNum cast here is required to support UIMF files that list the ScanNum field as SMALLINT yet have scan number values > 32765
@@ -1171,7 +1171,7 @@ namespace UIMFLibrary
         /// <summary>
         /// Returns the drift time for the given frame and IMS scan, as computed using driftTime = averageTOFLength * scanNum / 1e6
         /// </summary>
-        /// <param name="frameNum">
+        /// <param name="frameNumber">
         /// Frame number (1-based)
         /// </param>
         /// <param name="scanNum">
@@ -1182,9 +1182,9 @@ namespace UIMFLibrary
         /// If true, then this function will normalize the drift time using 'drift time * STANDARD_PRESSURE / framePressure' where STANDARD_PRESSURE = 4
         /// </param>
         /// <returns>Drift time (milliseconds)</returns>
-        public double GetDriftTime(int frameNum, int scanNum, bool normalizeByPressure)
+        public double GetDriftTime(int frameNumber, int scanNum, bool normalizeByPressure)
         {
-            var frameParams = GetFrameParams(frameNum);
+            var frameParams = GetFrameParams(frameNumber);
 
             var averageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
             var driftTime = averageTOFLength * scanNum / 1e6;
@@ -1333,7 +1333,7 @@ namespace UIMFLibrary
         /// Get frame and scan list by descending intensity.
         /// </summary>
         /// <returns>
-        /// Stack of tuples (FrameNum, ScanNum, BPI)
+        /// Stack of tuples (FrameNumber, ScanNumber, BPI)
         /// </returns>
         public Stack<int[]> GetFrameAndScanListByDescendingIntensity()
         {
@@ -1352,8 +1352,8 @@ namespace UIMFLibrary
                 while (reader.Read())
                 {
                     var values = new int[3];
-                    values[0] = reader.GetInt32(0); // FrameNum
-                    values[1] = reader.GetInt32(1); // ScanNum
+                    values[0] = reader.GetInt32(0); // FrameNumber
+                    values[1] = reader.GetInt32(1); // ScanNumber
                     values[2] = reader.GetInt32(2); // BPI
 
                     tuples.Push(values);
@@ -1426,9 +1426,9 @@ namespace UIMFLibrary
         public void PreCacheAllFrameParams()
         {
             var cachedCount = 0;
-            for (var frameNum = 0; frameNum <= GlobalParameters.NumFrames; frameNum++)
+            for (var frameNumber = 0; frameNumber <= GlobalParameters.NumFrames; frameNumber++)
             {
-                if (mCachedFrameParameters.ContainsKey(frameNum))
+                if (mCachedFrameParameters.ContainsKey(frameNumber))
                     cachedCount++;
             }
 
@@ -1454,7 +1454,7 @@ namespace UIMFLibrary
             {
                 var frameParamKeys = GetFrameParameterKeys();
                 FrameParams frameParameters = null;
-                var currentFrameNum = -1;
+                var currentFrameNumber = -1;
 
                 var dbCommand = mDbConnection.CreateCommand();
                 dbCommand.CommandText = "SELECT FrameNum, ParamID, ParamValue FROM Frame_Params ORDER BY FrameNum";
@@ -1471,24 +1471,24 @@ namespace UIMFLibrary
                     while (reader.Read())
                     {
                         // FrameNum column is index 0
-                        var frameNum = reader.GetInt32(0);
+                        var frameNumber = reader.GetInt32(0);
 
-                        if (frameNum > currentFrameNum)
+                        if (frameNumber > currentFrameNumber)
                         {
-                            if (currentFrameNum > -1)
+                            if (currentFrameNumber > -1)
                             {
                                 // Store the previous frame's parameters
-                                if (!mCachedFrameParameters.ContainsKey(currentFrameNum))
-                                    mCachedFrameParameters.Add(currentFrameNum, frameParameters);
+                                if (!mCachedFrameParameters.ContainsKey(currentFrameNumber))
+                                    mCachedFrameParameters.Add(currentFrameNumber, frameParameters);
                             }
 
-                            currentFrameNum = frameNum;
-                            frameParameters = new FrameParams(frameNum);
+                            currentFrameNumber = frameNumber;
+                            frameParameters = new FrameParams(frameNumber);
 
                             if (DateTime.UtcNow.Subtract(dtLastStatusUpdate).TotalSeconds >= 2)
                             {
                                 dtLastStatusUpdate = DateTime.UtcNow;
-                                Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " +
+                                Console.WriteLine("  Caching frame parameters, " + currentFrameNumber + " / " +
                                                   GlobalParameters.NumFrames);
                             }
                         }
@@ -1497,8 +1497,8 @@ namespace UIMFLibrary
                     }
 
                     // Store the previous frame's parameters
-                    if (!mCachedFrameParameters.ContainsKey(currentFrameNum))
-                        mCachedFrameParameters.Add(currentFrameNum, frameParameters);
+                    if (!mCachedFrameParameters.ContainsKey(currentFrameNumber))
+                        mCachedFrameParameters.Add(currentFrameNumber, frameParameters);
                 }
             }
             catch (Exception ex)
@@ -1522,15 +1522,15 @@ namespace UIMFLibrary
                     {
                         var frameParameters = GetLegacyFrameParameters(reader);
 
-                        var currentFrameNum = frameParameters.FrameNumber;
+                        var currentFrameNumber = frameParameters.FrameNumber;
 
-                        if (!mCachedFrameParameters.ContainsKey(currentFrameNum))
-                            mCachedFrameParameters.Add(currentFrameNum, frameParameters);
+                        if (!mCachedFrameParameters.ContainsKey(currentFrameNumber))
+                            mCachedFrameParameters.Add(currentFrameNumber, frameParameters);
 
                         if (DateTime.UtcNow.Subtract(dtLastStatusUpdate).TotalSeconds >= 2)
                         {
                             dtLastStatusUpdate = DateTime.UtcNow;
-                            Console.WriteLine("  Caching frame parameters, " + currentFrameNum + " / " +
+                            Console.WriteLine("  Caching frame parameters, " + currentFrameNumber + " / " +
                                               GlobalParameters.NumFrames);
                         }
                     }
@@ -1818,6 +1818,7 @@ namespace UIMFLibrary
         public FrameType GetFrameTypeForFrame(int frameNumber)
         {
             var frameParams = GetFrameParams(frameNumber);
+
             if (frameParams == null)
             {
                 // Frame number out of range
@@ -1997,7 +1998,7 @@ namespace UIMFLibrary
             {
                 while (reader.Read())
                 {
-                    var frameNum = GetInt32(reader, "FrameNum");
+                    var frameNumber = GetInt32(reader, "FrameNum");
 
                     var compressedBinIntensity = (byte[])reader["Intensities"];
                     var scanNum = GetInt32(reader, "ScanNum");
@@ -2015,7 +2016,7 @@ namespace UIMFLibrary
                         var binIndex = binIntensity.Item1;
                         if (startBin <= binIndex && binIndex <= endBin)
                         {
-                            intensities[frameNum - startFrameNumber][scanNum - startScan][binIndex - startBin] = binIntensity.Item2;
+                            intensities[frameNumber - startFrameNumber][scanNum - startScan][binIndex - startBin] = binIntensity.Item2;
                         }
                     }
                 }
@@ -2036,11 +2037,11 @@ namespace UIMFLibrary
         public Dictionary<int, int>[] GetIntensityBlockOfFrame(int frameNumber)
         {
             var frameParams = GetFrameParams(frameNumber);
-            var numScans = frameParams.Scans;
+            var scanCount = frameParams.Scans;
             var frameType = frameParams.FrameType;
 
-            var dictionaryArray = new Dictionary<int, int>[numScans];
-            for (var i = 0; i < numScans; i++)
+            var dictionaryArray = new Dictionary<int, int>[scanCount];
+            for (var i = 0; i < scanCount; i++)
             {
                 dictionaryArray[i] = new Dictionary<int, int>();
             }
@@ -2049,7 +2050,7 @@ namespace UIMFLibrary
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum1", frameNumber));
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameNum2", frameNumber));
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", -1));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScans - 1));
+            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", scanCount - 1));
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
             using (var reader = mGetSpectrumCommand.ExecuteReader())
@@ -3374,16 +3375,16 @@ namespace UIMFLibrary
                             entryIndex++;
 
                             // Calculate LC Scan (aka frame number) and IMS Scan of this entry
-                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var frameNum, out var scanIms);
+                            CalculateFrameAndScanForEncodedIndex(entryIndex, numImsScans, out var frameNumber, out var scanIms);
 
                             // Skip FrameTypes that do not match the given FrameType
-                            if (GetFrameParams(frameNum).FrameType != frameType)
+                            if (GetFrameParams(frameNumber).FrameType != frameType)
                             {
                                 continue;
                             }
 
                             // Add intensity to the result
-                            var frameIndex = frameIndexes[frameNum];
+                            var frameIndex = frameIndexes[frameNumber];
                             intensityList.Add(new IntensityPoint(frameIndex, scanIms, decodedSpectraRecord));
                         }
                     }
@@ -3780,7 +3781,7 @@ namespace UIMFLibrary
             var binWidth = GlobalParameters.BinWidth;
             var tofCorrectionTime = GlobalParameters.TOFCorrectionTime;
             var numImsScans = frameParams.Scans;
-            var numScans = scanMax - scanMin + 1;
+            var scanCount = scanMax - scanMin + 1;
 
             var frameSet = GetFrameSetByFrameType(frameType);
             var numFrames = frameNumberMax - frameNumberMin + 1;
@@ -3790,7 +3791,7 @@ namespace UIMFLibrary
                                                   out var minFrameNumberInFrameSet,
                                                   out var maxFrameNumberInFrameSet);
 
-            var result = new double[numFrames, numScans];
+            var result = new double[numFrames, scanCount];
 
             var mzTolerance = toleranceType == ToleranceType.Thomson ? tolerance : targetMz / 1000000 * tolerance;
             var lowMz = targetMz - mzTolerance;
@@ -4666,10 +4667,10 @@ namespace UIMFLibrary
             }
 
             // Initialize List of arrays that will be used for the cache
-            var numScansInFrame = GetFrameParams(startFrameNumber).Scans;
+            var scanCountInFrame = GetFrameParams(startFrameNumber).Scans;
 
             // Previously a list of dictionaries, now a list of SortedList objects
-            IList<SortedList<int, int>> listOfIntensityDictionaries = new List<SortedList<int, int>>(numScansInFrame);
+            IList<SortedList<int, int>> listOfIntensityDictionaries = new List<SortedList<int, int>>(scanCountInFrame);
 
             var summedIntensityDictionary = new Dictionary<int, int>();
 
@@ -4678,7 +4679,7 @@ namespace UIMFLibrary
             // In UIMF files from IMS08, prior to December 1, 2014, if Frame_Parameters.Scans = 374 then Frame_Scans will have scans 0 through 373
             // in UIMF files from IMS08, after December 1, 2014     if Frame_Parameters.Scans = 374 then Frame_Scans will have scans 1 through 374
 
-            for (var i = 0; i < numScansInFrame; i++)
+            for (var i = 0; i < scanCountInFrame; i++)
             {
                 listOfIntensityDictionaries.Add(new SortedList<int, int>());
             }
@@ -4691,11 +4692,11 @@ namespace UIMFLibrary
             // https://social.msdn.microsoft.com/Forums/en-US/596f17c7-bf7f-4eac-b061-a0026a5579eb/faq-item-why-i-cannot-pass-0-as-value-to-a-sql-parameter-in-adonet
             // We can manually cast the value, or manually set it via the initializer syntax.
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum1", Convert.ToInt32(0)));
-            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", numScansInFrame));
+            mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("ScanNum2", scanCountInFrame));
             mGetSpectrumCommand.Parameters.Add(new SQLiteParameter("FrameType", GetFrameTypeInt(frameType)));
 
             // Keep track of the actual minimum and maximum scan values
-            var minScan = numScansInFrame;
+            var minScan = scanCountInFrame;
             var maxScan = -1;
 
             using (var reader = mGetSpectrumCommand.ExecuteReader())
@@ -4957,7 +4958,7 @@ namespace UIMFLibrary
                 {
                     while (reader.Read())
                     {
-                        // Read the data: FrameNum and Value
+                        // Read the data: Frame Number and Value
                         dctTicOrBPI.Add(reader.GetInt32(0), reader.GetDouble(1));
                     }
                 }
@@ -5108,7 +5109,7 @@ namespace UIMFLibrary
             {
                 bool columnMissing;
 
-                var frameNum = GetInt32(reader, "FrameNum");
+                var frameNumber = GetInt32(reader, "FrameNum");
 
                 var startTimeMinutes = GetDouble(reader, "StartTime");
 
@@ -5275,7 +5276,7 @@ namespace UIMFLibrary
                 }
 
                 // Now store to FrameParams, in order (for compatibility and comparison)
-                var fp = new FrameParams(frameNum);
+                var fp = new FrameParams(frameNumber);
 
                 fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, startTimeMinutes);
                 fp.AddUpdateValue(FrameParamKeyType.DurationSeconds, durationSeconds);
@@ -5445,7 +5446,7 @@ namespace UIMFLibrary
             FrameParams frameParameters)
         {
             // Columns returned by the reader should be
-            // FrameNum, ParamID, ParamValue
+            // FrameNumber, ParamID, ParamValue
 
             var paramID = reader.GetInt32(idColIndex);
 

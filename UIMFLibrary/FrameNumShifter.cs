@@ -39,21 +39,21 @@ namespace UIMFLibrary
             HasLegacyParameterTables = hasLegacyParameterTables;
         }
 
-        private static string GetFrameRanges(IReadOnlyList<int> frameNums)
+        private static string GetFrameRanges(IReadOnlyList<int> frameNumbers)
         {
             var frameRanges = new List<string>();
-            var startFrame = frameNums[0];
+            var startFrame = frameNumbers[0];
 
-            for (var i = 0; i < frameNums.Count - 1; i++)
+            for (var i = 0; i < frameNumbers.Count - 1; i++)
             {
-                if (frameNums[i] - frameNums[i + 1] <= 1)
+                if (frameNumbers[i] - frameNumbers[i + 1] <= 1)
                     continue;
 
-                frameRanges.Add(GetFrameRangeDescription(startFrame, frameNums[i]));
-                startFrame = frameNums[i + 1];
+                frameRanges.Add(GetFrameRangeDescription(startFrame, frameNumbers[i]));
+                startFrame = frameNumbers[i + 1];
             }
 
-            frameRanges.Add(GetFrameRangeDescription(startFrame, frameNums[frameNums.Count - 1]));
+            frameRanges.Add(GetFrameRangeDescription(startFrame, frameNumbers[frameNumbers.Count - 1]));
 
             return string.Join(", ", frameRanges);
         }
@@ -75,19 +75,19 @@ namespace UIMFLibrary
             using (var dbCommand = DBConnection.CreateCommand())
             {
                 // Obtain a list of the current frame numbers
-                var frameNums = new List<int>();
+                var frameNumbers = new List<int>();
 
                 dbCommand.CommandText = "SELECT DISTINCT FrameNum FROM Frame_Params ORDER BY FrameNum;";
                 using (var reader = dbCommand.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        var frameNum = reader.GetInt32(0);
-                        frameNums.Add(frameNum);
+                        var frameNumber = reader.GetInt32(0);
+                        frameNumbers.Add(frameNumber);
                     }
                 }
 
-                if (frameNums.Count == 0)
+                if (frameNumbers.Count == 0)
                 {
                     // Nothing to do
                     return;
@@ -114,17 +114,17 @@ namespace UIMFLibrary
                 }
 
                 // Dictionary mapping old frame number to new frame number
-                var frameNumMapping = new Dictionary<int, int>();
+                var frameNumberMapping = new Dictionary<int, int>();
                 var nextFrameNumber = 1;
 
                 var renumberRequired = false;
                 var needToAddFirstCalibrationFrame = false;
 
-                for (var i = 0; i < frameNums.Count; i++)
+                for (var i = 0; i < frameNumbers.Count; i++)
                 {
-                    var frameNum = frameNums[i];
+                    var frameNumber = frameNumbers[i];
 
-                    if (i == 0 && firstCalibrationFrame > 0 && frameNum == firstCalibrationFrame)
+                    if (i == 0 && firstCalibrationFrame > 0 && frameNumber == firstCalibrationFrame)
                     {
                         // The first frame in the frames we want to keep is the calibration frame
                         // This frame likely has fewer scans than the other frames in the UIMF file
@@ -134,17 +134,17 @@ namespace UIMFLibrary
                         continue;
                     }
 
-                    if (frameNum != nextFrameNumber)
+                    if (frameNumber != nextFrameNumber)
                         renumberRequired = true;
 
-                    frameNumMapping.Add(frameNum, nextFrameNumber);
+                    frameNumberMapping.Add(frameNumber, nextFrameNumber);
                     nextFrameNumber++;
 
-                    if (needToAddFirstCalibrationFrame && frameNum > firstCalibrationFrame)
+                    if (needToAddFirstCalibrationFrame && frameNumber > firstCalibrationFrame)
                     {
                         // Add the calibration frame now
                         renumberRequired = true;
-                        frameNumMapping.Add(firstCalibrationFrame, nextFrameNumber);
+                        frameNumberMapping.Add(firstCalibrationFrame, nextFrameNumber);
                         nextFrameNumber++;
 
                         needToAddFirstCalibrationFrame = false;
@@ -157,49 +157,49 @@ namespace UIMFLibrary
                     return;
                 }
 
-                var frameNumsInBatch = new List<int> {
-                    frameNums[0]
+                var frameNumbersInBatch = new List<int> {
+                    frameNumbers[0]
                 };
 
-                var deltaForBatch = frameNums[0] - frameNumMapping[frameNums[0]];
+                var deltaForBatch = frameNumbers[0] - frameNumberMapping[frameNumbers[0]];
 
-                for (var i = 1; i < frameNums.Count; i++)
+                for (var i = 1; i < frameNumbers.Count; i++)
                 {
-                    var thisFrame = frameNums[i];
-                    var frameNumNew = frameNumMapping[thisFrame];
-                    var delta = thisFrame - frameNumNew;
+                    var thisFrame = frameNumbers[i];
+                    var newFrameNumber = frameNumberMapping[thisFrame];
+                    var delta = thisFrame - newFrameNumber;
 
                     if (delta == deltaForBatch)
                     {
-                        frameNumsInBatch.Add(thisFrame);
+                        frameNumbersInBatch.Add(thisFrame);
                         continue;
                     }
 
-                    ShiftFramesInBatch(dbCommand, frameNumsInBatch, deltaForBatch);
-                    frameNumsInBatch.Clear();
+                    ShiftFramesInBatch(dbCommand, frameNumbersInBatch, deltaForBatch);
+                    frameNumbersInBatch.Clear();
 
-                    frameNumsInBatch.Add(thisFrame);
+                    frameNumbersInBatch.Add(thisFrame);
                     deltaForBatch = delta;
                 }
 
-                ShiftFramesInBatch(dbCommand, frameNumsInBatch, deltaForBatch);
+                ShiftFramesInBatch(dbCommand, frameNumbersInBatch, deltaForBatch);
             }
         }
 
         /// <summary>
-        /// Shift the frame number for the frames in frameNums, shifting down by decrementAmount
+        /// Shift the frame number for the frames in frameNumbers, shifting down by decrementAmount
         /// </summary>
         /// <remarks>Used by RenumberFrames when adjusting frames to start at frame 1 and to not have any gaps</remarks>
         /// <param name="dbCommand"></param>
-        /// <param name="frameNums"></param>
+        /// <param name="frameNumbers"></param>
         /// <param name="decrementAmount"></param>
-        private void ShiftFramesInBatch(IDbCommand dbCommand, IReadOnlyList<int> frameNums, int decrementAmount)
+        private void ShiftFramesInBatch(IDbCommand dbCommand, IReadOnlyList<int> frameNumbers, int decrementAmount)
         {
-            if (frameNums.Count == 0)
+            if (frameNumbers.Count == 0)
                 return;
 
             // Construct a comma-separated list of frame numbers
-            var sFrameList = string.Join(",", frameNums);
+            var sFrameList = string.Join(",", frameNumbers);
 
             dbCommand.CommandText =
                 " UPDATE Frame_Params " +
@@ -222,7 +222,7 @@ namespace UIMFLibrary
                 dbCommand.ExecuteNonQuery();
             }
 
-            var frameRanges = GetFrameRanges(frameNums);
+            var frameRanges = GetFrameRanges(frameNumbers);
 
             OnFramesShifted(decrementAmount, frameRanges);
         }

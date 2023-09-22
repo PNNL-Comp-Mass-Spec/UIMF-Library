@@ -94,7 +94,7 @@ namespace UIMFLibrary
         /// <summary>
         /// This list tracks the frame numbers that are present in the Frame_Parameters table
         /// </summary>
-        private readonly SortedSet<int> mFrameNumsInLegacyFrameParametersTable;
+        private readonly SortedSet<int> mFrameNumbersInLegacyFrameParametersTable;
 
         #endregion
 
@@ -127,7 +127,7 @@ namespace UIMFLibrary
                 throw new ArgumentException("UIMF file path cannot be empty", nameof(filePath));
 
             mCreateLegacyParametersTables = createLegacyParametersTables;
-            mFrameNumsInLegacyFrameParametersTable = new SortedSet<int>();
+            mFrameNumbersInLegacyFrameParametersTable = new SortedSet<int>();
 
             var usingExistingDatabase = File.Exists(mFilePath);
 
@@ -166,8 +166,8 @@ namespace UIMFLibrary
                     CacheGlobalParameters();
                 }
 
-                // Read the frame numbers in the legacy Frame_Parameters table to make sure that mFrameNumsInLegacyFrameParametersTable is up to date
-                CacheLegacyFrameNums();
+                // Read the frame numbers in the legacy Frame_Parameters table to make sure that mFrameNumbersInLegacyFrameParametersTable is up to date
+                CacheLegacyFrameNumbers();
 
                 // If table Frame_Parameters exists and table Frame_Params does not exist, then create Frame_Params using Frame_Parameters
                 ConvertLegacyFrameParameters();
@@ -192,7 +192,7 @@ namespace UIMFLibrary
             }
         }
 
-        private void CacheLegacyFrameNums()
+        private void CacheLegacyFrameNumbers()
         {
             try
             {
@@ -209,16 +209,16 @@ namespace UIMFLibrary
 
                     while (reader.Read())
                     {
-                        var frameNum = reader.GetInt32(0);
+                        var frameNumber = reader.GetInt32(0);
 
-                        if (!mFrameNumsInLegacyFrameParametersTable.Contains(frameNum))
-                            mFrameNumsInLegacyFrameParametersTable.Add(frameNum);
+                        // Add frame number if missing
+                        mFrameNumbersInLegacyFrameParametersTable.Add(frameNumber);
                     }
                 }
             }
             catch (Exception ex)
             {
-                CheckExceptionForIntermittentError(ex, "CacheLegacyFrameNums");
+                CheckExceptionForIntermittentError(ex, "CacheLegacyFrameNumbers");
                 ReportError(
                     "Exception caching the frame numbers in the legacy Frame_Parameters table: " + ex.Message, ex);
                 throw;
@@ -531,13 +531,13 @@ namespace UIMFLibrary
         /// <summary>
         /// Add or update a frame parameter entry in the Frame_Params table
         /// </summary>
-        /// <param name="frameNum">Frame number</param>
+        /// <param name="frameNumber">Frame number</param>
         /// <param name="paramKeyType">Parameter type</param>
         /// <param name="paramValue">Parameter value</param>
         /// <returns>
         /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
         /// </returns>
-        public DataWriter AddUpdateFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue)
+        public DataWriter AddUpdateFrameParameter(int frameNumber, FrameParamKeyType paramKeyType, string paramValue)
         {
             // Make sure the Frame_Param_Keys table contains key paramKeyType
             ValidateFrameParameterKey(paramKeyType);
@@ -549,7 +549,7 @@ namespace UIMFLibrary
                 // If no rows are matched, then run an insert query
 
                 mDbCommandUpdateFrameParamValue.Parameters.Clear();
-                mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                 mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
                 mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
                 var updateCount = mDbCommandUpdateFrameParamValue.ExecuteNonQuery();
@@ -558,27 +558,27 @@ namespace UIMFLibrary
                 {
                     using (var dbCommand = mDbConnection.CreateCommand())
                     {
-                        if (!mFrameNumsInLegacyFrameParametersTable.Contains(frameNum))
+                        if (!mFrameNumbersInLegacyFrameParametersTable.Contains(frameNumber))
                         {
                             // Check for an existing row in the legacy Frame_Parameters table for this frame
-                            dbCommand.CommandText = "SELECT COUNT(*) FROM " + FRAME_PARAMETERS_TABLE + " WHERE FrameNum = " + frameNum;
+                            dbCommand.CommandText = "SELECT COUNT(*) FROM " + FRAME_PARAMETERS_TABLE + " WHERE FrameNum = " + frameNumber;
                             var rowCount = (long)dbCommand.ExecuteScalar();
 
                             if (rowCount < 1)
                             {
-                                InitializeFrameParametersRow(new FrameParams(frameNum));
+                                InitializeFrameParametersRow(new FrameParams(frameNumber));
                             }
-                            mFrameNumsInLegacyFrameParametersTable.Add(frameNum);
+                            mFrameNumbersInLegacyFrameParametersTable.Add(frameNumber);
                         }
 
-                        UpdateLegacyFrameParameter(frameNum, paramKeyType, paramValue, dbCommand);
+                        UpdateLegacyFrameParameter(frameNumber, paramKeyType, paramValue, dbCommand);
                     }
                 }
 
                 if (updateCount == 0)
                 {
                     mDbCommandInsertFrameParamValue.Parameters.Clear();
-                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
                     mDbCommandInsertFrameParamValue.ExecuteNonQuery();
@@ -590,7 +590,7 @@ namespace UIMFLibrary
             {
                 CheckExceptionForIntermittentError(ex, "AddUpdateFrameParameter");
                 ReportError(
-                    "Error adding/updating parameter " + paramKeyType + " for frame " + frameNum + ": " + ex.Message, ex);
+                    "Error adding/updating parameter " + paramKeyType + " for frame " + frameNumber + ": " + ex.Message, ex);
                 throw;
             }
 
@@ -702,7 +702,7 @@ namespace UIMFLibrary
         private void AddVersionInfo(Assembly entryAssembly = null)
         {
             const string DEFAULT_NAME = "Unknown";
-            var defaultVersion = "0.0.0.0";
+            const string DEFAULT_VERSION = "0.0.0.0";
 
             // Wrapping in a try/catch because NUnit breaks GetEntryAssembly().
             try
@@ -733,7 +733,7 @@ namespace UIMFLibrary
                 }
                 else
                 {
-                    softwareVersion = software?.Version?.ToString() ?? defaultVersion;
+                    softwareVersion = software?.Version?.ToString() ?? DEFAULT_VERSION;
                 }
 
                 var fileDate = DateTime.MinValue;
@@ -746,7 +746,7 @@ namespace UIMFLibrary
             }
             catch
             {
-                AddVersionInfo(DEFAULT_NAME, defaultVersion);
+                AddVersionInfo(DEFAULT_NAME, DEFAULT_VERSION);
             }
         }
 
@@ -985,15 +985,15 @@ namespace UIMFLibrary
         /// <param name="dbCommand"></param>
         /// <param name="paramKeyType"></param>
         /// <param name="paramValue"></param>
-        /// <param name="frameNumStart">Optional: Starting frame number; ignored if frameNumEnd is 0 or negative</param>
-        /// <param name="frameNumEnd">Optional: Ending frame number; ignored if frameNumEnd is 0 or negative</param>
+        /// <param name="frameNumberStart">Optional: Starting frame number; ignored if frameNumberEnd is 0 or negative</param>
+        /// <param name="frameNumberEnd">Optional: Ending frame number; ignored if frameNumberEnd is 0 or negative</param>
         /// <returns>The number of rows added (i.e. the number of frames that did not have the parameter)</returns>
         private static int AssureAllFramesHaveFrameParam(
             IDbCommand dbCommand,
             FrameParamKeyType paramKeyType,
             string paramValue,
-            int frameNumStart = 0,
-            int frameNumEnd = 0)
+            int frameNumberStart = 0,
+            int frameNumberEnd = 0)
         {
             if (string.IsNullOrEmpty(paramValue))
                 paramValue = string.Empty;
@@ -1005,9 +1005,9 @@ namespace UIMFLibrary
                 "FROM " + FRAME_PARAMS_TABLE + " " +
                 "WHERE Not FrameNum In (SELECT FrameNum FROM " + FRAME_PARAMS_TABLE + " WHERE ParamID = " + (int)paramKeyType + ") ";
 
-            if (frameNumEnd > 0)
+            if (frameNumberEnd > 0)
             {
-                dbCommand.CommandText += " AND FrameNum >= " + frameNumStart + " AND FrameNum <= " + frameNumEnd;
+                dbCommand.CommandText += " AND FrameNum >= " + frameNumberStart + " AND FrameNum <= " + frameNumberEnd;
             }
 
             var rowsAdded = dbCommand.ExecuteNonQuery();
@@ -1376,19 +1376,19 @@ namespace UIMFLibrary
         /// <summary>
         /// Deletes the frame from the Frame_Params table and from the Frame_Scans table
         /// </summary>
-        /// <param name="frameNum">
+        /// <param name="frameNumber">
         /// </param>
         /// <param name="updateGlobalParameters">
         /// If true, then decrements the NumFrames value in the Global_Params table
         /// </param>
-        public void DeleteFrame(int frameNum, bool updateGlobalParameters)
+        public void DeleteFrame(int frameNumber, bool updateGlobalParameters)
         {
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNumber + "; ";
                 dbCommand.ExecuteNonQuery();
 
-                dbCommand.CommandText = "DELETE FROM " + FRAME_PARAMS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_PARAMS_TABLE + " WHERE FrameNum = " + frameNumber + "; ";
                 dbCommand.ExecuteNonQuery();
 
                 if (updateGlobalParameters)
@@ -1403,24 +1403,24 @@ namespace UIMFLibrary
         /// <summary>
         /// Deletes all of the scans for the specified frame
         /// </summary>
-        /// <param name="frameNum">
+        /// <param name="frameNumber">
         /// Frame number to delete
         /// </param>
         /// <param name="updateScanCountInFrameParams">
         /// If true, then will update the Scans column to be 0 for the deleted frames
         /// </param>
-        public void DeleteFrameScans(int frameNum, bool updateScanCountInFrameParams)
+        public void DeleteFrameScans(int frameNumber, bool updateScanCountInFrameParams)
         {
             using (var dbCommand = mDbConnection.CreateCommand())
             {
-                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNum + "; ";
+                dbCommand.CommandText = "DELETE FROM " + FRAME_SCANS_TABLE + " WHERE FrameNum = " + frameNumber + "; ";
                 dbCommand.ExecuteNonQuery();
 
                 if (updateScanCountInFrameParams)
                 {
                     dbCommand.CommandText = "UPDATE " + FRAME_PARAMS_TABLE + " " +
                                             "SET ParamValue = '0' " +
-                                            "WHERE FrameNum = " + frameNum +
+                                            "WHERE FrameNum = " + frameNumber +
                                              " AND ParamID = " + (int)FrameParamKeyType.Scans + ";";
                     dbCommand.ExecuteNonQuery();
 
@@ -1428,7 +1428,7 @@ namespace UIMFLibrary
                     {
                         dbCommand.CommandText = "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
                                                 "SET Scans = 0 " +
-                                                "WHERE FrameNum = " + frameNum + ";";
+                                                "WHERE FrameNum = " + frameNumber + ";";
                         dbCommand.ExecuteNonQuery();
                     }
                 }
@@ -1440,14 +1440,14 @@ namespace UIMFLibrary
         /// <summary>
         /// Delete the given frames from the UIMF file.
         /// </summary>
-        /// <param name="frameNums">
+        /// <param name="frameNumbers">
         /// </param>
         /// <param name="updateGlobalParameters">
         /// </param>
-        public void DeleteFrames(List<int> frameNums, bool updateGlobalParameters)
+        public void DeleteFrames(List<int> frameNumbers, bool updateGlobalParameters)
         {
             // Construct a comma-separated list of frame numbers
-            var sFrameList = string.Join(",", frameNums);
+            var sFrameList = string.Join(",", frameNumbers);
 
             using (var dbCommand = mDbConnection.CreateCommand())
             {
@@ -1465,7 +1465,7 @@ namespace UIMFLibrary
 
                 if (updateGlobalParameters)
                 {
-                    DecrementFrameCount(dbCommand, frameNums.Count);
+                    DecrementFrameCount(dbCommand, frameNumbers.Count);
                 }
             }
 
@@ -1552,26 +1552,26 @@ namespace UIMFLibrary
         /// <summary>
         /// Method to insert details related to each IMS frame
         /// </summary>
-        /// <param name="frameNum">Frame number</param>
+        /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">FrameParams object</param>
         /// <returns>
         /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
         /// </returns>
-        public DataWriter InsertFrame(int frameNum, FrameParams frameParameters)
+        public DataWriter InsertFrame(int frameNumber, FrameParams frameParameters)
         {
             var frameParamsLite = frameParameters.Values.ToDictionary(frameParam => frameParam.Key, frameParam => frameParam.Value.Value);
-            return InsertFrame(frameNum, frameParamsLite);
+            return InsertFrame(frameNumber, frameParamsLite);
         }
 
         /// <summary>
         /// Method to insert details related to each IMS frame
         /// </summary>
-        /// <param name="frameNum">Frame number</param>
+        /// <param name="frameNumber">Frame number</param>
         /// <param name="frameParameters">Frame parameters dictionary</param>
         /// <returns>
         /// Instance of this class, which allows for chaining function calls (see https://en.wikipedia.org/wiki/Fluent_interface)
         /// </returns>
-        public DataWriter InsertFrame(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParameters)
+        public DataWriter InsertFrame(int frameNumber, Dictionary<FrameParamKeyType, dynamic> frameParameters)
         {
             // Make sure the previous frame's data is committed to the database
             // However, only flush the data every MINIMUM_FLUSH_INTERVAL_SECONDS
@@ -1603,7 +1603,7 @@ namespace UIMFLibrary
                         value = "NaN";
                     }
                     mDbCommandInsertFrameParamValue.Parameters.Clear();
-                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNum));
+                    mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramValue.Key));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", value));
                     mDbCommandInsertFrameParamValue.ExecuteNonQuery();
@@ -1617,7 +1617,7 @@ namespace UIMFLibrary
 
             if (mCreateLegacyParametersTables)
             {
-                InsertLegacyFrameParams(frameNum, frameParameters);
+                InsertLegacyFrameParams(frameNumber, frameParameters);
             }
 
             return this;
@@ -1648,7 +1648,7 @@ namespace UIMFLibrary
         /// <param name="frameParameters"></param>
         private void InitializeFrameParametersRow(FrameParams frameParameters)
         {
-            if (mFrameNumsInLegacyFrameParametersTable.Contains(frameParameters.FrameNumber))
+            if (mFrameNumbersInLegacyFrameParametersTable.Contains(frameParameters.FrameNumber))
             {
                 // Row already exists; don't try to re-add it
                 return;
@@ -1823,7 +1823,7 @@ namespace UIMFLibrary
 
             mDbCommandInsertLegacyFrameParameterRow.ExecuteNonQuery();
 
-            mFrameNumsInLegacyFrameParametersTable.Add(frameParameters.FrameNumber);
+            mFrameNumbersInLegacyFrameParametersTable.Add(frameParameters.FrameNumber);
         }
 
         /// <summary>
@@ -2145,30 +2145,30 @@ namespace UIMFLibrary
         /// <summary>
         /// Updates the scan count for the given frame
         /// </summary>
-        /// <param name="frameNum">
+        /// <param name="frameNumber">
         /// Frame number to update
         /// </param>
-        /// <param name="NumScans">
+        /// <param name="scanCount">
         /// New scan count
         /// </param>
-        public void UpdateFrameScanCount(int frameNum, int NumScans)
+        public void UpdateFrameScanCount(int frameNumber, int scanCount)
         {
-            AddUpdateFrameParameter(frameNum, FrameParamKeyType.Scans, NumScans.ToString(CultureInfo.InvariantCulture));
+            AddUpdateFrameParameter(frameNumber, FrameParamKeyType.Scans, scanCount.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
         /// This function updates the frame type to 1, 2, 2, 2, 1, 2, 2, 2, etc. for the specified frame range
         /// It is used in the NUnit tests
         /// </summary>
-        /// <param name="startFrameNum">
+        /// <param name="startFrameNumber">
         /// Start Frame Number
         /// </param>
-        /// <param name="endFrameNum">
+        /// <param name="endFrameNumber">
         /// End Frame Number
         /// </param>
-        public void UpdateFrameType(int startFrameNum, int endFrameNum)
+        public void UpdateFrameType(int startFrameNumber, int endFrameNumber)
         {
-            for (var i = startFrameNum; i <= endFrameNum; i++)
+            for (var i = startFrameNumber; i <= endFrameNumber; i++)
             {
                 var frameType = i % 4 == 0 ? 1 : 2;
                 AddUpdateFrameParameter(i, FrameParamKeyType.FrameType, frameType.ToString(CultureInfo.InvariantCulture));
@@ -2390,11 +2390,11 @@ namespace UIMFLibrary
         /// <summary>
         /// Add entries to the legacy Frame_Parameters table
         /// </summary>
-        /// <param name="frameNum"></param>
+        /// <param name="frameNumber"></param>
         /// <param name="frameParamsByType"></param>
-        private void InsertLegacyFrameParams(int frameNum, Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
+        private void InsertLegacyFrameParams(int frameNumber, Dictionary<FrameParamKeyType, dynamic> frameParamsByType)
         {
-            var frameParams = new FrameParams(frameNum, frameParamsByType);
+            var frameParams = new FrameParams(frameNumber, frameParamsByType);
 
             InsertLegacyFrameParams(frameParams);
         }
@@ -2593,11 +2593,11 @@ namespace UIMFLibrary
         /// <summary>
         /// Update a parameter in the legacy Frame_Parameters table
         /// </summary>
-        /// <param name="frameNum">Frame number to update</param>
+        /// <param name="frameNumber">Frame number to update</param>
         /// <param name="paramKeyType">Key type</param>
         /// <param name="paramValue">Value</param>
         /// <param name="dbCommand">database command object</param>
-        private void UpdateLegacyFrameParameter(int frameNum, FrameParamKeyType paramKeyType, string paramValue, IDbCommand dbCommand)
+        private void UpdateLegacyFrameParameter(int frameNumber, FrameParamKeyType paramKeyType, string paramValue, IDbCommand dbCommand)
         {
             // Make sure the Frame_Parameters table has the Decoded column
             ValidateLegacyDecodedColumnExists();
@@ -2608,7 +2608,7 @@ namespace UIMFLibrary
             {
                 dbCommand.CommandText = "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
                                         "SET " + legacyFieldName[0] + " = '" + paramValue + "' " +
-                                        "WHERE frameNum = " + frameNum;
+                                        "WHERE frameNum = " + frameNumber;
                 dbCommand.ExecuteNonQuery();
             }
             else
