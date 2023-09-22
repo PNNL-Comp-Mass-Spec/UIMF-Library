@@ -560,6 +560,7 @@ namespace UIMFLibrary
                 mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                 mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
                 mDbCommandUpdateFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+
                 var updateCount = mDbCommandUpdateFrameParamValue.ExecuteNonQuery();
 
                 if (mCreateLegacyParametersTables)
@@ -590,6 +591,7 @@ namespace UIMFLibrary
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramKeyType));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", paramValue));
+
                     mDbCommandInsertFrameParamValue.ExecuteNonQuery();
                 }
 
@@ -668,9 +670,9 @@ namespace UIMFLibrary
 
                 mDbCommandUpdateGlobalParamValue.Parameters.Clear();
 
-                mDbCommandUpdateGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID",
-                                                                                    (int)globalParam.ParamType));
+                mDbCommandUpdateGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)globalParam.ParamType));
                 mDbCommandUpdateGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", globalParam.Value));
+
                 var updateCount = mDbCommandUpdateGlobalParamValue.ExecuteNonQuery();
 
                 if (mCreateLegacyParametersTables)
@@ -685,14 +687,12 @@ namespace UIMFLibrary
                 {
                     mDbCommandInsertGlobalParamValue.Parameters.Clear();
 
-                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID",
-                                                                                         (int)globalParam.ParamType));
+                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)globalParam.ParamType));
                     mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamName", globalParam.Name));
                     mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamValue", globalParam.Value));
-                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDataType",
-                                                                                         globalParam.DataType));
-                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDescription",
-                                                                                         globalParam.Description));
+                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDataType", globalParam.DataType));
+                    mDbCommandInsertGlobalParamValue.Parameters.Add(new SQLiteParameter("ParamDescription", globalParam.Description));
+
                     mDbCommandInsertGlobalParamValue.ExecuteNonQuery();
                 }
 
@@ -1663,6 +1663,7 @@ namespace UIMFLibrary
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("FrameNum", frameNumber));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamID", (int)paramValue.Key));
                     mDbCommandInsertFrameParamValue.Parameters.Add(new SQLiteParameter("ParamValue", value));
+
                     mDbCommandInsertFrameParamValue.ExecuteNonQuery();
                 }
             }
