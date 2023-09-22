@@ -778,7 +778,8 @@ namespace UIMFLibrary
             using (var dbCommand = mDbConnection.CreateCommand())
             {
                 // Check for a matching entry within the last 30 seconds
-                var minMatchDate = DateTime.UtcNow.AddSeconds(-30).ToString("yyyy-MM-dd HH:mm:ss");
+                // Use "Now" and not "UtcNow"
+                var minMatchDate = DateTime.Now.AddSeconds(-30).ToString("yyyy-MM-dd HH:mm:ss");
                 dbCommand.CommandText = "SELECT COUNT(*) FROM " + VERSION_INFO_TABLE + " "
                                         + "WHERE File_Version = ':Version' AND "
                                         + "Calling_Assembly_Name = ':SoftwareName' AND "
@@ -893,10 +894,12 @@ namespace UIMFLibrary
                 }
 
                 var lastEntryIdIfCloseMatch = -1;
+
                 // Check for a close match within the last 24 hours, if software type or note is supplied
                 if (!string.IsNullOrWhiteSpace(softwareType) || !string.IsNullOrWhiteSpace(note))
                 {
-                    var minMatchDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss");
+                    // Use "Now" and not "UtcNow"
+                    var minMatchDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss");
                     dbCommand.CommandText = "SELECT ID FROM " + SOFTWARE_INFO_TABLE + " ORDER BY ID DESC LIMIT 1";
 
                     var lastId = (int)(dbCommand.ExecuteScalar() ?? -1);
