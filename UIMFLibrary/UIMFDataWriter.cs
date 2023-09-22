@@ -825,9 +825,9 @@ namespace UIMFLibrary
                     return;
                 }
 
-                dbCommand.CommandText = "INSERT INTO " + VERSION_INFO_TABLE + " "
-                                        + "(File_Version, Calling_Assembly_Name, Calling_Assembly_Version) "
-                                        + "VALUES(:Version, :SoftwareName, :SoftwareVersion);";
+                dbCommand.CommandText = string.Format(
+                    "INSERT INTO {0} (File_Version, Calling_Assembly_Name, Calling_Assembly_Version) " +
+                    "VALUES (:Version, :SoftwareName, :SoftwareVersion);", VERSION_INFO_TABLE);
 
                 dbCommand.Parameters.Add(new SQLiteParameter(":Version", fileFormatVersion));
                 dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareName", softwareName));
@@ -880,20 +880,19 @@ namespace UIMFLibrary
 
             if (string.IsNullOrWhiteSpace(softwareType))
             {
-                softwareType = "";
+                softwareType = string.Empty;
             }
 
             if (string.IsNullOrWhiteSpace(note))
             {
-                note = "";
+                note = string.Empty;
             }
 
-            var softwareVersionString = (softwareVersion ?? "");
-            var lastModifiedDate = softwareLastModifiedDate.ToString("yyyy-MM-dd HH:mm:ss");
-            if (softwareLastModifiedDate == DateTime.MinValue)
-            {
-                lastModifiedDate = "??";
-            }
+            var softwareVersionString = (softwareVersion ?? string.Empty);
+
+            var exeDate = softwareLastModifiedDate == DateTime.MinValue
+                ? "??"
+                : softwareLastModifiedDate.ToString("yyyy-MM-dd HH:mm:ss");
 
             // Write any pending data so that the check below for an existing row will see the up-to-date version of the Software_Info table
             FlushUimf();
@@ -929,7 +928,7 @@ namespace UIMFLibrary
                 // Check for a close match within the last 24 hours, if software type or note is supplied
                 if (!string.IsNullOrWhiteSpace(softwareType) || !string.IsNullOrWhiteSpace(note))
                 {
-                    dbCommand.CommandText = "SELECT MAX(ID) AS ID FROM " + SOFTWARE_INFO_TABLE;
+                    dbCommand.CommandText = string.Format("SELECT MAX(ID) AS ID FROM {0}", SOFTWARE_INFO_TABLE);
 
                     var lastIdObj = dbCommand.ExecuteScalar();
 
@@ -967,29 +966,28 @@ namespace UIMFLibrary
                 if (lastEntryIdIfCloseMatch > 0)
                 {
                     // Update query
-                    dbCommand.CommandText = "UPDATE " + SOFTWARE_INFO_TABLE + " SET "
-                                            + "Software_Type = ':SoftwareType', "
-                                            + "Note = ':Note' "
-                                            + "WHERE ID = ':ID';";
+                    dbCommand.CommandText = string.Format(
+                        "UPDATE {0} SET Software_Type = :SoftwareType, Note = :Note " +
+                        "WHERE ID = :ID;", SOFTWARE_INFO_TABLE);
 
-                    dbCommand.Parameters.Add(new SQLiteParameter(":ID", lastEntryIdIfCloseMatch));
                     dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
                     dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ID", lastEntryIdIfCloseMatch));
 
                     dbCommand.ExecuteNonQuery();
                 }
                 else
                 {
                     // Insert new row
-                    dbCommand.CommandText = "INSERT INTO " + SOFTWARE_INFO_TABLE + " "
-                                            + "(Name, Software_Type, Note, Version, ExeDate) "
-                                            + "VALUES(:Name, :SoftwareType, :Note, :Version, :ExeDate);";
+                    dbCommand.CommandText = string.Format(
+                        "INSERT INTO {0} (Name, Software_Type, Note, Version, ExeDate) " +
+                        "VALUES (:Name, :SoftwareType, :Note, :Version, :ExeDate);", SOFTWARE_INFO_TABLE);
 
                     dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
                     dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
                     dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
                     dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
-                    dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", lastModifiedDate));
+                    dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", exeDate));
 
                     dbCommand.ExecuteNonQuery();
                 }
