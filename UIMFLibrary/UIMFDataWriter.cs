@@ -1268,9 +1268,33 @@ namespace UIMFLibrary
         /// <remarks>
         /// This must be called after opening a new file to create the default tables that are required for IMS data.
         /// </remarks>
+        [Obsolete("Use the version of CreateTables() that specifies the entry assembly")]
+        public void CreateTables()
+        {
+            CreateTables("int", null);
+        }
+
+        /// <summary>
+        /// Create the table structure within a UIMF file
+        /// </summary>
+        /// <remarks>
+        /// This must be called after opening a new file to create the default tables that are required for IMS data.
+        /// </remarks>
+        /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
+        public void CreateTables(Assembly entryAssembly)
+        {
+            CreateTables("int", entryAssembly);
+        }
+
+        /// <summary>
+        /// Create the table structure within a UIMF file
+        /// </summary>
+        /// <remarks>
+        /// This must be called after opening a new file to create the default tables that are required for IMS data.
+        /// </remarks>
         /// <param name="dataType">Data type of intensity in the Frame_Scans table: double, float, short, or int </param>
         /// <param name="entryAssembly">Entry assembly, used when adding a line to the Version_Info table</param>
-        public void CreateTables(string dataType = "int", Assembly entryAssembly = null)
+        public void CreateTables(string dataType, Assembly entryAssembly)
         {
             // Detailed information on columns is at
             // https://prismwiki.pnl.gov/wiki/IMS_Data_Processing
