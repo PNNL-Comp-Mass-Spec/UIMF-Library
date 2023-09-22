@@ -210,7 +210,7 @@ The UIMFWriter can optionally populate the legacy tables, but their use was phas
  | PressureBack | double | Pressure at back of Drift Tube |
  | MPBitOrder | short | Determines original size of bit sequence |
  | FragmentationProfile | binary (BLOB) | Voltage profile used in fragmentation, Length number of Scans |
- | HighPressureFunnelPressure  double | High pressure funnel pressure |
+ | HighPressureFunnelPressure | double | High pressure funnel pressure |
  | IonFunnelTrapPressure | double | Ion funnel trap pressure |
  | QuadrupolePressure | double | Quadrupole pressure |
  | ESIVoltage | double | Electrospray voltage |
