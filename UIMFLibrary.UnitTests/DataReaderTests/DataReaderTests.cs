@@ -1153,8 +1153,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             var sqrtMZ = slope * (t - correctionTimeForTOF / 1000 - intercept);
 
-            var mz = sqrtMZ * sqrtMZ + residualMassError;
-            return mz;
+            // Compute m/z
+            return sqrtMZ * sqrtMZ + residualMassError;
         }
 
         private string GetExistenceDescription(bool columnExists)
