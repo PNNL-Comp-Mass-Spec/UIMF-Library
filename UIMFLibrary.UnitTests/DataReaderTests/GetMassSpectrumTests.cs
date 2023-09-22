@@ -87,7 +87,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrame0_MS_Test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -113,7 +113,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrame0_MS_Demultiplexed_Data_Test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
@@ -146,7 +146,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetMultipleSummedMassSpectraTest1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -210,7 +210,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetSingleSummedMassSpectrumTest1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -225,7 +225,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzValues,
                     out var intensities);
 
-                var nonZeroCount = (from n in mzValues where Math.Abs(n) > Single.Epsilon select n).Count();
+                var nonZeroCount = (from n in mzValues where Math.Abs(n) > float.Epsilon select n).Count();
                 Console.WriteLine("Number of x/y data points = " + nonZeroCount);
 
                 Assert.AreEqual(1137, nonZeros);

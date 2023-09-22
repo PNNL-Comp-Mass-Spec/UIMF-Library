@@ -8,13 +8,13 @@ namespace UIMFLibrary.UnitTests
     public class EncodingTests
     {
         private const int BinCount = 148000;
-        private readonly List<KeyValuePair<int, int>> testValues = new List<KeyValuePair<int, int>>() {new KeyValuePair<int, int>(49693, 8)};
+        private readonly List<KeyValuePair<int, int>> testValues = new List<KeyValuePair<int, int>> {new KeyValuePair<int, int>(49693, 8)};
         private int[] testInputData;
         private short[] testInputDataShort;
-        private readonly int[] rlzEncodedOldImsData = new int[] { -32768, 0, -16925, 8, -32768, 0, -32768, 0, -32768, 0 };
-        private readonly short[] rlzEncodedOldImsDataShort = new short[] { -32768, 0, -16925, 8, -32768, 0, -32768, 0, -32768, 0 };
-        private readonly int[] rlzEncodedCurrentData = new int[] { -49693, 8 };
-        private readonly short[] rlzEncodedCurrentDataShort = new short[] { -32768, -16925, 8, -32768, -32768, -32768 };
+        private readonly int[] rlzEncodedOldImsData = { -32768, 0, -16925, 8, -32768, 0, -32768, 0, -32768, 0 };
+        private readonly short[] rlzEncodedOldImsDataShort = { -32768, 0, -16925, 8, -32768, 0, -32768, 0, -32768, 0 };
+        private readonly int[] rlzEncodedCurrentData = { -49693, 8 };
+        private readonly short[] rlzEncodedCurrentDataShort = { -32768, -16925, 8, -32768, -32768, -32768 };
 
         [OneTimeSetUp]
         public void CreateTestData()
@@ -153,7 +153,7 @@ namespace UIMFLibrary.UnitTests
                     {
                         // Too many zeros; need to append two points to rlzeDataList to avoid an overflow
                         rlzeDataList.Add((short)zeroCount);
-                        rlzeDataList.Add((short)0); // This is the bug.
+                        rlzeDataList.Add(0); // This is the bug.
                         zeroCount = 0;
                     }
 

@@ -22,7 +22,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetAvgTOFLengthTest1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -40,7 +40,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrameInfo_demultiplexed_firstFrame_Test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
@@ -64,7 +64,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrameInfo_demultiplexed_lastFrame_Test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
@@ -91,7 +91,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFramePressure_lastFrame()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -116,7 +116,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetGlobalParams_test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
@@ -134,7 +134,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetNumberOfFramesTest()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {

@@ -18,7 +18,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrameTypeTest1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.MSMSData1))
             {
@@ -42,7 +42,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetMSMSTest1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.MSMSData1))
             {
@@ -77,7 +77,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void ContainsMSMSDataTest3()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.MSMSData1))
             {
@@ -92,7 +92,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void ContainsMSMSData_test1()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -107,7 +107,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void ContainsMSMSData_test2()
         {
-            DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {

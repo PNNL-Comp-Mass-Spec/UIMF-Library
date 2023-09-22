@@ -26,7 +26,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         #region Public Methods and Operators
 
-        public static void PrintMethodName(System.Reflection.MethodBase methodInfo)
+        public static void PrintMethodName(MethodBase methodInfo)
         {
             // Call with PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
@@ -60,7 +60,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFramesAndScanIntensitiesForAGivenMzTest()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
@@ -146,7 +146,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             IReadOnlyList<int> expectedLastNValuesOverOne
             )
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             Console.WriteLine("Opening " + filePath);
 
@@ -238,7 +238,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestBinValueGreaterThanMax()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             const string uimfFile = @"\\proto-2\unitTest_Files\DeconTools_TestFiles\UIMF\LSDF2_10-0457-03_A_26May11_Roc_11-02-26.uimf";
             using (var reader = new DataReader(uimfFile))
@@ -288,7 +288,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private void TestFrameCountsWork(string filePath, int frameCountExpectedMS1, int frameCountExpectedMS2)
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(filePath))
             {
@@ -324,7 +324,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestGetSpectrum()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var filePath = FileRefs.EncodedUIMF;
             const int frameNumber = 6;
@@ -378,7 +378,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestGetSpectrumAsBins()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var filePath = FileRefs.EncodedUIMF;
             const int frameNumber = 6;
@@ -397,7 +397,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void TestGetSpectrumAsBinsLocal()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
 
@@ -420,7 +420,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestGetSpectrumAsBins2()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             const string filePath =
                 @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
@@ -479,7 +479,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void TestGetSpectrumAsBins2Local()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
             const int startFrame = 5;
@@ -543,7 +543,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestGetSpectrumSummed1()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var filePath = FileRefs.EncodedUIMF;
             const int frameStart = 6;
@@ -577,7 +577,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void TestGetSpectrumSummedLocal()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
             const int frameStart = 6;
@@ -614,7 +614,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void TestPressureDetermination1()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             const string uimfFilePressureInTorr1 = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS2_90_6Apr11_Cheetah_11-02-19.uimf";
 
@@ -664,7 +664,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void DisplayMZValueForEachBin_Test1()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             const int testFrame = 1000;
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_75_24Aug10_Cheetah_10-08-02_0000.uimf";
@@ -704,7 +704,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetFrameParametersTest()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -723,7 +723,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void GetFrameParametersTestLocal()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
 
@@ -744,7 +744,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetBPITest()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.LegacyFile1))
@@ -778,7 +778,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void GetBPITestLocal()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
 
@@ -803,7 +803,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("PNL_Domain")]
         public void GetTICTest()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             // File with legacy parameter tables
             using (var reader = new DataReader(FileRefs.LegacyFile1))
@@ -837,7 +837,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Category("Local_Files")]
         public void GetTICTestLocal()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var uimfFile = VerifyLocalUimfFile(FileRefs.LocalUimfFile25Frames);
 
@@ -861,7 +861,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         [Test]
         public void ReadFileVersionTest()
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var dataFile = new FileInfo(FileRefs.WriterTest10Frames);
 
@@ -919,7 +919,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private void SQLiteTableHasColumnWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(filePath))
             {
@@ -977,7 +977,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private void SQLiteColumnExistsWork(string filePath, string tableName, string columnName, bool columnExistsExpected)
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(filePath))
             {
@@ -1035,7 +1035,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private void SQLiteTableExistsWork(string filePath, string tableName, bool tableExistsExpected)
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             using (var reader = new DataReader(filePath))
             {
@@ -1084,7 +1084,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
         private void SQLiteTableColumnsWork(string filePath, string tableName, string expectedColumnNames)
         {
-            PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            PrintMethodName(MethodBase.GetCurrentMethod());
 
             var expectedColNameList = expectedColumnNames.Split(',').ToList();
             if (string.IsNullOrEmpty(expectedColumnNames))

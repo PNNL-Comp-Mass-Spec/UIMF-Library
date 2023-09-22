@@ -7,14 +7,14 @@ namespace UIMFLibrary.UnitTests
     [TestFixture]
     public class CompressionTests
     {
-        private readonly List<KeyValuePair<int, int>> testValues = new List<KeyValuePair<int, int>>() { new KeyValuePair<int, int>(49693, 8) };
         private const int BIN_COUNT = 148000;
+        private readonly List<KeyValuePair<int, int>> testValues = new List<KeyValuePair<int, int>> { new KeyValuePair<int, int>(49693, 8) };
         private int[] testInputData;
         private short[] testInputDataShort;
-        private readonly byte[] compressedOldImsData = new byte[] { 0x04, 0x00, 0x80, 0xFF, 0xFF, 0x00, 0x20, 0x00, 0x05, 0xE3, 0xBD, 0xFF, 0xFF, 0x08, 0x00, 0x20, 0x00, 0xA0, 0x0F, 0xE0, 0x05, 0x07, 0x01, 0x00, 0x00 };
-        private readonly byte[] compressedOldImsDataShort = new byte[] { 0x08, 0x00, 0x80, 0x00, 0x00, 0xE3, 0xBD, 0x08, 0x00, 0x00, 0x20, 0x07, 0x80, 0x03, 0x01, 0x00, 0x00 };
-        private readonly byte[] compressedCurrentData = new byte[] { 0x07, 0xE3, 0x3D, 0xFF, 0xFF, 0x08, 0x00, 0x00, 0x00 };
-        private readonly byte[] compressedCurrentDataShort = new byte[] { 0x0B, 0x00, 0x80, 0xE3, 0xBD, 0x08, 0x00, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80 };
+        private readonly byte[] compressedOldImsData = { 0x04, 0x00, 0x80, 0xFF, 0xFF, 0x00, 0x20, 0x00, 0x05, 0xE3, 0xBD, 0xFF, 0xFF, 0x08, 0x00, 0x20, 0x00, 0xA0, 0x0F, 0xE0, 0x05, 0x07, 0x01, 0x00, 0x00 };
+        private readonly byte[] compressedOldImsDataShort = { 0x08, 0x00, 0x80, 0x00, 0x00, 0xE3, 0xBD, 0x08, 0x00, 0x00, 0x20, 0x07, 0x80, 0x03, 0x01, 0x00, 0x00 };
+        private readonly byte[] compressedCurrentData = { 0x07, 0xE3, 0x3D, 0xFF, 0xFF, 0x08, 0x00, 0x00, 0x00 };
+        private readonly byte[] compressedCurrentDataShort = { 0x0B, 0x00, 0x80, 0xE3, 0xBD, 0x08, 0x00, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80 };
 
         [OneTimeSetUp]
         public void CreateTestData()
@@ -104,7 +104,7 @@ namespace UIMFLibrary.UnitTests
 
         private static int[] Decompress(byte[] compressed, int binCount, out int nonZero)
         {
-            var binIntensities = UIMFLibrary.IntensityConverterCLZF.Decompress(compressed, out nonZero);
+            var binIntensities = IntensityConverterCLZF.Decompress(compressed, out nonZero);
             var intensities = new int[binCount];
 
             foreach (var binIntensity in binIntensities)
@@ -125,7 +125,7 @@ namespace UIMFLibrary.UnitTests
 
         private static short[] Decompress(byte[] compressed, int binCount, out short nonZero)
         {
-            var binIntensities = UIMFLibrary.IntensityConverterCLZF.Decompress(compressed, out nonZero);
+            var binIntensities = IntensityConverterCLZF.Decompress(compressed, out nonZero);
             var intensities = new short[binCount];
 
             foreach (var binIntensity in binIntensities)
@@ -146,13 +146,13 @@ namespace UIMFLibrary.UnitTests
 
         private static byte[] Compress(IReadOnlyList<int> intensities)
         {
-            UIMFLibrary.IntensityConverterCLZF.Compress(intensities, out var compressed, out _, out _, out _);
+            IntensityConverterCLZF.Compress(intensities, out var compressed, out _, out _, out _);
             return compressed;
         }
 
         private static byte[] Compress(IReadOnlyList<short> intensities)
         {
-            UIMFLibrary.IntensityConverterCLZF.Compress(intensities, out var compressed, out _, out _, out _);
+            IntensityConverterCLZF.Compress(intensities, out var compressed, out _, out _, out _);
             return compressed;
         }
     }

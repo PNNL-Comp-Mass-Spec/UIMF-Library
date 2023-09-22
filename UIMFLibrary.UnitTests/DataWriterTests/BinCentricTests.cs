@@ -23,7 +23,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Category("PNL_Domain")]
         public void TestCreateBinCentricTables()
         {
-            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             var fiSource = new FileInfo(FileRefs.BinCentricTest1);
 
@@ -35,7 +35,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             if (fiTarget == null)
                 return;
 
-            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var executingAssembly = Assembly.GetExecutingAssembly();
             using (var uimfWriter = new DataWriter(fiTarget.FullName, executingAssembly))
             {
                 uimfWriter.CreateBinCentricTables();
@@ -53,7 +53,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Category("PNL_Domain")]
         public void TestCreateBinCentricTables2()
         {
-            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             var fiSource = new FileInfo(FileRefs.BinCentricTest1);
 
@@ -68,7 +68,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             {
                 // Note: providing true for parseViaFramework as a workaround for reading SqLite files located on a remote UNC share or in read-only folders
                 var connectionString = "Data Source = " + fiTarget.FullName;
-                using (var dbConnection = new System.Data.SQLite.SQLiteConnection(connectionString, true))
+                using (var dbConnection = new SQLiteConnection(connectionString, true))
                 {
                     dbConnection.Open();
 
@@ -109,7 +109,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Category("PNL_Domain")]
         public void TestCreateBinCentricTablesSmallFile()
         {
-            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             var fiSource = new FileInfo(FileRefs.BinCentricTest2);
 
@@ -123,7 +123,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             if (fiTarget == null)
                 return;
 
-            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var executingAssembly = Assembly.GetExecutingAssembly();
             using (var uimfWriter = new DataWriter(fiTarget.FullName, executingAssembly))
             {
                 uimfWriter.CreateBinCentricTables();
@@ -138,7 +138,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [Test]
         public void TestEncodeDecodeFunctionality()
         {
-            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             const int scanLc = 183;
             const int scanIms = 217;

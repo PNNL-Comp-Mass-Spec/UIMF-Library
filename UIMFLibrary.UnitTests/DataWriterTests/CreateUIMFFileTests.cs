@@ -16,7 +16,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
         [TestCase(10)]
         public void CreateDB_test1(int frameCountToWrite)
         {
-            DataReaderTests.DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
+            DataReaderTests.DataReaderTests.PrintMethodName(MethodBase.GetCurrentMethod());
 
             var targetFile = new FileInfo(FileRefs.WriterTest10Frames);
 
@@ -39,7 +39,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                     var sleepSeconds = attemptNumber * 10;
                     Console.WriteLine("Sleeping for {0} seconds", sleepSeconds);
-                    System.Threading.Thread.Sleep(sleepSeconds * 1000);
+                    Thread.Sleep(sleepSeconds * 1000);
 
                     // Customize the filename by appending a random number
                     targetFile = new FileInfo(Path.Combine(
@@ -56,7 +56,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                 targetFile.Refresh();
             }
 
-            var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var executingAssembly = Assembly.GetExecutingAssembly();
             using (var writer = new DataWriter(targetFile.FullName, executingAssembly))
             {
                 writer.CreateTables(executingAssembly);
