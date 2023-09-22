@@ -64,7 +64,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
             using (var writer = new DataWriter(targetFile.FullName, executingAssembly))
             {
-                writer.CreateTables();
+                writer.CreateTables(executingAssembly);
 
                 var globalParameters = new GlobalParams();
 
