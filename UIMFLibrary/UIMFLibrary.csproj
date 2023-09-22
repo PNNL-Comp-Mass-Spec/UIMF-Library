@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- net472 is to support a ValueTuple method in IntensityBinConverterInt32 -->
-    <TargetFrameworks>net462;net472;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net472;net48;netstandard2.0</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -23,7 +23,7 @@
   <PropertyGroup Condition="'$(Configuration)'=='Experimental_Release'">
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net462' OR '$(TargetFramework)'=='net472'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net462' OR '$(TargetFramework)'=='net472' OR '$(TargetFramework)'=='net48'">
     <!-- Needed for use of the 'dynamic' type -->
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
