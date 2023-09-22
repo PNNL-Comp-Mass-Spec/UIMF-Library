@@ -933,9 +933,7 @@ namespace UIMFLibrary
                     dbCommand.CommandText = "UPDATE " + SOFTWARE_INFO_TABLE + " SET "
                                             + "Software_Type = ':SoftwareType', "
                                             + "Note = ':Note' "
-                                            + "WHERE ID = ':ID' AND "
-                                            + "(Name, Software_Type, Note, Version, ExeDate) "
-                                            + "VALUES(:Name, :SoftwareType, :Note, :Version, :ExeDate);";
+                                            + "WHERE ID = ':ID';";
 
                     dbCommand.Parameters.Add(new SQLiteParameter(":ID", lastEntryIdIfCloseMatch));
                     dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
