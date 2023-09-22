@@ -775,6 +775,9 @@ namespace UIMFLibrary
             var fileFormatVersion = version.ToString(2);
             var softwareVersionString = softwareVersion ?? "";
 
+            // Write any pending data so that the check below for an existing row will see the up-to-date version of the Version_Info table
+            FlushUimf();
+
             using (var dbCommand = mDbConnection.CreateCommand())
             {
                 // Check for a matching entry within the last 30 seconds
@@ -867,6 +870,12 @@ namespace UIMFLibrary
             if (softwareLastModifiedDate == DateTime.MinValue)
             {
                 lastModifiedDate = "??";
+            }
+
+            if (!string.IsNullOrWhiteSpace(softwareType) || !string.IsNullOrWhiteSpace(note))
+            {
+                // Write any pending data so that the check below for an existing row will see the up-to-date version of the Software_Info table
+                FlushUimf();
             }
 
             using (var dbCommand = mDbConnection.CreateCommand())
