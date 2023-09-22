@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Data.SQLite;
+using System.IO;
+using System.Reflection;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
-    using System.IO;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// Bin centric tests
     /// </summary>

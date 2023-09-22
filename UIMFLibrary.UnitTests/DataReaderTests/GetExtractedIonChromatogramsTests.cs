@@ -1,12 +1,11 @@
+﻿using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Text;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    using System;
-    using System.Diagnostics;
-    using System.Text;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// Extracted ion chromatogram tests.
     /// </summary>

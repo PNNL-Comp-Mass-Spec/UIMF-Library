@@ -1,11 +1,10 @@
+﻿using System;
 using System.Globalization;
+using System.Reflection;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    using System;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// Frame and scan info tests.
     /// </summary>

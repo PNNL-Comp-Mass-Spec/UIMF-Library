@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
-    using NUnit.Framework;
-
     /// <summary>
     /// Update frame parameter tests
     /// </summary>

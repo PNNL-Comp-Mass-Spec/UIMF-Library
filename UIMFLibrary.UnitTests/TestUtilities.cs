@@ -1,10 +1,9 @@
+﻿using System;
 using System.Linq;
+using System.Text;
 
 namespace UIMFLibrary.UnitTests
 {
-    using System;
-    using System.Text;
-
     /// <summary>
     /// Test utilities
     /// </summary>

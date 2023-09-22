@@ -1,11 +1,11 @@
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Remoting.Messaging;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    using System;
-    using System.Linq;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// Frame and scan info
     /// </summary>

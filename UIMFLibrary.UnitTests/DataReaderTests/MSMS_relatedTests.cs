@@ -1,10 +1,9 @@
+﻿using System.Reflection;
+using System.Text;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    using System.Text;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// MS/MS related tests
     /// </summary>

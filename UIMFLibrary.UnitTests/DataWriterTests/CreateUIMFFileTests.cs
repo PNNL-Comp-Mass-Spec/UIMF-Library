@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
+using System.Threading;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataWriterTests
 {
-    using NUnit.Framework;
-
     /// <summary>
     /// Create UIMF file tests
     /// </summary>

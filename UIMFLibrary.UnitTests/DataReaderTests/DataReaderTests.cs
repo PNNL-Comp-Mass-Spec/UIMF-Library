@@ -1,15 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using NUnit.Framework;
 
 namespace UIMFLibrary.UnitTests.DataReaderTests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
-
-    using NUnit.Framework;
-
     /// <summary>
     /// Data reader tests
     /// </summary>
