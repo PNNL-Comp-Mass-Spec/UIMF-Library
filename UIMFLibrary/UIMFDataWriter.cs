@@ -817,7 +817,7 @@ namespace UIMFLibrary
                     dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareVersion", softwareVersionString));
                 }
 
-                var existingMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
+                var existingMatchCount = TryConvertDbScalarToInt(dbCommand.ExecuteScalar(), 0);
 
                 if (existingMatchCount > 0)
                 {
@@ -915,7 +915,7 @@ namespace UIMFLibrary
                 dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
                 dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", exeDate));
 
-                var exactMatchCount = Convert.ToInt32(dbCommand.ExecuteScalar());
+                var exactMatchCount = TryConvertDbScalarToInt(dbCommand.ExecuteScalar(), 0);
 
                 if (exactMatchCount > 0)
                 {
@@ -930,9 +930,7 @@ namespace UIMFLibrary
                 {
                     dbCommand.CommandText = string.Format("SELECT MAX(ID) AS ID FROM {0}", SOFTWARE_INFO_TABLE);
 
-                    var lastIdObj = dbCommand.ExecuteScalar();
-
-                    var lastId = TryConvertDbScalarToInt(lastIdObj, -1);
+                    var lastId = TryConvertDbScalarToInt(dbCommand.ExecuteScalar(), -1);
 
                     // Use UtcNow since SQLite stores UTC-based dates with current_timestamp
                     var minMatchDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd HH:mm:ss");
@@ -948,14 +946,13 @@ namespace UIMFLibrary
                         "ORDER BY ID DESC LIMIT 1;",
                         SOFTWARE_INFO_TABLE, minMatchDate);
 
-                    var lastCloseMatchIdObj = dbCommand.ExecuteScalar();
                     dbCommand.Parameters.Add(new SQLiteParameter(":Name", softwareName));
                     dbCommand.Parameters.Add(new SQLiteParameter(":SoftwareType", softwareType));
                     dbCommand.Parameters.Add(new SQLiteParameter(":Note", note));
                     dbCommand.Parameters.Add(new SQLiteParameter(":Version", softwareVersionString));
                     dbCommand.Parameters.Add(new SQLiteParameter(":ExeDate", exeDate));
 
-                    var lastCloseMatchId = TryConvertDbScalarToInt(lastCloseMatchIdObj, -1);
+                    var lastCloseMatchId = TryConvertDbScalarToInt(dbCommand.ExecuteScalar(), -1);
 
                     if (lastCloseMatchId > 0 && lastCloseMatchId == lastId)
                     {
