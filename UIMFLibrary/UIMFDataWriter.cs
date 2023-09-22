@@ -917,8 +917,9 @@ namespace UIMFLibrary
                         "ORDER BY ID DESC LIMIT 1;",
                         softwareName, softwareType, note, softwareVersionString, lastModifiedDate, minMatchDate);
 
+                    var lastCloseMatchIdObj = dbCommand.ExecuteScalar();
 
-                    var lastCloseMatchId = (int)(dbCommand.ExecuteScalar() ?? -1);
+                    var lastCloseMatchId = TryConvertDbScalarToInt(lastCloseMatchIdObj, -1);
 
                     if (lastCloseMatchId > 0 && lastCloseMatchId == lastId)
                     {
@@ -2613,6 +2614,16 @@ namespace UIMFLibrary
                 dbCommand.CommandText = "END TRANSACTION;PRAGMA synchronous=1;";
                 dbCommand.ExecuteNonQuery();
             }
+        }
+
+        private int TryConvertDbScalarToInt(object lastIdObj, int defaultValue)
+        {
+            if (lastIdObj == null || lastIdObj == DBNull.Value)
+            {
+                return defaultValue;
+            }
+
+            return Convert.ToInt32(lastIdObj);
         }
 
         /// <summary>
