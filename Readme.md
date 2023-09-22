@@ -1,7 +1,7 @@
 # UIMF Library
 
-This software package includes a library of C# functions to create, 
-modify and extract data from UIMF files. UIMF files are SQLite 
+This software package includes a library of C# functions to create,
+modify and extract data from UIMF files. UIMF files are SQLite
 databases of mass spectrometry data acquired at Pacific Northwest
 National Laboratory (PNNL).
 
@@ -12,7 +12,7 @@ The UIMFLibrary is available on NuGet at:
 
 ### Continuous Integration
 
-The latest version of the application may be available on the [AppVeyor CI server](https://ci.appveyor.com/project/PNNLCompMassSpec/uimf-library/build/artifacts), 
+The latest version of the application may be available on the [AppVeyor CI server](https://ci.appveyor.com/project/PNNLCompMassSpec/uimf-library/build/artifacts),
 but builds are deleted after 6 months. \
 [![Build status](https://ci.appveyor.com/api/projects/status/fe9k281a3r5s1ec3?svg=true)](https://ci.appveyor.com/project/PNNLCompMassSpec/uimf-library)
 
@@ -23,7 +23,7 @@ but builds are deleted after 6 months. \
 ```csharp
 using UIMFLibrary;
 ```
-          
+
 * Declare the DataReader and DataWriter classes in your main code:
 * Now the functions can be called as such:
 
@@ -39,14 +39,14 @@ DataWriter.CreateTables();
 ## How to use the UIMFLibrary in C++:
 
 * Copy UIMFLibrary.dll and System.Data.SQLite.DLL from either
-  * UIMFLibrary\bin\x86 
+  * UIMFLibrary\bin\x86
   * UIMFLibrary\bin\x64
 * Open the Solution Explorer, add UIMFLibrary to your Project/References
-* Add this using statement at the top of your code: 
+* Add this using statement at the top of your code:
 ```c
 using namespace UIMFLibrary;
 ```
-* In your .h file, declare the DataReader and DataWriter classes: 
+* In your .h file, declare the DataReader and DataWriter classes:
 ```c
 gcroot<UIMFReader*> ReadUIMF;
 gcroot<UIMFWriter*> WriteUIMF;
@@ -59,19 +59,19 @@ ReadUIMF = new UIMFReader(filePath);
 ReadUIMF->GetSpectrum(frameNumber, scanNumber, mzArray, intensityArray);
   ......
 
-WriteUIMF = new UIMFWriter(filePath);  
+WriteUIMF = new UIMFWriter(filePath);
 WriteUIMF->CreateTables();
 ```
 
 ## Examples
 
-To see examples of how to create, modify, and extract data out of the database, 
-refer to the UIMFLibrary_Demo solution (see  [GitHub](https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library/tree/master/UIMFLibrary_Demo))
+To see examples of how to create, modify, and extract data out of the database,
+refer to the UIMFLibrary_Demo solution (see [GitHub](https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library/tree/master/UIMFLibrary_Demo))
 
 
 ## UIMF database structure:
 
-Tables in a UIMF database file: 
+Tables in a UIMF database file:
 
  | Table Name | Description | Comments |
  | ----------- | --------- | ------- |
@@ -123,7 +123,7 @@ The UIMFWriter can optionally populate the legacy tables, but their use was phas
  | BPI | double/float/int | Base Peak Intensity per Scan |
  | BPI_MZ | double | m/z associated with BPI |
  | TIC | double/float/int | Total Ion Chromatogram per Scan |
- | Intensities | binary (BLOB) | Intensities in compressed binary format  |
+ | Intensities | binary (BLOB) | Intensities in compressed binary format |
 
 
 ### Log_Entries table
@@ -221,7 +221,7 @@ The UIMFWriter can optionally populate the legacy tables, but their use was phas
 ## Contacts
 
 Written by PNNL Staff for the Department of Energy (PNNL, Richland, WA) \
-Copyright 2009, Battelle Memorial Institute.  All Rights Reserved.
+Copyright 2009, Battelle Memorial Institute. All Rights Reserved.
 
 Contributors include: \
 Kevin Crowell, Bill Danielson, Bryson Gibbons, Matthew Monroe, Spencer Prost, Yan Shi, Anuj Shah, Gordon Slysz
@@ -231,8 +231,8 @@ Website: https://github.com/PNNL-Comp-Mass-Spec/UIMF-Library
 
 ## License
 
-Licensed under the Educational Community License, Version 2.0 (the "License"); 
-you may not use this program except in compliance with the License. 
+Licensed under the Educational Community License, Version 2.0 (the "License");
+you may not use this program except in compliance with the License.
 You may obtain a copy of the License at
 
 https://opensource.org/licenses/ECL-2.0
