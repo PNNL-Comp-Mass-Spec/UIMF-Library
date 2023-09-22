@@ -2481,16 +2481,17 @@ namespace UIMFLibrary
 
             var fieldMapping = GetLegacyGlobalParameterMapping();
             var legacyFieldName = (from item in fieldMapping where item.Value == paramKey select item.Key).ToList();
-            if (legacyFieldName.Count > 0)
+
+            if (legacyFieldName.Count == 0)
             {
-                dbCommand.CommandText = "UPDATE " + GLOBAL_PARAMETERS_TABLE + " " +
-                                        "SET " + legacyFieldName[0] + " = '" + paramValue + "' ";
-                dbCommand.ExecuteNonQuery();
+                // Unsupported key type; skip it
+                return;
             }
-            else
-            {
-                Console.WriteLine("Skipping unsupported key type, " + paramKey);
-            }
+
+            dbCommand.CommandText = "UPDATE " + GLOBAL_PARAMETERS_TABLE + " " +
+                                    "SET " + legacyFieldName[0] + " = '" + paramValue + "' ";
+
+            dbCommand.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -2673,17 +2674,18 @@ namespace UIMFLibrary
 
             var fieldMapping = GetLegacyFrameParameterMapping();
             var legacyFieldName = (from item in fieldMapping where item.Value == paramKeyType select item.Key).ToList();
-            if (legacyFieldName.Count > 0)
+
+            if (legacyFieldName.Count == 0)
             {
-                dbCommand.CommandText = "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
-                                        "SET " + legacyFieldName[0] + " = '" + paramValue + "' " +
-                                        "WHERE frameNum = " + frameNumber;
-                dbCommand.ExecuteNonQuery();
+                // Unsupported key type; skip it
+                return;
             }
-            else
-            {
-                Console.WriteLine("Skipping unsupported key type, " + paramKeyType);
-            }
+
+            dbCommand.CommandText = "UPDATE " + FRAME_PARAMETERS_TABLE + " " +
+                                    "SET " + legacyFieldName[0] + " = '" + paramValue + "' " +
+                                    "WHERE frameNum = " + frameNumber;
+
+            dbCommand.ExecuteNonQuery();
         }
 
         /// <summary>
