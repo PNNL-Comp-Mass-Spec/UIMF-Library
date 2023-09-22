@@ -31,7 +31,7 @@ namespace UIMFLibrary
     /// </summary>
     public class DataWriter : UIMFData
     {
-        // Ignore Spelling: Cond, datetime, Frag, Prescan, quantitation, workflows, yyyy-MM-dd HH:mm:ss
+        // Ignore Spelling: Cond, datetime, Frag, Prescan, quantitation, uimf, workflows, yyyy-MM-dd HH:mm:ss
 
         #region Constants
 

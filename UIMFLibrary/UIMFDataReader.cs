@@ -30,7 +30,7 @@ namespace UIMFLibrary
     {
         // ReSharper disable CommentTypo
 
-        // Ignore Spelling: Atreyu, Cond, demultiplexing, floyd, millitorr, nameof, Prescan, Slysz, sql, Thomsons
+        // Ignore Spelling: Atreyu, Cond, demultiplexing, floyd, ims, millitorr, nameof, nano, Prescan, Slysz, sql, Thomsons, XIC
 
         // ReSharper restore CommentTypo
 

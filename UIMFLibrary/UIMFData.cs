@@ -15,7 +15,7 @@ namespace UIMFLibrary
     /// </summary>
     public abstract class UIMFData : IDisposable
     {
-        // Ignore Spelling: bool, datetime, floyd, Prescan, Structs, yyyy-MM-dd HH:mm:ss
+        // Ignore Spelling: bool, datetime, floyd, Prescan, Structs, uimf, yyyy-MM-dd HH:mm:ss
 
         #region Constants
 

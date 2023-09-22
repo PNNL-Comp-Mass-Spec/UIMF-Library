@@ -16,6 +16,8 @@ namespace UIMFLibrary
     /// </summary>
     public class BinCentricTableCreation
     {
+        // Ignore Spelling: uimf
+
         /// <summary>
         /// Tracks the last time the progress was reported via a Message event for a long-running task
         /// </summary>
