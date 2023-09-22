@@ -1613,20 +1613,21 @@ namespace UIMFLibrary
         /// <returns>Actual StartTimeMinutes (if set), otherwise the computed start time (which depends on other metadata being correct)</returns>
         public double GetFrameStartTimeMinutesEstimated(int frameNumber)
         {
-            var fp = GetFrameParams(frameNumber);
+            var frameParams = GetFrameParams(frameNumber);
 
             // If the frame start time is set, return it
-            if (fp.HasParameter(FrameParamKeyType.StartTimeMinutes))
+            if (frameParams.HasParameter(FrameParamKeyType.StartTimeMinutes))
             {
-                return fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
+                return frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
             }
 
             // If the frame start time is not set, then compute it so it is available (but with no guarantees of accuracy)
             // nanoseconds
-            var averageTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+            var averageTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+
             // Frame number is 1-based...
             var framesOffset = frameNumber - 1;
-            var scansPerFrame = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, fp.Scans);
+            var scansPerFrame = GlobalParameters.GetValueInt32(GlobalParamKeyType.PrescanTOFPulses, frameParams.Scans);
             var scansOffset = framesOffset * scansPerFrame;
             var startTimeSeconds = averageTOFLength * scansOffset / 1e9;
             return startTimeSeconds / 60;
@@ -5274,46 +5275,46 @@ namespace UIMFLibrary
                 }
 
                 // Now store to FrameParams, in order (for compatibility and comparison)
-                var fp = new FrameParams(frameNumber);
+                var frameParams = new FrameParams(frameNumber);
 
-                fp.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, startTimeMinutes);
-                fp.AddUpdateValue(FrameParamKeyType.DurationSeconds, durationSeconds);
-                fp.AddUpdateValue(FrameParamKeyType.Accumulations, accumulations);
-                fp.AddUpdateValue(FrameParamKeyType.FrameType, frameTypeInt);
-                fp.AddUpdateValue(FrameParamKeyType.Decoded, decoded);
-                fp.AddUpdateValue(FrameParamKeyType.CalibrationDone, calibrationDone);
-                fp.AddUpdateValue(FrameParamKeyType.Scans, scans);
-                fp.AddUpdateValue(FrameParamKeyType.MultiplexingEncodingSequence, multiplexingEncodingSequence);
-                fp.AddUpdateValue(FrameParamKeyType.MPBitOrder, mpBitOrder);
-                fp.AddUpdateValue(FrameParamKeyType.TOFLosses, tofLosses);
-                fp.AddUpdateValue(FrameParamKeyType.AverageTOFLength, averageTOFLength);
-                fp.AddUpdateValue(FrameParamKeyType.CalibrationSlope, calibrationSlope);
-                fp.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, calibrationIntercept);
+                frameParams.AddUpdateValue(FrameParamKeyType.StartTimeMinutes, startTimeMinutes);
+                frameParams.AddUpdateValue(FrameParamKeyType.DurationSeconds, durationSeconds);
+                frameParams.AddUpdateValue(FrameParamKeyType.Accumulations, accumulations);
+                frameParams.AddUpdateValue(FrameParamKeyType.FrameType, frameTypeInt);
+                frameParams.AddUpdateValue(FrameParamKeyType.Decoded, decoded);
+                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationDone, calibrationDone);
+                frameParams.AddUpdateValue(FrameParamKeyType.Scans, scans);
+                frameParams.AddUpdateValue(FrameParamKeyType.MultiplexingEncodingSequence, multiplexingEncodingSequence);
+                frameParams.AddUpdateValue(FrameParamKeyType.MPBitOrder, mpBitOrder);
+                frameParams.AddUpdateValue(FrameParamKeyType.TOFLosses, tofLosses);
+                frameParams.AddUpdateValue(FrameParamKeyType.AverageTOFLength, averageTOFLength);
+                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationSlope, calibrationSlope);
+                frameParams.AddUpdateValue(FrameParamKeyType.CalibrationIntercept, calibrationIntercept);
 
                 // These six parameters are coefficients for residual mass error correction
                 // ResidualMassError = a2*t + b2*t^3 + c2*t^5 + d2*t^7 + e2*t^9 + f2*t^11
                 if (Math.Abs(a2) > float.Epsilon || Math.Abs(b2) > float.Epsilon || Math.Abs(c2) > float.Epsilon ||
                     Math.Abs(d2) > float.Epsilon || Math.Abs(e2) > float.Epsilon || Math.Abs(f2) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficienta2, a2);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, b2);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, c2);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, d2);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, e2);
-                    fp.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, f2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficienta2, a2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientb2, b2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientc2, c2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientd2, d2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficiente2, e2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.MassCalibrationCoefficientf2, f2);
                 }
 
                 // Ambient temperature
-                fp.AddUpdateValue(FrameParamKeyType.AmbientTemperature, ambientTemperature);
+                frameParams.AddUpdateValue(FrameParamKeyType.AmbientTemperature, ambientTemperature);
 
                 // Voltage settings in the IMS system
                 if (Math.Abs(voltHVRack1) > float.Epsilon || Math.Abs(voltHVRack2) > float.Epsilon ||
                     Math.Abs(voltHVRack3) > float.Epsilon || Math.Abs(voltHVRack4) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack1, voltHVRack1);
-                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack2, voltHVRack2);
-                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack3, voltHVRack3);
-                    fp.AddUpdateValue(FrameParamKeyType.VoltHVRack4, voltHVRack4);
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltHVRack1, voltHVRack1);
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltHVRack2, voltHVRack2);
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltHVRack3, voltHVRack3);
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltHVRack4, voltHVRack4);
                 }
 
                 // Capillary Inlet Voltage
@@ -5323,10 +5324,10 @@ namespace UIMFLibrary
                 if (Math.Abs(voltEntranceHPFIn) > float.Epsilon || Math.Abs(voltEntranceHPFIn) > float.Epsilon ||
                     Math.Abs(voltEntranceHPFOut) > float.Epsilon || Math.Abs(voltEntranceCondLmt) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltCapInlet, voltCapInlet); // 14, Capillary Inlet Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, voltEntranceHPFIn); // 15, HPF In Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, voltEntranceHPFOut); // 16, HPF Out Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltEntranceCondLmt, voltEntranceCondLmt); // 17, Cond Limit Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltCapInlet, voltCapInlet); // 14, Capillary Inlet Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFIn, voltEntranceHPFIn); // 15, HPF In Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltEntranceHPFOut, voltEntranceHPFOut); // 16, HPF Out Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltEntranceCondLmt, voltEntranceCondLmt); // 17, Cond Limit Voltage
                 }
 
                 // Trap Out Voltage
@@ -5335,25 +5336,25 @@ namespace UIMFLibrary
                 if (Math.Abs(voltTrapOut) > float.Epsilon || Math.Abs(voltTrapIn) > float.Epsilon ||
                     Math.Abs(voltJetDist) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltTrapOut, voltTrapOut); // 18, Trap Out Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltTrapIn, voltTrapIn); // 19, Trap In Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltJetDist, voltJetDist); // 20, Jet Disruptor Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltTrapOut, voltTrapOut); // 18, Trap Out Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltTrapIn, voltTrapIn);   // 19, Trap In Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltJetDist, voltJetDist); // 20, Jet Disruptor Voltage
                 }
 
                 // Fragmentation Quadrupole 1 Voltage
                 // Fragmentation Conductance 1 Voltage
                 if (Math.Abs(voltQuad1) > float.Epsilon || Math.Abs(voltCond1) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltQuad1, voltQuad1); // 21, Fragmentation Quadrupole Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltCond1, voltCond1); // 22, Fragmentation Conductance Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltQuad1, voltQuad1); // 21, Fragmentation Quadrupole Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltCond1, voltCond1); // 22, Fragmentation Conductance Voltage
                 }
 
                 // Fragmentation Quadrupole 2 Voltage
                 // Fragmentation Conductance 2 Voltage
                 if (Math.Abs(voltQuad2) > float.Epsilon || Math.Abs(voltCond2) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltQuad2, voltQuad2); // 23, Fragmentation Quadrupole Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltCond2, voltCond2); // 24, Fragmentation Conductance Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltQuad2, voltQuad2); // 23, Fragmentation Quadrupole Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltCond2, voltCond2); // 24, Fragmentation Conductance Voltage
                 }
 
                 // IMS Out Voltage
@@ -5362,18 +5363,18 @@ namespace UIMFLibrary
                 if (Math.Abs(voltIMSOut) > float.Epsilon || Math.Abs(voltExitHPFIn) > float.Epsilon ||
                     Math.Abs(voltExitHPFOut) > float.Epsilon || Math.Abs(voltExitCondLmt) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.VoltIMSOut, voltIMSOut); // 25, IMS Out Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, voltExitHPFIn); // 26, HPF In Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, voltExitHPFOut); // 27, HPF Out Voltage
-                    fp.AddUpdateValue(FrameParamKeyType.VoltExitCondLmt, voltExitCondLmt); // 28, Cond Limit Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltIMSOut, voltIMSOut);           // 25, IMS Out Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltExitHPFIn, voltExitHPFIn);     // 26, HPF In Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltExitHPFOut, voltExitHPFOut);   // 27, HPF Out Voltage
+                    frameParams.AddUpdateValue(FrameParamKeyType.VoltExitCondLmt, voltExitCondLmt); // 28, Cond Limit Voltage
                 }
 
                 // Pressure at front of Drift Tube
                 // Pressure at back of Drift Tube
                 if (Math.Abs(pressureFront) > float.Epsilon || Math.Abs(pressureBack) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.PressureFront, pressureFront);
-                    fp.AddUpdateValue(FrameParamKeyType.PressureBack, pressureBack);
+                    frameParams.AddUpdateValue(FrameParamKeyType.PressureFront, pressureFront);
+                    frameParams.AddUpdateValue(FrameParamKeyType.PressureBack, pressureBack);
                 }
 
                 // High pressure funnel pressure
@@ -5390,22 +5391,22 @@ namespace UIMFLibrary
                         pressureConversionDivisor = 1000.0;
                     }
 
-                    fp.AddUpdateValue(FrameParamKeyType.HighPressureFunnelPressure, highPressureFunnelPressure / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.IonFunnelTrapPressure, ionFunnelTrapPressure / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.RearIonFunnelPressure, rearIonFunnelPressure / pressureConversionDivisor);
-                    fp.AddUpdateValue(FrameParamKeyType.QuadrupolePressure, quadrupolePressure / pressureConversionDivisor);
+                    frameParams.AddUpdateValue(FrameParamKeyType.HighPressureFunnelPressure, highPressureFunnelPressure / pressureConversionDivisor);
+                    frameParams.AddUpdateValue(FrameParamKeyType.IonFunnelTrapPressure, ionFunnelTrapPressure / pressureConversionDivisor);
+                    frameParams.AddUpdateValue(FrameParamKeyType.RearIonFunnelPressure, rearIonFunnelPressure / pressureConversionDivisor);
+                    frameParams.AddUpdateValue(FrameParamKeyType.QuadrupolePressure, quadrupolePressure / pressureConversionDivisor);
                 }
 
                 // ESI Voltage
                 if (Math.Abs(esiVoltage) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.ESIVoltage, esiVoltage);
+                    frameParams.AddUpdateValue(FrameParamKeyType.ESIVoltage, esiVoltage);
                 }
 
                 // Float Voltage
                 if (Math.Abs(floatVoltage) > float.Epsilon)
                 {
-                    fp.AddUpdateValue(FrameParamKeyType.FloatVoltage, floatVoltage);
+                    frameParams.AddUpdateValue(FrameParamKeyType.FloatVoltage, floatVoltage);
                 }
 
                 // Voltage profile used in fragmentation
@@ -5417,10 +5418,10 @@ namespace UIMFLibrary
                     var base64String = Convert.ToBase64String(fragProfile, 0, fragProfile.Length);
 
                     // Finally, store in frameParams
-                    fp.AddUpdateValue(FrameParamKeyType.FragmentationProfile, base64String);
+                    frameParams.AddUpdateValue(FrameParamKeyType.FragmentationProfile, base64String);
                 }
 
-                return fp;
+                return frameParams;
             }
             catch (Exception ex)
             {

@@ -22,11 +22,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.MSMSData1))
             {
-                var gp = reader.GetGlobalParams();
+                var globalParams = reader.GetGlobalParams();
 
                 var checkSum = 0;
 
-                for (var frame = 1; frame <= gp.NumFrames; frame++)
+                for (var frame = 1; frame <= globalParams.NumFrames; frame++)
                 {
                     checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
                 }

@@ -16,20 +16,16 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// Display 2D chromatogram.
         /// </summary>
-        /// <param name="frameORScanVals">
-        /// Frame or scan values
-        /// </param>
-        /// <param name="intensityVals">
-        /// Intensity values
-        /// </param>
-        public static void Display2DChromatogram(int[] frameORScanVals, int[] intensityVals)
+        /// <param name="frameOrScanValues">Frame or scan values</param>
+        /// <param name="intensityValues">Intensity values</param>
+        public static void Display2DChromatogram(int[] frameOrScanValues, int[] intensityValues)
         {
             var sb = new StringBuilder();
-            for (var i = 0; i < frameORScanVals.Length; i++)
+            for (var i = 0; i < frameOrScanValues.Length; i++)
             {
-                sb.Append(frameORScanVals[i]);
+                sb.Append(frameOrScanValues[i]);
                 sb.Append("\t");
-                sb.Append(intensityVals[i]);
+                sb.Append(intensityValues[i]);
                 sb.Append(Environment.NewLine);
             }
 
@@ -39,38 +35,38 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// Display frame parameters.
         /// </summary>
-        /// <param name="fp">Frame parameters</param>
-        public static void DisplayFrameParameters(FrameParams fp)
+        /// <param name="frameParams">Frame parameters</param>
+        public static void DisplayFrameParameters(FrameParams frameParams)
         {
             var sb = new StringBuilder();
 
             var separator = Environment.NewLine;
 
-            sb.AppendFormat("avg TOF length = \t{0}", fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
+            sb.AppendFormat("avg TOF length = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0));
             sb.Append(separator);
-            sb.AppendFormat("cal intercept = \t{0}", fp.CalibrationIntercept);
+            sb.AppendFormat("cal intercept = \t{0}", frameParams.CalibrationIntercept);
             sb.Append(separator);
-            sb.AppendFormat("cal slope = \t{0}", fp.CalibrationSlope);
+            sb.AppendFormat("cal slope = \t{0}", frameParams.CalibrationSlope);
             sb.Append(separator);
-            sb.AppendFormat("frame type = \t{0}", fp.FrameType);
+            sb.AppendFormat("frame type = \t{0}", frameParams.FrameType);
             sb.Append(separator);
-            sb.AppendFormat("pressure back = \t{0}", fp.GetValueDouble(FrameParamKeyType.PressureBack, 0));
+            sb.AppendFormat("pressure back = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.PressureBack, 0));
             sb.Append(separator);
-            sb.AppendFormat("pressure front = \t{0}", fp.GetValueDouble(FrameParamKeyType.PressureFront, 0));
+            sb.AppendFormat("pressure front = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.PressureFront, 0));
             sb.Append(separator);
-            sb.AppendFormat("high pressure funnel pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0));
+            sb.AppendFormat("high pressure funnel pressure = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.HighPressureFunnelPressure, 0));
             sb.Append(separator);
-            sb.AppendFormat("ion funnel trap pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0));
+            sb.AppendFormat("ion funnel trap pressure = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.IonFunnelTrapPressure, 0));
             sb.Append(separator);
-            sb.AppendFormat("quadrupole pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0));
+            sb.AppendFormat("quadrupole pressure = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.QuadrupolePressure, 0));
             sb.Append(separator);
-            sb.AppendFormat("rear ion funnel pressure = \t{0}", fp.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0));
+            sb.AppendFormat("rear ion funnel pressure = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.RearIonFunnelPressure, 0));
             sb.Append(separator);
-            sb.AppendFormat("start time = \t{0}", fp.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0));
+            sb.AppendFormat("start time = \t{0}", frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes, 0));
             sb.Append(separator);
-            sb.AppendFormat("num scans = \t{0}", fp.Scans);
+            sb.AppendFormat("num scans = \t{0}", frameParams.Scans);
             sb.Append(separator);
-            sb.AppendFormat("IMF profile = \t{0}", fp.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
+            sb.AppendFormat("IMF profile = \t{0}", frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence));
 
             Console.WriteLine(sb.ToString());
         }
@@ -153,35 +149,35 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// Print data as a matrix
         /// </summary>
-        /// <param name="frameVals">
+        /// <param name="frameValues">
         /// Frame values
         /// </param>
-        /// <param name="intensityVals">
+        /// <param name="intensityValues">
         /// Intensity values
         /// </param>
         /// <param name="cutoff">
         /// Cutoff
         /// </param>
-        public static void PrintAsAMatrix(int[] frameVals, float[] intensityVals, float cutoff)
+        public static void PrintAsAMatrix(int[] frameValues, float[] intensityValues, float cutoff)
         {
             var sb = new StringBuilder();
-            var frameValue = frameVals[0];
-            for (var i = 0; i < frameVals.Length; i++)
+            var frameValue = frameValues[0];
+            for (var i = 0; i < frameValues.Length; i++)
             {
-                if (frameValue != frameVals[i])
+                if (frameValue != frameValues[i])
                 {
                     sb.Append("\n");
-                    frameValue = frameVals[i];
+                    frameValue = frameValues[i];
                 }
                 else
                 {
-                    if (intensityVals[i] < cutoff)
+                    if (intensityValues[i] < cutoff)
                     {
                         sb.Append("0,");
                     }
                     else
                     {
-                        sb.AppendFormat("{0},", intensityVals[i]);
+                        sb.AppendFormat("{0},", intensityValues[i]);
                     }
                 }
             }
@@ -192,35 +188,35 @@ namespace UIMFLibrary.UnitTests
         /// <summary>
         /// Print data as a matrix
         /// </summary>
-        /// <param name="frameVals">
+        /// <param name="frameValues">
         /// Frame values
         /// </param>
-        /// <param name="intensityVals">
+        /// <param name="intensityValues">
         /// Intensity values
         /// </param>
         /// <param name="cutoff">
         /// Cutoff
         /// </param>
-        public static void PrintAsAMatrix(int[] frameVals, int[] intensityVals, float cutoff)
+        public static void PrintAsAMatrix(int[] frameValues, int[] intensityValues, float cutoff)
         {
             var sb = new StringBuilder();
-            var frameValue = frameVals[0];
-            for (var i = 0; i < frameVals.Length; i++)
+            var frameValue = frameValues[0];
+            for (var i = 0; i < frameValues.Length; i++)
             {
-                if (frameValue != frameVals[i])
+                if (frameValue != frameValues[i])
                 {
                     sb.Append("\n");
-                    frameValue = frameVals[i];
+                    frameValue = frameValues[i];
                 }
                 else
                 {
-                    if (intensityVals[i] < cutoff)
+                    if (intensityValues[i] < cutoff)
                     {
                         sb.Append("0,");
                     }
                     else
                     {
-                        sb.AppendFormat("{0},", intensityVals[i]);
+                        sb.AppendFormat("{0},", intensityValues[i]);
                     }
                 }
             }

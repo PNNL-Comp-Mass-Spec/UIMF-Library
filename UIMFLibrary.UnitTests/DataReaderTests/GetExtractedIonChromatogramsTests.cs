@@ -39,7 +39,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-            int[] intensityVals;
+            int[] intensityValues;
 
             var sw = new Stopwatch();
             sw.Start();
@@ -56,17 +56,17 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     toleranceInMZ,
                     out _,
                     out _,
-                    out intensityVals);
+                    out intensityValues);
             }
 
             sw.Stop();
 
-            var max = TestUtilities.GetMax(intensityVals);
-            var normalizedIntensities = new float[intensityVals.Length];
+            var max = TestUtilities.GetMax(intensityValues);
+            var normalizedIntensities = new float[intensityValues.Length];
 
-            for (var i = 0; i < intensityVals.Length; i++)
+            for (var i = 0; i < intensityValues.Length; i++)
             {
-                normalizedIntensities[i] = (float)intensityVals[i] / max;
+                normalizedIntensities[i] = (float)intensityValues[i] / max;
             }
 
             Assert.AreEqual(1913, max);
@@ -145,9 +145,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             const string filePath = @"\\proto-2\UnitTest_Files\DeconTools_TestFiles\UIMF\Sarc_MS_90_21Aug10_Cheetah_10-08-02_0000.uimf";
 
-            int[] frameVals;
-            int[] scanVals;
-            int[] intensityVals;
+            int[] frameValues;
+            int[] scanValues;
+            int[] intensityValues;
 
             var sw = new Stopwatch();
             sw.Start();
@@ -162,9 +162,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     stopScan,
                     targetMZ,
                     toleranceInMZ,
-                    out frameVals,
-                    out scanVals,
-                    out intensityVals);
+                    out frameValues,
+                    out scanValues,
+                    out intensityValues);
             }
 
             sw.Stop();
@@ -181,11 +181,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var mostRecentLine = string.Empty;
             var previousValueStored = false;
 
-            for (var i = 0; i < frameVals.Length; i++)
+            for (var i = 0; i < frameValues.Length; i++)
             {
-                if (previousIntensity == 0 && intensityVals[i] == 0)
+                if (previousIntensity == 0 && intensityValues[i] == 0)
                 {
-                    mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameVals[i], scanVals[i], intensityVals[i]);
+                    mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameValues[i], scanValues[i], intensityValues[i]);
                     previousValueStored = false;
                     continue;
                 }
@@ -195,14 +195,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     sb.AppendLine(mostRecentLine);
                 }
 
-                mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameVals[i], scanVals[i], intensityVals[i]);
+                mostRecentLine = string.Format("{0,-5}\t{1,-5}\t{2}", frameValues[i], scanValues[i], intensityValues[i]);
 
                 sb.AppendLine(mostRecentLine);
                 previousValueStored = true;
 
-                previousIntensity = intensityVals[i];
+                previousIntensity = intensityValues[i];
 
-                if (intensityVals[i] <= 0)
+                if (intensityValues[i] <= 0)
                     continue;
 
                 nonZeroIntensities++;
@@ -230,8 +230,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-            int[] scanVals = null;
-            int[] intensityVals = null;
+            int[] scanValues = null;
+            int[] intensityValues = null;
 
             using (mReader = new DataReader(FileRefs.LegacyFile1))
             {
@@ -243,17 +243,17 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     startScan + 100,
                     targetMZ,
                     toleranceInMZ,
-                    ref scanVals,
-                    ref intensityVals);
+                    ref scanValues,
+                    ref intensityValues);
 
-                TestUtilities.Display2DChromatogram(scanVals, intensityVals);
+                TestUtilities.Display2DChromatogram(scanValues, intensityValues);
 
-                Assert.AreEqual(50, scanVals[0]);
-                Assert.AreEqual(250, scanVals[200]);
+                Assert.AreEqual(50, scanValues[0]);
+                Assert.AreEqual(250, scanValues[200]);
 
-                Assert.AreEqual(6525, intensityVals[100]);
-                Assert.AreEqual(3199, intensityVals[105]);
-                Assert.AreEqual(255, intensityVals[111]);
+                Assert.AreEqual(6525, intensityValues[100]);
+                Assert.AreEqual(3199, intensityValues[105]);
+                Assert.AreEqual(255, intensityValues[111]);
             }
         }
 
@@ -278,7 +278,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 const double toleranceInPPM = 20;
                 const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
 
-                // mReader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanVals, ref intensityVals);
+                // mReader.GetDriftTimeProfile(testFrame, frameType, startScan, stopScan, targetMZ, toleranceInMZ, ref scanValues, ref intensityValues);
                 var sw = new Stopwatch();
                 sw.Start();
                 mReader.GetLCProfile(
@@ -289,22 +289,22 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     stopScan,
                     targetMZ,
                     toleranceInMZ,
-                    out var frameVals,
-                    out var intensityVals);
+                    out var frameValues,
+                    out var intensityValues);
                 sw.Stop();
 
                 var sb = new StringBuilder();
-                for (var i = 0; i < frameVals.Length; i++)
+                for (var i = 0; i < frameValues.Length; i++)
                 {
-                    sb.Append(frameVals[i]);
+                    sb.Append(frameValues[i]);
                     sb.Append('\t');
-                    sb.Append(intensityVals[i]);
+                    sb.Append(intensityValues[i]);
                     sb.Append(Environment.NewLine);
                 }
 
-                // Assert.AreEqual(171, frameVals[71]);
-                // Assert.AreEqual(6770, intensityVals[71]);
-                Assert.AreEqual(endFrame - startFrame + 1, frameVals.Length);
+                // Assert.AreEqual(171, frameValues[71]);
+                // Assert.AreEqual(6770, intensityValues[71]);
+                Assert.AreEqual(endFrame - startFrame + 1, frameValues.Length);
 
                 // Console.Write(sb.ToString());
                 Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
@@ -328,7 +328,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const double toleranceInMZ = toleranceInPPM / 1e6 * targetMZ;
             using (mReader = new DataReader(FileRefs.LegacyFile1))
             {
-                // int[] scanVals = null;
+                // int[] scanValues = null;
 
                 var sw = new Stopwatch();
                 sw.Start();
@@ -340,13 +340,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     startScan + 2,
                     targetMZ,
                     toleranceInMZ,
-                    out var frameVals,
-                    out var intensityVals);
+                    out var frameValues,
+                    out var intensityValues);
                 sw.Stop();
 
                 Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
 
-                // TestUtilities.display2DChromatogram(frameVals, intensityVals);
+                // TestUtilities.display2DChromatogram(frameValues, intensityValues);
             }
         }
 

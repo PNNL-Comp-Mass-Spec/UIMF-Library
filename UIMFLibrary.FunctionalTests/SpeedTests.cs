@@ -147,7 +147,7 @@ namespace UIMFLibrary.FunctionalTests
             // int numFramesToSum = 1;
             const int numIMSScansToSum = 7;
 
-            using (var dr = new DataReader(uimfStandardFile1))
+            using (var reader = new DataReader(uimfStandardFile1))
             {
                 const int frameStart = 500;
                 const int frameStop = frameStart + numIterations;
@@ -162,7 +162,7 @@ namespace UIMFLibrary.FunctionalTests
                 sw.Start();
                 for (var frame = frameStart; frame < frameStop; frame++)
                 {
-                    var nonZeros = dr.GetSpectrum(
+                    var nonZeros = reader.GetSpectrum(
                         frame,
                         frame,
                         UIMFData.FrameType.MS1,
@@ -196,17 +196,17 @@ namespace UIMFLibrary.FunctionalTests
         {
             PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            var dr = new DataReader(uimfStandardFile1);
-            var gp = dr.GetGlobalParams();
+            var reader = new DataReader(uimfStandardFile1);
+            var globalParams = reader.GetGlobalParams();
 
-            Console.WriteLine("Frame Count: " + gp.NumFrames);
+            Console.WriteLine("Frame Count: " + globalParams.NumFrames);
 
             const int startFrame = 500;
             const int endFrame = 502;
             const int startScan = 250;
             const int endScan = 256;
 
-            var nonZeroCount = dr.GetSpectrum(
+            var nonZeroCount = reader.GetSpectrum(
                 startFrame, endFrame,
                 UIMFData.FrameType.MS1,
                 startScan, endScan,

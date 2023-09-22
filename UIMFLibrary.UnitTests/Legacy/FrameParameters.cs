@@ -310,14 +310,14 @@ namespace UIMFLibrary.UnitTests.Legacy
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameParameters"/> class.
-        /// This constructor auto-populates StartTime using Now minutes dtRunStartTime using the correct format
+        /// This constructor auto-populates StartTime using Now minus runStartTime
         /// </summary>
-        /// <param name="dtRunStartTime">
+        /// <param name="runStartTime">
         /// </param>
         // ReSharper disable once UnusedMember.Global
-        public FrameParameters(DateTime dtRunStartTime)
+        public FrameParameters(DateTime runStartTime)
         {
-            StartTime = DateTime.UtcNow.Subtract(dtRunStartTime).TotalMinutes;
+            StartTime = DateTime.UtcNow.Subtract(runStartTime).TotalMinutes;
         }
 
         /// <summary>

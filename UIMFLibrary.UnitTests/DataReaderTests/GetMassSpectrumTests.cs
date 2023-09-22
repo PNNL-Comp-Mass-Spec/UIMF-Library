@@ -89,11 +89,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.LegacyFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                var gp = dr.GetGlobalParams();
+                var globalParams = reader.GetGlobalParams();
 
-                var nonZeros = dr.GetSpectrum(
+                var nonZeros = reader.GetSpectrum(
                     testFrameScanInfo1.startFrame,
                     testFrameScanInfo1.stopFrame,
                     UIMFData.FrameType.MS1,
@@ -101,6 +101,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     testFrameScanInfo1.stopScan,
                     out var mzValues,
                     out var intensities);
+
                 TestUtilities.DisplayRawMassSpectrum(mzValues, intensities);
             }
         }
@@ -110,19 +111,19 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         /// </summary>
         [Test]
         [Category("PNL_Domain")]
-        public void GetFrame0_MS_demultiplexedData_Test1()
+        public void GetFrame0_MS_Demultiplexed_Data_Test1()
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.LegacyDemultiplexedFile1))
+            using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
-                var gp = dr.GetGlobalParams();
+                var globalParams = reader.GetGlobalParams();
 
                 // Manually change to true to enable the test
                 if (false)
                 {
 #pragma warning disable 162
-                    var nonZeros = dr.GetSpectrum(
+                    var nonZeros = reader.GetSpectrum(
                         testFrameScanInfo1.startFrame,
                         testFrameScanInfo1.stopFrame,
                         UIMFData.FrameType.MS1,
@@ -147,16 +148,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.LegacyFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var testFrameScanInfo2 = new FrameAndScanInfo(500, 550, 250, 256);
 
-                var gp = dr.GetGlobalParams();
-                Console.WriteLine("Frame count: " + gp.NumFrames);
+                var globalParams = reader.GetGlobalParams();
+                Console.WriteLine("Frame count: " + globalParams.NumFrames);
 
                 for (var frame = testFrameScanInfo2.startFrame; frame <= testFrameScanInfo2.stopFrame; frame++)
                 {
-                    var nonZeros = dr.GetSpectrum(
+                    var nonZeros = reader.GetSpectrum(
                         frame,
                         frame,
                         UIMFData.FrameType.MS1,
@@ -170,7 +171,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         frame, testFrameScanInfo2.startScan, testFrameScanInfo2.stopScan, nonZeros);
 
                     // jump back
-                    var nonZerosPreviousFrame = dr.GetSpectrum(
+                    var nonZerosPreviousFrame = reader.GetSpectrum(
                         frame - 1,
                         frame - 1,
                         UIMFData.FrameType.MS1,
@@ -184,7 +185,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         frame - 1, testFrameScanInfo2.startScan, testFrameScanInfo2.stopScan, nonZerosPreviousFrame);
 
                     // and ahead... just testing it's ability to jump around
-                    var nonZerosNextFrame = dr.GetSpectrum(
+                    var nonZerosNextFrame = reader.GetSpectrum(
                         frame + 2,
                         frame + 2,
                         UIMFData.FrameType.MS1,
@@ -211,11 +212,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             DataReaderTests.PrintMethodName(System.Reflection.MethodBase.GetCurrentMethod());
 
-            using (var dr = new DataReader(FileRefs.LegacyFile1))
+            using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                var gp = dr.GetGlobalParams();
+                var globalParams = reader.GetGlobalParams();
 
-                var nonZeros = dr.GetSpectrum(
+                var nonZeros = reader.GetSpectrum(
                     testFrameScanInfo1.startFrame,
                     testFrameScanInfo1.stopFrame,
                     UIMFData.FrameType.MS1,

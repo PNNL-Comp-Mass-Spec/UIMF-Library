@@ -81,16 +81,16 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
 
                 for (var frameNum = 1; frameNum <= frameCountToWrite; frameNum++)
                 {
-                    var fp = new FrameParams(frameNum);
+                    var frameParams = new FrameParams(frameNum);
 
-                    fp.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFData.FrameType.MS1)
+                    frameParams.AddUpdateValue(FrameParamKeyType.FrameType, (int)UIMFData.FrameType.MS1)
                       .AddUpdateValue(FrameParamKeyType.CalibrationSlope, 0.3476349957054481)
                       .AddUpdateValue(FrameParamKeyType.CalibrationIntercept, 0.03434148864746093)
                       .AddUpdateValue(FrameParamKeyType.AverageTOFLength, 163366.6666666667)
                       .AddUpdateValue(FrameParamKeyType.StartTimeMinutes, frameNum * SECONDS_PER_FRAME)
                       .AddUpdateValue(FrameParamKeyType.Scans, 600);
 
-                    writer.InsertFrame(frameNum, fp);
+                    writer.InsertFrame(frameNum, frameParams);
 
                     for (var scanNumber = 1; scanNumber <= 600; scanNumber++)
                     {
@@ -108,7 +108,7 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
                                 intensities[i] = nextRandom;
                         }
 
-                        writer.InsertScan(frameNum, fp, scanNumber, intensities, globalParameters.BinWidth);
+                        writer.InsertScan(frameNum, frameParams, scanNumber, intensities, globalParameters.BinWidth);
                     }
                 }
 

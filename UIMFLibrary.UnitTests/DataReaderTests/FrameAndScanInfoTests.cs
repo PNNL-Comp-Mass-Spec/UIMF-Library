@@ -26,8 +26,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                var fp = reader.GetFrameParams(1);
-                var avgTOFLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
+                var frameParams = reader.GetFrameParams(1);
+                var avgTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
 
                 Assert.AreEqual(162555.56m, (decimal)avgTOFLength);
             }
@@ -46,14 +46,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 const int firstFrame = 1;
 
-                var fp = reader.GetFrameParams(firstFrame);
+                var frameParams = reader.GetFrameParams(firstFrame);
 
-                Assert.AreEqual(UIMFData.FrameType.MS1, fp.FrameType);
-                Assert.AreEqual(0.03313236, fp.CalibrationIntercept);
-                Assert.AreEqual(0.3476655, fp.CalibrationSlope);
-                Assert.AreEqual(360, fp.Scans);
+                Assert.AreEqual(UIMFData.FrameType.MS1, frameParams.FrameType);
+                Assert.AreEqual(0.03313236, frameParams.CalibrationIntercept);
+                Assert.AreEqual(0.3476655, frameParams.CalibrationSlope);
+                Assert.AreEqual(360, frameParams.Scans);
 
-                // TestUtilities.DisplayFrameParameters(fp);
+                // TestUtilities.DisplayFrameParameters(frameParams);
             }
         }
 
@@ -73,14 +73,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Console.WriteLine("Last frame = " + lastFrame);
 
-                var fp = reader.GetFrameParams(lastFrame);
+                var frameParams = reader.GetFrameParams(lastFrame);
 
-                Assert.AreEqual(UIMFData.FrameType.MS1, fp.FrameType);
-                Assert.AreEqual(0.03313236, fp.CalibrationIntercept);
-                Assert.AreEqual(0.3476655, fp.CalibrationSlope);
-                Assert.AreEqual(360, fp.Scans);
+                Assert.AreEqual(UIMFData.FrameType.MS1, frameParams.FrameType);
+                Assert.AreEqual(0.03313236, frameParams.CalibrationIntercept);
+                Assert.AreEqual(0.3476655, frameParams.CalibrationSlope);
+                Assert.AreEqual(360, frameParams.Scans);
 
-                // TestUtilities.DisplayFrameParameters(fp);
+                // TestUtilities.DisplayFrameParameters(frameParams);
             }
         }
 
@@ -120,10 +120,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.LegacyDemultiplexedFile1))
             {
-                var gp = reader.GetGlobalParams();
-                var dt = DateTime.Parse(gp.GetValue(GlobalParamKeyType.DateStarted));
+                var globalParams = reader.GetGlobalParams();
+                var dateStarted = DateTime.Parse(globalParams.GetValue(GlobalParamKeyType.DateStarted));
 
-                Assert.AreEqual("04/07/2011 06:40:30", dt.ToString(CultureInfo.InvariantCulture));
+                Assert.AreEqual("04/07/2011 06:40:30", dateStarted.ToString(CultureInfo.InvariantCulture));
             }
         }
 

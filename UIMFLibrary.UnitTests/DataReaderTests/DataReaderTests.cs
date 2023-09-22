@@ -428,7 +428,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int stopFrame = 164;
             const int scan = 121;
 
-            var sequentialFrameIntensityVals = new List<int[]>();
+            var sequentialFrameIntensityValues = new List<int[]>();
 
             using (var reader = new DataReader(filePath))
             {
@@ -436,13 +436,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
                     var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, UIMFData.FrameType.MS1, scan, scan);
-                    sequentialFrameIntensityVals.Add(intensitiesForFrame);
+                    sequentialFrameIntensityValues.Add(intensitiesForFrame);
                 }
 
                 const int testBin = 72072;
-                Assert.AreEqual(35845, sequentialFrameIntensityVals[0][testBin]);
-                Assert.AreEqual(44965, sequentialFrameIntensityVals[1][testBin]);
-                Assert.AreEqual(45758, sequentialFrameIntensityVals[2][testBin]);
+                Assert.AreEqual(35845, sequentialFrameIntensityValues[0][testBin]);
+                Assert.AreEqual(44965, sequentialFrameIntensityValues[1][testBin]);
+                Assert.AreEqual(45758, sequentialFrameIntensityValues[2][testBin]);
 
                 var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
@@ -454,7 +454,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     UIMFData.FrameType.MS1,
                     scan,
                     scan,
-                    out var mzVals,
+                    out var mzValues,
                     out var intensitiesB);
 
                 Assert.AreEqual(764, numZeros);
@@ -462,7 +462,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var maxIntensityForTestMZ = 0;
                 for (var i = 0; i < intensitiesB.Length; i++)
                 {
-                    if (mzVals[i] > (testMZ - 0.1) && mzVals[i] < (testMZ + 0.1))
+                    if (mzValues[i] > (testMZ - 0.1) && mzValues[i] < (testMZ + 0.1))
                     {
                         if (intensitiesB[i] > maxIntensityForTestMZ)
                         {
@@ -486,7 +486,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             const int stopFrame = 15;
             const int scan = 121;
 
-            var sequentialFrameIntensityVals = new List<int[]>();
+            var sequentialFrameIntensityValues = new List<int[]>();
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
@@ -494,16 +494,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 for (var frame = startFrame; frame <= stopFrame; frame++)
                 {
                     var intensitiesForFrame = reader.GetSpectrumAsBins(frame, frame, UIMFData.FrameType.MS1, scan, scan);
-                    sequentialFrameIntensityVals.Add(intensitiesForFrame);
+                    sequentialFrameIntensityValues.Add(intensitiesForFrame);
                 }
 
                 const int testBin = 44527;
 
-                Assert.AreEqual(59, sequentialFrameIntensityVals[0][testBin]);
-                Assert.AreEqual(44, sequentialFrameIntensityVals[1][testBin]);
-                Assert.AreEqual(49, sequentialFrameIntensityVals[2][testBin]);
-                Assert.AreEqual(53, sequentialFrameIntensityVals[3][testBin]);
-                Assert.AreEqual(51, sequentialFrameIntensityVals[4][testBin]);
+                Assert.AreEqual(59, sequentialFrameIntensityValues[0][testBin]);
+                Assert.AreEqual(44, sequentialFrameIntensityValues[1][testBin]);
+                Assert.AreEqual(49, sequentialFrameIntensityValues[2][testBin]);
+                Assert.AreEqual(53, sequentialFrameIntensityValues[3][testBin]);
+                Assert.AreEqual(51, sequentialFrameIntensityValues[4][testBin]);
 
                 var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
@@ -515,7 +515,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     UIMFData.FrameType.MS1,
                     scan,
                     scan,
-                    out var mzVals,
+                    out var mzValues,
                     out var intensitiesB);
 
                 Assert.AreEqual(761, numZeros);
@@ -523,7 +523,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var maxIntensityForTestMZ = 0;
                 for (var i = 0; i < intensitiesB.Length; i++)
                 {
-                    if (mzVals[i] > (testMZ - 0.1) && mzVals[i] < (testMZ + 0.1))
+                    if (mzValues[i] > (testMZ - 0.1) && mzValues[i] < (testMZ + 0.1))
                     {
                         if (intensitiesB[i] > maxIntensityForTestMZ)
                         {
@@ -671,8 +671,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (mReader = new DataReader(filePath))
             {
-                var gp = mReader.GetGlobalParams();
-                var fp = mReader.GetFrameParams(testFrame);
+                var globalParams = mReader.GetGlobalParams();
+                var frameParams = mReader.GetFrameParams(testFrame);
 
                 var sb = new StringBuilder();
 
@@ -681,7 +681,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 {
                     sb.Append(i);
                     sb.Append('\t');
-                    var mz = ConvertBinToMZ(fp.CalibrationSlope, fp.CalibrationIntercept, gp.BinWidth, gp.TOFCorrectionTime, i);
+                    var mz = ConvertBinToMZ(frameParams.CalibrationSlope, frameParams.CalibrationIntercept, globalParams.BinWidth, globalParams.TOFCorrectionTime, i);
 
                     sb.Append(mz);
 
@@ -708,13 +708,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                var gp = reader.GetGlobalParams();
-                var fp = reader.GetFrameParams(1);
+                var globalParams = reader.GetGlobalParams();
+                var frameParams = reader.GetFrameParams(1);
 
-                Assert.AreEqual(1.0, gp.BinWidth);
-                Assert.AreEqual(138000, gp.Bins);
+                Assert.AreEqual(1.0, globalParams.BinWidth);
+                Assert.AreEqual(138000, globalParams.Bins);
 
-                var tofLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+                var tofLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
                 Assert.AreEqual(162555.56, tofLength);
             }
         }
@@ -729,13 +729,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFile.FullName))
             {
-                var gp = reader.GetGlobalParams();
-                var fp = reader.GetFrameParams(10);
+                var globalParams = reader.GetGlobalParams();
+                var frameParams = reader.GetFrameParams(10);
 
-                Assert.AreEqual(1.0, gp.BinWidth);
-                Assert.AreEqual(148000, gp.Bins);
+                Assert.AreEqual(1.0, globalParams.BinWidth);
+                Assert.AreEqual(148000, globalParams.Bins);
 
-                var tofLength = fp.GetValueDouble(FrameParamKeyType.AverageTOFLength);
+                var tofLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
                 Assert.AreEqual(163369.23077, tofLength, 0.0001);
             }
         }
@@ -1148,7 +1148,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
         {
             var t = bin * binWidth / 1000;
 
-            // double residualMassError  = fp.a2*t + fp.b2 * System.Math.Pow(t,3)+ fp.c2 * System.Math.Pow(t,5) + fp.d2 * System.Math.Pow(t,7) + fp.e2 * System.Math.Pow(t,9) + fp.f2 * System.Math.Pow(t,11);
+            // double residualMassError  = frameParams.a2*t + frameParams.b2 * System.Math.Pow(t,3)+ frameParams.c2 * System.Math.Pow(t,5) + frameParams.d2 * System.Math.Pow(t,7) + frameParams.e2 * System.Math.Pow(t,9) + frameParams.f2 * System.Math.Pow(t,11);
             const double residualMassError = 0;
 
             var sqrtMZ = slope * (t - correctionTimeForTOF / 1000 - intercept);
