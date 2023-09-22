@@ -125,6 +125,8 @@ namespace UIMFLibrary
             return bin * TenthsOfNanoSecondsPerBin;
         }
 
+        // ReSharper disable once InconsistentNaming
+
         /// <summary>
         /// Convert from a TOF value to bin number
         /// </summary>
@@ -191,7 +193,7 @@ namespace UIMFLibrary
         /// <returns>
         /// m/z<see cref="double"/>.
         /// </returns>
-        public double ToftoMz(double tofValue, double factor)
+        public double TOFtoMZ(double tofValue, double factor)
         {
            var mz = TOFtoMZ(tofValue);
             mz /= factor;
