@@ -728,8 +728,10 @@ namespace UIMFLibrary
 
                 var softwareName = software?.Name ?? DEFAULT_NAME;
                 string softwareVersion;
-                var infoVersion = entryAssembly?.GetCustomAttributes<AssemblyInformationalVersionAttribute>()?.ToList();
-                var fileVersion = entryAssembly?.GetCustomAttributes<AssemblyFileVersionAttribute>()?.ToList();
+
+                var infoVersion = entryAssembly?.GetCustomAttributes<AssemblyInformationalVersionAttribute>().ToList();
+                var fileVersion = entryAssembly?.GetCustomAttributes<AssemblyFileVersionAttribute>().ToList();
+
                 if (infoVersion?.Count > 0)
                 {
                     softwareVersion = infoVersion[0].InformationalVersion;
