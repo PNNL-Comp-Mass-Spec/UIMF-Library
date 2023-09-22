@@ -33,7 +33,7 @@
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="PRISM-Library" Version="2.8.8" />
+    <PackageReference Include="PRISM-Library" Version="2.8.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UIMFLibrary.UnitTests\UIMFLibrary.UnitTests.csproj" />
