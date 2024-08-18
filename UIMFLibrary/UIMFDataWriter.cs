@@ -4,7 +4,7 @@
 //   Originally written by Yan Shi for the Department of Energy (PNNL, Richland, WA)
 //   Additional contributions by Anuj Shah, Matthew Monroe, Gordon Slysz, Kevin Crowell, Bill Danielson, Spencer Prost, and Bryson Gibbons
 //   E-mail: matthew.monroe@pnnl.gov or proteomics@pnnl.gov
-//   Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://panomics.pnnl.gov/ or https://www.pnnl.gov/integrative-omics
+//   Website: https://github.com/PNNL-Comp-Mass-Spec/ or https://www.pnnl.gov/integrative-omics
 //
 // --------------------------------------------------------------------------------------------------------------------
 
