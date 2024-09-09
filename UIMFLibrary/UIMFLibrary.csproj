@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- net472 is to support a ValueTuple method in IntensityBinConverterInt32 -->
-    <TargetFrameworks>net462;net472;net48;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net472;net48;netstandard2.0;netstandard2.1</TargetFrameworks>
     <Company>Pacific Northwest National Laboratory</Company>
     <Authors>PNNL-Comp-Mass-Spec</Authors>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -25,13 +25,13 @@
     <DefineConstants>TRACE;EXPERIMENTAL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\Readme.md" Pack="true" PackagePath="\"/>
+    <None Include="..\Readme.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net462' OR '$(TargetFramework)'=='net472' OR '$(TargetFramework)'=='net48'">
     <!-- Needed for use of the 'dynamic' type -->
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0' OR '$(TargetFramework)'=='netstandard2.1'">
     <!-- Needed for use of the 'dynamic' type -->
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
@@ -39,14 +39,17 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
+  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release' AND '$(TargetFramework)'!='netstandard2.1'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release' AND '$(TargetFramework)'=='netstandard2.1'">
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.98" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.133">
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.143">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
