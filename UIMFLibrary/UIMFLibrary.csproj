@@ -39,10 +39,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release' AND '$(TargetFramework)'!='netstandard2.1'">
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release' AND '$(TargetFramework)'=='netstandard2.1'">
+  <ItemGroup Condition="'$(Configuration)'!='Pwiz_Release'">
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Pwiz_Release'">
