@@ -230,7 +230,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var nonZeroCount = (from n in mzValues where Math.Abs(n) > float.Epsilon select n).Count();
                 Console.WriteLine("Number of x/y data points = " + nonZeroCount);
 
-                Assert.AreEqual(1137, nonZeros);
+                Assert.That(nonZeros, Is.EqualTo(1137));
             }
         }
 

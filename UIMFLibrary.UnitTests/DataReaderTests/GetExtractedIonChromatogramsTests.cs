@@ -69,8 +69,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 normalizedIntensities[i] = (float)intensityValues[i] / max;
             }
 
-            Assert.AreEqual(1913, max);
-            Assert.AreEqual((float)0.0172503926, normalizedIntensities[16]);
+            Assert.That(max, Is.EqualTo(1913));
+            Assert.That(normalizedIntensities[16], Is.EqualTo((float)0.0172503926));
 
             Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);
         }
@@ -115,10 +115,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     sb.Append(Environment.NewLine);
                 }
 
-                Assert.AreEqual(293, values[0][64]);
-                Assert.AreEqual(510, values[2][66]);
-                Assert.AreEqual(663, values[3][64]);
-                Assert.AreEqual(436, values[4][57]);
+                Assert.That(values[0][64], Is.EqualTo(293));
+                Assert.That(values[2][66], Is.EqualTo(510));
+                Assert.That(values[3][64], Is.EqualTo(663));
+                Assert.That(values[4][57], Is.EqualTo(436));
 
                 // Console.WriteLine(sb.ToString());
             }
@@ -248,12 +248,12 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 TestUtilities.Display2DChromatogram(scanValues, intensityValues);
 
-                Assert.AreEqual(50, scanValues[0]);
-                Assert.AreEqual(250, scanValues[200]);
+                Assert.That(scanValues[0], Is.EqualTo(50));
+                Assert.That(scanValues[200], Is.EqualTo(250));
 
-                Assert.AreEqual(6525, intensityValues[100]);
-                Assert.AreEqual(3199, intensityValues[105]);
-                Assert.AreEqual(255, intensityValues[111]);
+                Assert.That(intensityValues[100], Is.EqualTo(6525));
+                Assert.That(intensityValues[105], Is.EqualTo(3199));
+                Assert.That(intensityValues[111], Is.EqualTo(255));
             }
         }
 
@@ -302,9 +302,9 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     sb.Append(Environment.NewLine);
                 }
 
-                // Assert.AreEqual(171, frameValues[71]);
-                // Assert.AreEqual(6770, intensityValues[71]);
-                Assert.AreEqual(endFrame - startFrame + 1, frameValues.Length);
+                // Assert.That(frameValues[71], Is.EqualTo(171));
+                // Assert.That(intensityValues[71], Is.EqualTo(6770));
+                Assert.That(frameValues, Has.Length.EqualTo(endFrame - startFrame + 1));
 
                 // Console.Write(sb.ToString());
                 Console.WriteLine("Time (ms) = " + sw.ElapsedMilliseconds);

@@ -149,8 +149,8 @@ namespace UIMFLibrary.UnitTests.DataWriterTests
             const int calculatedScanLc = calculatedIndex / numImsScans;
             const int calculatedScanIms = calculatedIndex % numImsScans;
 
-            Assert.AreEqual(calculatedScanLc, scanLc);
-            Assert.AreEqual(calculatedScanIms, scanIms);
+            Assert.That(scanLc, Is.EqualTo(calculatedScanLc));
+            Assert.That(scanIms, Is.EqualTo(calculatedScanIms));
         }
 
         #endregion

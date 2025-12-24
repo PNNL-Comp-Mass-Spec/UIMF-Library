@@ -29,7 +29,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var frameParams = reader.GetFrameParams(1);
                 var avgTOFLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength, 0);
 
-                Assert.AreEqual(162555.56m, (decimal)avgTOFLength);
+                Assert.That((decimal)avgTOFLength, Is.EqualTo(162555.56m));
             }
         }
 
@@ -48,10 +48,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var frameParams = reader.GetFrameParams(firstFrame);
 
-                Assert.AreEqual(UIMFData.FrameType.MS1, frameParams.FrameType);
-                Assert.AreEqual(0.03313236, frameParams.CalibrationIntercept);
-                Assert.AreEqual(0.3476655, frameParams.CalibrationSlope);
-                Assert.AreEqual(360, frameParams.Scans);
+                Assert.That(frameParams.FrameType, Is.EqualTo(UIMFData.FrameType.MS1));
+                Assert.That(frameParams.CalibrationIntercept, Is.EqualTo(0.03313236));
+                Assert.That(frameParams.CalibrationSlope, Is.EqualTo(0.3476655));
+                Assert.That(frameParams.Scans, Is.EqualTo(360));
 
                 // TestUtilities.DisplayFrameParameters(frameParams);
             }
@@ -75,10 +75,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var frameParams = reader.GetFrameParams(lastFrame);
 
-                Assert.AreEqual(UIMFData.FrameType.MS1, frameParams.FrameType);
-                Assert.AreEqual(0.03313236, frameParams.CalibrationIntercept);
-                Assert.AreEqual(0.3476655, frameParams.CalibrationSlope);
-                Assert.AreEqual(360, frameParams.Scans);
+                Assert.That(frameParams.FrameType, Is.EqualTo(UIMFData.FrameType.MS1));
+                Assert.That(frameParams.CalibrationIntercept, Is.EqualTo(0.03313236));
+                Assert.That(frameParams.CalibrationSlope, Is.EqualTo(0.3476655));
+                Assert.That(frameParams.Scans, Is.EqualTo(360));
 
                 // TestUtilities.DisplayFrameParameters(frameParams);
             }
@@ -104,8 +104,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 // Console.WriteLine("Pressure for frame " + secondToLastFrame + " = " + pressureBackSecondToLastFrame);
 
                 // Console.WriteLine("Pressure for frame "+lastFrame + " = " + pressureBackLastFrame);
-                Assert.AreEqual(4.127, (decimal)pressureBackLastFrame);
-                Assert.AreEqual(4.136, (decimal)pressureBackSecondToLastFrame);
+                Assert.That((decimal)pressureBackLastFrame, Is.EqualTo(4.127));
+                Assert.That((decimal)pressureBackSecondToLastFrame, Is.EqualTo(4.136));
             }
         }
 
@@ -123,7 +123,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var globalParams = reader.GetGlobalParams();
                 var dateStarted = DateTime.Parse(globalParams.GetValue(GlobalParamKeyType.DateStarted));
 
-                Assert.AreEqual("04/07/2011 06:40:30", dateStarted.ToString(CultureInfo.InvariantCulture));
+                Assert.That(dateStarted.ToString(CultureInfo.InvariantCulture), Is.EqualTo("04/07/2011 06:40:30"));
             }
         }
 
@@ -141,7 +141,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var numFrames = reader.GetGlobalParams().NumFrames;
 
                 // Console.WriteLine("Number of frames = " + numFrames);
-                Assert.AreEqual(3220, numFrames);
+                Assert.That(numFrames, Is.EqualTo(3220));
             }
         }
 

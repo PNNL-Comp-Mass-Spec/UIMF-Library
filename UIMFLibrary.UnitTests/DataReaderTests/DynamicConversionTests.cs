@@ -37,7 +37,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 // Conversion failed
                 if (convertible)
-                    Assert.Fail("Conversion of {0} to {1} should have succeeded", value, targetType);
+                    Assert.Fail($"Conversion of {value} to {targetType} should have succeeded");
 
                 Console.WriteLine("As expected, could not convert {0} to {1}", value, targetType);
                 return;
@@ -45,7 +45,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             if (targetType == typeof(string))
             {
-                Assert.AreEqual(value, (string)result);
+                Assert.That((string)result, Is.EqualTo(value));
                 return;
             }
 
@@ -72,11 +72,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             if (convertible)
             {
-                Assert.IsTrue(success, "Conversion to double failed for {0}", valueText);
+                Assert.That(success, Is.True, $"Conversion to double failed for {valueText}");
             }
             else
             {
-                Assert.IsFalse(success, "Conversion to double unexpectedly succeeded for {0}", valueText);
+                Assert.That(success, Is.False, $"Conversion to double unexpectedly succeeded for {valueText}");
 
                 Console.WriteLine("As expected, could not convert {0} to a double", valueText);
             }
@@ -103,11 +103,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             if (convertible)
             {
-                Assert.IsTrue(success, "Conversion to int failed for {0}", valueText);
+                Assert.That(success, Is.True, $"Conversion to int failed for {valueText}");
             }
             else
             {
-                Assert.IsFalse(success, "Conversion to int unexpectedly succeeded for {0}", valueText);
+                Assert.That(success, Is.False, $"Conversion to int unexpectedly succeeded for {valueText}");
 
                 Console.WriteLine("As expected, could not convert {0} to a int", valueText);
             }
@@ -122,20 +122,20 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning restore CS0618 // Type or member is obsolete
 
             var success = frameParams.TryGetValue(FrameParamKeyType.StartTimeMinutes, out var startTime);
-            Assert.IsTrue(success, "Start time could not be retrieved");
-            Assert.AreEqual(frameParameters.StartTime, startTime, 0.00001);
+            Assert.That(success, Is.True, "Start time could not be retrieved");
+            Assert.That(startTime, Is.EqualTo(frameParameters.StartTime).Within(0.00001));
 
             success = frameParams.TryGetValue(FrameParamKeyType.Scans, out var scans);
-            Assert.IsTrue(success, "Scans could not be retrieved");
-            Assert.AreEqual(frameParameters.Scans, scans);
+            Assert.That(success, Is.True, "Scans could not be retrieved");
+            Assert.That(scans, Is.EqualTo(frameParameters.Scans));
 
             success = frameParams.TryGetValue(FrameParamKeyType.CalibrationSlope, out var calibrationSlope);
-            Assert.IsTrue(success, "CalibrationSlope could not be retrieved");
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlope, 0.00001);
+            Assert.That(success, Is.True, "CalibrationSlope could not be retrieved");
+            Assert.That(calibrationSlope, Is.EqualTo(frameParameters.CalibrationSlope).Within(0.00001));
 
             success = frameParams.TryGetValue(FrameParamKeyType.FrameType, out var frameType);
-            Assert.IsTrue(success, "FrameType could not be retrieved");
-            Assert.AreEqual((int)frameParameters.FrameType, frameType);
+            Assert.That(success, Is.True, "FrameType could not be retrieved");
+            Assert.That(frameType, Is.EqualTo((int)frameParameters.FrameType));
         }
 
         [Test]
@@ -148,63 +148,63 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             var frameParams = new FrameParams(frameParameters.FrameNum, frameParamsByType);
 
             var startTime = frameParams.GetValueDouble(FrameParamKeyType.StartTimeMinutes);
-            Assert.AreEqual(frameParameters.StartTime, startTime, 0.00001);
+            Assert.That(startTime, Is.EqualTo(frameParameters.StartTime).Within(0.00001));
 
             var startTimeDynamicInt = frameParams.GetValue(FrameParamKeyType.StartTimeMinutes, 0);
-            Assert.AreEqual(frameParameters.StartTime, startTimeDynamicInt, 0.00001);
+            Assert.That(startTimeDynamicInt, Is.EqualTo(frameParameters.StartTime).Within(0.00001));
 
             var startTimeDynamicDouble = frameParams.GetValue(FrameParamKeyType.StartTimeMinutes, 0.0);
-            Assert.AreEqual(frameParameters.StartTime, startTimeDynamicDouble, 0.00001);
+            Assert.That(startTimeDynamicDouble, Is.EqualTo(frameParameters.StartTime).Within(0.00001));
 
             var startTimeDynamic= frameParams.GetValue(FrameParamKeyType.StartTimeMinutes);
-            Assert.AreEqual(frameParameters.StartTime, startTimeDynamic, 0.00001);
+            Assert.That(startTimeDynamic, Is.EqualTo(frameParameters.StartTime).Within(0.00001));
 
             var scans = frameParams.GetValueInt32(FrameParamKeyType.Scans);
-            Assert.AreEqual(frameParameters.Scans, scans);
+            Assert.That(scans, Is.EqualTo(frameParameters.Scans));
 
             var scansDynamicInt = frameParams.GetValue(FrameParamKeyType.Scans, 0);
-            Assert.AreEqual(frameParameters.Scans, scansDynamicInt);
+            Assert.That(scansDynamicInt, Is.EqualTo(frameParameters.Scans));
 
             var scansDynamicDouble = frameParams.GetValue(FrameParamKeyType.Scans, 0.0);
-            Assert.AreEqual(frameParameters.Scans, scansDynamicDouble, 0.00001);
+            Assert.That(scansDynamicDouble, Is.EqualTo(frameParameters.Scans).Within(0.00001));
 
             var calibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope);
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlope, 0.00001);
+            Assert.That(calibrationSlope, Is.EqualTo(frameParameters.CalibrationSlope).Within(0.00001));
 
             var calibrationSlopeDynamicInt = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 0);
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDynamicInt);
+            Assert.That(calibrationSlopeDynamicInt, Is.EqualTo(frameParameters.CalibrationSlope));
 
             var calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 0.0);
-            Assert.AreEqual(frameParameters.CalibrationSlope, calibrationSlopeDynamicDouble, 0.00001);
+            Assert.That(calibrationSlopeDynamicDouble, Is.EqualTo(frameParameters.CalibrationSlope).Within(0.00001));
 
             // Remove the slope and try again
             frameParams.Values.Remove(FrameParamKeyType.CalibrationSlope);
             calibrationSlope = frameParams.GetValueDouble(FrameParamKeyType.CalibrationSlope, 3.4);
-            Assert.AreEqual(3.4, calibrationSlope, 0.00001);
+            Assert.That(calibrationSlope, Is.EqualTo(3.4).Within(0.00001));
 
             calibrationSlopeDynamicInt = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 2);
-            Assert.AreEqual(2, calibrationSlopeDynamicInt);
+            Assert.That(calibrationSlopeDynamicInt, Is.EqualTo(2));
 
             calibrationSlopeDynamicDouble = frameParams.GetValue(FrameParamKeyType.CalibrationSlope, 2.5);
-            Assert.AreEqual(2.5, calibrationSlopeDynamicDouble, 0.00001);
+            Assert.That(calibrationSlopeDynamicDouble, Is.EqualTo(2.5).Within(0.00001));
 
             var frameType = frameParams.GetValueInt32(FrameParamKeyType.FrameType);
-            Assert.AreEqual((int)frameParameters.FrameType, frameType);
+            Assert.That(frameType, Is.EqualTo((int)frameParameters.FrameType));
 
             var frameTypeDynamic = frameParams.GetValue(FrameParamKeyType.FrameType, 0);
-            Assert.AreEqual((int)frameParameters.FrameType, frameTypeDynamic);
+            Assert.That(frameTypeDynamic, Is.EqualTo((int)frameParameters.FrameType));
 
             var frameTypeDynamicDouble = frameParams.GetValue(FrameParamKeyType.FrameType, 0.0);
-            Assert.AreEqual((double)frameParameters.FrameType, frameTypeDynamicDouble, 0.00001);
+            Assert.That(frameTypeDynamicDouble, Is.EqualTo((double)frameParameters.FrameType).Within(0.00001));
 
             var imfProfile = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence);
-            Assert.AreEqual(imfProfile, "Seq");
+            Assert.That(imfProfile, Is.EqualTo("Seq"));
 
             var imfProfileWithDefault = frameParams.GetValue(FrameParamKeyType.MultiplexingEncodingSequence, "");
-            Assert.AreEqual(imfProfileWithDefault, "Seq");
+            Assert.That(imfProfileWithDefault, Is.EqualTo("Seq"));
 
             var imfProfileString = frameParams.GetValueString(FrameParamKeyType.MultiplexingEncodingSequence);
-            Assert.AreEqual(imfProfileString, "Seq");
+            Assert.That(imfProfileString, Is.EqualTo("Seq"));
         }
 
         [Test]
@@ -216,16 +216,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning restore CS0618 // Type or member is obsolete
 
             var success = globalParams.TryGetValue(GlobalParamKeyType.InstrumentName, out var instName);
-            Assert.IsTrue(success, "Instrument name could not be retrieved");
-            Assert.AreEqual(globalParameters.InstrumentName, instName);
+            Assert.That(success, Is.True, "Instrument name could not be retrieved");
+            Assert.That(instName, Is.EqualTo(globalParameters.InstrumentName));
 
             success = globalParams.TryGetValue(GlobalParamKeyType.NumFrames, out var numFrames);
-            Assert.IsTrue(success, "NumFrames could not be retrieved");
-            Assert.AreEqual(globalParameters.NumFrames, numFrames);
+            Assert.That(success, Is.True, "NumFrames could not be retrieved");
+            Assert.That(numFrames, Is.EqualTo(globalParameters.NumFrames));
 
             success = globalParams.TryGetValue(GlobalParamKeyType.BinWidth, out var binWidth);
-            Assert.IsTrue(success, "BinWidth could not be retrieved");
-            Assert.AreEqual(globalParameters.BinWidth, binWidth, 0.00001);
+            Assert.That(success, Is.True, "BinWidth could not be retrieved");
+            Assert.That(binWidth, Is.EqualTo(globalParameters.BinWidth).Within(0.00001));
         }
 
         [Test]
@@ -238,46 +238,46 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 #pragma warning restore CS0618 // Type or member is obsolete
 
             var instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
-            Assert.AreEqual(globalParameters.InstrumentName, instName);
+            Assert.That(instName, Is.EqualTo(globalParameters.InstrumentName));
 
             var instNameDynamic = globalParams.GetValue(GlobalParamKeyType.InstrumentName, "");
-            Assert.AreEqual(globalParameters.InstrumentName, instNameDynamic);
+            Assert.That(instNameDynamic, Is.EqualTo(globalParameters.InstrumentName));
 
             var instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
-            Assert.AreEqual(globalParameters.InstrumentName, instNameDynamicWithDefault);
+            Assert.That(instNameDynamicWithDefault, Is.EqualTo(globalParameters.InstrumentName));
 
             // Remove the instrument name then test again
             globalParams.Values.Remove(GlobalParamKeyType.InstrumentName);
 
             instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName);
-            Assert.AreEqual("", instName);
+            Assert.That(instName, Is.Empty);
 
             instName = globalParams.GetValueString(GlobalParamKeyType.InstrumentName, "Undefined");
-            Assert.AreEqual("Undefined", instName);
+            Assert.That(instName, Is.EqualTo("Undefined"));
 
             instNameDynamic = globalParams.GetValue(GlobalParamKeyType.InstrumentName, "Undefined");
-            Assert.AreEqual("Undefined", instNameDynamic);
+            Assert.That(instNameDynamic, Is.EqualTo("Undefined"));
 
             instNameDynamicWithDefault = globalParams.GetValue(GlobalParamKeyType.InstrumentName);
-            Assert.AreEqual("", instNameDynamicWithDefault);
+            Assert.That(instNameDynamicWithDefault, Is.EqualTo(""));
 
             var numFrames = globalParams.GetValueInt32(GlobalParamKeyType.NumFrames);
-            Assert.AreEqual(globalParameters.NumFrames, numFrames);
+            Assert.That(numFrames, Is.EqualTo(globalParameters.NumFrames));
 
             var numFramesDynamic = globalParams.GetValue(GlobalParamKeyType.NumFrames, 0);
-            Assert.AreEqual(globalParameters.NumFrames, numFramesDynamic);
+            Assert.That(numFramesDynamic, Is.EqualTo(globalParameters.NumFrames));
 
             var numFramesDynamicDouble = globalParams.GetValue(GlobalParamKeyType.NumFrames, 0.0);
-            Assert.AreEqual(globalParameters.NumFrames, numFramesDynamicDouble, 0.00001);
+            Assert.That(numFramesDynamicDouble, Is.EqualTo(globalParameters.NumFrames).Within(0.00001));
 
             var binWidth = globalParams.GetValueInt32(GlobalParamKeyType.BinWidth);
-            Assert.AreEqual(globalParameters.BinWidth, binWidth);
+            Assert.That(binWidth, Is.EqualTo(globalParameters.BinWidth));
 
             var binWidthDynamic = globalParams.GetValue(GlobalParamKeyType.BinWidth, 0);
-            Assert.AreEqual(globalParameters.BinWidth, binWidthDynamic);
+            Assert.That(binWidthDynamic, Is.EqualTo(globalParameters.BinWidth));
 
             var binWidthDynamicDouble = globalParams.GetValue(GlobalParamKeyType.BinWidth, 0.0);
-            Assert.AreEqual(globalParameters.BinWidth, binWidthDynamicDouble, 0.00001);
+            Assert.That(binWidthDynamicDouble, Is.EqualTo(globalParameters.BinWidth).Within(0.00001));
         }
 
 #pragma warning disable 612, 618

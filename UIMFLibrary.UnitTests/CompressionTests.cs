@@ -38,7 +38,7 @@ namespace UIMFLibrary.UnitTests
 
             for (var i = 0; i < BIN_COUNT; i++)
             {
-                Assert.AreEqual(testInputData[i], decoded[i], 0, "Mismatch at bin {0}", i);
+                Assert.That(decoded[i], Is.EqualTo(testInputData[i]).Within(0), $"Mismatch at bin {i}");
             }
         }
 
@@ -48,11 +48,11 @@ namespace UIMFLibrary.UnitTests
             var decoded = Decompress(compressedCurrentData, BIN_COUNT, out int _);
             var encoded = Compress(decoded);
 
-            Assert.AreEqual(compressedCurrentData.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(compressedCurrentData.Length));
 
             for (var i = 0; i < encoded.Length; i++)
             {
-                Assert.AreEqual(compressedCurrentData[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(compressedCurrentData[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 
@@ -60,10 +60,10 @@ namespace UIMFLibrary.UnitTests
         public void CompressTest()
         {
             var encoded = Compress(testInputData);
-            Assert.AreEqual(compressedCurrentData.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(compressedCurrentData.Length));
             for (var i = 0; i < compressedCurrentData.Length; i++)
             {
-                Assert.AreEqual(compressedCurrentData[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(compressedCurrentData[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 
@@ -74,7 +74,7 @@ namespace UIMFLibrary.UnitTests
 
             for (var i = 0; i < BIN_COUNT; i++)
             {
-                Assert.AreEqual(testInputData[i], decoded[i], 0, "Mismatch at bin {0}", i);
+                Assert.That(decoded[i], Is.EqualTo(testInputData[i]).Within(0), $"Mismatch at bin {i}");
             }
         }
 
@@ -85,7 +85,7 @@ namespace UIMFLibrary.UnitTests
 
             for (var i = 0; i < BIN_COUNT; i++)
             {
-                Assert.AreEqual(testInputData[i], decoded[i], 0, "Mismatch at bin {0}", i);
+                Assert.That(decoded[i], Is.EqualTo(testInputData[i]).Within(0), $"Mismatch at bin {i}");
             }
         }
 
@@ -97,10 +97,10 @@ namespace UIMFLibrary.UnitTests
             {
                 Console.WriteLine("{0:X}", b);
             }
-            Assert.AreEqual(compressedCurrentDataShort.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(compressedCurrentDataShort.Length));
             for (var i = 0; i < compressedCurrentDataShort.Length; i++)
             {
-                Assert.AreEqual(compressedCurrentDataShort[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(compressedCurrentDataShort[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 

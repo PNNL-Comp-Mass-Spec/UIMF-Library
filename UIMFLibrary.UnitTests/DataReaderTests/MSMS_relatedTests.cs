@@ -33,7 +33,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     checkSum += frame * (int)reader.GetFrameTypeForFrame(frame);
                 }
 
-                Assert.AreEqual(222, checkSum);
+                Assert.That(checkSum, Is.EqualTo(222));
             }
         }
 
@@ -67,8 +67,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     sb.AppendFormat("{0}\t{1}", mzArray[i], intensityArray[i]).AppendLine();
                 }
 
-                Assert.IsNotNull(mzArray);
-                Assert.IsTrue(mzArray.Length > 0);
+                Assert.That(mzArray, Is.Not.Null);
+                Assert.That(mzArray, Is.Not.Empty);
             }
         }
 
@@ -83,7 +83,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.MSMSData1))
             {
-                Assert.AreEqual(true, reader.HasMSMSData());
+                Assert.That(reader.HasMSMSData(), Is.True);
             }
         }
 
@@ -98,7 +98,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                Assert.AreEqual(false, reader.HasMSMSData());
+                Assert.That(reader.HasMSMSData(), Is.False);
             }
         }
 
@@ -113,7 +113,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
-                Assert.AreEqual(false, reader.HasMSMSData());
+                Assert.That(reader.HasMSMSData(), Is.False);
             }
         }
 

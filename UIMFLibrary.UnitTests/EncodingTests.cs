@@ -38,7 +38,7 @@ namespace UIMFLibrary.UnitTests
 
             for (var i = 0; i < BinCount; i++)
             {
-                Assert.AreEqual(testInputData[i], decoded[i], 0, "Mismatch at bin {0}", i);
+                Assert.That(decoded[i], Is.EqualTo(testInputData[i]).Within(0), $"Mismatch at bin {i}");
             }
         }
 
@@ -48,11 +48,11 @@ namespace UIMFLibrary.UnitTests
             var decoded = RlzDecode(rlzEncodedCurrentData, BinCount);
             var encoded = RlzEncode(decoded);
 
-            Assert.AreEqual(rlzEncodedCurrentData.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(rlzEncodedCurrentData.Length));
 
             for (var i = 0; i < encoded.Length; i++)
             {
-                Assert.AreEqual(rlzEncodedCurrentData[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(rlzEncodedCurrentData[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 
@@ -60,10 +60,10 @@ namespace UIMFLibrary.UnitTests
         public void RlzEncodeTest()
         {
             var encoded = RlzEncode(testInputData);
-            Assert.AreEqual(rlzEncodedCurrentData.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(rlzEncodedCurrentData.Length));
             for (var i = 0; i < rlzEncodedCurrentData.Length; i++)
             {
-                Assert.AreEqual(rlzEncodedCurrentData[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(rlzEncodedCurrentData[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 
@@ -74,7 +74,7 @@ namespace UIMFLibrary.UnitTests
 
             for (var i = 0; i < BinCount; i++)
             {
-                Assert.AreEqual(testInputData[i], decoded[i], 0, "Mismatch at bin {0}", i);
+                Assert.That(decoded[i], Is.EqualTo(testInputData[i]).Within(0), $"Mismatch at bin {i}");
             }
         }
 
@@ -82,10 +82,10 @@ namespace UIMFLibrary.UnitTests
         public void RlzEncodeShortTest()
         {
             var encoded = RlzEncode(testInputDataShort);
-            Assert.AreEqual(rlzEncodedCurrentDataShort.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(rlzEncodedCurrentDataShort.Length));
             for (var i = 0; i < rlzEncodedCurrentDataShort.Length; i++)
             {
-                Assert.AreEqual(rlzEncodedCurrentDataShort[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(rlzEncodedCurrentDataShort[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 
@@ -93,10 +93,10 @@ namespace UIMFLibrary.UnitTests
         public void RlzEncodeOldImsShortTest()
         {
             var encoded = RlzEncodeOld(testInputDataShort);
-            Assert.AreEqual(rlzEncodedOldImsDataShort.Length, encoded.Length);
+            Assert.That(encoded, Has.Length.EqualTo(rlzEncodedOldImsDataShort.Length));
             for (var i = 0; i < rlzEncodedOldImsDataShort.Length; i++)
             {
-                Assert.AreEqual(rlzEncodedOldImsDataShort[i], encoded[i], 0, "Mismatch at index {0}", i);
+                Assert.That(encoded[i], Is.EqualTo(rlzEncodedOldImsDataShort[i]).Within(0), $"Mismatch at index {i}");
             }
         }
 

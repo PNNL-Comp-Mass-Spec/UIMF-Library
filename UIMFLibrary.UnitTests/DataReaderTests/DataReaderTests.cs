@@ -86,10 +86,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var lastIndex = intensityMap.Length - 1;
                 var lastValue = intensityMap[lastIndex][intensityMap[lastIndex].Length - 1];
 
-                Assert.AreEqual(0, intensityMap[0][0]);
-                Assert.AreEqual(32, intensityMap[9][23]);
-                Assert.AreEqual(179, intensityMap[42][18]);
-                Assert.AreEqual(0, lastValue);
+                Assert.That(intensityMap[0][0], Is.EqualTo(0));
+                Assert.That(intensityMap[9][23], Is.EqualTo(32));
+                Assert.That(intensityMap[42][18], Is.EqualTo(179));
+                Assert.That(lastValue, Is.EqualTo(0));
 
                 foreach (var scanIntensities in intensityMap)
                 {
@@ -164,8 +164,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Console.WriteLine("Array of size {0} by {1}", dim1, dim2);
 
-                Assert.AreEqual(sizeDimension1, dim1, "Dimension 1 size mismatch");
-                Assert.AreEqual(sizeDimension2, dim2, "Dimension 1 size mismatch");
+                Assert.That(dim1, Is.EqualTo(sizeDimension1), "Dimension 1 size mismatch");
+                Assert.That(dim2, Is.EqualTo(sizeDimension2), "Dimension 1 size mismatch");
 
                 var nonZeroCount = 0;
                 var valuesOverOne = 0;
@@ -203,10 +203,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 Console.WriteLine();
                 Console.WriteLine("Non-zero count: " + nonZeroCount);
-                Assert.AreEqual(expectedNonZeroDataCount, nonZeroCount, "Non-zero count mismatch");
+                Assert.That(nonZeroCount, Is.EqualTo(expectedNonZeroDataCount), "Non-zero count mismatch");
 
                 Console.WriteLine("Values over 1: " + valuesOverOne);
-                Assert.AreEqual(expectedDataCountOverOne, valuesOverOne, "Count mismatch of values over 1");
+                Assert.That(valuesOverOne, Is.EqualTo(expectedDataCountOverOne), "Count mismatch of values over 1");
 
                 Console.WriteLine();
                 Console.WriteLine("First values greater than 1: ");
@@ -214,7 +214,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 for (var i = 0; i < expectedFirstNValuesOverOne.Count; i++)
                 {
                     Console.Write(firstNValues[i] + ", ");
-                    Assert.AreEqual(expectedFirstNValuesOverOne[i], firstNValues[i], "Expected value mismatch (at the start of the results)");
+                    Assert.That(firstNValues[i], Is.EqualTo(expectedFirstNValuesOverOne[i]), "Expected value mismatch (at the start of the results)");
                 }
 
                 Console.WriteLine();
@@ -226,7 +226,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 for (var i = 0; i < expectedLastNValuesOverOne.Count; i++)
                 {
                     Console.Write(lastNValueList[i] + ", ");
-                    Assert.AreEqual(expectedLastNValuesOverOne[i], lastNValueList[i], "Expected value mismatch (at the end of the results)");
+                    Assert.That(lastNValueList[i], Is.EqualTo(expectedLastNValuesOverOne[i]), "Expected value mismatch (at the end of the results)");
                 }
             }
         }
@@ -259,8 +259,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzArray,
                     out var intensityArray);
 
-                Assert.AreEqual(11.986007612613742, mzArray[0]);
-                Assert.AreEqual(1, intensityArray[0]);
+                Assert.That(mzArray[0], Is.EqualTo(11.986007612613742));
+                Assert.That(intensityArray[0], Is.EqualTo(1));
             }
         }
 
@@ -308,14 +308,14 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var frameCountExpected = frameCountExpectedMS1 + frameCountExpectedMS2;
 
-                Assert.AreEqual(frameCountExpected, allFrames.Count, "Frame count mismatch");
-                Assert.AreEqual(frameCountExpectedMS1, frameCountMS1, "MS1 count mismatch");
-                Assert.AreEqual(frameCountExpectedMS2, frameCountMS2, "MS2 count mismatch");
+                Assert.That(allFrames, Has.Count.EqualTo(frameCountExpected), "Frame count mismatch");
+                Assert.That(frameCountMS1, Is.EqualTo(frameCountExpectedMS1), "MS1 count mismatch");
+                Assert.That(frameCountMS2, Is.EqualTo(frameCountExpectedMS2), "MS2 count mismatch");
 
-                Assert.AreEqual(frameCountMS1, frameNumbersMS1.Length, "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS1 frames");
-                Assert.AreEqual(frameCountMS2, frameNumbersMS2.Length, "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS2 frames");
+                Assert.That(frameNumbersMS1, Has.Length.EqualTo(frameCountMS1), "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS1 frames");
+                Assert.That(frameNumbersMS2, Has.Length.EqualTo(frameCountMS2), "Count from .GetNumberOfFrames disagrees with counts from .GetFrameNumbers for MS2 frames");
 
-                Assert.AreEqual(hasMSn, frameCountMS2 > 0, "HasMSMSData result disagrees with frameCountMS2");
+                Assert.That(frameCountMS2 > 0, Is.EqualTo(hasMSn), "HasMSMSData result disagrees with frameCountMS2");
             }
         }
 
@@ -341,10 +341,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzArray,
                     out var intensityArray);
 
-                Assert.AreEqual(nonZeroCount, intensityArray.Length);
-                Assert.AreEqual(692, nonZeroCount);
-                Assert.AreEqual(80822, intensityArray.Sum());
-                Assert.AreEqual(708377.8576, mzArray.Sum(), 0.0001);
+                Assert.That(intensityArray, Has.Length.EqualTo(nonZeroCount));
+                Assert.That(nonZeroCount, Is.EqualTo(692));
+                Assert.That(intensityArray.Sum(), Is.EqualTo(80822));
+                Assert.That(mzArray.Sum(), Is.EqualTo(708377.8576).Within(0.0001));
             }
         }
 
@@ -366,10 +366,10 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzArray,
                     out var intensityArray);
 
-                Assert.AreEqual(nonZeroCount, intensityArray.Length);
-                Assert.AreEqual(227, nonZeroCount);
-                Assert.AreEqual(79043, intensityArray.Sum());
-                Assert.AreEqual(71034.2399, mzArray.Sum(), 0.0001);
+                Assert.That(intensityArray, Has.Length.EqualTo(nonZeroCount));
+                Assert.That(nonZeroCount, Is.EqualTo(227));
+                Assert.That(intensityArray.Sum(), Is.EqualTo(79043));
+                Assert.That(mzArray.Sum(), Is.EqualTo(71034.2399).Within(0.0001));
             }
         }
 
@@ -390,8 +390,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var intensities = reader.GetSpectrumAsBins(frameNumber, UIMFData.FrameType.MS1, scanNumber);
 
-                Assert.AreEqual(148001, intensities.Length);
-                Assert.AreEqual(80822, intensities.Sum());
+                Assert.That(intensities, Has.Length.EqualTo(148001));
+                Assert.That(intensities.Sum(), Is.EqualTo(80822));
             }
         }
 
@@ -410,8 +410,8 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var intensities = reader.GetSpectrumAsBins(frameNumber, UIMFData.FrameType.MS1, scanNumber);
 
-                Assert.AreEqual(148001, intensities.Length);
-                Assert.AreEqual(18109, intensities.Sum());
+                Assert.That(intensities, Has.Length.EqualTo(148001));
+                Assert.That(intensities.Sum(), Is.EqualTo(18109));
             }
         }
 
@@ -442,13 +442,13 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 }
 
                 const int testBin = 72072;
-                Assert.AreEqual(35845, sequentialFrameIntensityValues[0][testBin]);
-                Assert.AreEqual(44965, sequentialFrameIntensityValues[1][testBin]);
-                Assert.AreEqual(45758, sequentialFrameIntensityValues[2][testBin]);
+                Assert.That(sequentialFrameIntensityValues[0][testBin], Is.EqualTo(35845));
+                Assert.That(sequentialFrameIntensityValues[1][testBin], Is.EqualTo(44965));
+                Assert.That(sequentialFrameIntensityValues[2][testBin], Is.EqualTo(45758));
 
                 var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
-                Assert.AreEqual(126568, intensitiesA[testBin]);
+                Assert.That(intensitiesA[testBin], Is.EqualTo(126568));
 
                 var numZeros = reader.GetSpectrum(
                     startFrame,
@@ -459,7 +459,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzValues,
                     out var intensitiesB);
 
-                Assert.AreEqual(764, numZeros);
+                Assert.That(numZeros, Is.EqualTo(764));
 
                 var maxIntensityForTestMZ = 0;
                 for (var i = 0; i < intensitiesB.Length; i++)
@@ -473,7 +473,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     }
                 }
 
-                Assert.AreEqual(126568, maxIntensityForTestMZ);
+                Assert.That(maxIntensityForTestMZ, Is.EqualTo(126568));
             }
         }
 
@@ -501,15 +501,15 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 const int testBin = 44527;
 
-                Assert.AreEqual(59, sequentialFrameIntensityValues[0][testBin]);
-                Assert.AreEqual(44, sequentialFrameIntensityValues[1][testBin]);
-                Assert.AreEqual(49, sequentialFrameIntensityValues[2][testBin]);
-                Assert.AreEqual(53, sequentialFrameIntensityValues[3][testBin]);
-                Assert.AreEqual(51, sequentialFrameIntensityValues[4][testBin]);
+                Assert.That(sequentialFrameIntensityValues[0][testBin], Is.EqualTo(59));
+                Assert.That(sequentialFrameIntensityValues[1][testBin], Is.EqualTo(44));
+                Assert.That(sequentialFrameIntensityValues[2][testBin], Is.EqualTo(49));
+                Assert.That(sequentialFrameIntensityValues[3][testBin], Is.EqualTo(53));
+                Assert.That(sequentialFrameIntensityValues[4][testBin], Is.EqualTo(51));
 
                 var intensitiesA = reader.GetSpectrumAsBins(startFrame, stopFrame, UIMFData.FrameType.MS1, scan, scan);
 
-                Assert.AreEqual(649, intensitiesA[testBin]);
+                Assert.That(intensitiesA[testBin], Is.EqualTo(649));
 
                 var numZeros = reader.GetSpectrum(
                     startFrame,
@@ -520,7 +520,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     out var mzValues,
                     out var intensitiesB);
 
-                Assert.AreEqual(761, numZeros);
+                Assert.That(numZeros, Is.EqualTo(761));
 
                 var maxIntensityForTestMZ = 0;
                 for (var i = 0; i < intensitiesB.Length; i++)
@@ -534,7 +534,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                     }
                 }
 
-                Assert.AreEqual(65, maxIntensityForTestMZ);
+                Assert.That(maxIntensityForTestMZ, Is.EqualTo(65));
             }
         }
 
@@ -567,11 +567,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var totalIntensity = intensityArray.Sum();
                 var totalMz = mzArray.Sum();
 
-                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+                Assert.That(intensityArray, Has.Length.EqualTo(nonZeroCount));
 
-                Assert.AreEqual(4401, nonZeroCount);
-                Assert.AreEqual(612266, totalIntensity);
-                Assert.AreEqual(4582721.377149, totalMz, 0.0001);
+                Assert.That(nonZeroCount, Is.EqualTo(4401));
+                Assert.That(totalIntensity, Is.EqualTo(612266));
+                Assert.That(totalMz, Is.EqualTo(4582721.377149).Within(0.0001));
             }
         }
 
@@ -601,11 +601,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var totalIntensity = intensityArray.Sum();
                 var totalMz = mzArray.Sum();
 
-                Assert.AreEqual(nonZeroCount, intensityArray.Length);
+                Assert.That(intensityArray, Has.Length.EqualTo(nonZeroCount));
 
-                Assert.AreEqual(1686, nonZeroCount);
-                Assert.AreEqual(3514145, totalIntensity);
-                Assert.AreEqual(549104.71709, totalMz, 0.0001);
+                Assert.That(nonZeroCount, Is.EqualTo(1686));
+                Assert.That(totalIntensity, Is.EqualTo(3514145));
+                Assert.That(totalMz, Is.EqualTo(549104.71709).Within(0.0001));
             }
         }
 
@@ -631,25 +631,25 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
             using (var reader = new DataReader(uimfFilePressureInTorr1))
             {
-                Assert.IsFalse(reader.PressureIsMilliTorr);
+                Assert.That(reader.PressureIsMilliTorr, Is.False);
                 reader.Dispose();
             }
 
             using (var reader = new DataReader(uimfFilePressureInTorr2))
             {
-                Assert.IsFalse(reader.PressureIsMilliTorr);
+                Assert.That(reader.PressureIsMilliTorr, Is.False);
                 reader.Dispose();
             }
 
             using (var reader = new DataReader(uimfFileWithExtraPressureColumnsInTorr))
             {
-                Assert.IsFalse(reader.PressureIsMilliTorr);
+                Assert.That(reader.PressureIsMilliTorr, Is.False);
                 reader.Dispose();
             }
 
             using (var reader = new DataReader(uimfFileWithPressureInMillitorr))
             {
-                Assert.IsTrue(reader.PressureIsMilliTorr);
+                Assert.That(reader.PressureIsMilliTorr, Is.True);
                 reader.Dispose();
             }
 
@@ -713,11 +713,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var globalParams = reader.GetGlobalParams();
                 var frameParams = reader.GetFrameParams(1);
 
-                Assert.AreEqual(1.0, globalParams.BinWidth);
-                Assert.AreEqual(138000, globalParams.Bins);
+                Assert.That(globalParams.BinWidth, Is.EqualTo(1.0));
+                Assert.That(globalParams.Bins, Is.EqualTo(138000));
 
                 var tofLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
-                Assert.AreEqual(162555.56, tofLength);
+                Assert.That(tofLength, Is.EqualTo(162555.56));
             }
         }
 
@@ -734,11 +734,11 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var globalParams = reader.GetGlobalParams();
                 var frameParams = reader.GetFrameParams(10);
 
-                Assert.AreEqual(1.0, globalParams.BinWidth);
-                Assert.AreEqual(148000, globalParams.Bins);
+                Assert.That(globalParams.BinWidth, Is.EqualTo(1.0));
+                Assert.That(globalParams.Bins, Is.EqualTo(148000));
 
                 var tofLength = frameParams.GetValueDouble(FrameParamKeyType.AverageTOFLength);
-                Assert.AreEqual(163369.23077, tofLength, 0.0001);
+                Assert.That(tofLength, Is.EqualTo(163369.23077).Within(0.0001));
             }
         }
 
@@ -752,27 +752,27 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
-                Assert.AreEqual(91235, bpi[20], float.Epsilon);
+                Assert.That(bpi[20], Is.EqualTo(91235).Within(float.Epsilon));
 
                 bpi = reader.GetBPIByFrame(20, 20, 1, 100);
-                Assert.AreEqual(7406, bpi[20], float.Epsilon);
+                Assert.That(bpi[20], Is.EqualTo(7406).Within(float.Epsilon));
 
                 bpi = reader.GetBPIByFrame(20, 30, 50, 200);
-                Assert.AreEqual(42828, bpi[25], float.Epsilon);
+                Assert.That(bpi[25], Is.EqualTo(42828).Within(float.Epsilon));
 
                 // Uncomment this to get a BPI across the entire dataset (typically slow)
                 // bpi = reader.GetBPIByFrame(0, 0, 0, 0);
-                // Assert.AreEqual(83524, bpi[100], float.Epsilon);
+                // Assert.That(bpi[100], Is.EqualTo(83524).Within(float.Epsilon));
 
                 var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 100, 20, 50);
-                Assert.AreEqual(2028, bpiList[70], float.Epsilon);
+                Assert.That(bpiList[70], Is.EqualTo(2028).Within(float.Epsilon));
             }
 
             // File with updated parameter tables
             using (var reader = new DataReader(FileRefs.StandardFile1))
             {
                 var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 100, 20, 50);
-                Assert.AreEqual(2028, bpiList[70], float.Epsilon);
+                Assert.That(bpiList[70], Is.EqualTo(2028).Within(float.Epsilon));
             }
         }
 
@@ -788,16 +788,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(uimfFile.FullName))
             {
                 var bpi = reader.GetBPIByFrame(20, 20, 0, 0);
-                Assert.AreEqual(bpi[20], 1791115, float.Epsilon);
+                Assert.That(bpi[20], Is.EqualTo(1791115).Within(float.Epsilon));
 
                 bpi = reader.GetBPIByFrame(20, 20, 1, 100);
-                Assert.AreEqual(bpi[20], 202560, float.Epsilon);
+                Assert.That(bpi[20], Is.EqualTo(202560).Within(float.Epsilon));
 
                 bpi = reader.GetBPIByFrame(20, 30, 50, 200);
-                Assert.AreEqual(bpi[25], 2645542, float.Epsilon);
+                Assert.That(bpi[25], Is.EqualTo(2645542).Within(float.Epsilon));
 
                 var bpiList = reader.GetBPI(UIMFData.FrameType.MS1, 1, 10, 20, 50);
-                Assert.AreEqual(bpiList[7], 831, float.Epsilon);
+                Assert.That(bpiList[7], Is.EqualTo(831).Within(float.Epsilon));
             }
         }
 
@@ -811,27 +811,27 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(FileRefs.LegacyFile1))
             {
                 var tic = reader.GetTICByFrame(20, 20, 0, 0);
-                Assert.AreEqual(2195378, tic[20], float.Epsilon);
+                Assert.That(tic[20], Is.EqualTo(2195378).Within(float.Epsilon));
 
                 tic = reader.GetTICByFrame(20, 20, 1, 100);
-                Assert.AreEqual(13703, tic[20], float.Epsilon);
+                Assert.That(tic[20], Is.EqualTo(13703).Within(float.Epsilon));
 
                 tic = reader.GetTICByFrame(20, 30, 50, 200);
-                Assert.AreEqual(1081201, tic[25], float.Epsilon);
+                Assert.That(tic[25], Is.EqualTo(1081201).Within(float.Epsilon));
 
                 // Uncomment this to get a TIC across the entire dataset (typically slow)
                 //tic = reader.GetTICByFrame(0, 0, 0, 0);
-                // Assert.AreEqual(2026072, tic[100], float.Epsilon);
+                // Assert.That(tic[100], Is.EqualTo(2026072).Within(float.Epsilon));
 
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
-                Assert.AreEqual(3649, ticList[70], float.Epsilon);
+                Assert.That(ticList[70], Is.EqualTo(3649).Within(float.Epsilon));
             }
 
             // File with updated parameter tables
             using (var reader = new DataReader(FileRefs.StandardFile1))
             {
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
-                Assert.AreEqual(3649, ticList[70], float.Epsilon);
+                Assert.That(ticList[70], Is.EqualTo(3649).Within(float.Epsilon));
             }
         }
 
@@ -847,16 +847,16 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             using (var reader = new DataReader(uimfFile.FullName))
             {
                 var tic = reader.GetTICByFrame(20, 20, 0, 0);
-                Assert.AreEqual(25390718, tic[20], float.Epsilon);
+                Assert.That(tic[20], Is.EqualTo(25390718).Within(float.Epsilon));
 
                 tic = reader.GetTICByFrame(20, 20, 1, 100);
-                Assert.AreEqual(1665423, tic[20], float.Epsilon);
+                Assert.That(tic[20], Is.EqualTo(1665423).Within(float.Epsilon));
 
                 tic = reader.GetTICByFrame(20, 30, 50, 200);
-                Assert.AreEqual(34572597, tic[22], float.Epsilon);
+                Assert.That(tic[22], Is.EqualTo(34572597).Within(float.Epsilon));
 
                 var ticList = reader.GetTIC(UIMFData.FrameType.MS1, 1, 100, 20, 50);
-                Assert.AreEqual(16224, ticList[11], float.Epsilon);
+                Assert.That(ticList[11], Is.EqualTo(16224).Within(float.Epsilon));
             }
         }
 
@@ -883,7 +883,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             Console.WriteLine("{0,-27} {1}", "Creating Software Version:", mostRecentVersion.SoftwareVersion);
             Console.WriteLine("{0,-27} {1}", "Date Entered:", mostRecentVersion.DateEntered);
 
-            Assert.IsTrue(mostRecentVersion.UimfVersion > new Version(), "UIMF file does not have a valid version: " + mostRecentVersion.UimfVersion);
+            Assert.That(mostRecentVersion.UimfVersion, Is.GreaterThan(new Version()), "UIMF file does not have a valid version: " + mostRecentVersion.UimfVersion);
         }
 
         [Test]
@@ -927,7 +927,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var columnExists = reader.TableHasColumn(tableName, columnName);
 
-                Assert.AreEqual(columnExistsExpected, columnExists,
+                Assert.That(columnExists, Is.EqualTo(columnExistsExpected),
                     "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
                     "; expected it to be " + GetExistenceDescription(columnExistsExpected) +
                     "; See file " + Path.GetFileName(filePath));
@@ -986,7 +986,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                 var tableExists = reader.TableExists(tableName);
                 if (!tableExists)
                 {
-                    Assert.AreEqual(columnExistsExpected, false,
+                    Assert.That(columnExistsExpected, Is.False,
                                     "Table " + tableName + " not found in the UIMF file, but column " + columnName + " was expected to exist" +
                                     "; See file " + Path.GetFileName(filePath));
 
@@ -995,7 +995,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
 
                 var columnExists = reader.TableHasColumn(tableName, columnName);
 
-                Assert.AreEqual(columnExistsExpected, columnExists,
+                Assert.That(columnExists, Is.EqualTo(columnExistsExpected),
                     "Column " + columnName + " " + GetExistenceDescription(columnExists) + " in table " + tableName +
                     "; expected it to be " + GetExistenceDescription(columnExistsExpected) +
                     "; See file " + Path.GetFileName(filePath));
@@ -1043,7 +1043,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
             {
                 var tableExists = reader.TableExists(tableName);
 
-                Assert.AreEqual(tableExistsExpected, tableExists,
+                Assert.That(tableExists, Is.EqualTo(tableExistsExpected),
                     "Table " + tableName + " " + GetExistenceDescription(tableExists) + " in file " + Path.GetFileName(filePath) +
                     "; expected it to be " + GetExistenceDescription(tableExistsExpected));
 
@@ -1103,7 +1103,7 @@ namespace UIMFLibrary.UnitTests.DataReaderTests
                         break;
                     }
 
-                    Assert.AreEqual(expectedColNameList[i], columnNames[i],
+                    Assert.That(columnNames[i], Is.EqualTo(expectedColNameList[i]),
                                     "Column name mismatch for table " + tableName + ", column " + (i + 1) + "; expected " +
                                     expectedColNameList[i] + " but actually " + columnNames[i]);
                 }

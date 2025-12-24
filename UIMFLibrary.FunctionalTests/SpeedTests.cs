@@ -178,7 +178,7 @@ namespace UIMFLibrary.FunctionalTests
 
                 sw.Stop();
 
-                Assert.AreEqual(mzValuesRead, intensityValuesRead, "Read a differing number of m/z versus intensity values");
+                Assert.That(intensityValuesRead, Is.EqualTo(mzValuesRead), "Read a differing number of m/z versus intensity values");
 
                 Console.WriteLine($"Total time to read {numIterations} scans = {sw.ElapsedMilliseconds} msec");
                 Console.WriteLine($"Average time/scan = {sw.ElapsedMilliseconds / (double)numIterations} msec");
