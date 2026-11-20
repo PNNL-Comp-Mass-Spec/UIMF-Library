@@ -16,8 +16,3 @@ artifacts:
 - path: UIMFLibrary\bin\Release\net472\UIMFLibrary.dll
 - path: UIMFLibrary\bin\Release\netstandard2.0\UIMFLibrary.dll
 - path: UIMFLibrary\bin\Release\UIMFLibrary*.nupkg
-deploy:
-- provider: NuGet
-  api_key:
-    secure: LJJRNR7AQCZxrg67xuFIf1e0ZA90/4Nm6Uay6LIU6dRItqxs4J/J59Ju/80xErp+
-  skip_symbols: true
